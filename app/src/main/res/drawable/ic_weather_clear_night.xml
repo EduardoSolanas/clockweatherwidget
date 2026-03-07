@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Moon for clear night -->
+    <path
+        android:fillColor="#B0C4DE"
+        android:pathData="M24,8 C15.2,8 8,15.2 8,24 C8,32.8 15.2,40 24,40 C32.8,40 40,32.8 40,24 C36,26 30,24 28,18 C26,12 28,6 32,4 C29.5,3.4 26.8,3 24,3 Z"
+        android:strokeWidth="0" />
+</vector>
+

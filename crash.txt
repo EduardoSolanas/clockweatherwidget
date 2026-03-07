@@ -1,0 +1,169 @@
+--------- beginning of main
+03-06 18:34:30.439   558   643 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+03-06 18:34:30.440  1198  1198 I NotificationListener: Handling notification state refresh for com.android.systemui#0
+03-06 18:34:30.440  1198  1198 I NotificationListener: Handling notification state refresh for android#0
+03-06 18:34:30.440  1198  2141 I s.nexuslauncher: AssetManager2(0x79cf14b97e78) locale list changing from [] to [en-US]
+03-06 18:34:30.441  1198  1198 D SsBaseTemplateCard: No text view can be set up
+03-06 18:34:30.441  1198  1198 D SsBaseTemplateCard: Passed-in item info is null
+03-06 18:34:30.441  1198  1198 D SsBaseTemplateCard: Passed-in item info is null
+03-06 18:34:30.441  1198  1198 D SsBaseTemplateCard: Passed-in item info is null
+03-06 18:34:30.441  1198  1198 I SsBaseTemplateCard: Secondary card pane is null
+--------- beginning of system
+03-06 18:34:30.444  1017  1610 V WindowManagerShell: onTransitionReady(transaction=3131031160809)
+03-06 18:34:30.445  1017  1067 V WindowManagerShell: onTransitionReady (#61) android.os.BinderProxy@705c497: {id=61 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+03-06 18:34:30.445  1017  1067 V WindowManagerShell:         {m=TO_FRONT f=SHOW_WALLPAPER|MOVE_TO_TOP leash=Surface(name=Task=1)/@0x8320aa2 sb=Rect(0, 0 - 1280, 2856) eb=Rect(0, 0 - 1280, 2856) epz=Point(1280, 2856) d=0 taskParent=-1},
+03-06 18:34:30.445  1017  1067 V WindowManagerShell:         {m=CLOSE f=NONE leash=Surface(name=Task=57)/@0x7d81333 sb=Rect(0, 0 - 1280, 2856) eb=Rect(0, 0 - 1280, 2856) epz=Point(1280, 2856) d=0 taskParent=-1},
+03-06 18:34:30.445  1017  1067 V WindowManagerShell:         {m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{6eb0f19 showWhenLocked=false})/@0x94be6f0 sb=Rect(0, 0 - 1280, 2856) eb=Rect(0, 0 - 1280, 2856) epz=Point(1280, 2856) d=0}
+03-06 18:34:30.445  1017  1067 V WindowManagerShell:     ]}
+03-06 18:34:30.445  1017  1067 V WindowManagerShell: Playing animation for (#61) android.os.BinderProxy@705c497@0
+03-06 18:34:30.445  1017  1067 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+03-06 18:34:30.445  1017  1067 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=61 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=TO_FRONT f=SHOW_WALLPAPER|MOVE_TO_TOP leash=Surface(name=Task=1)/@0x8320aa2 sb=Rect(0, 0 - 1280, 2856) eb=Rect(0, 0 - 1280, 2856) epz=Point(1280, 2856) d=0 taskParent=-1},{m=CLOSE f=NONE leash=Surface(name=Task=57)/@0x7d81333 sb=Rect(0, 0 - 1280, 2856) eb=Rect(0, 0 - 1280, 2856) epz=Point(1280, 2856) d=0 taskParent=-1},{m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{6eb0f19 showWhenLocked=false})/@0x94be6f0 sb=Rect(0, 0 - 1280, 2856) eb=Rect(0, 0 - 1280, 2856) epz=Point(1280, 2856) d=0}]}
+03-06 18:34:30.445  1017  1067 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x0 checks=[{atype=undefined independent=true modes=[CLOSE,TO_BACK] flags=IN_TASK_WITH_EMBEDDED_ACTIVITY mustBeTask=false order=ANY topActivity=null launchCookie=null taskFragmentToken=android.os.BinderProxy@e7493ea windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@db076db, appThread = android.app.IApplicationThread$Stub$Proxy@bb8578, debugName = overlayBackTransition }}
+03-06 18:34:30.445  1017  1067 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x0 checks=[{atype=dream independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined},{atype=home independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@5529451, appThread = android.app.IApplicationThread$Stub$Proxy@50004b6, debugName = LauncherToDream }}
+03-06 18:34:30.445  1017  1067 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity} launchCookie=null windowingMode=undefined},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined},{NOT atype=undefined independent=true modes=[] flags=NONE mustBeTask=true order=ANY topActivity=null launchCookie=null customAnim=true windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@d35a5b7, appThread = android.app.IApplicationThread$Stub$Proxy@adf8124, debugName = QuickstepLaunchHome }}
+03-06 18:34:30.445  1017  1067 D RemoteTransitionHandler: Found filterPair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity} launchCookie=null windowingMode=undefined},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined},{NOT atype=undefined independent=true modes=[] flags=NONE mustBeTask=true order=ANY topActivity=null launchCookie=null customAnim=true windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@d35a5b7, appThread = android.app.IApplicationThread$Stub$Proxy@adf8124, debugName = QuickstepLaunchHome }}
+03-06 18:34:30.445  1017  1067 V WindowManagerShell:  Delegate animation for (#61) to RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@d35a5b7, appThread = android.app.IApplicationThread$Stub$Proxy@adf8124, debugName = QuickstepLaunchHome }
+03-06 18:34:30.448  1198  1198 D StateManager: createAtomicAnimation - fromState: Background, toState: Normal, partial trace:
+03-06 18:34:30.448  1198  1198 D StateManager: 	at com.android.quickstep.util.ScalingWorkspaceRevealAnim.<init>(go/retraceme 72a59688580715d19f0e415c69e80376c2f062d1648c80db6730905005a27c20:39)
+03-06 18:34:30.448  1198  1198 D StateManager: 	at com.android.launcher3.QuickstepTransitionManager.createWallpaperOpenAnimations(go/retraceme 72a59688580715d19f0e415c69e80376c2f062d1648c80db6730905005a27c20:168)
+03-06 18:34:30.448  1198  1198 D StateManager: 	at com.android.launcher3.QuickstepTransitionManager$WallpaperOpenLauncherAnimationRunner.onAnimationStart(go/retraceme 72a59688580715d19f0e415c69e80376c2f062d1648c80db6730905005a27c20:17)
+03-06 18:34:30.448  1198  1198 D b/311077782: LauncherAnimationRunner.setAnimation
+03-06 18:34:30.479   729   769 V WindowManager: Sent Transition (#61) createdAt=03-06 18:34:30.328 via request=TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=57 effectiveUid=10218 displayId=0 isRunning=false baseIntent=Intent { flg=0x10000000 cmp=com.clockweather.app/.presentation.detail.WeatherDetailActivity } baseActivity=null topActivity=null origActivity=null realActivity=ComponentInfo{com.clockweather.app/com.clockweather.app.presentation.detail.WeatherDetailActivity} numActivities=0 lastActiveTime=8409418 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{72572bd Task{a6d89c1 #57 type=standard A=10218:com.clockweather.app}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=null launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=true lastNonFullscreenBounds=Rect(329, 830 - 952, 2110) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= false isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 0, 0) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=undefined}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 61 }
+03-06 18:34:30.479   729   769 V WindowManager:     startWCT=WindowContainerTransaction { changes= {} hops= [] errorCallbackToken=null taskFragmentOrganizer=null }
+03-06 18:34:30.479   729   769 V WindowManager:     info={id=61 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+03-06 18:34:30.479   729   769 V WindowManager:         {WCT{RemoteToken{decf0ab Task{f088d79 #1 type=home}}} m=TO_FRONT f=SHOW_WALLPAPER|MOVE_TO_TOP leash=Surface(name=Task=1)/@0x237163e sb=Rect(0, 0 - 1280, 2856) eb=Rect(0, 0 - 1280, 2856) epz=Point(1280, 2856) d=0 taskParent=-1},
+03-06 18:34:30.479   729   769 V WindowManager:         {WCT{RemoteToken{72572bd Task{a6d89c1 #57 type=standard A=10218:com.clockweather.app}}} m=CLOSE f=NONE leash=Surface(name=Task=57)/@0x7eb605a sb=Rect(0, 0 - 1280, 2856) eb=Rect(0, 0 - 1280, 2856) epz=Point(1280, 2856) d=0 taskParent=-1},
+03-06 18:34:30.479   729   769 V WindowManager:         {m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{6eb0f19 showWhenLocked=false})/@0xeda25f0 sb=Rect(0, 0 - 1280, 2856) eb=Rect(0, 0 - 1280, 2856) epz=Point(1280, 2856) d=0}
+03-06 18:34:30.479   729   769 V WindowManager:     ]}
+03-06 18:34:30.481  1017  1067 V WindowManagerShell:  animated by com.android.wm.shell.transition.RemoteTransitionHandler@42bf527
+03-06 18:34:30.520   729   881 I ImeTracker: com.google.android.apps.nexuslauncher:28f50a9: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+03-06 18:34:30.523  1439  1439 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():2113 
+03-06 18:34:30.523  1439  1439 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 0, locked = false
+03-06 18:34:30.524   729  1928 I ImeTracker: system_server:c99ffb9a: onRequestHide at ORIGIN_SERVER reason IME_REQUESTED_CHANGED_LISTENER fromUser false
+03-06 18:34:30.524   729   774 I ImeTracker: system_server:c99ffb9a: onCancelled at PHASE_SERVER_SHOULD_HIDE
+03-06 18:34:30.525  1439  1439 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1384 onStartInput(EditorInfo{EditorInfo{packageName=com.google.android.apps.nexuslauncher, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+03-06 18:34:30.526  1439  1439 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 1, locked = false
+03-06 18:34:30.527   729  2079 W PackageConfigPersister: App-specific configuration not found for packageName: com.google.android.apps.nexuslauncher and userId: 0
+03-06 18:34:30.536  1198  1198 D InsetsController: hide(ime(), fromIme=false)
+03-06 18:34:30.536  1198  1198 I ImeTracker: com.google.android.apps.nexuslauncher:28f50a9: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+03-06 18:34:30.548   558   558 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+03-06 18:34:30.551  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.551  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.551  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.551  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.552  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.552  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.552  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.552  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.552  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.552  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.552  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.552  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.552  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.552  1017  1024 W System  : A resource failed to call release. 
+03-06 18:34:30.724  9225  9225 W dumpsys : Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: package
+03-06 18:34:30.870  3226  3226 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~4Pb6oUgUo8Tg8WubOuZ7FA==/com.google.android.gms-L9TiL2gS7T_Bqp1CPT9qRA==/oat/x86_64/base.odex) is kOatUpToDate with filter 'speed-profile' executable 'false'
+03-06 18:34:30.872  3226  3226 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~4Pb6oUgUo8Tg8WubOuZ7FA==/com.google.android.gms-L9TiL2gS7T_Bqp1CPT9qRA==/oat/x86_64/split_AdsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+03-06 18:34:30.873  3226  3226 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~4Pb6oUgUo8Tg8WubOuZ7FA==/com.google.android.gms-L9TiL2gS7T_Bqp1CPT9qRA==/oat/x86_64/split_CronetDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+03-06 18:34:30.875  3226  3226 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~4Pb6oUgUo8Tg8WubOuZ7FA==/com.google.android.gms-L9TiL2gS7T_Bqp1CPT9qRA==/oat/x86_64/split_DynamiteLoader_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+03-06 18:34:30.876  3226  3226 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~4Pb6oUgUo8Tg8WubOuZ7FA==/com.google.android.gms-L9TiL2gS7T_Bqp1CPT9qRA==/oat/x86_64/split_DynamiteModulesA_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+03-06 18:34:30.880  3226  3226 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~4Pb6oUgUo8Tg8WubOuZ7FA==/com.google.android.gms-L9TiL2gS7T_Bqp1CPT9qRA==/oat/x86_64/split_DynamiteModulesC_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+03-06 18:34:30.882  3226  3226 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~4Pb6oUgUo8Tg8WubOuZ7FA==/com.google.android.gms-L9TiL2gS7T_Bqp1CPT9qRA==/oat/x86_64/split_GoogleCertificates_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+03-06 18:34:30.883  3226  3226 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~4Pb6oUgUo8Tg8WubOuZ7FA==/com.google.android.gms-L9TiL2gS7T_Bqp1CPT9qRA==/oat/x86_64/split_MapsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+03-06 18:34:30.884  3226  3226 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~4Pb6oUgUo8Tg8WubOuZ7FA==/com.google.android.gms-L9TiL2gS7T_Bqp1CPT9qRA==/oat/x86_64/split_MeasurementDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+03-06 18:34:30.885  3226  3226 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~4Pb6oUgUo8Tg8WubOuZ7FA==/com.google.android.gms-L9TiL2gS7T_Bqp1CPT9qRA==/oat/x86_64/split_all_locale_splits.odex) is kOatUpToDate with filter 'speed' executable 'false'
+03-06 18:34:30.886  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000001/CronetDynamite.apk has no usable artifacts
+03-06 18:34:30.886  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000013/dl-TfliteDynamiteDynamite.integ_243930802100800.apk has no usable artifacts
+03-06 18:34:30.887  3226  3226 I artd    : GetBestInfo: /data/user/0/com.google.android.gms/app_dg_cache/9C3914BA639C225C3270B81DD57E92CD956143E9/the.apk has no usable artifacts
+03-06 18:34:30.888  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000002/DynamiteLoader.apk has no usable artifacts
+03-06 18:34:30.888  3226  3226 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/BE7EF7B4C46169C70551CAA4FB9F9DFEAA13427D/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+03-06 18:34:30.889  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000005/GoogleCertificates.apk has no usable artifacts
+03-06 18:34:30.889  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000018/dl-PlayCloudSearch.optional_255034100000.apk has no usable artifacts
+03-06 18:34:30.891  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000014/dl-MlkitBarcodeUi.optional_255034100800.apk has no usable artifacts
+03-06 18:34:30.892  3226  3226 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/0B5F21648920603C6816E0B76773EED17E15FB77/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+03-06 18:34:30.893  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000012/dl-Appsearch.optional_255034100800.apk has no usable artifacts
+03-06 18:34:30.894  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000011/dl-VisionOcr.optional_255034100000.apk has no usable artifacts
+03-06 18:34:30.895  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000001c/dl-TfliteDynamiteDynamite.integ_252130102100800.apk has no usable artifacts
+03-06 18:34:30.896  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000d/dl-MlkitBarcodeUi.optional_250834100800.apk has no usable artifacts
+03-06 18:34:30.896  3226  3226 W artd    : Could not get dex checksums for location /data/app/~~koXZe_PnZt5JVyfTqhAjSQ==/com.android.vending-Dit5oGBRyNmuQLrrfzjLcA==/base.apk, fd=-1
+03-06 18:34:30.897  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000017/dl-MlkitOcrCommon.optional_255034100800.apk has no usable artifacts
+03-06 18:34:30.898  3226  3226 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000f/dl-Appsearch.optional_250834100800.apk has no usable artifacts
+03-06 18:34:31.452  1198  1198 D ScalingWorkspaceRevealAnim: alpha of workspace at the end of animation: 1.0
+03-06 18:34:31.453  1017  1067 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#61) android.os.BinderProxy@705c497@0
+03-06 18:34:31.455   729   769 V WindowManager: Finish Transition (#61): created at 03-06 18:34:30.328 collect-started=0.046ms request-sent=0.112ms started=4.216ms ready=13.7ms sent=115.552ms commit=28.127ms finished=1126.891ms
+03-06 18:34:31.456   729  2079 E IPCThreadState: Binder transaction failure. id: 904351, BR_*: 29189, error: -22 (Invalid argument)
+03-06 18:34:31.456   729  2079 W ActivityManager: pid 729 system sent binder code 7 with flags 1 to frozen apps and got error -32
+03-06 18:34:31.456   729  2079 D ActivityManager: Too many transaction errors, throttling freezer binder callback.
+03-06 18:34:31.456   729  2079 W WindowManager: Exception thrown during dispatchAppVisibility Window{3d39a62 u0 com.clockweather.app/com.clockweather.app.presentation.detail.WeatherDetailActivity EXITING}
+03-06 18:34:31.456   729  2079 W WindowManager: android.os.DeadObjectException
+03-06 18:34:31.456   729  2079 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:592)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:557)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:3151)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1311)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:389)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at com.android.server.wm.ActivityRecord.setClientVisible(ActivityRecord.java:6650)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5561)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at com.android.server.wm.Transition.finishTransition(Transition.java:1391)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at com.android.server.wm.TransitionController.finishTransition(TransitionController.java:1029)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.finishTransition(WindowOrganizerController.java:496)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at android.window.IWindowOrganizerController$Stub.onTransact(IWindowOrganizerController.java:261)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:223)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at android.os.Binder.execTransactInternal(Binder.java:1426)
+03-06 18:34:31.456   729  2079 W WindowManager: 	at android.os.Binder.execTransact(Binder.java:1365)
+03-06 18:34:31.456   729  2079 W Process : Unable to open /proc/9181/status
+03-06 18:34:31.460  1017  1067 V WindowManagerShell: Track 0 became idle
+03-06 18:34:31.460  1017  1067 V WindowManagerShell: All active transition animations finished
+03-06 18:34:31.462  1198  1198 D RecentsView: onTaskRemoved: 57, not handling task stack changes
+03-06 18:34:31.466  1198  1198 D RecentsView: onTaskRemoved: 57, not handling task stack changes
+03-06 18:34:31.497   558   558 E BpTransactionCompletedListener: Failed to transact (-32)
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63029, 48921466, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63037, 45774200, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63052, 54680434, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63067, 45436868, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63089, 44307202, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63104, 41764136, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63112, 41032070, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63149, 67901538, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63172, 52345140, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63195, 29793108, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63210, 27423242, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63225, 34402476, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63241, 17982110, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63255, 16337044, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63270, 17061478, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63285, 30375212, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63293, 30299946, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63301, 14294980, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63309, 26165814, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63317, 28468548, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63333, 33286616, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63349, 33184284, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63365, 5591752, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63373, 30222886, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63381, 28699420, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63389, 27739854, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63397, 26764988, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63405, 26421322, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63413, 9779356, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63421, 22437090, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63429, 21831824, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63437, 35562158, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63453, 8555826, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63461, 22314060, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63469, 30067594, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63477, 28506628, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63485, 27043662, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63493, 26068196, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.516  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63501, 25045330, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63509, 23811264, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63517, 22572898, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63525, 21483832, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63533, 35605166, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63549, 34406534, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63565, 33228702, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63573, 22044336, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63581, 29822670, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63589, 29197304, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63597, 12674838, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>
+03-06 18:34:31.517  1198  1198 W FrameTracker: Missed SF frame:JANK_COMPOSER, 63605, 23985072, CUJ=J<LAUNCHER_APP_CLOSE_TO_HOME>

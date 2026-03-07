@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Clock &amp; Weather</string>
+    <string name="widget_compact_name">Clock &amp; Weather (Compact)</string>
+    <string name="widget_compact_description">Flip clock with current weather</string>
+    <string name="widget_extended_name">Clock &amp; Weather (Extended)</string>
+    <string name="widget_extended_description">Flip clock with weather and 5-day forecast</string>
+    <string name="widget_forecast_name">Clock &amp; Weather (7-Day)</string>
+    <string name="widget_forecast_description">Flip clock with current weather and 7-day forecast</string>
+
+    <!-- Weather Conditions (WMO codes) -->
+    <string name="condition_clear_sky">Clear</string>
+    <string name="condition_mainly_clear">Mainly clear</string>
+    <string name="condition_partly_cloudy">Partly cloudy</string>
+    <string name="condition_overcast">Overcast</string>
+    <string name="condition_fog">Fog</string>
+    <string name="condition_rime_fog">Rime fog</string>
+    <string name="condition_drizzle_light">Light drizzle</string>
+    <string name="condition_drizzle_moderate">Drizzle</string>
+    <string name="condition_drizzle_dense">Dense drizzle</string>
+    <string name="condition_freezing_drizzle_light">Light freezing drizzle</string>
+    <string name="condition_freezing_drizzle_dense">Dense freezing drizzle</string>
+    <string name="condition_rain_slight">Light rain</string>
+    <string name="condition_rain_moderate">Rain</string>
+    <string name="condition_rain_heavy">Heavy rain</string>
+    <string name="condition_freezing_rain_light">Light freezing rain</string>
+    <string name="condition_freezing_rain_heavy">Heavy freezing rain</string>
+    <string name="condition_snow_slight">Light snow</string>
+    <string name="condition_snow_moderate">Snow</string>
+    <string name="condition_snow_heavy">Heavy snow</string>
+    <string name="condition_snow_grains">Snow grains</string>
+    <string name="condition_rain_showers_slight">Light showers</string>
+    <string name="condition_rain_showers_moderate">Showers</string>
+    <string name="condition_rain_showers_violent">Violent showers</string>
+    <string name="condition_snow_showers_slight">Light snow showers</string>
+    <string name="condition_snow_showers_heavy">Heavy snow showers</string>
+    <string name="condition_thunderstorm">Thunderstorm</string>
+    <string name="condition_thunderstorm_hail">Thunderstorm with hail</string>
+    <string name="condition_thunderstorm_hail_heavy">Heavy thunderstorm with hail</string>
+
+    <!-- Weather Detail Labels -->
+    <string name="label_humidity">Humidity</string>
+    <string name="label_feels_like">Feels like</string>
+    <string name="label_dew_point">Dew point</string>
+    <string name="label_precipitation">Precipitation</string>
+    <string name="label_pressure">Pressure</string>
+    <string name="label_wind">Wind</string>
+    <string name="label_visibility">Visibility</string>
+    <string name="label_uv_index">UV index</string>
+    <string name="label_sunrise">Sunrise</string>
+    <string name="label_sunset">Sunset</string>
+    <string name="label_duration_of_day">Duration of day</string>
+    <string name="label_daily_forecast">Daily forecast</string>
+    <string name="label_hourly_forecast">Hourly forecast</string>
+    <string name="label_latest_update">Latest update: %s</string>
+    <string name="label_minutes_ago">%d minutes ago</string>
+    <string name="label_just_now">just now</string>
+
+    <!-- Units -->
+    <string name="unit_celsius">%1$.0f\u00B0</string>
+    <string name="unit_fahrenheit">%1$.0f\u00B0</string>
+    <string name="unit_percent">%d%%</string>
+    <string name="unit_mbar">%1$.0f mBar</string>
+    <string name="unit_kmh">%1$.0f km/h</string>
+    <string name="unit_mph">%1$.0f mph</string>
+    <string name="unit_mm">%1$.1f mm</string>
+    <string name="unit_inch">%1$.2f in</string>
+    <string name="unit_km">%1$.1f km</string>
+    <string name="unit_mi">%1$.1f mi</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_temperature_unit">Temperature unit</string>
+    <string name="settings_wind_speed_unit">Wind speed unit</string>
+    <string name="settings_update_frequency">Update frequency</string>
+    <string name="settings_manage_locations">Manage locations</string>
+
+    <!-- Widget Config -->
+    <string name="config_title">Configure Widget</string>
+    <string name="config_select_location">Select location</string>
+    <string name="config_search_city">Search city…</string>
+    <string name="config_use_current_location">Use current location</string>
+    <string name="config_done">Done</string>
+
+    <!-- Errors -->
+    <string name="error_no_network">No internet connection. Showing cached data.</string>
+    <string name="error_no_data">No data available. Check your connection.</string>
+    <string name="error_location_permission">Location permission required</string>
+</resources>

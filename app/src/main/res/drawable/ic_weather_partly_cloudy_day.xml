@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Sun -->
+    <path android:fillColor="#FFD700"
+        android:pathData="M24,14 A10,10 0 1,0 24,34 A10,10 0 1,0 24,14 Z"/>
+    <!-- Cloud overlay -->
+    <path android:fillColor="#BDBDBD"
+        android:pathData="M38,28 C38,23.6 34.4,20 30,20 C29.2,20 28.4,20.1 27.7,20.4 C26.5,17.8 23.8,16 20.7,16 C16.3,16 12.7,19.6 12.7,24 C12.7,24.1 12.7,24.2 12.7,24.3 C10,25 8,27.5 8,30.5 C8,34.1 10.9,37 14.5,37 L33.5,37 C36.5,37 39,34.5 39,31.5 C39,30.3 38.6,29.1 38,28 Z"/>
+</vector>
+
