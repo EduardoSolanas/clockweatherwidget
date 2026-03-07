@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -200,10 +201,12 @@ private fun HeroWeatherCard(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = displayCondition.description.uppercase(),
+                        text = (if (debugIndex >= 0) displayCondition.description else condition).uppercase(),
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.White.copy(alpha = 0.8f),
-                        letterSpacing = 2.sp
+                        letterSpacing = 2.sp,
+                        maxLines = 2,
+                        lineHeight = 18.sp
                     )
                     Text(
                         text = tempDisplay,
@@ -260,9 +263,10 @@ private fun HeroWeatherCard(
         val cName = displayCondition.name.uppercase()
         when {
             cName.contains("SNOW") -> FrostOverlay()
-            cName.contains("THUNDER") || cName.contains("STORM") || cName == "RAIN_HEAVY" -> WetGlassOverlay(intensity = 1.0f)
-            cName.contains("RAIN") -> WetGlassOverlay(intensity = 0.6f)
-            cName.contains("DRIZZLE") -> WetGlassOverlay(intensity = 0.25f)
+            cName.contains("THUNDER") || cName.contains("STORM") || cName == "RAIN_HEAVY" || cName.contains("VIOLENT") -> WetGlassOverlay(intensity = 1.0f)
+            cName == "RAIN_MODERATE" || cName.contains("SHOWER_MODERATE") -> WetGlassOverlay(intensity = 0.6f)
+            cName == "RAIN_SLIGHT" || cName.contains("SHOWER_SLIGHT") -> WetGlassOverlay(intensity = 0.35f)
+            cName.contains("DRIZZLE") -> WetGlassOverlay(intensity = 0.2f)
         }
     }
 }
@@ -664,51 +668,52 @@ private fun WetGlassOverlay(intensity: Float, modifier: Modifier = Modifier) {
         val w = size.width
         val h = size.height
 
-        // Overall dark wet vignette
+        // Higher-contrast dark wet vignette
         drawRect(
             brush = Brush.radialGradient(
-                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.15f * intensity)),
+                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.3f * intensity)),
                 center = Offset(w / 2, h / 2),
-                radius = w * 0.9f
+                radius = w * 1.0f
             ),
             size = size,
             blendMode = BlendMode.Multiply
         )
 
-        // Static condensation / camera lens drops
+        // Static condensation / camera lens drops - AAA High Visibility
         drops.forEach { (pos, dropSize) ->
-            val scale = dropSize * intensity
+            val scale = dropSize * intensity * 1.5f // Scaled up
             val cx = pos.x * w
             val cy = pos.y * h
             
-            // Drop shadow/refraction depth
+            // Drop shadow/refraction depth - Darker
             drawCircle(
-                color = Color.Black.copy(alpha = 0.2f * intensity),
+                color = Color.Black.copy(alpha = 0.4f * intensity),
                 radius = scale * 2.5f,
-                center = Offset(cx + 1f, cy + 1f)
+                center = Offset(cx + 1.5f, cy + 1.5f)
             )
             
-            // Lens highlight (Bright specular)
+            // Hot Specular Highlight
             drawCircle(
-                color = Color.White.copy(alpha = 0.6f * intensity),
-                radius = scale * 1.8f,
-                center = Offset(cx - scale * 0.6f, cy - scale * 0.6f),
+                color = Color.White.copy(alpha = 0.85f * intensity),
+                radius = scale * 1.6f,
+                center = Offset(cx - scale * 0.7f, cy - scale * 0.7f),
                 blendMode = BlendMode.Screen
             )
             
-            // Subtle secondary highlight
+            // Inner water glow
             drawCircle(
-                color = Color.White.copy(alpha = 0.3f * intensity),
-                radius = scale * 0.8f,
-                center = Offset(cx + scale * 0.4f, cy + scale * 0.4f),
+                color = Color.White.copy(alpha = 0.25f * intensity),
+                radius = scale * 1.2f,
+                center = Offset(cx, cy),
                 blendMode = BlendMode.Screen
             )
 
-            // Main water drop body (Thin surface tension line)
+            // Main water drop body / Surface tension ring
             drawCircle(
-                color = Color.White.copy(alpha = 0.15f * intensity),
-                radius = scale * 2.2f,
-                center = Offset(cx, cy)
+                color = Color.White.copy(alpha = 0.35f * intensity),
+                radius = scale * 2.5f,
+                center = Offset(cx, cy),
+                style = Stroke(width = 1.2f)
             )
         }
     }

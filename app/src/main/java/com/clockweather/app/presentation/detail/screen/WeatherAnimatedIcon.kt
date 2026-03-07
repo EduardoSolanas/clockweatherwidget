@@ -487,7 +487,7 @@ fun OvercastBackground(modifier: Modifier = Modifier) {
 @Composable
 fun RainBackground(modifier: Modifier = Modifier, heavy: Boolean = false) {
     val time by rememberTime()
-    val particleCount = if (heavy) 60 else 30
+    val particleCount = if (heavy) 120 else 50
     val particles = rememberParticles(particleCount, Size(1000f, 1000f))
 
     Canvas(modifier = modifier.fillMaxSize()) {
@@ -575,7 +575,7 @@ fun DrizzleBackground(modifier: Modifier = Modifier) {
 @Composable
 fun SnowBackground(modifier: Modifier = Modifier) {
     val time by rememberTime()
-    val particles = rememberParticles(40, Size(1000f, 1000f))
+    val particles = rememberParticles(100, Size(1000f, 1000f))
 
     Canvas(modifier = modifier.fillMaxSize()) {
         val h = size.height
