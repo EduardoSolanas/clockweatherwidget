@@ -78,13 +78,12 @@ abstract class BaseWidgetUpdater(
                 // Re-bind clock with correct 24h setting
                 WidgetDataBinder.bindClockViews(context, views, appWidgetId, now.hour, now.minute, is24h)
 
-                // Apply clock tile theme (dark = black bg/white text, light = white bg/black text)
-                val clockTheme = prefs[stringPreferencesKey("clock_theme")] ?: "dark"
-                val (tileBgRes, digitColor, colonColor) = if (clockTheme == "light") {
-                    Triple(com.clockweather.app.R.drawable.flip_digit_bg_light, Color.BLACK, 0xCC000000.toInt())
-                } else {
-                    Triple(com.clockweather.app.R.drawable.flip_digit_bg, Color.WHITE, 0x80FFFFFF.toInt())
-                }
+                // Apply clock tile theme
+                val clockThemeName = prefs[stringPreferencesKey("clock_theme")] ?: "dark"
+                val theme = WidgetThemeSelector.getTheme(clockThemeName)
+                val tileBgRes = theme.backgroundResId
+                val digitColor = theme.textColor
+                val colonColor = theme.colonColor
 
                 val tileSizeName = prefs[stringPreferencesKey("clock_tile_size")] ?: "MEDIUM"
                 val tileSize = runCatching { ClockTileSize.valueOf(tileSizeName) }
