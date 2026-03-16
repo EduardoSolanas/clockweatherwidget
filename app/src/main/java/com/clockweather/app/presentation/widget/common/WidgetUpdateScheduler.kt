@@ -40,6 +40,7 @@ object WidgetUpdateScheduler {
             add(Calendar.MINUTE, 1)
         }
 
+        @android.annotation.SuppressLint("MissingPermission")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarmManager.canScheduleExactAlarms()) {
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC,
