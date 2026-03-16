@@ -26,11 +26,10 @@ android {
         
         val vMajor = project.property("VERSION_MAJOR").toString()
         val vMinor = project.property("VERSION_MINOR").toString()
-        val vPatch = project.property("VERSION_PATCH").toString()
         val buildNumber = System.getenv("GITHUB_RUN_NUMBER") ?: "0"
 
         versionCode = buildNumber.toInt().coerceAtLeast(1)
-        versionName = "$vMajor.$vMinor.$vPatch.$buildNumber"
+        versionName = "$vMajor.$vMinor.$buildNumber"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "WEATHER_API_KEY", "\"$weatherApiKey\"")

@@ -41,7 +41,7 @@ fun HourlyWeatherGraph(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "NEXT 24 HOURS",
+                text = stringResource(R.string.label_next_24_weather_forecast),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.2.sp,

@@ -65,6 +65,7 @@
     <string name="label_weather_fallback_title">Weather</string>
 
     <!-- CurrentWeatherCard -->
+    <string name="label_next_24_weather_forecast">NEXT 24 WEATHER FORECAST</string>
     <string name="label_7day_forecast">7-DAY FORECAST</string>
     <string name="label_today">Today</string>
     <string name="label_conditions">CONDITIONS</string>
