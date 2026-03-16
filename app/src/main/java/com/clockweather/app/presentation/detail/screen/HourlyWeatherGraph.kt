@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.clockweather.app.R
 import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.util.DateFormatter
@@ -73,12 +75,13 @@ private fun HourlyGraphCanvas(
     modifier: Modifier = Modifier
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f)
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
     val rainColor = Color(0xFF64B5F6)
 
-    val maxTemp = forecasts.maxOf { it.temperature }
-    val minTemp = forecasts.minOf { it.temperature }
+    val maxTemp = forecasts.maxOf { maxOf(it.temperature, it.feelsLike) }
+    val minTemp = forecasts.minOf { minOf(it.temperature, it.feelsLike) }
     val tempRange = (maxTemp - minTemp).coerceAtLeast(1.0)
 
     Canvas(modifier = modifier) {
@@ -87,59 +90,77 @@ private fun HourlyGraphCanvas(
         val pointSpacing = width / forecasts.size
         
         // Boundaries for graph areas
-        val topPadding = 40.dp.toPx()
+        val topPadding = 45.dp.toPx()
         val bottomPadding = 40.dp.toPx()
         val graphHeight = height - topPadding - bottomPadding
         
-        val points = forecasts.mapIndexed { index, forecast ->
+        val actualPoints = forecasts.mapIndexed { index, forecast ->
             val x = index * pointSpacing + pointSpacing / 2
             val tempFactor = (forecast.temperature - minTemp) / tempRange
             val y = height - bottomPadding - (tempFactor * graphHeight).toFloat()
             Offset(x, y)
         }
 
-        // Draw Temperature Path (Smoothed)
-        val path = Path().apply {
-            if (points.isNotEmpty()) {
-                moveTo(points[0].x, points[0].y)
-                for (i in 1 until points.size) {
-                    val prev = points[i - 1]
-                    val curr = points[i]
+        val feelsLikePoints = forecasts.mapIndexed { index, forecast ->
+            val x = index * pointSpacing + pointSpacing / 2
+            val tempFactor = (forecast.feelsLike - minTemp) / tempRange
+            val y = height - bottomPadding - (tempFactor * graphHeight).toFloat()
+            Offset(x, y)
+        }
+
+        // Draw Actual Temperature Path
+        val actualPath = Path().apply {
+            if (actualPoints.isNotEmpty()) {
+                moveTo(actualPoints[0].x, actualPoints[0].y)
+                for (i in 1 until actualPoints.size) {
+                    val prev = actualPoints[i - 1]
+                    val curr = actualPoints[i]
                     val cp1X = prev.x + (curr.x - prev.x) / 2
                     cubicTo(cp1X, prev.y, cp1X, curr.y, curr.x, curr.y)
                 }
             }
         }
 
+        // Draw Feels Like Temperature Path
+        val feelsLikePath = Path().apply {
+            if (feelsLikePoints.isNotEmpty()) {
+                moveTo(feelsLikePoints[0].x, feelsLikePoints[0].y)
+                for (i in 1 until feelsLikePoints.size) {
+                    val prev = feelsLikePoints[i - 1]
+                    val curr = feelsLikePoints[i]
+                    val cp1X = prev.x + (curr.x - prev.x) / 2
+                    cubicTo(cp1X, prev.y, cp1X, curr.y, curr.x, curr.y)
+                }
+            }
+        }
+
+        // Draw Feels Like Line First (Lower/Secondary)
         drawPath(
-            path = path,
+            path = feelsLikePath,
+            color = secondaryColor,
+            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
+        )
+
+        // Draw Actual Line (Top/Primary)
+        drawPath(
+            path = actualPath,
             color = primaryColor,
             style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
 
-        // Draw points and labels
-        forecasts.forEachIndexed { index, forecast ->
-            val center = points[index]
-            
-            // Temperature point
+        // Draw points for actual temperature
+        forecasts.forEachIndexed { index, _ ->
+            val center = actualPoints[index]
             drawCircle(
                 color = primaryColor,
-                radius = 4.dp.toPx(),
+                radius = 3.5.dp.toPx(),
                 center = center
             )
             drawCircle(
                 color = onSurfaceColor,
-                radius = 2.dp.toPx(),
+                radius = 1.5.dp.toPx(),
                 center = center
             )
-
-            // Temperature Label
-            val tempText = "${forecast.temperature.roundToInt()}°"
-            // We can't use drawText easily here without a transformation or specialized scope, 
-            // but for a simple agentic app we can use native canvas or just rely on the point position
-            // Since we want high quality, I'll use native canvas for text if needed, 
-            // but usually in Compose we use LayoutId or separate composables for labels to be easier.
-            // Let's stick to simple markers.
         }
         
         // Draw Precipitation Bars at the bottom
@@ -172,13 +193,20 @@ private fun HourlyGraphCanvas(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Top Temp
-                Text(
-                    text = "${TemperatureFormatter.format(forecast.temperature, temperatureUnit)}°",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+                // Top Temps
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 4.dp)) {
+                    Text(
+                        text = "${TemperatureFormatter.format(forecast.temperature, temperatureUnit)}°",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor
+                    )
+                    Text(
+                        text = "${TemperatureFormatter.format(forecast.feelsLike, temperatureUnit)}°",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = secondaryColor
+                    )
+                }
                 
                 Spacer(modifier = Modifier.weight(1f))
                 
