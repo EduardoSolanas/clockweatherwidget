@@ -61,7 +61,7 @@ class WeatherDetailViewModel @Inject constructor(
                         locationRepository.getCurrentLocation()
                     }
                     val loc = detected ?: com.clockweather.app.domain.model.Location(
-                        id = 0, name = "London", country = "GB",
+                        id = 0, name = "London (Default)", country = "GB",
                         latitude = 51.5074, longitude = -0.1278, isCurrentLocation = true
                     )
                     locationRepository.saveLocation(loc)

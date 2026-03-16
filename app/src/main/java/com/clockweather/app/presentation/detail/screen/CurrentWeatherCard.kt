@@ -159,16 +159,35 @@ private fun HeroWeatherCard(
         TemperatureFormatter.formatWithUnit(current.temperature, temperatureUnit)
     else
         "${TemperatureFormatter.format(selectedForecast?.temperatureMax ?: 0.0, temperatureUnit)}°"
-    val feelsLike = if (selectedDayIndex == 0)
-        "Feels ${TemperatureFormatter.formatWithUnit(current.feelsLikeTemperature, temperatureUnit)}"
-    else
-        "Feels ${TemperatureFormatter.format(selectedForecast?.feelsLikeMax ?: 0.0, temperatureUnit)}°/${TemperatureFormatter.format(selectedForecast?.feelsLikeMin ?: 0.0, temperatureUnit)}°"
-    val highLow = if (selectedDayIndex == 0)
-        "H:${TemperatureFormatter.format(selectedForecast?.temperatureMax ?: 0.0, temperatureUnit)}°  L:${TemperatureFormatter.format(selectedForecast?.temperatureMin ?: 0.0, temperatureUnit)}°"
-    else
+
+    val feelsLike = if (selectedDayIndex == 0) {
+        stringResource(
+            R.string.label_feels_like_format,
+            TemperatureFormatter.formatWithUnit(current.feelsLikeTemperature, temperatureUnit)
+        )
+    } else {
+        stringResource(
+            R.string.label_feels_like_range_format,
+            "${TemperatureFormatter.format(selectedForecast?.feelsLikeMax ?: 0.0, temperatureUnit)}°",
+            "${TemperatureFormatter.format(selectedForecast?.feelsLikeMin ?: 0.0, temperatureUnit)}°"
+        )
+    }
+
+    val highLow = if (selectedDayIndex == 0) {
+        stringResource(
+            R.string.label_high_low_format,
+            "${TemperatureFormatter.format(selectedForecast?.temperatureMax ?: 0.0, temperatureUnit)}°",
+            "${TemperatureFormatter.format(selectedForecast?.temperatureMin ?: 0.0, temperatureUnit)}°"
+        )
+    } else {
         selectedForecast?.let {
-            "H:${TemperatureFormatter.format(it.temperatureMax, temperatureUnit)}°  L:${TemperatureFormatter.format(it.temperatureMin, temperatureUnit)}°"
+            stringResource(
+                R.string.label_high_low_format,
+                "${TemperatureFormatter.format(it.temperatureMax, temperatureUnit)}°",
+                "${TemperatureFormatter.format(it.temperatureMin, temperatureUnit)}°"
+            )
         } ?: ""
+    }
 
     val humidity = if (selectedDayIndex == 0) current.humidity else selectedForecast?.averageHumidity ?: 0
     val windSpeed = if (selectedDayIndex == 0) current.windSpeed.toInt() else selectedForecast?.windSpeedMax?.toInt() ?: 0

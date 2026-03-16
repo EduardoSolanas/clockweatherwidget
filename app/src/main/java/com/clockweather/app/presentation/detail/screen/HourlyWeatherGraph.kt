@@ -10,14 +10,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clockweather.app.R
@@ -196,13 +194,19 @@ private fun HourlyGraphCanvas(
                 // Top Temps
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 4.dp)) {
                     Text(
-                        text = "${TemperatureFormatter.format(forecast.temperature, temperatureUnit)}°",
+                        text = stringResource(
+                            R.string.unit_celsius,
+                            TemperatureFormatter.convert(forecast.temperature, temperatureUnit)
+                        ),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = primaryColor
                     )
                     Text(
-                        text = "${TemperatureFormatter.format(forecast.feelsLike, temperatureUnit)}°",
+                        text = stringResource(
+                            R.string.unit_celsius,
+                            TemperatureFormatter.convert(forecast.feelsLike, temperatureUnit)
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = secondaryColor
                     )
@@ -214,7 +218,7 @@ private fun HourlyGraphCanvas(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     if (forecast.precipitationProbability > 0) {
                         Text(
-                            text = "${forecast.precipitationProbability}%",
+                            text = stringResource(R.string.unit_percent, forecast.precipitationProbability),
                             style = MaterialTheme.typography.labelSmall,
                             color = rainColor,
                             fontSize = 10.sp

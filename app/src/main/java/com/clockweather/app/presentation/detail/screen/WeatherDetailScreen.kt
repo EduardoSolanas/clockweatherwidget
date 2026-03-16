@@ -19,13 +19,33 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
 @Composable
 fun WeatherDetailScreen(
     viewModel: WeatherDetailViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToSettings: () -> Unit = {}
 ) {
+    val locationPermissionState = com.google.accompanist.permissions.rememberMultiplePermissionsState(
+        listOf(
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        )
+    )
+
+    LaunchedEffect(locationPermissionState.allPermissionsGranted) {
+        if (locationPermissionState.allPermissionsGranted) {
+            viewModel.refresh()
+        }
+    }
+
+    // Auto-request if not granted and haven't shown yet
+    SideEffect {
+        if (!locationPermissionState.allPermissionsGranted && !locationPermissionState.shouldShowRationale) {
+            locationPermissionState.launchMultiplePermissionRequest()
+        }
+    }
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val temperatureUnit by viewModel.temperatureUnit.collectAsStateWithLifecycle()
@@ -93,12 +113,24 @@ fun WeatherDetailScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        val isPermissionError = !locationPermissionState.allPermissionsGranted
                         Text(
-                            text = state.message,
+                            text = if (isPermissionError) 
+                                stringResource(R.string.error_location_permission_required)
+                                else state.message,
                             color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
-                        Button(onClick = { viewModel.refresh() }) { Text(stringResource(R.string.action_retry)) }
+                        if (isPermissionError) {
+                            Button(onClick = { locationPermissionState.launchMultiplePermissionRequest() }) {
+                                Text(stringResource(R.string.action_grant_permission))
+                            }
+                        } else {
+                            Button(onClick = { viewModel.refresh() }) {
+                                Text(stringResource(R.string.action_retry))
+                            }
+                        }
                     }
                 }
                 is UiState.Success -> {

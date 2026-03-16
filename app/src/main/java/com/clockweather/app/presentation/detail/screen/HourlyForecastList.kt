@@ -82,12 +82,12 @@ fun HourlyForecastItem(forecast: HourlyForecast, temperatureUnit: TemperatureUni
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "💧 ${forecast.precipitationProbability}%",
+                    text = stringResource(R.string.label_precip_percent, forecast.precipitationProbability),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "💨 ${forecast.windSpeed.toInt()} km/h ${forecast.windDirection.label}",
+                    text = stringResource(R.string.label_wind_speed_kmh, forecast.windSpeed.toInt(), forecast.windDirection.label),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -49,18 +49,28 @@ class LocationRepositoryImpl @Inject constructor(
         return try {
             // 1. Try last known location first (Zero battery cost)
             val lastKnown = fusedLocationClient.lastLocation.await()
-            if (lastKnown != null && (System.currentTimeMillis() - lastKnown.time) < 10 * 60 * 1000) {
-                // If last location is less than 10 mins old, reuse it
+            if (lastKnown != null && (System.currentTimeMillis() - lastKnown.time) < 15 * 60 * 1000) {
+                // If last location is less than 15 mins old, reuse it
                 return mapToLocation(lastKnown)
             }
 
-            // 2. Request fresh location with "Balanced Power" (prefers WiFi/Cell towers)
+            // 2. Request fresh location - Try balanced power first
             val cancellationToken = CancellationTokenSource()
-            val androidLocation = withTimeoutOrNull(5_000L) {
+            var androidLocation = withTimeoutOrNull(10_000L) {
                 fusedLocationClient.getCurrentLocation(
                     Priority.PRIORITY_BALANCED_POWER_ACCURACY,
                     cancellationToken.token
                 ).await()
+            }
+
+            // 3. If balanced power fails, try high accuracy (e.g. if indoors)
+            if (androidLocation == null) {
+                androidLocation = withTimeoutOrNull(5_000L) {
+                    fusedLocationClient.getCurrentLocation(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        CancellationTokenSource().token
+                    ).await()
+                }
             }
 
             if (androidLocation != null) {
@@ -104,7 +114,7 @@ class LocationRepositoryImpl @Inject constructor(
         /** Default location used when GPS is unavailable (e.g. emulator with no signal) */
         val FALLBACK_LOCATION = Location(
             id = 0,
-            name = "London",
+            name = "London (Default)",
             country = "GB",
             latitude = 51.5074,
             longitude = -0.1278,
