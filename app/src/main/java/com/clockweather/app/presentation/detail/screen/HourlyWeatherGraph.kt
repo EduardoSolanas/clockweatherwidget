@@ -73,13 +73,13 @@ private fun HourlyGraphCanvas(
     modifier: Modifier = Modifier
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val secondaryColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f)
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
     val rainColor = Color(0xFF64B5F6)
+    val snowColor = Color(0xFFBBDEFB)
 
-    val maxTemp = forecasts.maxOf { maxOf(it.temperature, it.feelsLike) }
-    val minTemp = forecasts.minOf { minOf(it.temperature, it.feelsLike) }
+    val maxTemp = forecasts.maxOf { it.temperature }
+    val minTemp = forecasts.minOf { it.temperature }
     val tempRange = (maxTemp - minTemp).coerceAtLeast(1.0)
 
     Canvas(modifier = modifier) {
@@ -92,63 +92,35 @@ private fun HourlyGraphCanvas(
         val bottomPadding = 40.dp.toPx()
         val graphHeight = height - topPadding - bottomPadding
         
-        val actualPoints = forecasts.mapIndexed { index, forecast ->
+        val points = forecasts.mapIndexed { index, forecast ->
             val x = index * pointSpacing + pointSpacing / 2
             val tempFactor = (forecast.temperature - minTemp) / tempRange
             val y = height - bottomPadding - (tempFactor * graphHeight).toFloat()
             Offset(x, y)
         }
 
-        val feelsLikePoints = forecasts.mapIndexed { index, forecast ->
-            val x = index * pointSpacing + pointSpacing / 2
-            val tempFactor = (forecast.feelsLike - minTemp) / tempRange
-            val y = height - bottomPadding - (tempFactor * graphHeight).toFloat()
-            Offset(x, y)
-        }
-
-        // Draw Actual Temperature Path
-        val actualPath = Path().apply {
-            if (actualPoints.isNotEmpty()) {
-                moveTo(actualPoints[0].x, actualPoints[0].y)
-                for (i in 1 until actualPoints.size) {
-                    val prev = actualPoints[i - 1]
-                    val curr = actualPoints[i]
+        // Draw Temperature Path
+        val path = Path().apply {
+            if (points.isNotEmpty()) {
+                moveTo(points[0].x, points[0].y)
+                for (i in 1 until points.size) {
+                    val prev = points[i - 1]
+                    val curr = points[i]
                     val cp1X = prev.x + (curr.x - prev.x) / 2
                     cubicTo(cp1X, prev.y, cp1X, curr.y, curr.x, curr.y)
                 }
             }
         }
 
-        // Draw Feels Like Temperature Path
-        val feelsLikePath = Path().apply {
-            if (feelsLikePoints.isNotEmpty()) {
-                moveTo(feelsLikePoints[0].x, feelsLikePoints[0].y)
-                for (i in 1 until feelsLikePoints.size) {
-                    val prev = feelsLikePoints[i - 1]
-                    val curr = feelsLikePoints[i]
-                    val cp1X = prev.x + (curr.x - prev.x) / 2
-                    cubicTo(cp1X, prev.y, cp1X, curr.y, curr.x, curr.y)
-                }
-            }
-        }
-
-        // Draw Feels Like Line First (Lower/Secondary)
         drawPath(
-            path = feelsLikePath,
-            color = secondaryColor,
-            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
-        )
-
-        // Draw Actual Line (Top/Primary)
-        drawPath(
-            path = actualPath,
+            path = path,
             color = primaryColor,
             style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
 
-        // Draw points for actual temperature
+        // Draw points for temperature
         forecasts.forEachIndexed { index, _ ->
-            val center = actualPoints[index]
+            val center = points[index]
             drawCircle(
                 color = primaryColor,
                 radius = 3.5.dp.toPx(),
@@ -166,11 +138,14 @@ private fun HourlyGraphCanvas(
             val x = index * pointSpacing + pointSpacing / 2
             val barWidth = pointSpacing * 0.4f
             val probFactor = forecast.precipitationProbability / 100f
-            val barHeight = 30.dp.toPx() * probFactor
+            val barHeight = 40.dp.toPx() * probFactor
             
+            val isSnow = forecast.weatherCondition.name.contains("SNOW", ignoreCase = true)
+            val barColor = if (isSnow) snowColor else rainColor
+
             if (probFactor > 0) {
                 drawRect(
-                    color = rainColor.copy(alpha = 0.6f),
+                    color = barColor.copy(alpha = 0.6f),
                     topLeft = Offset(x - barWidth / 2, height - bottomPadding - barHeight),
                     size = Size(barWidth, barHeight.coerceAtLeast(2.dp.toPx()))
                 )
@@ -191,38 +166,37 @@ private fun HourlyGraphCanvas(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Top Temps
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 4.dp)) {
-                    Text(
-                        text = stringResource(
-                            R.string.unit_celsius,
-                            TemperatureFormatter.convert(forecast.temperature, temperatureUnit)
-                        ),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = primaryColor
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.unit_celsius,
-                            TemperatureFormatter.convert(forecast.feelsLike, temperatureUnit)
-                        ),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = secondaryColor
-                    )
-                }
+                // Top Temp
+                Text(
+                    text = stringResource(
+                        R.string.unit_celsius,
+                        TemperatureFormatter.convert(forecast.temperature, temperatureUnit)
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = primaryColor,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
                 
                 Spacer(modifier = Modifier.weight(1f))
                 
                 // Bottom Time and Rain
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     if (forecast.precipitationProbability > 0) {
-                        Text(
-                            text = stringResource(R.string.unit_percent, forecast.precipitationProbability),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = rainColor,
-                            fontSize = 10.sp
-                        )
+                        val isSnow = forecast.weatherCondition.name.contains("SNOW", ignoreCase = true)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (isSnow) "❄️" else "💧",
+                                fontSize = 10.sp,
+                                modifier = Modifier.padding(end = 2.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.unit_percent, forecast.precipitationProbability),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isSnow) snowColor else rainColor,
+                                fontSize = 10.sp
+                            )
+                        }
                     }
                     Text(
                         text = DateFormatter.formatTime(forecast.dateTime.toLocalTime(), is24Hour = true),
