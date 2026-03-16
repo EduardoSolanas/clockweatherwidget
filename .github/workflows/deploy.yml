@@ -26,7 +26,7 @@ jobs:
       - run: chmod +x gradlew
 
       - name: Run Lint
-        run: ./gradlew lintDebug
+        run: ./gradlew lintRelease
         env:
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
 
@@ -55,7 +55,7 @@ jobs:
       - run: chmod +x gradlew
 
       - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew testReleaseUnitTest
         env:
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
 
