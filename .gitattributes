@@ -1,0 +1,13 @@
+# Handle line endings automatically for files detected as text
+# and perform LF normalization (convert CRLF to LF on checkout)
+* text=auto eol=lf
+
+# Force bash scripts to always use LF, even on Windows checkouts
+gradlew text eol=lf
+*.sh text eol=lf
+
+# Keep binary files as-is
+*.png binary
+*.jpg binary
+*.keystore binary
+*.jks binary
