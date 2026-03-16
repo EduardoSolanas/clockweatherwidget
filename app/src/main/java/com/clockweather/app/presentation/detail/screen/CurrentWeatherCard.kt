@@ -56,8 +56,14 @@ fun WeatherDetailContent(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
             .padding(top = 16.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // ── Hourly Forecast Graph ──────────────────────────────────────────
+        HourlyWeatherGraph(
+            hourlyForecasts = weatherData.hourlyForecasts,
+            temperatureUnit = temperatureUnit
+        )
+
         // ── Hero card ──────────────────────────────────────────────────────
         HeroWeatherCard(
             weatherData = weatherData,
