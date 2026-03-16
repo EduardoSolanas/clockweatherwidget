@@ -23,8 +23,14 @@ android {
         applicationId = "com.clockweather.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = (System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1)
-        versionName = "1.0.0"
+        
+        val vMajor = project.property("VERSION_MAJOR").toString()
+        val vMinor = project.property("VERSION_MINOR").toString()
+        val vPatch = project.property("VERSION_PATCH").toString()
+        val buildNumber = System.getenv("GITHUB_RUN_NUMBER") ?: "0"
+
+        versionCode = buildNumber.toInt().coerceAtLeast(1)
+        versionName = "$vMajor.$vMinor.$vPatch.$buildNumber"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "WEATHER_API_KEY", "\"$weatherApiKey\"")

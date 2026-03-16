@@ -110,3 +110,15 @@ jobs:
           mappingFile: app/build/outputs/mapping/release/mapping.txt
           track: internal
           status: draft
+
+      - name: Create Git Tag on Success
+        if: success()
+        run: |
+          VERSION_MAJOR=$(grep 'VERSION_MAJOR' gradle.properties | cut -d'=' -f2)
+          VERSION_MINOR=$(grep 'VERSION_MINOR' gradle.properties | cut -d'=' -f2)
+          VERSION_PATCH=$(grep 'VERSION_PATCH' gradle.properties | cut -d'=' -f2)
+          TAG_NAME="v$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH.${{ github.run_number }}"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
