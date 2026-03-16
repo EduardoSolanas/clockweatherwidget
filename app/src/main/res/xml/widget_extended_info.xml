@@ -9,7 +9,8 @@
     android:maxResizeWidth="530dp"
     android:maxResizeHeight="300dp"
     android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="1800000"
+    android:updatePeriodMillis="0"
     android:initialLayout="@layout/widget_extended"
+    android:previewLayout="@layout/widget_extended"
     android:description="@string/widget_extended_description"
     android:widgetCategory="home_screen" />

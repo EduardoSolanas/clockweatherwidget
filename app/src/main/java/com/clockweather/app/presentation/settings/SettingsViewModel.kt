@@ -1,9 +1,13 @@
 package com.clockweather.app.presentation.settings
 
+import android.appwidget.AppWidgetManager
+import android.content.Context
+import android.content.Intent
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
@@ -11,8 +15,10 @@ import androidx.lifecycle.viewModelScope
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
+import com.clockweather.app.domain.model.ClockTileSize
 import com.clockweather.app.domain.repository.LocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +31,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val locationRepository: LocationRepository,
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     companion object {
@@ -36,6 +43,12 @@ class SettingsViewModel @Inject constructor(
         val KEY_SHOW_DATE = booleanPreferencesKey("show_date_in_widget")
         val KEY_SHOW_TODAY_COMPACT = booleanPreferencesKey("show_today_compact")
         val KEY_SHOW_TODAY_EXTENDED = booleanPreferencesKey("show_today_extended")
+        val KEY_DATE_FONT_SIZE = floatPreferencesKey("date_font_size_sp")
+        val KEY_CLOCK_THEME = stringPreferencesKey("clock_theme")
+        val KEY_CLOCK_TILE_SIZE = stringPreferencesKey("clock_tile_size")
+        const val DEFAULT_DATE_FONT_SP = 15f
+        const val CLOCK_THEME_DARK = "dark"
+        const val CLOCK_THEME_LIGHT = "light"
     }
 
     val savedLocations: StateFlow<List<Location>> = locationRepository.getSavedLocations()
@@ -75,15 +88,35 @@ class SettingsViewModel @Inject constructor(
         .map { prefs -> prefs[KEY_SHOW_TODAY_EXTENDED] ?: false }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val dateFontSizeSp: StateFlow<Float> = dataStore.data
+        .map { prefs -> prefs[KEY_DATE_FONT_SIZE] ?: DEFAULT_DATE_FONT_SP }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_DATE_FONT_SP)
+
+    val clockTheme: StateFlow<String> = dataStore.data
+        .map { prefs -> prefs[KEY_CLOCK_THEME] ?: CLOCK_THEME_DARK }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CLOCK_THEME_DARK)
+
+    val clockTileSize: StateFlow<ClockTileSize> = dataStore.data
+        .map { prefs ->
+            val name = prefs[KEY_CLOCK_TILE_SIZE] ?: ClockTileSize.MEDIUM.name
+            runCatching { ClockTileSize.valueOf(name) }
+                .getOrDefault(ClockTileSize.MEDIUM)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ClockTileSize.MEDIUM)
+
+    // ── Setters (all trigger a widget redraw) ──────────────────────────────────
+
     fun setTemperatureUnit(unit: TemperatureUnit) {
         viewModelScope.launch {
             dataStore.edit { it[KEY_TEMP_UNIT] = unit.name }
+            triggerWidgetUpdate()
         }
     }
 
     fun setSpeedUnit(unit: SpeedUnit) {
         viewModelScope.launch {
             dataStore.edit { it[KEY_SPEED_UNIT] = unit.name }
+            triggerWidgetUpdate()
         }
     }
 
@@ -96,19 +129,50 @@ class SettingsViewModel @Inject constructor(
     fun set24hClock(use24h: Boolean) {
         viewModelScope.launch {
             dataStore.edit { it[KEY_USE_24H] = use24h }
+            triggerWidgetUpdate()
         }
     }
 
     fun setShowDateInWidget(show: Boolean) {
-        viewModelScope.launch { dataStore.edit { it[KEY_SHOW_DATE] = show } }
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_SHOW_DATE] = show }
+            triggerWidgetUpdate()
+        }
     }
 
     fun setShowTodayCompact(show: Boolean) {
-        viewModelScope.launch { dataStore.edit { it[KEY_SHOW_TODAY_COMPACT] = show } }
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_SHOW_TODAY_COMPACT] = show }
+            triggerWidgetUpdate()
+        }
     }
 
     fun setShowTodayExtended(show: Boolean) {
-        viewModelScope.launch { dataStore.edit { it[KEY_SHOW_TODAY_EXTENDED] = show } }
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_SHOW_TODAY_EXTENDED] = show }
+            triggerWidgetUpdate()
+        }
+    }
+
+    fun setDateFontSize(sp: Float) {
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_DATE_FONT_SIZE] = sp }
+            triggerWidgetUpdate()
+        }
+    }
+
+    fun setClockTheme(theme: String) {
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_CLOCK_THEME] = theme }
+            triggerWidgetUpdate()
+        }
+    }
+
+    fun setClockTileSize(size: ClockTileSize) {
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_CLOCK_TILE_SIZE] = size.name }
+            triggerWidgetUpdate()
+        }
     }
 
     fun deleteLocation(locationId: Long) {
@@ -116,5 +180,18 @@ class SettingsViewModel @Inject constructor(
             locationRepository.deleteLocation(locationId)
         }
     }
-}
 
+    // ── Private ────────────────────────────────────────────────────────────────
+
+    /**
+     * Kicks all active widgets to re-draw immediately after a pref change.
+     * Uses the same broadcast mechanism as the clock-tick alarm.
+     */
+    private fun triggerWidgetUpdate() {
+        val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
+            setPackage(context.packageName)
+        }
+        com.clockweather.app.presentation.widget.common.WidgetUpdateScheduler
+            .sendUpdateBroadcast(context)
+    }
+}

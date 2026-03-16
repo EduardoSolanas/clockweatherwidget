@@ -3,7 +3,21 @@
     "allow": [
       "WebFetch(domain:open-meteo.com)",
       "Bash(python3 -c \":*)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(JAVA_OPTS=\"\" ./gradlew assembleDebug)",
+      "Bash(echo \"JAVA_OPTS: $JAVA_OPTS\")",
+      "Bash(echo \"GRADLE_OPTS: $GRADLE_OPTS\")",
+      "Bash(java -version)",
+      "Bash(cmd.exe /c \"gradlew.bat assembleDebug 2>&1\")",
+      "Bash(cmd.exe /c \"gradlew.bat assembleDebug\")",
+      "Bash(cmd.exe /c \"gradlew.bat assembleDebug > build_output.txt 2>&1 & type build_output.txt\")",
+      "Bash(powershell.exe -Command \"& .\\\\gradlew.bat assembleDebug 2>&1 | Out-File -FilePath build_output.txt -Encoding utf8; Get-Content build_output.txt | Select-Object -Last 150\")",
+      "Bash(npx --yes puppeteer --version)",
+      "Bash(npm list:*)",
+      "Bash(node capture_mockup.mjs)",
+      "Bash(npm install:*)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

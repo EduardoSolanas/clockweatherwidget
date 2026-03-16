@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.clockweather.app.R
 import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.util.DateFormatter
@@ -21,7 +23,7 @@ fun HourlyForecastList(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "72-Hour Forecast",
+            text = stringResource(R.string.label_72_hour_forecast),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -100,10 +102,10 @@ fun HourlyForecastItem(forecast: HourlyForecast, temperatureUnit: TemperatureUni
                 .padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Humidity: ${forecast.humidity}%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Dew: ${TemperatureFormatter.format(forecast.dewPoint, temperatureUnit)}°", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("UV: ${forecast.uvIndex.toInt()}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("P: ${forecast.pressure.toInt()} hPa", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.label_metric_humidity_short, forecast.humidity), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.label_metric_dew_short, TemperatureFormatter.format(forecast.dewPoint, temperatureUnit)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.label_metric_uv_short, forecast.uvIndex.toInt()), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.label_metric_pressure_short, forecast.pressure.toInt()), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

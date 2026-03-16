@@ -1,6 +1,29 @@
 ﻿<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="48dp" android:height="48dp"
-    android:viewportWidth="48" android:viewportHeight="48">
-    <path android:fillColor="#546E7A" android:pathData="M36,22 C36,18.1 32.9,15 29,15 C28.3,15 27.6,15.1 27,15.3 C25.9,13.1 23.6,11.5 20.9,11.5 C17,11.5 13.9,14.6 13.9,18.5 C11.6,19.1 10,21.2 10,23.7 C10,26.6 12.4,29 15.3,29 L30.7,29 C33.6,29 36,26.6 36,23.7 C36,23.1 35.9,22.5 36,22 Z"/>
-    <path android:strokeColor="#1E88E5" android:strokeWidth="3" android:pathData="M13,30 L10,40 M19,30 L16,40 M25,30 L22,40 M31,30 L28,40"/>
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Cloud Drop Shadow -->
+    <path android:pathData="M17.5,19.5c1.93,0 3.5,-1.57 3.5,-3.5c0,-1.67 -1.18,-3.07 -2.76,-3.42C18.11,9.53 15.28,7.5 12,7.5c-3.15,0 -5.87,1.86 -7.02,4.61C4.41,12.33 4,12.89 4,13.56C2.3,13.93 1,15.43 1,17.25C1,19.32 2.68,21 4.75,21l12.75,0z"
+        android:fillColor="#33000000"/>    <!-- Dark Cloud Main Body (Glossy Storm) -->
+    <path android:pathData="M17.5,19c1.93,0 3.5,-1.57 3.5,-3.5c0,-1.67 -1.18,-3.07 -2.76,-3.42C18.11,9.03 15.28,7 12,7c-3.15,0 -5.87,1.86 -7.02,4.61C4.41,11.83 4,12.39 4,13.06C2.3,13.43 1,14.93 1,16.75C1,18.82 2.68,20.5 4.75,20.5l12.75,0z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="12" android:startY="5" android:endX="12" android:endY="20">
+                <item android:color="#FF78909C" android:offset="0.0"/>
+                <item android:color="#FF37474F" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Dark Cloud Highlight Rim -->
+    <path android:pathData="M17.5,19c1.93,0 3.5,-1.57 3.5,-3.5c0,-1.67 -1.18,-3.07 -2.76,-3.42C18.11,9.03 15.28,7 12,7c-3.15,0 -5.87,1.86 -7.02,4.61C4.41,11.83 4,12.39 4,13.06"
+        android:strokeWidth="0.6" android:strokeLineCap="round" android:strokeColor="#80FFFFFF"/>    <!-- 3D Rain Drops -->
+    <path android:pathData="M9,16 L8.5,18.5 A1,1 0,0 0,10 19 L11,16 Z M13,16 L12.5,18.5 A1,1 0,0 0,14 19 L15,16 Z M9,20 L8.5,22.5 A1,1 0,0 0,10 23 L11,20 Z M13,20 L12.5,22.5 A1,1 0,0 0,14 23 L15,20 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="12" android:startY="15" android:endX="12" android:endY="23">
+                <item android:color="#FF64B5F6" android:offset="0.0"/>
+                <item android:color="#FF1565C0" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>

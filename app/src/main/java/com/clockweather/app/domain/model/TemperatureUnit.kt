@@ -5,3 +5,4 @@ enum class TemperatureUnit(val symbol: String, val apiValue: String) {
     FAHRENHEIT("°F", "fahrenheit")
 }
 
+

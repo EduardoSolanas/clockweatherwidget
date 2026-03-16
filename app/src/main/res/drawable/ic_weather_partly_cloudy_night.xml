@@ -1,13 +1,37 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="48dp"
-    android:height="48dp"
-    android:viewportWidth="48"
-    android:viewportHeight="48">
-    <!-- Moon -->
-    <path android:fillColor="#B0C4DE"
-        android:pathData="M20,10 C13,10 8,16 8,23 C8,28 11,32 16,34 C12,30 12,24 16,20 C18,18 21,17 24,18 C21,14 20,10 20,10 Z"/>
-    <!-- Cloud -->
-    <path android:fillColor="#BDBDBD"
-        android:pathData="M38,28 C38,23.6 34.4,20 30,20 C29.2,20 28.4,20.1 27.7,20.4 C26.5,17.8 23.8,16 20.7,16 C16.3,16 12.7,19.6 12.7,24 L12.7,24.3 C10,25 8,27.5 8,30.5 C8,34.1 10.9,37 14.5,37 L33.5,37 C36.5,37 39,34.5 39,31.5 C39,30.3 38.6,29.1 38,28 Z"/>
+﻿<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+<group android:translateX="-3" android:translateY="-3">    <!-- Moon Body -->
+    <path android:pathData="M12,3 A9,9 0,1 0,21 12 A9,9 0,0 1,12 3 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="6" android:startY="4" android:endX="18" android:endY="20">
+                <item android:color="#FFFAFAFA" android:offset="0.0"/>
+                <item android:color="#FF9E9E9E" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Moon Top Specular -->
+    <path android:pathData="M6,6.5 A8,8 0,0 1,14 4.5"
+        android:strokeWidth="1.2" android:strokeLineCap="round" android:strokeColor="#FFFFFFFF"/></group>    <!-- Cloud Drop Shadow -->
+    <path android:pathData="M17.5,19.5c1.93,0 3.5,-1.57 3.5,-3.5c0,-1.67 -1.18,-3.07 -2.76,-3.42C18.11,9.53 15.28,7.5 12,7.5c-3.15,0 -5.87,1.86 -7.02,4.61C4.41,12.33 4,12.89 4,13.56C2.3,13.93 1,15.43 1,17.25C1,19.32 2.68,21 4.75,21l12.75,0z"
+        android:fillColor="#33000000"/>    <!-- Cloud Main Body (Glossy White/Blue) -->
+    <path android:pathData="M17.5,19c1.93,0 3.5,-1.57 3.5,-3.5c0,-1.67 -1.18,-3.07 -2.76,-3.42C18.11,9.03 15.28,7 12,7c-3.15,0 -5.87,1.86 -7.02,4.61C4.41,11.83 4,12.39 4,13.06C2.3,13.43 1,14.93 1,16.75C1,18.82 2.68,20.5 4.75,20.5l12.75,0z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="12" android:startY="5" android:endX="12" android:endY="20">
+                <item android:color="#FFFFFFFF" android:offset="0.0"/>
+                <item android:color="#FFB0BEC5" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Cloud Highlight Rim -->
+    <path android:pathData="M17.5,19c1.93,0 3.5,-1.57 3.5,-3.5c0,-1.67 -1.18,-3.07 -2.76,-3.42C18.11,9.03 15.28,7 12,7c-3.15,0 -5.87,1.86 -7.02,4.61C4.41,11.83 4,12.39 4,13.06"
+        android:strokeWidth="0.8" android:strokeLineCap="round" android:strokeColor="#FFFFFFFF"/>
+    <!-- Cloud Top Reflections -->
+    <path android:pathData="M9,9.5 A4,4 0,0 1,14 8"
+        android:strokeWidth="1.5" android:strokeLineCap="round" android:strokeColor="#FFFFFFFF"/>
+    <path android:pathData="M16.5,10.5 A2.5,2.5 0,0 1,19 12"
+        android:strokeWidth="1" android:strokeLineCap="round" android:strokeColor="#FFFFFFFF"/>
 </vector>
-

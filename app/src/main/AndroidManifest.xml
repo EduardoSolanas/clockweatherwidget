@@ -13,6 +13,7 @@
     <!-- Widget clock updates -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <!-- Background work -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -86,6 +87,19 @@
                 android:resource="@xml/widget_forecast_info" />
         </receiver>
 
+        <!-- Large Widget Provider (big clock + weather) -->
+        <receiver
+            android:name=".presentation.widget.large.LargeWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_large_info" />
+        </receiver>
+
+
         <!-- Boot Completed Receiver -->
         <receiver
             android:name=".receiver.BootCompletedReceiver"
@@ -103,6 +117,15 @@
             <intent-filter>
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
                 <action android:name="android.intent.action.TIME_SET" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Clock Tick Receiver (Minute Updates) -->
+        <receiver
+            android:name=".receiver.ClockTickReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.clockweather.app.ACTION_CLOCK_TICK" />
             </intent-filter>
         </receiver>
 

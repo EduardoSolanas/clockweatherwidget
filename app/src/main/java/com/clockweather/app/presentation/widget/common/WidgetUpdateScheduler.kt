@@ -9,6 +9,8 @@ import android.content.Intent
 import android.os.Build
 import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
 import com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider
+import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
+import com.clockweather.app.presentation.widget.large.LargeWidgetProvider
 import java.util.Calendar
 
 object WidgetUpdateScheduler {
@@ -68,6 +70,21 @@ object WidgetUpdateScheduler {
         pendingIntent?.let { alarmManager.cancel(it) }
     }
 
+    /**
+     * Cancels the clock alarm only if no widget instances remain across all widget types.
+     * Providers call this in onDisabled() instead of manually checking each other.
+     */
+    fun cancelClockAlarmIfNoWidgets(context: Context) {
+        val mgr = AppWidgetManager.getInstance(context)
+        val hasAny = listOf(
+            CompactWidgetProvider::class.java,
+            ExtendedWidgetProvider::class.java,
+            ForecastWidgetProvider::class.java,
+            LargeWidgetProvider::class.java
+        ).any { mgr.getAppWidgetIds(ComponentName(context, it)).isNotEmpty() }
+        if (!hasAny) cancelClockAlarm(context)
+    }
+
     fun sendUpdateBroadcast(context: Context) {
         val appWidgetManager = AppWidgetManager.getInstance(context)
 
@@ -103,6 +120,18 @@ object WidgetUpdateScheduler {
             val intent = Intent(context, com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider::class.java).apply {
                 action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, forecastIds)
+            }
+            context.sendBroadcast(intent)
+        }
+
+        // Update large widgets
+        val largeIds = appWidgetManager.getAppWidgetIds(
+            ComponentName(context, LargeWidgetProvider::class.java)
+        )
+        if (largeIds.isNotEmpty()) {
+            val intent = Intent(context, LargeWidgetProvider::class.java).apply {
+                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, largeIds)
             }
             context.sendBroadcast(intent)
         }

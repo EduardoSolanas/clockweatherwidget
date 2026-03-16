@@ -4,12 +4,14 @@ import com.clockweather.app.data.local.dao.CurrentWeatherDao
 import com.clockweather.app.data.local.dao.DailyForecastDao
 import com.clockweather.app.data.local.dao.HourlyForecastDao
 import com.clockweather.app.data.local.dao.LocationDao
+import com.clockweather.app.data.local.db.WeatherDatabase
 import com.clockweather.app.data.mapper.WeatherApiMapper
 import com.clockweather.app.data.mapper.WeatherEntityMapper
 import com.clockweather.app.data.remote.api.WeatherApi
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.repository.WeatherRepository
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
@@ -21,6 +23,7 @@ import javax.inject.Singleton
 class WeatherRepositoryImpl @Inject constructor(
     private val weatherApi: WeatherApi,
     @Named("weatherApiKey") private val apiKey: String,
+    private val database: WeatherDatabase,
     private val currentWeatherDao: CurrentWeatherDao,
     private val hourlyForecastDao: HourlyForecastDao,
     private val dailyForecastDao: DailyForecastDao,
@@ -77,16 +80,18 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     private suspend fun persistWeatherData(data: WeatherData, locationId: Long) {
-        currentWeatherDao.insertCurrentWeather(
-            entityMapper.mapCurrentWeatherToEntity(data.currentWeather, locationId, data.airQuality)
-        )
-        hourlyForecastDao.deleteHourlyForecasts(locationId)
-        hourlyForecastDao.insertHourlyForecasts(
-            data.hourlyForecasts.map { entityMapper.mapHourlyToEntity(it, locationId) }
-        )
-        dailyForecastDao.deleteDailyForecasts(locationId)
-        dailyForecastDao.insertDailyForecasts(
-            data.dailyForecasts.map { entityMapper.mapDailyToEntity(it, locationId) }
-        )
+        database.withTransaction {
+            currentWeatherDao.insertCurrentWeather(
+                entityMapper.mapCurrentWeatherToEntity(data.currentWeather, locationId, data.airQuality)
+            )
+            hourlyForecastDao.deleteHourlyForecasts(locationId)
+            hourlyForecastDao.insertHourlyForecasts(
+                data.hourlyForecasts.map { entityMapper.mapHourlyToEntity(it, locationId) }
+            )
+            dailyForecastDao.deleteDailyForecasts(locationId)
+            dailyForecastDao.insertDailyForecasts(
+                data.dailyForecasts.map { entityMapper.mapDailyToEntity(it, locationId) }
+            )
+        }
     }
 }

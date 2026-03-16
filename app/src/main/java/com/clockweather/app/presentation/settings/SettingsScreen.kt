@@ -1,15 +1,21 @@
 package com.clockweather.app.presentation.settings
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.clockweather.app.R
 import com.clockweather.app.domain.model.TemperatureUnit
+import com.clockweather.app.domain.model.ClockTileSize
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -17,19 +23,22 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateBack: () -> Unit
 ) {
-    val temperatureUnit by viewModel.temperatureUnit.collectAsStateWithLifecycle()
-    val use24hClock by viewModel.use24hClock.collectAsStateWithLifecycle()
+    val temperatureUnit  by viewModel.temperatureUnit.collectAsStateWithLifecycle()
+    val use24hClock      by viewModel.use24hClock.collectAsStateWithLifecycle()
     val showDateInWidget by viewModel.showDateInWidget.collectAsStateWithLifecycle()
     val showTodayCompact by viewModel.showTodayCompact.collectAsStateWithLifecycle()
     val showTodayExtended by viewModel.showTodayExtended.collectAsStateWithLifecycle()
+    val dateFontSizeSp   by viewModel.dateFontSizeSp.collectAsStateWithLifecycle()
+    val clockTheme       by viewModel.clockTheme.collectAsStateWithLifecycle()
+    val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_navigate_back))
                     }
                 }
             )
@@ -39,27 +48,136 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             Spacer(Modifier.height(8.dp))
 
-            // ── Temperature Unit ──────────────────────────────────────────────
-            SettingsSectionHeader("Temperature")
+            // ══════════════════════════════════════════════════════════
+            // 🕐  CLOCK
+            // ══════════════════════════════════════════════════════════
+            SettingsSectionHeader(stringResource(R.string.settings_section_clock))
 
+            // Tile style
+            SettingsLabel(
+                label = stringResource(R.string.settings_clock_tile_style_label),
+                description = stringResource(R.string.settings_clock_tile_style_desc)
+            )
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                FilterChip(
+                    selected = clockTheme == SettingsViewModel.CLOCK_THEME_DARK,
+                    onClick  = { viewModel.setClockTheme(SettingsViewModel.CLOCK_THEME_DARK) },
+                    label    = { Text(stringResource(R.string.settings_clock_tile_style_dark)) }
+                )
+                FilterChip(
+                    selected = clockTheme == SettingsViewModel.CLOCK_THEME_LIGHT,
+                    onClick  = { viewModel.setClockTheme(SettingsViewModel.CLOCK_THEME_LIGHT) },
+                    label    = { Text(stringResource(R.string.settings_clock_tile_style_light)) }
+                )
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            // Tile size
+            SettingsLabel(
+                label = stringResource(R.string.settings_clock_tile_size_label),
+                description = stringResource(R.string.settings_clock_tile_size_desc)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ClockTileSize.entries.forEach { size ->
+                    FilterChip(
+                        selected = size == clockTileSize,
+                        onClick  = { viewModel.setClockTileSize(size) },
+                        label    = { Text(size.label) }
+                    )
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            SettingsToggleRow(
+                label       = stringResource(R.string.settings_24h_clock_label),
+                description = stringResource(R.string.settings_24h_clock_desc),
+                checked     = use24hClock,
+                onCheckedChange = { viewModel.set24hClock(it) }
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // ══════════════════════════════════════════════════════════
+            // 📅  DATE
+            // ══════════════════════════════════════════════════════════
+            SettingsSectionHeader(stringResource(R.string.settings_section_date))
+
+            SettingsToggleRow(
+                label       = stringResource(R.string.settings_show_date_label),
+                description = stringResource(R.string.settings_show_date_desc),
+                checked     = showDateInWidget,
+                onCheckedChange = { viewModel.setShowDateInWidget(it) }
+            )
+
+            if (showDateInWidget) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.settings_date_font_size_label), style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "${dateFontSizeSp.roundToInt()} sp",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Slider(
+                        value         = dateFontSizeSp,
+                        onValueChange = { viewModel.setDateFontSize(it) },
+                        valueRange    = 10f..22f,
+                        steps         = 11,
+                        modifier      = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ══════════════════════════════════════════════════════════
+            // 🌤  WEATHER
+            // ══════════════════════════════════════════════════════════
+            SettingsSectionHeader(stringResource(R.string.settings_section_weather))
+
+            SettingsLabel(
+                label       = stringResource(R.string.settings_temperature_unit),
+                description = stringResource(R.string.settings_temperature_unit)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 TemperatureUnit.entries.forEach { unit ->
                     FilterChip(
                         selected = unit == temperatureUnit,
-                        onClick = { viewModel.setTemperatureUnit(unit) },
+                        onClick  = { viewModel.setTemperatureUnit(unit) },
                         label = {
                             Text(
-                                text = when (unit) {
-                                    TemperatureUnit.CELSIUS -> "°C — Celsius"
-                                    TemperatureUnit.FAHRENHEIT -> "°F — Fahrenheit"
+                                when (unit) {
+                                    TemperatureUnit.CELSIUS    -> stringResource(R.string.settings_temp_celsius)
+                                    TemperatureUnit.FAHRENHEIT -> stringResource(R.string.settings_temp_fahrenheit)
                                 }
                             )
                         }
@@ -69,54 +187,54 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // ── Widget Display ────────────────────────────────────────────────
-            SettingsSectionHeader("Widget")
+            // ══════════════════════════════════════════════════════════
+            // 📱  WIDGET
+            // ══════════════════════════════════════════════════════════
+            SettingsSectionHeader(stringResource(R.string.settings_section_widget))
 
             SettingsToggleRow(
-                label = "Show date",
-                description = "Display the current date below the clock",
-                checked = showDateInWidget,
-                onCheckedChange = { viewModel.setShowDateInWidget(it) }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-            SettingsToggleRow(
-                label = "24-hour clock",
-                description = "Use 24h format instead of AM/PM",
-                checked = use24hClock,
-                onCheckedChange = { viewModel.set24hClock(it) }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-            SettingsToggleRow(
-                label = "Show today — compact widget",
-                description = "Display current weather below the clock (on by default)",
-                checked = showTodayCompact,
+                label       = stringResource(R.string.settings_show_weather_compact_label),
+                description = stringResource(R.string.settings_show_weather_compact_desc),
+                checked     = showTodayCompact,
                 onCheckedChange = { viewModel.setShowTodayCompact(it) }
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
             SettingsToggleRow(
-                label = "Show today — forecast widget",
-                description = "Display today's weather above the 7-day rows (off by default)",
-                checked = showTodayExtended,
+                label       = stringResource(R.string.settings_show_today_forecast_label),
+                description = stringResource(R.string.settings_show_today_forecast_desc),
+                checked     = showTodayExtended,
                 onCheckedChange = { viewModel.setShowTodayExtended(it) }
             )
+
+            Spacer(Modifier.height(24.dp))
         }
     }
 }
 
+// ── Shared composables ────────────────────────────────────────────────────────
+
 @Composable
 private fun SettingsSectionHeader(title: String) {
     Text(
-        text = title.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.primary,
+        text     = title.uppercase(),
+        style    = MaterialTheme.typography.labelSmall,
+        color    = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
     )
+}
+
+@Composable
+private fun SettingsLabel(label: String, description: String) {
+    Column(modifier = Modifier.padding(vertical = 6.dp)) {
+        Text(label, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 @Composable
@@ -131,20 +249,17 @@ private fun SettingsToggleRow(
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment     = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(label,       style = MaterialTheme.typography.bodyLarge)
+            Text(description, style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(
-            checked = checked,
+            checked         = checked,
             onCheckedChange = onCheckedChange,
-            modifier = Modifier.padding(start = 16.dp)
+            modifier        = Modifier.padding(start = 16.dp)
         )
     }
 }

@@ -43,19 +43,19 @@ fun WeatherAnimatedIcon(condition: WeatherCondition, modifier: Modifier = Modifi
 
 // ─── Colours ──────────────────────────────────────────────────────────────────
 private val SunYellow       = Color(0xFFFFD600)
-private val SunOrange       = Color(0xFFFF6D00)
-private val SunCore         = Color(0xFFFFFFE0)
-private val SunGlow         = Color(0x66FFD600)
+private val SunOrange       = Color(0xFFFF5722)
+private val SunCore         = Color(0xFFFFFFF0)
+private val SunGlow         = Color(0x99FFD600)
 private val CloudWhite      = Color(0xFFFFFFFF)
-private val CloudShadow     = Color(0xFFCFD8DC)
-private val CloudStorm      = Color(0xFF546E7A)
-private val RainBlue        = Color(0xFF2196F3)
-private val SnowWhite       = Color(0xFFE3F2FD)
-private val LightningYellow = Color(0xFFFFEB3B)
-private val MoonCream       = Color(0xFFFFFDE7)
-private val MoonShadow      = Color(0xFFD1C4E9)
+private val CloudShadow     = Color(0xFF90A4AE)
+private val CloudStorm      = Color(0xFF37474F)
+private val RainBlue        = Color(0xFF42A5F5)
+private val SnowWhite       = Color(0xFFFAFAFA)
+private val LightningYellow = Color(0xFFFFF59D)
+private val MoonCream       = Color(0xFFFFF9C4)
+private val MoonShadow      = Color(0xFF9575CD)
 private val StarWhite       = Color(0xFFFFFFFF)
-private val FogGray         = Color(0xFFB0BEC5)
+private val FogGray         = Color(0xFF78909C)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -133,11 +133,11 @@ private fun DrawScope.drawCloud(center: Offset, size: Float, color: Color, alpha
 
 @Composable
 private fun rememberTime(): State<Long> {
-    val time = remember { mutableStateOf(0L) }
+    val time = remember { mutableLongStateOf(0L) }
     LaunchedEffect(Unit) {
         val startTime = System.currentTimeMillis()
         while (isActive) {
-            time.value = System.currentTimeMillis() - startTime
+            time.longValue = System.currentTimeMillis() - startTime
             withFrameMillis { }
         }
     }
@@ -289,15 +289,27 @@ fun MoonBackground(modifier: Modifier = Modifier) {
         val w = size.width
         val h = size.height
 
-        // Subtle Aurora Effect
-        val auroraShift = sin(time / 2000f) * 50f
+        // AAA Ultra HD Aurora Borealis Effect
+        val auroraShift = sin(time / 2500f) * 60f
+        val auroraShift2 = cos(time / 1800f) * 40f
+        
         drawRect(
             brush = Brush.verticalGradient(
-                colors = listOf(Color(0xFF00FFCC).copy(alpha = 0.1f), Color.Transparent),
+                colors = listOf(Color(0xFF00E676).copy(alpha = 0.15f), Color.Transparent),
                 startY = 0f,
-                endY = h * 0.6f + auroraShift
+                endY = h * 0.65f + auroraShift
             ),
-            size = size
+            size = size,
+            blendMode = BlendMode.Screen
+        )
+        drawRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(Color(0xFFD500F9).copy(alpha = 0.1f), Color.Transparent),
+                startY = h * 0.1f,
+                endY = h * 0.8f + auroraShift2
+            ),
+            size = size,
+            blendMode = BlendMode.Screen
         )
 
         // AAA Depth Stars
@@ -602,16 +614,27 @@ fun SnowBackground(modifier: Modifier = Modifier) {
             val x = (p.x + baseDrift + gust) % spawnWidth + (cloudCenter.x - spawnWidth / 2)
             val y = (p.y + fallSpeed) % spawnHeight + spawnStartY
             
-            // Bokeh blur for foreground flakes (z > 1.2)
+            // Ultra AAA Depth Bokeh for Snowflakes
             val isForeground = p.z > 1.2f
-            val flakeAlpha = if (isForeground) p.alpha * 0.4f else p.alpha
-            val flakeRadius = if (isForeground) p.size * 2.5f * p.z else p.size * 1.5f * p.z
+            val isBackground = p.z < 0.6f
+            val flakeAlpha = if (isForeground) p.alpha * 0.8f else if (isBackground) p.alpha * 0.3f else p.alpha
+            val flakeRadius = if (isForeground) p.size * 3.5f * p.z else p.size * 1.5f * p.z
             
+            val pulse = (sin((time + p.x) / 300f) + 1f) / 2f
             drawCircle(
-                color = SnowWhite.copy(alpha = flakeAlpha),
+                color = SnowWhite.copy(alpha = flakeAlpha * (0.6f + 0.4f * pulse)),
                 radius = flakeRadius,
                 center = Offset(x, y)
             )
+            if (isForeground) {
+                // Bloom for foreground flakes
+                drawCircle(
+                    color = SnowWhite.copy(alpha = flakeAlpha * 0.2f),
+                    radius = flakeRadius * 2f,
+                    center = Offset(x, y),
+                    blendMode = BlendMode.Screen
+                )
+            }
         }
     }
 }
@@ -713,12 +736,12 @@ fun ThunderstormBackground(modifier: Modifier = Modifier) {
         // AAA High-contrast Screen Flash Blending
         if (boltAlpha > 0f) {
             drawRect(
-                color = Color.White.copy(alpha = boltAlpha * 0.25f),
+                color = Color.White.copy(alpha = boltAlpha * 0.4f),
                 size = size,
                 blendMode = BlendMode.Screen
             )
             drawRect(
-                color = LightningYellow.copy(alpha = boltAlpha * 0.1f),
+                color = LightningYellow.copy(alpha = boltAlpha * 0.25f),
                 size = size,
                 blendMode = BlendMode.Lighten
             )

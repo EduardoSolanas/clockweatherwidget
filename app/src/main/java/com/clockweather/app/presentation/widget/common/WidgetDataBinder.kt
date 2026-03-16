@@ -14,7 +14,7 @@ import java.time.LocalDate
 
 object WidgetDataBinder {
 
-    fun bindClockViews(views: RemoteViews, hour: Int, minute: Int, is24h: Boolean = true) {
+    fun bindClockViews(context: Context, views: RemoteViews, appWidgetId: Int, hour: Int, minute: Int, is24h: Boolean = true) {
         val displayHour = if (is24h) hour
             else if (hour == 0) 12
             else if (hour > 12) hour - 12
@@ -24,10 +24,12 @@ object WidgetDataBinder {
         val h2 = displayHour % 10
         val m1 = minute / 10
         val m2 = minute % 10
-        views.setTextViewText(R.id.digit_h1, h1.toString())
-        views.setTextViewText(R.id.digit_h2, h2.toString())
-        views.setTextViewText(R.id.digit_m1, m1.toString())
-        views.setTextViewText(R.id.digit_m2, m2.toString())
+
+        // Always set displayed child — RemoteViews is freshly created each update so defaults to 0
+        views.setDisplayedChild(R.id.digit_h1, h1)
+        views.setDisplayedChild(R.id.digit_h2, h2)
+        views.setDisplayedChild(R.id.digit_m1, m1)
+        views.setDisplayedChild(R.id.digit_m2, m2)
 
         if (is24h) {
             views.setTextViewText(R.id.ampm, "")
@@ -47,7 +49,7 @@ object WidgetDataBinder {
         val todayForecast = weatherData.dailyForecasts.firstOrNull()
 
         views.setTextViewText(R.id.city_name, location.name)
-        views.setTextViewText(R.id.date_text, DateFormatter.formatDate(LocalDate.now()))
+
         views.setTextViewText(R.id.condition_text, current.weatherCondition.description)
         views.setImageViewResource(
             R.id.weather_icon,
@@ -63,6 +65,9 @@ object WidgetDataBinder {
                 "${TemperatureFormatter.format(forecast.temperatureMax, temperatureUnit)}°/${TemperatureFormatter.format(forecast.temperatureMin, temperatureUnit)}°"
             )
         }
+        
+        // Ensure the card is visible once data is bound
+        views.setViewVisibility(R.id.weather_card, android.view.View.VISIBLE)
     }
 
 
@@ -72,15 +77,15 @@ object WidgetDataBinder {
         weatherData: WeatherData,
         temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS
     ) {
-        data class RowIds(val name: Int, val icon: Int, val cond: Int, val high: Int, val low: Int)
+        data class RowIds(val name: Int, val icon: Int, val high: Int)
         val rows = listOf(
-            RowIds(R.id.fday1_name, R.id.fday1_icon, R.id.fday1_cond, R.id.fday1_high, R.id.fday1_low),
-            RowIds(R.id.fday2_name, R.id.fday2_icon, R.id.fday2_cond, R.id.fday2_high, R.id.fday2_low),
-            RowIds(R.id.fday3_name, R.id.fday3_icon, R.id.fday3_cond, R.id.fday3_high, R.id.fday3_low),
-            RowIds(R.id.fday4_name, R.id.fday4_icon, R.id.fday4_cond, R.id.fday4_high, R.id.fday4_low),
-            RowIds(R.id.fday5_name, R.id.fday5_icon, R.id.fday5_cond, R.id.fday5_high, R.id.fday5_low),
-            RowIds(R.id.fday6_name, R.id.fday6_icon, R.id.fday6_cond, R.id.fday6_high, R.id.fday6_low),
-            RowIds(R.id.fday7_name, R.id.fday7_icon, R.id.fday7_cond, R.id.fday7_high, R.id.fday7_low),
+            RowIds(R.id.fday1_name, R.id.fday1_icon, R.id.fday1_high),
+            RowIds(R.id.fday2_name, R.id.fday2_icon, R.id.fday2_high),
+            RowIds(R.id.fday3_name, R.id.fday3_icon, R.id.fday3_high),
+            RowIds(R.id.fday4_name, R.id.fday4_icon, R.id.fday4_high),
+            RowIds(R.id.fday5_name, R.id.fday5_icon, R.id.fday5_high),
+            RowIds(R.id.fday6_name, R.id.fday6_icon, R.id.fday6_high),
+            RowIds(R.id.fday7_name, R.id.fday7_icon, R.id.fday7_high),
         )
         // Start from today (index 0) — show 7 days including today
         val futureDays = weatherData.dailyForecasts.take(7)
@@ -89,10 +94,9 @@ object WidgetDataBinder {
             val dayLabel = if (i == 0) "Today" else DateFormatter.formatDayName(f.date)
             views.setTextViewText(r.name, dayLabel)
             views.setImageViewResource(r.icon, WeatherIconMapper.getDrawableResId(f.weatherCondition))
-            views.setTextViewText(r.cond, f.weatherCondition.description)
             views.setTextViewText(r.high, "${TemperatureFormatter.format(f.temperatureMax, temperatureUnit)}°")
-            views.setTextViewText(r.low, "${TemperatureFormatter.format(f.temperatureMin, temperatureUnit)}°")
         }
+        views.setViewVisibility(R.id.forecast_container, android.view.View.VISIBLE)
     }
 
     fun buildDetailPendingIntent(context: Context, appWidgetId: Int): PendingIntent {

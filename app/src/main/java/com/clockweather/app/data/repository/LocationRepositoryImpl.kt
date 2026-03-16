@@ -47,9 +47,15 @@ class LocationRepositoryImpl @Inject constructor(
     @SuppressLint("MissingPermission")
     override suspend fun getCurrentLocation(): Location? {
         return try {
-            val cancellationToken = CancellationTokenSource()
+            // 1. Try last known location first (Zero battery cost)
+            val lastKnown = fusedLocationClient.lastLocation.await()
+            if (lastKnown != null && (System.currentTimeMillis() - lastKnown.time) < 10 * 60 * 1000) {
+                // If last location is less than 10 mins old, reuse it
+                return mapToLocation(lastKnown)
+            }
 
-            // 5 second timeout — emulators often have no GPS signal
+            // 2. Request fresh location with "Balanced Power" (prefers WiFi/Cell towers)
+            val cancellationToken = CancellationTokenSource()
             val androidLocation = withTimeoutOrNull(5_000L) {
                 fusedLocationClient.getCurrentLocation(
                     Priority.PRIORITY_BALANCED_POWER_ACCURACY,
@@ -58,30 +64,9 @@ class LocationRepositoryImpl @Inject constructor(
             }
 
             if (androidLocation != null) {
-                // Got real GPS — try to reverse geocode
-                try {
-                    val results = geocodingApi.searchLocations(
-                        name = "${androidLocation.latitude},${androidLocation.longitude}",
-                        count = 1
-                    )
-                    results.results?.firstOrNull()?.let { geoDto ->
-                        dtoMapper.mapGeoLocation(geoDto).copy(
-                            latitude = androidLocation.latitude,
-                            longitude = androidLocation.longitude,
-                            isCurrentLocation = true
-                        )
-                    }
-                } catch (e: Exception) {
-                    null
-                } ?: Location(
-                    name = "Current Location",
-                    country = "",
-                    latitude = androidLocation.latitude,
-                    longitude = androidLocation.longitude,
-                    isCurrentLocation = true
-                )
+                mapToLocation(androidLocation)
             } else {
-                // GPS timed out (emulator) — try last saved, then fall back to London
+                // GPS/Network timed out — try last saved or fallback
                 locationDao.getCurrentLocation()?.let { entityMapper.mapLocationToDomain(it) }
                     ?: FALLBACK_LOCATION
             }
@@ -89,6 +74,30 @@ class LocationRepositoryImpl @Inject constructor(
             locationDao.getCurrentLocation()?.let { entityMapper.mapLocationToDomain(it) }
                 ?: FALLBACK_LOCATION
         }
+    }
+
+    private suspend fun mapToLocation(androidLocation: android.location.Location): Location {
+        return try {
+            val results = geocodingApi.searchLocations(
+                name = "${androidLocation.latitude},${androidLocation.longitude}",
+                count = 1
+            )
+            results.results?.firstOrNull()?.let { geoDto ->
+                dtoMapper.mapGeoLocation(geoDto).copy(
+                    latitude = androidLocation.latitude,
+                    longitude = androidLocation.longitude,
+                    isCurrentLocation = true
+                )
+            }
+        } catch (e: Exception) {
+            null
+        } ?: Location(
+            name = "Current Location",
+            country = "",
+            latitude = androidLocation.latitude,
+            longitude = androidLocation.longitude,
+            isCurrentLocation = true
+        )
     }
 
     companion object {

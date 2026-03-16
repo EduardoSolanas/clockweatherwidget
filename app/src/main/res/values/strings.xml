@@ -7,6 +7,8 @@
     <string name="widget_extended_description">Flip clock with weather and 5-day forecast</string>
     <string name="widget_forecast_name">Clock &amp; Weather (7-Day)</string>
     <string name="widget_forecast_description">Flip clock with current weather and 7-day forecast</string>
+    <string name="widget_large_name">Clock &amp; Weather (Large)</string>
+    <string name="widget_large_description">Flip clock with big digits and current weather</string>
 
     <!-- Weather Conditions (WMO codes) -->
     <string name="condition_clear_sky">Clear</string>
@@ -52,9 +54,94 @@
     <string name="label_duration_of_day">Duration of day</string>
     <string name="label_daily_forecast">Daily forecast</string>
     <string name="label_hourly_forecast">Hourly forecast</string>
-    <string name="label_latest_update">Latest update: %s</string>
-    <string name="label_minutes_ago">%d minutes ago</string>
+    <string name="label_latest_update">Updated %s</string>
     <string name="label_just_now">just now</string>
+
+    <!-- Weather Detail Screen -->
+    <string name="label_loading_weather">Loading weather…</string>
+    <string name="action_retry">Retry</string>
+    <string name="cd_navigate_back">Back</string>
+    <string name="cd_settings">Settings</string>
+    <string name="label_weather_fallback_title">Weather</string>
+
+    <!-- CurrentWeatherCard -->
+    <string name="label_7day_forecast">7-DAY FORECAST</string>
+    <string name="label_today">Today</string>
+    <string name="label_conditions">CONDITIONS</string>
+    <string name="label_air_quality">AIR QUALITY</string>
+    <string name="label_updated_format">Updated %s</string>
+    <string name="label_sun_sunrise">Sunrise</string>
+    <string name="label_sun_sunset">Sunset</string>
+    <string name="label_sun_daylight">Daylight</string>
+    <string name="label_metric_rain_total">💧 Rain Total</string>
+    <string name="label_metric_pressure">🌬 Pressure</string>
+    <string name="label_metric_humidity">💦 Humidity</string>
+    <string name="label_metric_max_wind">💨 Max Wind</string>
+    <string name="label_metric_rain_chance">🌧 Rain Chance</string>
+    <string name="label_metric_uv_max">☀️ UV Max</string>
+    <string name="label_metric_precipitation">💧 Precipitation</string>
+    <string name="label_metric_visibility">👁 Visibility</string>
+    <string name="label_metric_dew_point">💦 Dew Point</string>
+    <string name="label_metric_cloud_cover">☁️ Cloud Cover</string>
+    <string name="label_metric_wind_gusts">💨 Wind Gusts</string>
+
+    <!-- DailyForecastDetailList -->
+    <string name="label_7_day_forecast_title">7-Day Forecast</string>
+    <string name="label_metric_wind_max">Wind max</string>
+    <string name="label_metric_uv_index_max">UV Index max</string>
+    <string name="label_metric_feels_like">Feels like</string>
+    <string name="label_metric_daylight">Daylight</string>
+
+    <!-- HourlyForecastList -->
+    <string name="label_72_hour_forecast">72-Hour Forecast</string>
+    <string name="label_metric_humidity_short">Humidity: %d%%</string>
+    <string name="label_metric_dew_short">Dew: %s°</string>
+    <string name="label_metric_uv_short">UV: %d</string>
+    <string name="label_metric_pressure_short">P: %d hPa</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_temperature_unit">Temperature unit</string>
+    <string name="settings_wind_speed_unit">Wind speed unit</string>
+    <string name="settings_update_frequency">Update frequency</string>
+    <string name="settings_manage_locations">Manage locations</string>
+    <string name="settings_section_clock">Clock</string>
+    <string name="settings_section_date">Date</string>
+    <string name="settings_section_weather">Weather</string>
+    <string name="settings_section_widget">Widget</string>
+    <string name="settings_clock_tile_style_label">Digit tile style</string>
+    <string name="settings_clock_tile_style_desc">Background colour of the flip-clock tiles</string>
+    <string name="settings_clock_tile_style_dark">◼  Dark  (black/white)</string>
+    <string name="settings_clock_tile_style_light">◻  Light  (white/black)</string>
+    <string name="settings_clock_tile_size_label">Digit tile size</string>
+    <string name="settings_clock_tile_size_desc">Choose how big the clock numbers should be on your home screen</string>
+    <string name="settings_24h_clock_label">24-hour clock</string>
+    <string name="settings_24h_clock_desc">Use 24 h format instead of AM/PM</string>
+    <string name="settings_show_date_label">Show date</string>
+    <string name="settings_show_date_desc">Display the current date below the clock</string>
+    <string name="settings_date_font_size_label">Date font size</string>
+    <string name="settings_temp_celsius">°C — Celsius</string>
+    <string name="settings_temp_fahrenheit">°F — Fahrenheit</string>
+    <string name="settings_show_weather_compact_label">Show weather — compact / large</string>
+    <string name="settings_show_weather_compact_desc">Display the current weather card below the clock</string>
+    <string name="settings_show_today_forecast_label">Show today — forecast widget</string>
+    <string name="settings_show_today_forecast_desc">Display today\'s weather above the 7-day forecast rows</string>
+
+    <!-- Widget Config -->
+    <string name="config_title">Configure Widget</string>
+    <string name="config_select_location">Select location</string>
+    <string name="config_search_city">Search city…</string>
+    <string name="config_use_current_location">Use Current Location</string>
+    <string name="config_done">Done</string>
+    <string name="config_add_widget">Add Widget</string>
+    <string name="config_selected_format">Selected: %1$s, %2$s</string>
+    <string name="config_temperature_unit">Temperature Unit</string>
+    <string name="cd_location_selected">Selected</string>
+
+    <!-- Errors -->
+    <string name="error_no_network">No internet connection. Showing cached data.</string>
+    <string name="error_no_data">No data available. Check your connection.</string>
+    <string name="error_location_permission">Location permission required</string>
 
     <!-- Units -->
     <string name="unit_celsius">%1$.0f\u00B0</string>
@@ -67,23 +154,4 @@
     <string name="unit_inch">%1$.2f in</string>
     <string name="unit_km">%1$.1f km</string>
     <string name="unit_mi">%1$.1f mi</string>
-
-    <!-- Settings -->
-    <string name="settings_title">Settings</string>
-    <string name="settings_temperature_unit">Temperature unit</string>
-    <string name="settings_wind_speed_unit">Wind speed unit</string>
-    <string name="settings_update_frequency">Update frequency</string>
-    <string name="settings_manage_locations">Manage locations</string>
-
-    <!-- Widget Config -->
-    <string name="config_title">Configure Widget</string>
-    <string name="config_select_location">Select location</string>
-    <string name="config_search_city">Search city…</string>
-    <string name="config_use_current_location">Use current location</string>
-    <string name="config_done">Done</string>
-
-    <!-- Errors -->
-    <string name="error_no_network">No internet connection. Showing cached data.</string>
-    <string name="error_no_data">No data available. Check your connection.</string>
-    <string name="error_location_permission">Location permission required</string>
 </resources>

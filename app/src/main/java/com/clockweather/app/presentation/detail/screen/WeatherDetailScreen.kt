@@ -8,8 +8,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.clockweather.app.R
 import com.clockweather.app.presentation.common.UiState
 import com.clockweather.app.presentation.detail.WeatherDetailViewModel
 import com.clockweather.app.util.DateFormatter
@@ -28,7 +30,7 @@ fun WeatherDetailScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val temperatureUnit by viewModel.temperatureUnit.collectAsStateWithLifecycle()
 
-    val locationName = (uiState as? UiState.Success)?.data?.location?.name ?: "Weather"
+    val locationName = (uiState as? UiState.Success)?.data?.location?.name ?: stringResource(R.string.label_weather_fallback_title)
 
     // Lift selected day index here so TopAppBar can react to it
     var selectedDayIndex by remember { mutableIntStateOf(0) }
@@ -49,12 +51,12 @@ fun WeatherDetailScreen(
                 title = { Text(topBarTitle) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_navigate_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.cd_settings))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -77,7 +79,7 @@ fun WeatherDetailScreen(
                     ) {
                         CircularProgressIndicator()
                         Text(
-                            text = "Loading weather…",
+                            text = stringResource(R.string.label_loading_weather),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -96,7 +98,7 @@ fun WeatherDetailScreen(
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        Button(onClick = { viewModel.refresh() }) { Text("Retry") }
+                        Button(onClick = { viewModel.refresh() }) { Text(stringResource(R.string.action_retry)) }
                     }
                 }
                 is UiState.Success -> {

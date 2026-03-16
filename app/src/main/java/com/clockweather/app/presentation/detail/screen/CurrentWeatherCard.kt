@@ -25,6 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.clockweather.app.R
 import com.clockweather.app.domain.model.AirQuality
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.TemperatureUnit
@@ -83,8 +86,14 @@ fun WeatherDetailContent(
         }
 
         // ── Last updated ────────────────────────────────────────────────────
+        val lastUpdated = weatherData.currentWeather.lastUpdated
+        val minutes = DateFormatter.minutesAgo(lastUpdated)
+        val timeString = when {
+            minutes < 1 -> stringResource(R.string.label_just_now)
+            else -> pluralStringResource(R.plurals.label_minutes_ago, minutes, minutes)
+        }
         Text(
-            text = "Updated ${DateFormatter.formatLastUpdated(weatherData.currentWeather.lastUpdated)}",
+            text = stringResource(R.string.label_updated_format, timeString),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth(),
@@ -160,6 +169,7 @@ private fun HeroWeatherCard(
     val windDir = if (selectedDayIndex == 0) current.windDirection.label else selectedForecast?.windDirectionDominant?.label ?: ""
     val uv = if (selectedDayIndex == 0) current.uvIndex.toInt() else selectedForecast?.uvIndexMax?.toInt() ?: 0
     val precipitationDisplay = "${if (selectedDayIndex == 0) selectedForecast?.precipitationProbability ?: 0 else selectedForecast?.precipitationProbability ?: 0}%"
+    val d2fr     = "${if (selectedDayIndex == 0) selectedForecast?.precipitationProbability ?: 0 else selectedForecast?.precipitationProbability ?: 0}%"
 
     val displayCondition = if (debugIndex < 0) weatherCondition else DEBUG_CONDITIONS[debugIndex]
     val debugLabel = if (debugIndex >= 0) "🐛 ${displayCondition.name}" else null
@@ -237,7 +247,7 @@ private fun HeroWeatherCard(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     HeroStat("💧", humidity.toString() + "%")
-                    HeroStat("🌧", precipitationDisplay)
+                    HeroStat("🌧",  precipitationDisplay)
                     HeroStat("💨", "${windSpeed} km/h")
                     HeroStat("☀️", "UV $uv")
                 }
@@ -301,7 +311,7 @@ private fun SevenDayForecastCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "7-DAY FORECAST",
+                text = stringResource(R.string.label_7day_forecast),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.2.sp,
@@ -351,7 +361,7 @@ private fun ForecastDayRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (isToday) "Today" else DateFormatter.formatDayName(forecast.date),
+                text = if (isToday) stringResource(R.string.label_today) else DateFormatter.formatDayName(forecast.date),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
                 color = if (isSelected) MaterialTheme.colorScheme.primary
@@ -420,7 +430,7 @@ private fun MetricsGrid(weatherData: WeatherData, temperatureUnit: TemperatureUn
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            "CONDITIONS",
+            stringResource(R.string.label_conditions),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary,
             letterSpacing = 1.2.sp
@@ -428,30 +438,30 @@ private fun MetricsGrid(weatherData: WeatherData, temperatureUnit: TemperatureUn
         if (selectedDayIndex == 0) {
             // Current live data
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard("💧 Precipitation", "${c.precipitation} mm", Modifier.weight(1f))
-                MetricCard("🌬 Pressure", "${c.pressure.toInt()} hPa", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_precipitation), "${c.precipitation} mm", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_pressure), "${c.pressure.toInt()} hPa", Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard("👁 Visibility", "${(c.visibility / 1000).toInt()} km", Modifier.weight(1f))
-                MetricCard("💦 Dew Point", TemperatureFormatter.formatWithUnit(c.dewPoint, temperatureUnit), Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_visibility), "${(c.visibility / 1000).toInt()} km", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_dew_point), TemperatureFormatter.formatWithUnit(c.dewPoint, temperatureUnit), Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard("☁️ Cloud Cover", "${c.cloudCover}%", Modifier.weight(1f))
-                MetricCard("💨 Wind Gusts", "${c.windGusts.toInt()} km/h", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_cloud_cover), "${c.cloudCover}%", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_wind_gusts), "${c.windGusts.toInt()} km/h", Modifier.weight(1f))
             }
         } else if (f != null) {
             // Daily forecast data
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard("💧 Rain Total", "${f.precipitationSum} mm", Modifier.weight(1f))
-                MetricCard("🌬 Pressure", "${f.averagePressure.toInt()} hPa", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_rain_total), "${f.precipitationSum} mm", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_pressure), "${f.averagePressure.toInt()} hPa", Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard("💦 Humidity", "${f.averageHumidity}%", Modifier.weight(1f))
-                MetricCard("💨 Max Wind", "${f.windSpeedMax.toInt()} km/h ${f.windDirectionDominant.label}", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_humidity), "${f.averageHumidity}%", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_max_wind), "${f.windSpeedMax.toInt()} km/h ${f.windDirectionDominant.label}", Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard("🌧 Rain Chance", "${f.precipitationProbability}%", Modifier.weight(1f))
-                MetricCard("☀️ UV Max", f.uvIndexMax.toInt().toString(), Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_rain_chance), "${f.precipitationProbability}%", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_uv_max), f.uvIndexMax.toInt().toString(), Modifier.weight(1f))
             }
         }
     }
@@ -486,19 +496,19 @@ private fun SunCard(forecast: DailyForecast) {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("🌅", fontSize = 28.sp)
-                Text("Sunrise", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.label_sun_sunrise), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(DateFormatter.formatTime(forecast.sunrise, true), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
             VerticalDivider(modifier = Modifier.height(60.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("🌇", fontSize = 28.sp)
-                Text("Sunset", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.label_sun_sunset), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(DateFormatter.formatTime(forecast.sunset, true), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
             VerticalDivider(modifier = Modifier.height(60.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("⏱", fontSize = 28.sp)
-                Text("Daylight", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.label_sun_daylight), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(DateFormatter.formatDuration(forecast.daylightDurationSeconds), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
         }
@@ -525,7 +535,7 @@ private fun AirQualityCard(aq: AirQuality) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "AIR QUALITY",
+                    stringResource(R.string.label_air_quality),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     letterSpacing = 1.2.sp
@@ -655,12 +665,13 @@ private fun FrostOverlay(modifier: Modifier = Modifier) {
 private fun WetGlassOverlay(intensity: Float, modifier: Modifier = Modifier) {
     // intensity: 0.2 = Drizzle, 0.5 = Rain, 1.0 = Heavy/Storm
     val drops = remember(intensity) {
-        val count = (40 * intensity).toInt().coerceAtLeast(10)
+        val count = (50 * intensity).toInt().coerceAtLeast(10)
         List(count) {
+            // Avoid extreme edges (0.05..0.95 range) to prevent clipping artifacts on rounded corners
             Offset(
-                x = kotlin.random.Random.nextFloat(), // relative 0..1
-                y = kotlin.random.Random.nextFloat()  // relative 0..1
-            ) to (1f + kotlin.random.Random.nextFloat() * 3f) // drop size
+                x = 0.05f + kotlin.random.Random.nextFloat() * 0.9f,
+                y = 0.08f + kotlin.random.Random.nextFloat() * 0.84f // Extra margin at top/bottom
+            ) to (1f + kotlin.random.Random.nextFloat() * 2.5f) // drop size
         }
     }
 
@@ -668,15 +679,15 @@ private fun WetGlassOverlay(intensity: Float, modifier: Modifier = Modifier) {
         val w = size.width
         val h = size.height
 
-        // Higher-contrast dark wet vignette
+        // Fixed: Use SrcOver with alpha gradient instead of Multiply 
+        // to prevent black edge artifacts on rounded corners.
         drawRect(
             brush = Brush.radialGradient(
-                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.3f * intensity)),
+                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.25f * intensity)),
                 center = Offset(w / 2, h / 2),
-                radius = w * 1.0f
+                radius = w * 1.1f
             ),
-            size = size,
-            blendMode = BlendMode.Multiply
+            size = size
         )
 
         // Static condensation / camera lens drops - AAA High Visibility

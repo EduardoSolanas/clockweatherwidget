@@ -28,13 +28,7 @@ class ExtendedWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onDisabled(context: Context) {
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-        val compactIds = appWidgetManager.getAppWidgetIds(
-            android.content.ComponentName(context, com.clockweather.app.presentation.widget.compact.CompactWidgetProvider::class.java)
-        )
-        if (compactIds.isEmpty()) {
-            com.clockweather.app.presentation.widget.common.WidgetUpdateScheduler.cancelClockAlarm(context)
-        }
+        com.clockweather.app.presentation.widget.common.WidgetUpdateScheduler.cancelClockAlarmIfNoWidgets(context)
     }
 }
 

@@ -9,3 +9,18 @@ app/build/
 *.aab
 *.jks
 *.keystore
+
+# Scratch scripts
+*.ps1
+*.py
+*.js
+*.html
+*.png
+build_output.txt
+
+# AI/IDE folders
+.claude/
+.gemini/
+node_modules/
+package.json
+package-lock.json

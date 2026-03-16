@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.clockweather.app.R
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.util.DateFormatter
@@ -21,7 +23,7 @@ fun DailyForecastDetailList(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "7-Day Forecast",
+            text = stringResource(R.string.label_7_day_forecast_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -73,15 +75,15 @@ fun DailyForecastDetailItem(forecast: DailyForecast, temperatureUnit: Temperatur
 
             if (expanded) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                WeatherMetricRow("Precipitation", "${forecast.precipitationSum} mm (${forecast.precipitationProbability}%)")
-                WeatherMetricRow("Humidity", "${forecast.averageHumidity}%")
-                WeatherMetricRow("Pressure", "${forecast.averagePressure.toInt()} hPa")
-                WeatherMetricRow("Wind max", "${forecast.windSpeedMax.toInt()} km/h ${forecast.windDirectionDominant.label}")
-                WeatherMetricRow("UV Index max", forecast.uvIndexMax.toInt().toString())
-                WeatherMetricRow("Sunrise", DateFormatter.formatTime(forecast.sunrise, is24Hour = true))
-                WeatherMetricRow("Sunset", DateFormatter.formatTime(forecast.sunset, is24Hour = true))
-                WeatherMetricRow("Daylight", DateFormatter.formatDuration(forecast.daylightDurationSeconds))
-                WeatherMetricRow("Feels like", "${TemperatureFormatter.format(forecast.feelsLikeMax, temperatureUnit)}° / ${TemperatureFormatter.format(forecast.feelsLikeMin, temperatureUnit)}°")
+                WeatherMetricRow(stringResource(R.string.label_precipitation), "${forecast.precipitationSum} mm (${forecast.precipitationProbability}%)")
+                WeatherMetricRow(stringResource(R.string.label_humidity), "${forecast.averageHumidity}%")
+                WeatherMetricRow(stringResource(R.string.label_pressure), "${forecast.averagePressure.toInt()} hPa")
+                WeatherMetricRow(stringResource(R.string.label_metric_wind_max), "${forecast.windSpeedMax.toInt()} km/h ${forecast.windDirectionDominant.label}")
+                WeatherMetricRow(stringResource(R.string.label_metric_uv_index_max), forecast.uvIndexMax.toInt().toString())
+                WeatherMetricRow(stringResource(R.string.label_sunrise), DateFormatter.formatTime(forecast.sunrise, is24Hour = true))
+                WeatherMetricRow(stringResource(R.string.label_sunset), DateFormatter.formatTime(forecast.sunset, is24Hour = true))
+                WeatherMetricRow(stringResource(R.string.label_metric_daylight), DateFormatter.formatDuration(forecast.daylightDurationSeconds))
+                WeatherMetricRow(stringResource(R.string.label_metric_feels_like), "${TemperatureFormatter.format(forecast.feelsLikeMax, temperatureUnit)}° / ${TemperatureFormatter.format(forecast.feelsLikeMin, temperatureUnit)}°")
             }
         }
     }

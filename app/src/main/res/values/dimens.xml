@@ -1,29 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Widget Dimensions -->
-    <dimen name="widget_padding">8dp</dimen>
-    <dimen name="widget_corner_radius">16dp</dimen>
-    <dimen name="widget_text_primary_size">14sp</dimen>
-    <dimen name="widget_text_secondary_size">12sp</dimen>
-    <dimen name="widget_temp_size">18sp</dimen>
-    <dimen name="widget_icon_size">40dp</dimen>
-
-    <!-- Flip Clock Dimensions -->
-    <dimen name="flip_digit_width">56dp</dimen>
-    <dimen name="flip_digit_height">72dp</dimen>
-    <dimen name="flip_digit_corner_radius">8dp</dimen>
+    <!-- Flip Clock Dimensions (actively used in BaseWidgetUpdater) -->
     <dimen name="flip_digit_gap">4dp</dimen>
-    <dimen name="flip_colon_width">12dp</dimen>
     <dimen name="flip_ampm_text_size">12sp</dimen>
 
-    <!-- Forecast Row -->
-    <dimen name="forecast_icon_size">24dp</dimen>
-    <dimen name="forecast_text_size">11sp</dimen>
+    <!-- Small -->
+    <dimen name="flip_digit_width_small">44dp</dimen>
+    <dimen name="flip_digit_height_small">60dp</dimen>
+    <dimen name="flip_text_size_small">38sp</dimen>
 
-    <!-- Detail Page -->
-    <dimen name="detail_card_padding">16dp</dimen>
-    <dimen name="detail_card_corner_radius">16dp</dimen>
-    <dimen name="detail_temp_large_size">64sp</dimen>
-    <dimen name="detail_temp_highlow_size">18sp</dimen>
-    <dimen name="detail_weather_icon_size">80dp</dimen>
+    <!-- Medium -->
+    <dimen name="flip_digit_width_medium">56dp</dimen>
+    <dimen name="flip_digit_height_medium">72dp</dimen>
+    <dimen name="flip_text_size_medium">48sp</dimen>
+
+    <!-- Large -->
+    <dimen name="flip_digit_width_large">72dp</dimen>
+    <dimen name="flip_digit_height_large">90dp</dimen>
+    <dimen name="flip_text_size_large">52sp</dimen>
+
+    <!-- XL -->
+    <dimen name="flip_digit_width_xl">92dp</dimen>
+    <dimen name="flip_digit_height_xl">92dp</dimen>
+    <dimen name="flip_text_size_xl">58sp</dimen>
 </resources>

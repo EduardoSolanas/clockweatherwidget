@@ -8,74 +8,108 @@
     android:orientation="vertical"
     android:padding="10dp">
 
-    <!-- ═══ FLIP CLOCK ROW ═══ -->
+    <!-- FLIP CLOCK ROW -->
     <LinearLayout
         android:id="@+id/clock_row"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <TextView
+        <ViewFlipper android:animateFirstView="false"
             android:id="@+id/digit_h1"
-            android:layout_width="@dimen/flip_digit_width"
-            android:layout_height="@dimen/flip_digit_height"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:background="@drawable/flip_digit_bg"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/flip_digit_text"
-            android:textSize="38sp"
-            android:textStyle="bold"
-            android:fontFamily="monospace" />
+            android:inAnimation="@anim/flip_in"
+            android:outAnimation="@anim/flip_out">
+            <TextView android:id="@+id/digit_h1_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h1_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h1_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h1_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h1_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h1_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h1_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h1_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h1_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h1_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+        </ViewFlipper>
 
-        <TextView
+        <ViewFlipper android:animateFirstView="false"
             android:id="@+id/digit_h2"
-            android:layout_width="@dimen/flip_digit_width"
-            android:layout_height="@dimen/flip_digit_height"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:layout_marginStart="@dimen/flip_digit_gap"
             android:background="@drawable/flip_digit_bg"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/flip_digit_text"
-            android:textSize="38sp"
-            android:textStyle="bold"
-            android:fontFamily="monospace" />
+            android:inAnimation="@anim/flip_in"
+            android:outAnimation="@anim/flip_out">
+            <TextView android:id="@+id/digit_h2_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h2_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h2_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h2_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h2_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h2_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h2_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h2_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h2_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_h2_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+        </ViewFlipper>
 
         <TextView
-            android:layout_width="@dimen/flip_colon_width"
+            android:id="@+id/colon"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/flip_digit_gap"
+            android:layout_marginEnd="@dimen/flip_digit_gap"
             android:gravity="center"
             android:text=":"
-            android:textColor="@color/flip_colon_color"
-            android:textSize="34sp"
+            android:textColor="#80FFFFFF"
+            android:textSize="44sp"
             android:textStyle="bold"
             android:fontFamily="monospace" />
 
-        <TextView
+        <ViewFlipper android:animateFirstView="false"
             android:id="@+id/digit_m1"
-            android:layout_width="@dimen/flip_digit_width"
-            android:layout_height="@dimen/flip_digit_height"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:background="@drawable/flip_digit_bg"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/flip_digit_text"
-            android:textSize="38sp"
-            android:textStyle="bold"
-            android:fontFamily="monospace" />
+            android:inAnimation="@anim/flip_in"
+            android:outAnimation="@anim/flip_out">
+            <TextView android:id="@+id/digit_m1_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m1_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m1_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m1_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m1_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m1_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m1_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m1_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m1_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m1_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+        </ViewFlipper>
 
-        <TextView
+        <ViewFlipper android:animateFirstView="false"
             android:id="@+id/digit_m2"
-            android:layout_width="@dimen/flip_digit_width"
-            android:layout_height="@dimen/flip_digit_height"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:layout_marginStart="@dimen/flip_digit_gap"
             android:background="@drawable/flip_digit_bg"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/flip_digit_text"
-            android:textSize="38sp"
-            android:textStyle="bold"
-            android:fontFamily="monospace" />
+            android:inAnimation="@anim/flip_in"
+            android:outAnimation="@anim/flip_out">
+            <TextView android:id="@+id/digit_m2_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m2_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m2_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m2_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m2_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m2_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m2_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m2_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m2_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            <TextView android:id="@+id/digit_m2_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+        </ViewFlipper>
 
         <TextView
             android:id="@+id/ampm"
@@ -92,32 +126,33 @@
     <!-- Date -->
     <TextView
         android:id="@+id/widget_date"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="2dp"
+        android:gravity="center"
+        android:layout_marginTop="4dp"
         android:layout_marginBottom="4dp"
-        android:text="Fri, Mar 6"
+        android:text="Mon, Mar 9"
         android:textColor="#FFFFFF"
         android:textSize="13sp"
         android:textStyle="bold"
         android:letterSpacing="0.05" />
 
-    <!-- ═══ CURRENT WEATHER ROW ═══ -->
+    <!-- CURRENT WEATHER ROW (optional, hidden by default) -->
     <LinearLayout
         android:id="@+id/weather_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginBottom="4dp"
         android:background="@drawable/weather_card_bg"
         android:gravity="center_vertical"
         android:orientation="horizontal"
+        android:visibility="gone"
         android:padding="8dp">
 
         <ImageView
             android:id="@+id/weather_icon"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:contentDescription="@null"
             android:scaleType="fitCenter" />
 
@@ -127,19 +162,17 @@
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:orientation="vertical">
-
             <TextView
                 android:id="@+id/city_name"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:maxLines="1" />
-
             <TextView
                 android:id="@+id/condition_text"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/widget_text_secondary"
                 android:textSize="10sp"
@@ -151,7 +184,6 @@
             android:layout_height="wrap_content"
             android:gravity="end|center_vertical"
             android:orientation="vertical">
-
             <TextView
                 android:id="@+id/current_temp"
                 android:layout_width="wrap_content"
@@ -159,7 +191,6 @@
                 android:textColor="@color/widget_text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold" />
-
             <TextView
                 android:id="@+id/high_low"
                 android:layout_width="wrap_content"
@@ -169,79 +200,66 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- ═══ 7-DAY FORECAST — horizontal columns ═══ -->
+    <!-- 7-DAY FORECAST horizontal columns -->
     <LinearLayout
+        android:id="@+id/forecast_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:background="@drawable/weather_card_bg"
         android:orientation="horizontal"
-        android:padding="6dp">
+        android:visibility="gone"
+        android:padding="4dp">
 
-        <!-- Day 1 -->
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday1_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday1_icon" android:layout_width="22dp" android:layout_height="22dp" android:layout_marginTop="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday1_high" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday1_low" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
-            <TextView android:id="@+id/fday1_cond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="9sp" android:gravity="center" android:maxLines="1" android:visibility="gone" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
+            <TextView android:id="@+id/fday1_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <ImageView android:id="@+id/fday1_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <TextView android:id="@+id/fday1_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday1_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
         </LinearLayout>
 
-        <!-- Day 2 -->
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday2_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday2_icon" android:layout_width="22dp" android:layout_height="22dp" android:layout_marginTop="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday2_high" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday2_low" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
-            <TextView android:id="@+id/fday2_cond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="9sp" android:gravity="center" android:maxLines="1" android:visibility="gone" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
+            <TextView android:id="@+id/fday2_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <ImageView android:id="@+id/fday2_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <TextView android:id="@+id/fday2_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday2_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
         </LinearLayout>
 
-        <!-- Day 3 -->
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday3_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday3_icon" android:layout_width="22dp" android:layout_height="22dp" android:layout_marginTop="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday3_high" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday3_low" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
-            <TextView android:id="@+id/fday3_cond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="9sp" android:gravity="center" android:maxLines="1" android:visibility="gone" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
+            <TextView android:id="@+id/fday3_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <ImageView android:id="@+id/fday3_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <TextView android:id="@+id/fday3_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday3_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
         </LinearLayout>
 
-        <!-- Day 4 -->
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday4_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday4_icon" android:layout_width="22dp" android:layout_height="22dp" android:layout_marginTop="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday4_high" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday4_low" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
-            <TextView android:id="@+id/fday4_cond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="9sp" android:gravity="center" android:maxLines="1" android:visibility="gone" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
+            <TextView android:id="@+id/fday4_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <ImageView android:id="@+id/fday4_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <TextView android:id="@+id/fday4_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday4_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
         </LinearLayout>
 
-        <!-- Day 5 -->
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday5_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday5_icon" android:layout_width="22dp" android:layout_height="22dp" android:layout_marginTop="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday5_high" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday5_low" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
-            <TextView android:id="@+id/fday5_cond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="9sp" android:gravity="center" android:maxLines="1" android:visibility="gone" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
+            <TextView android:id="@+id/fday5_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <ImageView android:id="@+id/fday5_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <TextView android:id="@+id/fday5_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday5_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
         </LinearLayout>
 
-        <!-- Day 6 -->
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday6_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday6_icon" android:layout_width="22dp" android:layout_height="22dp" android:layout_marginTop="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday6_high" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday6_low" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
-            <TextView android:id="@+id/fday6_cond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="9sp" android:gravity="center" android:maxLines="1" android:visibility="gone" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
+            <TextView android:id="@+id/fday6_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <ImageView android:id="@+id/fday6_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <TextView android:id="@+id/fday6_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday6_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
         </LinearLayout>
 
-        <!-- Day 7 -->
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday7_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday7_icon" android:layout_width="22dp" android:layout_height="22dp" android:layout_marginTop="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday7_high" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday7_low" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
-            <TextView android:id="@+id/fday7_cond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="9sp" android:gravity="center" android:maxLines="1" android:visibility="gone" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
+            <TextView android:id="@+id/fday7_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <ImageView android:id="@+id/fday7_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <TextView android:id="@+id/fday7_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday7_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
         </LinearLayout>
 
     </LinearLayout>
 
 </LinearLayout>
-

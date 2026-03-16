@@ -1,32 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primary Theme Colors -->
+    <!-- Primary Theme Colors (used by theme/manifest) -->
     <color name="primary">#1565C0</color>
     <color name="primary_dark">#0D47A1</color>
-    <color name="primary_light">#42A5F5</color>
-    <color name="secondary">#FFC107</color>
 
-    <!-- Widget Colors -->
-    <color name="widget_background">#CC1A237E</color>
-    <color name="widget_background_dark">#E6000051</color>
+    <!-- Widget Colors (used in widget XML layouts) -->
     <color name="widget_text_primary">#FFFFFF</color>
     <color name="widget_text_secondary">#B0BEC5</color>
+    <!-- Light mode: dark card so white text is readable on bright wallpapers -->
+    <color name="weather_card_bg_color">#CC111111</color>
 
-    <!-- Flip Clock Colors -->
-    <color name="flip_digit_background">#1A1A2E</color>
-    <color name="flip_digit_split_line">#0D0D1A</color>
+    <!-- Flip Clock Colors (used in widget layouts) -->
     <color name="flip_digit_text">#FFFFFF</color>
-    <color name="flip_colon_color">#80FFFFFF</color>
-
-    <!-- Weather Detail Colors -->
-    <color name="detail_background_start">#0D47A1</color>
-    <color name="detail_background_end">#1A237E</color>
-    <color name="detail_card_background">#CC1565C0</color>
-    <color name="detail_text_primary">#FFFFFF</color>
-    <color name="detail_text_secondary">#B3E5FC</color>
-
-    <!-- Forecast Colors -->
-    <color name="weekend_highlight">#FFC107</color>
-    <color name="temperature_high">#FF5722</color>
-    <color name="temperature_low">#03A9F4</color>
 </resources>

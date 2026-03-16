@@ -11,8 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.clockweather.app.R
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.presentation.common.UiState
@@ -33,7 +35,7 @@ fun WidgetConfigScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = "Configure Widget",
+            text = stringResource(R.string.config_title),
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -45,7 +47,7 @@ fun WidgetConfigScreen(
         ) {
             Icon(Icons.Default.LocationOn, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Use Current Location")
+            Text(stringResource(R.string.config_use_current_location))
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -54,7 +56,7 @@ fun WidgetConfigScreen(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { viewModel.onSearchQueryChanged(it) },
-            label = { Text("Search city") },
+            label = { Text(stringResource(R.string.config_search_city)) },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
@@ -86,7 +88,7 @@ fun WidgetConfigScreen(
         selectedLocation?.let { location ->
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                 Text(
-                    text = "Selected: ${location.name}, ${location.country}",
+                    text = stringResource(R.string.config_selected_format, location.name, location.country),
                     modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -96,7 +98,7 @@ fun WidgetConfigScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Temperature Unit
-        Text("Temperature Unit", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.config_temperature_unit), style = MaterialTheme.typography.labelLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TemperatureUnit.entries.forEach { unit ->
                 FilterChip(
@@ -115,7 +117,7 @@ fun WidgetConfigScreen(
             enabled = selectedLocation != null,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Add Widget")
+            Text(stringResource(R.string.config_add_widget))
         }
     }
 }
@@ -130,10 +132,9 @@ private fun LocationItem(
         headlineContent = { Text(location.name) },
         supportingContent = { Text(location.country) },
         trailingContent = {
-            if (isSelected) Icon(Icons.Default.LocationOn, contentDescription = "Selected")
+            if (isSelected) Icon(Icons.Default.LocationOn, contentDescription = stringResource(R.string.cd_location_selected))
         },
         modifier = Modifier.clickable(onClick = onClick)
     )
     HorizontalDivider()
 }
-

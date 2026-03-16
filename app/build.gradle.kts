@@ -8,11 +8,12 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
-// Load local.properties
-val localProps = Properties().also { props ->
-    val f = rootProject.file("local.properties")
-    if (f.exists()) props.load(f.inputStream())
-}
+// Load local.properties or Env
+val weatherApiKey: String = System.getenv("WEATHER_API_KEY") 
+    ?: Properties().also { props ->
+        val f = rootProject.file("local.properties")
+        if (f.exists()) props.load(f.inputStream())
+    }.getProperty("WEATHER_API_KEY", "")
 
 android {
     namespace = "com.clockweather.app"
@@ -22,11 +23,11 @@ android {
         applicationId = "com.clockweather.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
+        versionCode = (System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1)
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "WEATHER_API_KEY", "\"${localProps.getProperty("WEATHER_API_KEY", "")}\"")
+        buildConfigField("String", "WEATHER_API_KEY", "\"$weatherApiKey\"")
     }
 
     buildTypes {
@@ -52,6 +53,13 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    lint {
+        abortOnError = true
+        warningsAsErrors = false
+        checkReleaseBuilds = true
+        baseline = file("lint-baseline.xml")
     }
 }
 
