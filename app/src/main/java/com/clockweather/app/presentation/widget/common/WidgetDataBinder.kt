@@ -14,7 +14,15 @@ import java.time.LocalDate
 
 object WidgetDataBinder {
 
-    fun bindClockViews(context: Context, views: RemoteViews, appWidgetId: Int, hour: Int, minute: Int, is24h: Boolean = true) {
+    fun bindClockViews(
+        context: Context,
+        views: RemoteViews,
+        appWidgetId: Int,
+        hour: Int,
+        minute: Int,
+        is24h: Boolean = true,
+        isIncremental: Boolean = false
+    ) {
         val displayHour = if (is24h) hour
             else if (hour == 0) 12
             else if (hour > 12) hour - 12
@@ -25,11 +33,34 @@ object WidgetDataBinder {
         val m1 = minute / 10
         val m2 = minute % 10
 
-        // Always set displayed child — RemoteViews is freshly created each update so defaults to 0
-        views.setDisplayedChild(R.id.digit_h1, h1)
-        views.setDisplayedChild(R.id.digit_h2, h2)
-        views.setDisplayedChild(R.id.digit_m1, m1)
-        views.setDisplayedChild(R.id.digit_m2, m2)
+        if (isIncremental) {
+            // Only update digits that changed from the previous minute
+            val prevMinute = if (minute == 0) 59 else minute - 1
+            val prevHour = if (minute == 0) {
+                if (hour == 0) 23 else hour - 1
+            } else hour
+
+            val prevDisplayHour = if (is24h) prevHour
+                else if (prevHour == 0) 12
+                else if (prevHour > 12) prevHour - 12
+                else prevHour
+
+            val ph1 = prevDisplayHour / 10
+            val ph2 = prevDisplayHour % 10
+            val pm1 = prevMinute / 10
+            val pm2 = prevMinute % 10
+
+            if (h1 != ph1) views.setDisplayedChild(R.id.digit_h1, h1)
+            if (h2 != ph2) views.setDisplayedChild(R.id.digit_h2, h2)
+            if (m1 != pm1) views.setDisplayedChild(R.id.digit_m1, m1)
+            if (m2 != pm2) views.setDisplayedChild(R.id.digit_m2, m2)
+        } else {
+            // Full update: set all digits
+            views.setDisplayedChild(R.id.digit_h1, h1)
+            views.setDisplayedChild(R.id.digit_h2, h2)
+            views.setDisplayedChild(R.id.digit_m1, m1)
+            views.setDisplayedChild(R.id.digit_m2, m2)
+        }
 
         if (is24h) {
             views.setTextViewText(R.id.ampm, "")

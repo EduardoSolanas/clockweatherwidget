@@ -10,8 +10,8 @@ class ClockTickReceiver : BroadcastReceiver() {
         if (intent.action == WidgetUpdateScheduler.ACTION_CLOCK_TICK) {
             // Re-schedule for the next minute
             WidgetUpdateScheduler.scheduleClockAlarm(context)
-            // Trigger widget refresh
-            WidgetUpdateScheduler.sendUpdateBroadcast(context)
+            // Trigger widget refresh with clock-only optimization
+            WidgetUpdateScheduler.sendUpdateBroadcast(context, isClockTick = true)
         }
     }
 }

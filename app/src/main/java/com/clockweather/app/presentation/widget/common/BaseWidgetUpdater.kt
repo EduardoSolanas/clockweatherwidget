@@ -189,4 +189,37 @@ abstract class BaseWidgetUpdater(
             }
         }
     }
+
+    /**
+     * Minimal update that only refreshes the clock digits.
+     * Uses partiallyUpdateAppWidget to avoid flickering/nuking existing state.
+     */
+    fun updateClockOnly(appWidgetId: Int) {
+        scope.launch {
+            try {
+                val prefs = entryPoint.dataStore().data.first()
+                val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: true
+                
+                // For partial updates, we can just use the same RemoteViews constructor
+                val views = RemoteViews(context.packageName, layoutResId)
+                val now = LocalTime.now()
+                
+                WidgetDataBinder.bindClockViews(
+                    context, 
+                    views, 
+                    appWidgetId, 
+                    now.hour, 
+                    now.minute, 
+                    is24h, 
+                    isIncremental = true
+                )
+                
+                // Use partiallyUpdate to only apply the setDisplayedChild commands
+                appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
+                
+            } catch (e: Exception) {
+                Log.w(tag, "Clock-only update failed for $appWidgetId", e)
+            }
+        }
+    }
 }
