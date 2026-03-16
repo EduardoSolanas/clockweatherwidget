@@ -173,21 +173,7 @@ private fun HeroWeatherCard(
         )
     }
 
-    val highLow = if (selectedDayIndex == 0) {
-        stringResource(
-            R.string.label_high_low_format,
-            "${TemperatureFormatter.format(selectedForecast?.temperatureMax ?: 0.0, temperatureUnit)}°",
-            "${TemperatureFormatter.format(selectedForecast?.temperatureMin ?: 0.0, temperatureUnit)}°"
-        )
-    } else {
-        selectedForecast?.let {
-            stringResource(
-                R.string.label_high_low_format,
-                "${TemperatureFormatter.format(it.temperatureMax, temperatureUnit)}°",
-                "${TemperatureFormatter.format(it.temperatureMin, temperatureUnit)}°"
-            )
-        } ?: ""
-    }
+
 
     val humidity = if (selectedDayIndex == 0) current.humidity else selectedForecast?.averageHumidity ?: 0
     val windSpeed = if (selectedDayIndex == 0) current.windSpeed.toInt() else selectedForecast?.windSpeedMax?.toInt() ?: 0
@@ -233,27 +219,59 @@ private fun HeroWeatherCard(
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(
                         text = (if (debugIndex >= 0) displayCondition.description else condition).uppercase(),
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.White.copy(alpha = 0.8f),
                         letterSpacing = 2.sp,
-                        maxLines = 2,
+                        maxLines = 1,
                         lineHeight = 18.sp
                     )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = tempDisplay,
+                            fontSize = 72.sp,
+                            fontWeight = FontWeight.ExtraLight,
+                            color = Color.White,
+                            lineHeight = 72.sp
+                        )
+
+                        Spacer(Modifier.width(8.dp))
+
+                        Column {
+                            val highStr = if (selectedDayIndex == 0)
+                                "${TemperatureFormatter.format(selectedForecast?.temperatureMax ?: 0.0, temperatureUnit)}°"
+                            else
+                                "${TemperatureFormatter.format(selectedForecast?.temperatureMax ?: 0.0, temperatureUnit)}°"
+
+                            val lowStr = if (selectedDayIndex == 0)
+                                "${TemperatureFormatter.format(selectedForecast?.temperatureMin ?: 0.0, temperatureUnit)}°"
+                            else
+                                "${TemperatureFormatter.format(selectedForecast?.temperatureMin ?: 0.0, temperatureUnit)}°"
+
+                            Text(
+                                text = stringResource(R.string.label_high_format, highStr),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = stringResource(R.string.label_low_format, lowStr),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White.copy(alpha = 0.8f),
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
+                    }
+
                     Text(
-                        text = tempDisplay,
-                        fontSize = 72.sp,
-                        fontWeight = FontWeight.ExtraLight,
-                        color = Color.White,
-                        lineHeight = 72.sp
-                    )
-                    Text(
-                        text = highLow,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.9f)
+                        text = feelsLike,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.White.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(start = 4.dp)
                     )
                 }
 

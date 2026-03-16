@@ -59,6 +59,8 @@
     <string name="label_feels_like_format">Feels %s</string>
     <string name="label_feels_like_range_format">Feels %1$s/%2$s</string>
     <string name="label_high_low_format">H:%1$s  L:%2$s</string>
+    <string name="label_high_format">↑ %s</string>
+    <string name="label_low_format">↓ %s</string>
 
     <!-- Weather Detail Screen -->
     <string name="label_loading_weather">Loading weather…</string>
