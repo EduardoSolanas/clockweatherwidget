@@ -1,22 +1,24 @@
 package com.clockweather.app.domain.model
 
-enum class WindDirection(val label: String) {
-    N("N"),
-    NNE("NNE"),
-    NE("NE"),
-    ENE("ENE"),
-    E("E"),
-    ESE("ESE"),
-    SE("SE"),
-    SSE("SSE"),
-    S("S"),
-    SSW("SSW"),
-    SW("SW"),
-    WSW("WSW"),
-    W("W"),
-    WNW("WNW"),
-    NW("NW"),
-    NNW("NNW");
+import com.clockweather.app.R
+
+enum class WindDirection(val labelResId: Int) {
+    N(R.string.wind_n),
+    NNE(R.string.wind_nne),
+    NE(R.string.wind_ne),
+    ENE(R.string.wind_ene),
+    E(R.string.wind_e),
+    ESE(R.string.wind_ese),
+    SE(R.string.wind_se),
+    SSE(R.string.wind_sse),
+    S(R.string.wind_s),
+    SSW(R.string.wind_ssw),
+    SW(R.string.wind_sw),
+    WSW(R.string.wind_wsw),
+    W(R.string.wind_w),
+    WNW(R.string.wind_wnw),
+    NW(R.string.wind_nw),
+    NNW(R.string.wind_nnw);
 
     companion object {
         fun fromDegrees(degrees: Int): WindDirection {
@@ -43,7 +45,7 @@ enum class WindDirection(val label: String) {
         }
 
         fun fromLabel(label: String): WindDirection =
-            entries.firstOrNull { it.label.equals(label.trim(), ignoreCase = true) } ?: N
+            entries.firstOrNull { it.name.equals(label.trim(), ignoreCase = true) } ?: N
     }
 }
 

@@ -169,7 +169,7 @@ private fun HourlyGraphCanvas(
                 // Top Temp
                 Text(
                     text = stringResource(
-                        R.string.unit_celsius,
+                        if (temperatureUnit == com.clockweather.app.domain.model.TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit,
                         TemperatureFormatter.convert(forecast.temperature, temperatureUnit)
                     ),
                     style = MaterialTheme.typography.labelMedium,

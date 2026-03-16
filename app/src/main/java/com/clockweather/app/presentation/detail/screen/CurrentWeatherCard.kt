@@ -152,9 +152,9 @@ private fun HeroWeatherCard(
         Brush.verticalGradient(colors)
     }
 
-    val condition = if (debugIndex >= 0) weatherCondition.description
-                    else if (selectedDayIndex == 0) current.weatherCondition.description
-                    else selectedForecast?.weatherCondition?.description ?: ""
+    val displayCondition = if (debugIndex < 0) weatherCondition else DEBUG_CONDITIONS[debugIndex]
+    val conditionLabelId = displayCondition.labelResId
+    val condition = stringResource(conditionLabelId)
     val tempDisplay = if (selectedDayIndex == 0)
         TemperatureFormatter.formatWithUnit(current.temperature, temperatureUnit)
     else
@@ -177,12 +177,10 @@ private fun HeroWeatherCard(
 
     val humidity = if (selectedDayIndex == 0) current.humidity else selectedForecast?.averageHumidity ?: 0
     val windSpeed = if (selectedDayIndex == 0) current.windSpeed.toInt() else selectedForecast?.windSpeedMax?.toInt() ?: 0
-    val windDir = if (selectedDayIndex == 0) current.windDirection.label else selectedForecast?.windDirectionDominant?.label ?: ""
+    val windDir = if (selectedDayIndex == 0) stringResource(current.windDirection.labelResId) else stringResource(selectedForecast?.windDirectionDominant?.labelResId ?: R.string.wind_n)
     val uv = if (selectedDayIndex == 0) current.uvIndex.toInt() else selectedForecast?.uvIndexMax?.toInt() ?: 0
-    val precipitationDisplay = "${if (selectedDayIndex == 0) selectedForecast?.precipitationProbability ?: 0 else selectedForecast?.precipitationProbability ?: 0}%"
-    val d2fr     = "${if (selectedDayIndex == 0) selectedForecast?.precipitationProbability ?: 0 else selectedForecast?.precipitationProbability ?: 0}%"
+    val precipitationDisplay = stringResource(R.string.unit_percent, if (selectedDayIndex == 0) selectedForecast?.precipitationProbability ?: 0 else selectedForecast?.precipitationProbability ?: 0)
 
-    val displayCondition = if (debugIndex < 0) weatherCondition else DEBUG_CONDITIONS[debugIndex]
     val debugLabel = if (debugIndex >= 0) "🐛 ${displayCondition.name}" else null
 
     Box(
@@ -222,7 +220,7 @@ private fun HeroWeatherCard(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(
-                        text = (if (debugIndex >= 0) displayCondition.description else condition).uppercase(),
+                        text = (if (debugIndex >= 0) stringResource(displayCondition.labelResId) else condition).uppercase(),
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.White.copy(alpha = 0.8f),
                         letterSpacing = 2.sp,
@@ -413,30 +411,30 @@ private fun ForecastDayRow(
                 modifier = Modifier.width(52.dp)
             )
             Text(
-                text = if (forecast.precipitationProbability > 0) "${forecast.precipitationProbability}%" else "",
+                text = if (forecast.precipitationProbability > 0) stringResource(R.string.unit_percent, forecast.precipitationProbability) else "",
                 style = MaterialTheme.typography.labelSmall,
                 color = Color(0xFF64B5F6),
-                modifier = Modifier.width(30.dp)
+                modifier = Modifier.width(34.dp)
             )
             Text(
-                text = forecast.weatherCondition.description,
+                text = stringResource(forecast.weatherCondition.labelResId),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = "${TemperatureFormatter.format(forecast.temperatureMax, temperatureUnit)}°",
+                text = stringResource(if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit, forecast.temperatureMax),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.width(34.dp),
+                modifier = Modifier.width(42.dp),
                 textAlign = TextAlign.End
             )
             Spacer(Modifier.width(4.dp))
             Text(
-                text = "${TemperatureFormatter.format(forecast.temperatureMin, temperatureUnit)}°",
+                text = stringResource(if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit, forecast.temperatureMin),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.width(30.dp),
+                modifier = Modifier.width(38.dp),
                 textAlign = TextAlign.End
             )
         }
@@ -447,8 +445,8 @@ private fun ForecastDayRow(
                 .padding(top = 4.dp, start = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            SmallMetric("💧", "${forecast.precipitationSum} mm")
-            SmallMetric("💨", "${forecast.windSpeedMax.toInt()} km/h")
+            SmallMetric("💧", stringResource(R.string.unit_mm, forecast.precipitationSum))
+            SmallMetric("💨", stringResource(R.string.unit_kmh, forecast.windSpeedMax))
             SmallMetric("☀️", "UV ${forecast.uvIndexMax.toInt()}")
             SmallMetric("🌅", DateFormatter.formatTime(forecast.sunrise, true))
             SmallMetric("🌇", DateFormatter.formatTime(forecast.sunset, true))
@@ -481,29 +479,29 @@ private fun MetricsGrid(weatherData: WeatherData, temperatureUnit: TemperatureUn
         if (selectedDayIndex == 0) {
             // Current live data
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard(stringResource(R.string.label_metric_precipitation), "${c.precipitation} mm", Modifier.weight(1f))
-                MetricCard(stringResource(R.string.label_metric_pressure), "${c.pressure.toInt()} hPa", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_precipitation), stringResource(R.string.unit_mm, c.precipitation), Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_pressure), stringResource(R.string.unit_hpa, c.pressure), Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard(stringResource(R.string.label_metric_visibility), "${(c.visibility / 1000).toInt()} km", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_visibility), stringResource(R.string.unit_km, c.visibility / 1000.0), Modifier.weight(1f))
                 MetricCard(stringResource(R.string.label_metric_dew_point), TemperatureFormatter.formatWithUnit(c.dewPoint, temperatureUnit), Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard(stringResource(R.string.label_metric_cloud_cover), "${c.cloudCover}%", Modifier.weight(1f))
-                MetricCard(stringResource(R.string.label_metric_wind_gusts), "${c.windGusts.toInt()} km/h", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_cloud_cover), stringResource(R.string.unit_percent, c.cloudCover), Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_wind_gusts), stringResource(R.string.unit_kmh, c.windGusts), Modifier.weight(1f))
             }
         } else if (f != null) {
             // Daily forecast data
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard(stringResource(R.string.label_metric_rain_total), "${f.precipitationSum} mm", Modifier.weight(1f))
-                MetricCard(stringResource(R.string.label_metric_pressure), "${f.averagePressure.toInt()} hPa", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_rain_total), stringResource(R.string.unit_mm, f.precipitationSum), Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_pressure), stringResource(R.string.unit_hpa, f.averagePressure), Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard(stringResource(R.string.label_metric_humidity), "${f.averageHumidity}%", Modifier.weight(1f))
-                MetricCard(stringResource(R.string.label_metric_max_wind), "${f.windSpeedMax.toInt()} km/h ${f.windDirectionDominant.label}", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_humidity), stringResource(R.string.unit_percent, f.averageHumidity), Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_max_wind), stringResource(R.string.unit_kmh, f.windSpeedMax) + " " + stringResource(f.windDirectionDominant.labelResId), Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard(stringResource(R.string.label_metric_rain_chance), "${f.precipitationProbability}%", Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_rain_chance), stringResource(R.string.unit_percent, f.precipitationProbability), Modifier.weight(1f))
                 MetricCard(stringResource(R.string.label_metric_uv_max), f.uvIndexMax.toInt().toString(), Modifier.weight(1f))
             }
         }
@@ -589,7 +587,7 @@ private fun AirQualityCard(aq: AirQuality) {
                     color = indexColor.copy(alpha = 0.15f)
                 ) {
                     Text(
-                        text = aq.usEpaLabel,
+                        text = stringResource(aq.usEpaLabelResId),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = indexColor,

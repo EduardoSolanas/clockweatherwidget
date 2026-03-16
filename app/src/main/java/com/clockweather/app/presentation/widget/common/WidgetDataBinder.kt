@@ -80,8 +80,7 @@ object WidgetDataBinder {
         val todayForecast = weatherData.dailyForecasts.firstOrNull()
 
         views.setTextViewText(R.id.city_name, location.name)
-
-        views.setTextViewText(R.id.condition_text, current.weatherCondition.description)
+        views.setTextViewText(R.id.condition_text, context.getString(current.weatherCondition.labelResId))
         views.setImageViewResource(
             R.id.weather_icon,
             WeatherIconMapper.getDrawableResId(current.weatherCondition)
@@ -91,9 +90,10 @@ object WidgetDataBinder {
             TemperatureFormatter.formatWithUnit(current.temperature, temperatureUnit)
         )
         todayForecast?.let { forecast ->
+            val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit
             views.setTextViewText(
                 R.id.high_low,
-                "${TemperatureFormatter.format(forecast.temperatureMax, temperatureUnit)}°/${TemperatureFormatter.format(forecast.temperatureMin, temperatureUnit)}°"
+                context.getString(tempFormat, forecast.temperatureMax) + "/" + context.getString(tempFormat, forecast.temperatureMin)
             )
         }
         
@@ -122,10 +122,11 @@ object WidgetDataBinder {
         val futureDays = weatherData.dailyForecasts.take(7)
         futureDays.forEachIndexed { i, f ->
             val r = rows[i]
-            val dayLabel = if (i == 0) "Today" else DateFormatter.formatDayName(f.date)
+            val dayLabel = if (i == 0) context.getString(R.string.label_today) else DateFormatter.formatDayName(f.date)
             views.setTextViewText(r.name, dayLabel)
             views.setImageViewResource(r.icon, WeatherIconMapper.getDrawableResId(f.weatherCondition))
-            views.setTextViewText(r.high, "${TemperatureFormatter.format(f.temperatureMax, temperatureUnit)}°")
+            val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit
+            views.setTextViewText(r.high, context.getString(tempFormat, f.temperatureMax))
         }
         views.setViewVisibility(R.id.forecast_container, android.view.View.VISIBLE)
     }

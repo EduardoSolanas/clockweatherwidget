@@ -1,4 +1,5 @@
 package com.clockweather.app.data.repository
+import com.clockweather.app.R
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -78,11 +79,11 @@ class LocationRepositoryImpl @Inject constructor(
             } else {
                 // GPS/Network timed out — try last saved or fallback
                 locationDao.getCurrentLocation()?.let { entityMapper.mapLocationToDomain(it) }
-                    ?: FALLBACK_LOCATION
+                    ?: getFallbackLocation()
             }
         } catch (e: Exception) {
             locationDao.getCurrentLocation()?.let { entityMapper.mapLocationToDomain(it) }
-                ?: FALLBACK_LOCATION
+                ?: getFallbackLocation()
         }
     }
 
@@ -102,7 +103,7 @@ class LocationRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             null
         } ?: Location(
-            name = "Current Location",
+            name = context.getString(R.string.label_current_location),
             country = "",
             latitude = androidLocation.latitude,
             longitude = androidLocation.longitude,
@@ -110,11 +111,10 @@ class LocationRepositoryImpl @Inject constructor(
         )
     }
 
-    companion object {
-        /** Default location used when GPS is unavailable (e.g. emulator with no signal) */
-        val FALLBACK_LOCATION = Location(
+    override fun getFallbackLocation(): Location {
+        return Location(
             id = 0,
-            name = "London (Default)",
+            name = context.getString(R.string.label_default_location),
             country = "GB",
             latitude = 51.5074,
             longitude = -0.1278,

@@ -3,13 +3,13 @@ package com.clockweather.app.presentation.widget.configuration
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class WidgetConfigActivity : ComponentActivity() {
+class WidgetConfigActivity : AppCompatActivity() {
 
     private val viewModel: WidgetConfigViewModel by viewModels()
 

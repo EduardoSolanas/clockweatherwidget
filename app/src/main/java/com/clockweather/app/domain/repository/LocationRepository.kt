@@ -10,5 +10,6 @@ interface LocationRepository {
     suspend fun getCurrentLocation(): Location?
     suspend fun searchLocations(query: String): List<Location>
     fun getLocationById(id: Long): Flow<Location?>
+    fun getFallbackLocation(): Location
 }
 

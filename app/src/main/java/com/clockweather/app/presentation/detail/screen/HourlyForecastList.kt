@@ -68,7 +68,7 @@ fun HourlyForecastItem(forecast: HourlyForecast, temperatureUnit: TemperatureUni
 
             // Condition
             Text(
-                text = forecast.weatherCondition.description,
+                text = stringResource(forecast.weatherCondition.labelResId),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
@@ -77,7 +77,7 @@ fun HourlyForecastItem(forecast: HourlyForecast, temperatureUnit: TemperatureUni
             // Metrics column
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = TemperatureFormatter.formatWithUnit(forecast.temperature, temperatureUnit),
+                    text = stringResource(if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit, forecast.temperature),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -87,7 +87,7 @@ fun HourlyForecastItem(forecast: HourlyForecast, temperatureUnit: TemperatureUni
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = stringResource(R.string.label_wind_speed_kmh, forecast.windSpeed.toInt(), forecast.windDirection.label),
+                    text = stringResource(R.string.label_wind_speed_kmh, forecast.windSpeed.toInt(), stringResource(forecast.windDirection.labelResId)),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

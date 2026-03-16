@@ -14,6 +14,8 @@
     <string name="condition_clear_sky">Clear</string>
     <string name="condition_mainly_clear">Mainly clear</string>
     <string name="condition_partly_cloudy">Partly cloudy</string>
+    <string name="label_current_location">Current Location</string>
+    <string name="label_default_location">London (Default)</string>
     <string name="condition_overcast">Overcast</string>
     <string name="condition_fog">Fog</string>
     <string name="condition_rime_fog">Rime fog</string>
@@ -138,6 +140,12 @@
     <string name="settings_show_today_forecast_label">Show today — forecast widget</string>
     <string name="settings_show_today_forecast_desc">Display today\'s weather above the 7-day forecast rows</string>
 
+    <!-- Language Settings -->
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System Default</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_es">Spanish</string>
+
     <!-- Widget Config -->
     <string name="config_title">Configure Widget</string>
     <string name="config_select_location">Select location</string>
@@ -153,11 +161,22 @@
     <string name="error_no_network">No internet connection. Showing cached data.</string>
     <string name="error_no_data">No data available. Check your connection.</string>
     <string name="error_location_permission">Location permission required</string>
+    <string name="label_unknown">Unknown</string>
+    <string name="aq_good">Good</string>
+    <string name="aq_moderate">Moderate</string>
+    <string name="aq_unhealthy_sensitive">Unhealthy for Sensitive</string>
+    <string name="aq_unhealthy">Unhealthy</string>
+    <string name="aq_very_unhealthy">Very Unhealthy</string>
+    <string name="aq_hazardous">Hazardous</string>
+    <string name="aq_low">Low</string>
+    <string name="aq_high">High</string>
+    <string name="aq_very_high">Very High</string>
 
     <!-- Units -->
     <string name="unit_celsius">%1$.0f\u00B0</string>
     <string name="unit_fahrenheit">%1$.0f\u00B0</string>
     <string name="unit_percent">%d%%</string>
+    <string name="unit_hpa">%1$.0f hPa</string>
     <string name="unit_mbar">%1$.0f mBar</string>
     <string name="unit_kmh">%1$.0f km/h</string>
     <string name="unit_mph">%1$.0f mph</string>
@@ -165,4 +184,29 @@
     <string name="unit_inch">%1$.2f in</string>
     <string name="unit_km">%1$.1f km</string>
     <string name="unit_mi">%1$.1f mi</string>
+    <string name="wind_n">N</string>
+    <string name="wind_nne">NNE</string>
+    <string name="wind_ne">NE</string>
+    <string name="wind_ene">ENE</string>
+    <string name="wind_e">E</string>
+    <string name="wind_ese">ESE</string>
+    <string name="wind_se">SE</string>
+    <string name="wind_sse">SSE</string>
+    <string name="wind_s">S</string>
+    <string name="wind_ssw">SSW</string>
+    <string name="wind_sw">SW</string>
+    <string name="wind_wsw">WSW</string>
+    <string name="wind_w">W</string>
+    <string name="wind_wnw">WNW</string>
+    <string name="wind_nw">NW</string>
+    <string name="wind_nnw">NNW</string>
+    <string name="size_small">Small</string>
+    <string name="size_medium">Medium</string>
+    <string name="size_large">Large</string>
+    <string name="size_xl">XL</string>
+    <string name="unit_duration_format">%1$dh %2$dm</string>
+    <string name="label_1_min_ago">1 minute ago</string>
+    <string name="label_mins_ago">%d minutes ago</string>
+    <string name="label_1_hour_ago">1 hour ago</string>
+    <string name="label_hours_ago">%d hours ago</string>
 </resources>

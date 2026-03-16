@@ -22,6 +22,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import android.content.Context
+import com.clockweather.app.R
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,7 +32,8 @@ class WeatherDetailViewModel @Inject constructor(
     private val getWeatherDataUseCase: GetWeatherDataUseCase,
     private val refreshWeatherUseCase: RefreshWeatherUseCase,
     private val locationRepository: LocationRepository,
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<WeatherData>>(UiState.Loading)
@@ -60,10 +64,7 @@ class WeatherDetailViewModel @Inject constructor(
                     val detected = withTimeoutOrNull(6_000L) {
                         locationRepository.getCurrentLocation()
                     }
-                    val loc = detected ?: com.clockweather.app.domain.model.Location(
-                        id = 0, name = "London (Default)", country = "GB",
-                        latitude = 51.5074, longitude = -0.1278, isCurrentLocation = true
-                    )
+                    val loc = detected ?: locationRepository.getFallbackLocation()
                     locationRepository.saveLocation(loc)
                     locations = locationRepository.getSavedLocations().first()
                 }
@@ -78,13 +79,13 @@ class WeatherDetailViewModel @Inject constructor(
 
                 getWeatherDataUseCase(location)
                     .catch { e ->
-                        _uiState.value = UiState.Error(e.message ?: "Failed to load weather")
+                        _uiState.value = UiState.Error(e.message ?: context.getString(R.string.error_no_data))
                     }
                     .collect { weatherData ->
                         _uiState.value = UiState.Success(weatherData)
                     }
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Unexpected error")
+                _uiState.value = UiState.Error(e.message ?: context.getString(R.string.error_no_data))
             }
         }
     }

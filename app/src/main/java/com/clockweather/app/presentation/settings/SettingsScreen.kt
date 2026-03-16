@@ -98,7 +98,7 @@ fun SettingsScreen(
                     FilterChip(
                         selected = size == clockTileSize,
                         onClick  = { viewModel.setClockTileSize(size) },
-                        label    = { Text(size.label) }
+                        label    = { Text(stringResource(size.labelResId)) }
                     )
                 }
             }
@@ -181,6 +181,34 @@ fun SettingsScreen(
                                 }
                             )
                         }
+                    )
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            // Language
+            val selectedLanguage by viewModel.selectedLanguage.collectAsStateWithLifecycle()
+            SettingsLabel(
+                label       = stringResource(R.string.settings_language),
+                description = stringResource(R.string.settings_language)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                listOf(
+                    "system" to stringResource(R.string.settings_language_system),
+                    "en" to stringResource(R.string.settings_language_en),
+                    "es" to stringResource(R.string.settings_language_es)
+                ).forEach { (code, label) ->
+                    FilterChip(
+                        selected = selectedLanguage == code,
+                        onClick  = { viewModel.setLanguage(code) },
+                        label    = { Text(label) }
                     )
                 }
             }

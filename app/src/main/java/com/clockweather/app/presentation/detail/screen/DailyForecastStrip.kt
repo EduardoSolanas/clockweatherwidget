@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.clockweather.app.R
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.presentation.detail.theme.WeekendYellow
@@ -66,18 +68,18 @@ private fun DailyStripItem(forecast: DailyForecast, temperatureUnit: Temperature
         }
         if (forecast.precipitationProbability > 0) {
             Text(
-                text = "${forecast.precipitationProbability}%",
+                text = stringResource(R.string.unit_percent, forecast.precipitationProbability),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
             )
         }
         Text(
-            text = TemperatureFormatter.format(forecast.temperatureMax, temperatureUnit) + "°",
+            text = stringResource(if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit, forecast.temperatureMax),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = TemperatureFormatter.format(forecast.temperatureMin, temperatureUnit) + "°",
+            text = stringResource(if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit, forecast.temperatureMin),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

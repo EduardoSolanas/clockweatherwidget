@@ -46,6 +46,7 @@ class SettingsViewModel @Inject constructor(
         val KEY_DATE_FONT_SIZE = floatPreferencesKey("date_font_size_sp")
         val KEY_CLOCK_THEME = stringPreferencesKey("clock_theme")
         val KEY_CLOCK_TILE_SIZE = stringPreferencesKey("clock_tile_size")
+        val KEY_LANGUAGE = stringPreferencesKey("language")
         const val DEFAULT_DATE_FONT_SP = 15f
         const val CLOCK_THEME_DARK = "dark"
         const val CLOCK_THEME_LIGHT = "light"
@@ -104,7 +105,25 @@ class SettingsViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ClockTileSize.MEDIUM)
 
+    val selectedLanguage: StateFlow<String> = dataStore.data
+        .map { prefs -> prefs[KEY_LANGUAGE] ?: "system" }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "system")
+
     // ── Setters (all trigger a widget redraw) ──────────────────────────────────
+
+    fun setLanguage(languageCode: String) {
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_LANGUAGE] = languageCode }
+            
+            // Apply language immediately
+            val appLocale = if (languageCode == "system") {
+                androidx.core.os.LocaleListCompat.getEmptyLocaleList()
+            } else {
+                androidx.core.os.LocaleListCompat.forLanguageTags(languageCode)
+            }
+            androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(appLocale)
+        }
+    }
 
     fun setTemperatureUnit(unit: TemperatureUnit) {
         viewModelScope.launch {

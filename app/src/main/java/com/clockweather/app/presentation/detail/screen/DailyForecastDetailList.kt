@@ -61,13 +61,15 @@ fun DailyForecastDetailItem(forecast: DailyForecast, temperatureUnit: Temperatur
                     )
                 }
                 Text(
-                    text = forecast.weatherCondition.description,
+                    text = stringResource(id = forecast.weatherCondition.labelResId),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
                 )
                 Text(
-                    text = "${TemperatureFormatter.format(forecast.temperatureMax, temperatureUnit)}° / ${TemperatureFormatter.format(forecast.temperatureMin, temperatureUnit)}°",
+                    text = stringResource(if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit, forecast.temperatureMax) + 
+                           " / " + 
+                           stringResource(if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit, forecast.temperatureMin),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
@@ -75,15 +77,17 @@ fun DailyForecastDetailItem(forecast: DailyForecast, temperatureUnit: Temperatur
 
             if (expanded) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                WeatherMetricRow(stringResource(R.string.label_precipitation), "${forecast.precipitationSum} mm (${forecast.precipitationProbability}%)")
-                WeatherMetricRow(stringResource(R.string.label_humidity), "${forecast.averageHumidity}%")
-                WeatherMetricRow(stringResource(R.string.label_pressure), "${forecast.averagePressure.toInt()} hPa")
-                WeatherMetricRow(stringResource(R.string.label_metric_wind_max), "${forecast.windSpeedMax.toInt()} km/h ${forecast.windDirectionDominant.label}")
+                WeatherMetricRow(stringResource(R.string.label_precipitation), stringResource(R.string.unit_mm, forecast.precipitationSum) + " " + stringResource(R.string.unit_percent, forecast.precipitationProbability))
+                WeatherMetricRow(stringResource(R.string.label_humidity), stringResource(R.string.unit_percent, forecast.averageHumidity))
+                WeatherMetricRow(stringResource(R.string.label_pressure), stringResource(R.string.unit_hpa, forecast.averagePressure))
+                WeatherMetricRow(stringResource(R.string.label_metric_wind_max), stringResource(R.string.unit_kmh, forecast.windSpeedMax) + " " + stringResource(forecast.windDirectionDominant.labelResId))
                 WeatherMetricRow(stringResource(R.string.label_metric_uv_index_max), forecast.uvIndexMax.toInt().toString())
                 WeatherMetricRow(stringResource(R.string.label_sunrise), DateFormatter.formatTime(forecast.sunrise, is24Hour = true))
                 WeatherMetricRow(stringResource(R.string.label_sunset), DateFormatter.formatTime(forecast.sunset, is24Hour = true))
                 WeatherMetricRow(stringResource(R.string.label_metric_daylight), DateFormatter.formatDuration(forecast.daylightDurationSeconds))
-                WeatherMetricRow(stringResource(R.string.label_metric_feels_like), "${TemperatureFormatter.format(forecast.feelsLikeMax, temperatureUnit)}° / ${TemperatureFormatter.format(forecast.feelsLikeMin, temperatureUnit)}°")
+                WeatherMetricRow(stringResource(R.string.label_metric_feels_like), 
+                    stringResource(if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit, forecast.feelsLikeMax) + " / " + 
+                    stringResource(if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit, forecast.feelsLikeMin))
             }
         }
     }

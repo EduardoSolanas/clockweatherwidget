@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Reloj y Tiempo</string>
+    <string name="widget_compact_name">Reloj y Tiempo (Compacto)</string>
+    <string name="widget_compact_description">Reloj de paletas con clima actual</string>
+    <string name="widget_extended_name">Reloj y Tiempo (Extendido)</string>
+    <string name="widget_extended_description">Reloj de paletas con clima y pronóstico de 5 días</string>
+    <string name="widget_forecast_name">Reloj y Tiempo (7 días)</string>
+    <string name="widget_forecast_description">Reloj de paletas con clima actual y pronóstico de 7 días</string>
+    <string name="widget_large_name">Reloj y Tiempo (Grande)</string>
+    <string name="widget_large_description">Reloj de paletas con dígitos grandes y clima actual</string>
+
+    <!-- Weather Conditions (WMO codes) -->
+    <string name="condition_clear_sky">Despejado</string>
+    <string name="condition_mainly_clear">Mayormente despejado</string>
+    <string name="condition_partly_cloudy">Parcialmente nublado</string>
+    <string name="label_current_location">Ubicación actual</string>
+    <string name="label_default_location">Londres (Predeterminado)</string>
+    <string name="condition_overcast">Nublado</string>
+    <string name="condition_fog">Niebla</string>
+    <string name="condition_rime_fog">Niebla con escarcha</string>
+    <string name="condition_drizzle_light">Llovizna ligera</string>
+    <string name="condition_drizzle_moderate">Llovizna</string>
+    <string name="condition_drizzle_dense">Llovizna densa</string>
+    <string name="condition_freezing_drizzle_light">Llovizna helada ligera</string>
+    <string name="condition_freezing_drizzle_dense">Llovizna helada densa</string>
+    <string name="condition_rain_slight">Lluvia ligera</string>
+    <string name="condition_rain_moderate">Lluvia</string>
+    <string name="condition_rain_heavy">Lluvia fuerte</string>
+    <string name="condition_freezing_rain_light">Lluvia helada ligera</string>
+    <string name="condition_freezing_rain_heavy">Lluvia helada fuerte</string>
+    <string name="condition_snow_slight">Nieve ligera</string>
+    <string name="condition_snow_moderate">Nieve</string>
+    <string name="condition_snow_heavy">Nieve fuerte</string>
+    <string name="condition_snow_grains">Cinarra (nieve granulada)</string>
+    <string name="condition_rain_showers_slight">Chubascos ligeros</string>
+    <string name="condition_rain_showers_moderate">Chubascos</string>
+    <string name="condition_rain_showers_violent">Chubascos violentos</string>
+    <string name="condition_snow_showers_slight">Chubascos de nieve ligeros</string>
+    <string name="condition_snow_showers_heavy">Chubascos de nieve fuertes</string>
+    <string name="condition_thunderstorm">Tormenta</string>
+    <string name="condition_thunderstorm_hail">Tormenta con granizo</string>
+    <string name="condition_thunderstorm_hail_heavy">Tormenta fuerte con granizo</string>
+
+    <!-- Weather Detail Labels -->
+    <string name="label_humidity">Humedad</string>
+    <string name="label_feels_like">Sensación térmica</string>
+    <string name="label_dew_point">Punto de rocío</string>
+    <string name="label_precipitation">Precipitación</string>
+    <string name="label_pressure">Presión</string>
+    <string name="label_wind">Viento</string>
+    <string name="label_visibility">Visibilidad</string>
+    <string name="label_uv_index">Índice UV</string>
+    <string name="label_sunrise">Amanecer</string>
+    <string name="label_sunset">Atardecer</string>
+    <string name="label_duration_of_day">Duración del día</string>
+    <string name="label_daily_forecast">Pronóstico diario</string>
+    <string name="label_hourly_forecast">Pronóstico por horas</string>
+    <string name="label_latest_update">Actualizado %s</string>
+    <string name="label_just_now">ahora mismo</string>
+    <string name="label_feels_like_format">Sensación %s</string>
+    <string name="label_feels_like_range_format">Sensación %1$s/%2$s</string>
+    <string name="label_high_low_format">M:%1$s  m:%2$s</string>
+    <string name="label_high_format">↑ %s</string>
+    <string name="label_low_format">↓ %s</string>
+
+    <!-- Weather Detail Screen -->
+    <string name="label_loading_weather">Cargando clima…</string>
+    <string name="action_retry">Reintentar</string>
+    <string name="action_grant_permission">Conceder permiso</string>
+    <string name="error_location_permission_required">Se requiere permiso de ubicación para mostrar el clima de tu posición actual.</string>
+    <string name="cd_navigate_back">Volver</string>
+    <string name="cd_settings">Ajustes</string>
+    <string name="label_weather_fallback_title">Tiempo</string>
+
+    <!-- CurrentWeatherCard -->
+    <string name="label_next_24_weather_forecast">PRONÓSTICO PRÓXIMAS 24H</string>
+    <string name="label_7day_forecast">PRONÓSTICO 7 DÍAS</string>
+    <string name="label_today">Hoy</string>
+    <string name="label_conditions">CONDICIONES</string>
+    <string name="label_air_quality">CALIDAD DEL AIRE</string>
+    <string name="label_updated_format">Actualizado %s</string>
+    <string name="label_sun_sunrise">Amanecer</string>
+    <string name="label_sun_sunset">Ocaso</string>
+    <string name="label_sun_daylight">Luz solar</string>
+    <string name="label_metric_rain_total">💧 Lluvia Total</string>
+    <string name="label_metric_pressure">🌬 Presión</string>
+    <string name="label_metric_humidity">💦 Humedad</string>
+    <string name="label_metric_max_wind">💨 Viento Máx</string>
+    <string name="label_metric_rain_chance">🌧 Prob. Lluvia</string>
+    <string name="label_metric_uv_max">☀️ UV Máx</string>
+    <string name="label_metric_precipitation">💧 Precipitación</string>
+    <string name="label_metric_visibility">👁 Visibilidad</string>
+    <string name="label_metric_dew_point">💦 Punto de rocío</string>
+    <string name="label_metric_cloud_cover">☁️ Nubosidad</string>
+    <string name="label_metric_wind_gusts">💨 Ráfagas</string>
+
+    <!-- DailyForecastDetailList -->
+    <string name="label_7_day_forecast_title">Pronóstico de 7 días</string>
+    <string name="label_metric_wind_max">Viento máx</string>
+    <string name="label_metric_uv_index_max">Índice UV máx</string>
+    <string name="label_metric_feels_like">Sensación</string>
+    <string name="label_metric_daylight">Luz solar</string>
+
+    <!-- HourlyForecastList -->
+    <string name="label_72_hour_forecast">Pronóstico 72 horas</string>
+    <string name="label_metric_humidity_short">Humedad: %d%%</string>
+    <string name="label_metric_dew_short">Rocío: %s°</string>
+    <string name="label_metric_uv_short">UV: %d</string>
+    <string name="label_metric_pressure_short">P: %d hPa</string>
+    <string name="label_precip_percent">💧 %d%%</string>
+    <string name="label_wind_speed_kmh">💨 %1$d km/h %2$s</string>
+    <string name="label_wind_speed_mph">💨 %1$d mph %2$s</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_temperature_unit">Unidad de temperatura</string>
+    <string name="settings_wind_speed_unit">Unidad de viento</string>
+    <string name="settings_update_frequency">Frecuencia de actualización</string>
+    <string name="settings_manage_locations">Gestionar ubicaciones</string>
+    <string name="settings_section_clock">Reloj</string>
+    <string name="settings_section_date">Fecha</string>
+    <string name="settings_section_weather">Clima</string>
+    <string name="settings_section_widget">Widget</string>
+    <string name="settings_clock_tile_style_label">Estilo de dígitos</string>
+    <string name="settings_clock_tile_style_desc">Color de fondo de las paletas del reloj</string>
+    <string name="settings_clock_tile_style_dark">◼  Oscuro  (negro/blanco)</string>
+    <string name="settings_clock_tile_style_light">◻  Claro  (blanco/negro)</string>
+    <string name="settings_clock_tile_size_label">Tamaño del reloj</string>
+    <string name="settings_clock_tile_size_desc">Elige qué tan grandes se verán los números en tu pantalla</string>
+    <string name="settings_24h_clock_label">Formato 24 horas</string>
+    <string name="settings_24h_clock_desc">Usar formato 24h en lugar de AM/PM</string>
+    <string name="settings_show_date_label">Mostrar fecha</string>
+    <string name="settings_show_date_desc">Mostrar la fecha actual debajo del reloj</string>
+    <string name="settings_date_font_size_label">Tamaño fuente fecha</string>
+    <string name="settings_temp_celsius">°C — Celsius</string>
+    <string name="settings_temp_fahrenheit">°F — Fahrenheit</string>
+    <string name="settings_show_weather_compact_label">Mostrar clima — compacto / grande</string>
+    <string name="settings_show_weather_compact_desc">Mostrar la tarjeta de clima actual debajo del reloj</string>
+    <string name="settings_show_today_forecast_label">Mostrar hoy — widget pronóstico</string>
+    <string name="settings_show_today_forecast_desc">Mostrar el tiempo de hoy sobre el pronóstico de 7 días</string>
+
+    <!-- Language Settings -->
+    <string name="settings_language">Idioma</string>
+    <string name="settings_language_system">Sistema (Predeterminado)</string>
+    <string name="settings_language_en">Inglés</string>
+    <string name="settings_language_es">Español</string>
+
+    <!-- Widget Config -->
+    <string name="config_title">Configurar Widget</string>
+    <string name="config_select_location">Seleccionar ubicación</string>
+    <string name="config_search_city">Buscar ciudad…</string>
+    <string name="config_use_current_location">Usar ubicación actual</string>
+    <string name="config_done">Listo</string>
+    <string name="config_add_widget">Añadir Widget</string>
+    <string name="config_selected_format">Seleccionado: %1$s, %2$s</string>
+    <string name="config_temperature_unit">Unidad de Temperatura</string>
+    <string name="cd_location_selected">Seleccionado</string>
+
+    <!-- Errors -->
+    <string name="error_no_network">Sin conexión a internet. Mostrando datos locales.</string>
+    <string name="error_no_data">No hay datos disponibles. Comprueba tu conexión.</string>
+    <string name="error_location_permission">Permiso de ubicación requerido</string>
+    <string name="label_unknown">Desconocido</string>
+    <string name="aq_good">Bueno</string>
+    <string name="aq_moderate">Moderado</string>
+    <string name="aq_unhealthy_sensitive">No saludable para sensibles</string>
+    <string name="aq_unhealthy">No saludable</string>
+    <string name="aq_very_unhealthy">Muy poco saludable</string>
+    <string name="aq_hazardous">Peligroso</string>
+    <string name="aq_low">Bajo</string>
+    <string name="aq_high">Alto</string>
+    <string name="aq_very_high">Muy Alto</string>
+
+    <!-- Units -->
+    <string name="unit_celsius">%1$.0f\u00B0</string>
+    <string name="unit_fahrenheit">%1$.0f\u00B0</string>
+    <string name="unit_percent">%d%%</string>
+    <string name="unit_hpa">%1$.0f hPa</string>
+    <string name="unit_mbar">%1$.0f mBar</string>
+    <string name="unit_kmh">%1$.0f km/h</string>
+    <string name="unit_mph">%1$.0f mph</string>
+    <string name="unit_mm">%1$.1f mm</string>
+    <string name="unit_inch">%1$.2f in</string>
+    <string name="unit_km">%1$.1f km</string>
+    <string name="unit_mi">%1$.1f mi</string>
+    <string name="wind_n">N</string>
+    <string name="wind_nne">NNE</string>
+    <string name="wind_ne">NE</string>
+    <string name="wind_ene">ENE</string>
+    <string name="wind_e">E</string>
+    <string name="wind_ese">ESE</string>
+    <string name="wind_se">SE</string>
+    <string name="wind_sse">SSE</string>
+    <string name="wind_s">S</string>
+    <string name="wind_ssw">SSW</string>
+    <string name="wind_sw">SO</string>
+    <string name="wind_wsw">OSO</string>
+    <string name="wind_w">O</string>
+    <string name="wind_wnw">ONO</string>
+    <string name="wind_nw">NO</string>
+    <string name="wind_nnw">NNO</string>
+    <string name="size_small">Pequeño</string>
+    <string name="size_medium">Mediano</string>
+    <string name="size_large">Grande</string>
+    <string name="size_xl">XL</string>
+    <string name="unit_duration_format">%1$dh %2$dm</string>
+    <string name="label_1_min_ago">hace 1 minuto</string>
+    <string name="label_mins_ago">hace %d minutos</string>
+    <string name="label_1_hour_ago">hace 1 hora</string>
+    <string name="label_hours_ago">hace %d horas</string>
+</resources>

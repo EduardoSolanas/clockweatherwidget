@@ -2,7 +2,7 @@ package com.clockweather.app.presentation.detail
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import com.clockweather.app.presentation.detail.screen.WeatherDetailScreen
@@ -11,7 +11,7 @@ import com.clockweather.app.presentation.settings.SettingsActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class WeatherDetailActivity : ComponentActivity() {
+class WeatherDetailActivity : AppCompatActivity() {
 
     private val viewModel: WeatherDetailViewModel by viewModels()
 
