@@ -34,6 +34,7 @@ fun SettingsScreen(
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
     val isHighPrecisionEnabled by viewModel.isHighPrecisionEnabled.collectAsStateWithLifecycle()
     val isExactAlarmGranted by viewModel.isExactAlarmPermissionGranted.collectAsStateWithLifecycle()
+    val flipAnimationEnabled by viewModel.flipAnimationEnabled.collectAsStateWithLifecycle()
 
     val context = androidx.compose.ui.platform.LocalContext.current
     
@@ -120,6 +121,15 @@ fun SettingsScreen(
                 description = stringResource(R.string.settings_24h_clock_desc),
                 checked     = use24hClock,
                 onCheckedChange = { viewModel.set24hClock(it) }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            SettingsToggleRow(
+                label       = stringResource(R.string.settings_flip_animation_label),
+                description = stringResource(R.string.settings_flip_animation_desc),
+                checked     = flipAnimationEnabled,
+                onCheckedChange = { viewModel.setFlipAnimationEnabled(it) }
             )
 
             Spacer(Modifier.height(16.dp))

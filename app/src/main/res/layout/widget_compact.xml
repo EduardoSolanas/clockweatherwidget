@@ -20,10 +20,11 @@
             android:layout_height="wrap_content"
             android:layout_weight="1">
 
-            <ViewFlipper android:animateFirstView="false"
+            <ViewFlipper
                 android:id="@+id/digit_h1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:animateFirstView="false"
                 android:background="@drawable/flip_digit_bg"
                 android:inAnimation="@anim/flip_in"
                 android:outAnimation="@anim/flip_out">
@@ -39,7 +40,6 @@
                 <TextView android:id="@+id/digit_h1_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
             </ViewFlipper>
 
-            <!-- Mechanical Hinge Overlay -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -50,13 +50,14 @@
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="@dimen/flip_digit_gap">
+            android:layout_marginStart="@dimen/flip_digit_gap"
+            android:layout_weight="1">
 
-            <ViewFlipper android:animateFirstView="false"
+            <ViewFlipper
                 android:id="@+id/digit_h2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:animateFirstView="false"
                 android:background="@drawable/flip_digit_bg"
                 android:inAnimation="@anim/flip_in"
                 android:outAnimation="@anim/flip_out">
@@ -71,6 +72,7 @@
                 <TextView android:id="@+id/digit_h2_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
                 <TextView android:id="@+id/digit_h2_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
             </ViewFlipper>
+
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -83,22 +85,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/flip_digit_gap"
+            android:fontFamily="monospace"
             android:gravity="center"
             android:text=":"
             android:textColor="#80FFFFFF"
             android:textSize="44sp"
-            android:textStyle="bold"
-            android:fontFamily="monospace" />
+            android:textStyle="bold" />
 
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1">
 
-            <ViewFlipper android:animateFirstView="false"
+            <ViewFlipper
                 android:id="@+id/digit_m1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:animateFirstView="false"
                 android:background="@drawable/flip_digit_bg"
                 android:inAnimation="@anim/flip_in"
                 android:outAnimation="@anim/flip_out">
@@ -113,6 +116,7 @@
                 <TextView android:id="@+id/digit_m1_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
                 <TextView android:id="@+id/digit_m1_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
             </ViewFlipper>
+
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -123,13 +127,14 @@
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="@dimen/flip_digit_gap">
+            android:layout_marginStart="@dimen/flip_digit_gap"
+            android:layout_weight="1">
 
-            <ViewFlipper android:animateFirstView="false"
+            <ViewFlipper
                 android:id="@+id/digit_m2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:animateFirstView="false"
                 android:background="@drawable/flip_digit_bg"
                 android:inAnimation="@anim/flip_in"
                 android:outAnimation="@anim/flip_out">
@@ -144,6 +149,7 @@
                 <TextView android:id="@+id/digit_m2_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
                 <TextView android:id="@+id/digit_m2_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
             </ViewFlipper>
+
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -156,27 +162,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:layout_marginStart="6dp"
             android:layout_marginBottom="4dp"
+            android:layout_marginStart="6dp"
             android:textColor="@color/widget_text_secondary"
             android:textSize="@dimen/flip_ampm_text_size"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Date display -->
     <TextView
         android:id="@+id/widget_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:layout_marginTop="4dp"
+        android:gravity="center"
+        android:letterSpacing="0.05"
         android:text="Mon, Mar 9"
         android:textColor="#FFFFFF"
         android:textSize="15sp"
-        android:textStyle="bold"
-        android:letterSpacing="0.05" />
+        android:textStyle="bold" />
 
-    <!-- WEATHER INFO CARD -->
     <LinearLayout
         android:id="@+id/weather_card"
         android:layout_width="match_parent"
@@ -185,30 +189,32 @@
         android:background="@drawable/weather_card_bg"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:visibility="gone"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="start|center_vertical">
+            android:gravity="start|center_vertical"
+            android:orientation="vertical">
+
             <TextView
                 android:id="@+id/city_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:maxLines="1"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold"
-                android:maxLines="1" />
+                android:textStyle="bold" />
+
             <TextView
                 android:id="@+id/condition_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:maxLines="1"
                 android:textColor="@color/widget_text_secondary"
-                android:textSize="11sp"
-                android:maxLines="1" />
+                android:textSize="11sp" />
         </LinearLayout>
 
         <ImageView
@@ -225,6 +231,7 @@
             android:layout_weight="1"
             android:gravity="end|center_vertical"
             android:orientation="vertical">
+
             <TextView
                 android:id="@+id/current_temp"
                 android:layout_width="match_parent"
@@ -233,6 +240,7 @@
                 android:textColor="@color/widget_text_primary"
                 android:textSize="24sp"
                 android:textStyle="bold" />
+
             <TextView
                 android:id="@+id/high_low"
                 android:layout_width="match_parent"

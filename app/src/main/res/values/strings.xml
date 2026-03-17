@@ -130,6 +130,8 @@
     <string name="settings_clock_tile_size_desc">Choose how big the clock numbers should be on your home screen</string>
     <string name="settings_24h_clock_label">24-hour clock</string>
     <string name="settings_24h_clock_desc">Use 24 h format instead of AM/PM</string>
+    <string name="settings_flip_animation_label">Flip animation</string>
+    <string name="settings_flip_animation_desc">Animate the clock digits with a flip effect when the time changes</string>
     <string name="settings_show_date_label">Show date</string>
     <string name="settings_show_date_desc">Display the current date below the clock</string>
     <string name="settings_date_font_size_label">Date font size</string>

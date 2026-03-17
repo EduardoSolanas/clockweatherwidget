@@ -14,11 +14,10 @@ import com.clockweather.app.di.WidgetEntryPoint
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.ClockTileSize
-import kotlinx.coroutines.CoroutineScope
+import com.clockweather.app.util.WidgetPrefsCache
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -35,23 +34,39 @@ abstract class BaseWidgetUpdater(
     protected val entryPoint: WidgetEntryPoint
 ) {
     private val tag = this::class.simpleName ?: "WidgetUpdater"
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     abstract val layoutResId: Int
     abstract val rootViewId: Int
     abstract val dateViewId: Int
+    open val usesSimpleClockDigits: Boolean = false
+
+    /**
+     * Resolves whether simple (non-animated) clock digits should be used.
+     * Returns true when the user has disabled the flip animation in settings,
+     * OR when the subclass has hardcoded usesSimpleClockDigits = true.
+     */
+    protected fun resolveUsesSimpleDigits(prefs: Preferences): Boolean {
+        if (usesSimpleClockDigits) return true
+        val flipEnabled = prefs[booleanPreferencesKey("flip_animation_enabled")] ?: true
+        return !flipEnabled
+    }
 
     /** Called after weather data is available. Subclasses apply their specific bindings. */
     abstract fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences)
 
-    fun updateWidget(appWidgetId: Int, isMinuteTick: Boolean = false) {
-        // Run completely asynchronously
-        scope.launch {
+    suspend fun updateWidget(
+        appWidgetId: Int,
+        isMinuteTick: Boolean = false,
+        allowWeatherRefresh: Boolean = !isMinuteTick
+    ) {
+        withContext(Dispatchers.IO) {
             try {
+                Log.d(tag, "updateWidget id=$appWidgetId isMinuteTick=$isMinuteTick usesSimpleClockDigits=$usesSimpleClockDigits")
                 val now = LocalTime.now()
                 val currentEpochMinute = System.currentTimeMillis() / 60000L
                 // Fetch prefs and weather on IO thread
                 val prefs = entryPoint.dataStore().data.first()
+                val useSimple = resolveUsesSimpleDigits(prefs)
                 val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: android.text.format.DateFormat.is24HourFormat(context)
                 val showDate = prefs[booleanPreferencesKey("show_date_in_widget")] ?: true
                 val tempUnitName = prefs[stringPreferencesKey("temperature_unit")] ?: TemperatureUnit.CELSIUS.name
@@ -84,8 +99,16 @@ abstract class BaseWidgetUpdater(
                     views.setOnClickPendingIntent(rootViewId, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
                 } catch (e: Exception) { /* ignore */ }
 
-                // Bind clock. If it's a minute tick, we want the flip animation!
-                WidgetDataBinder.bindClockViews(context, views, appWidgetId, now.hour, now.minute, is24h, isIncremental = isMinuteTick)
+                if (usesSimpleClockDigits) {
+                    // Layout has plain TextViews — set text directly
+                    WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
+                } else if (useSimple) {
+                    // Layout has ViewFlippers but flip animation is disabled — show correct digit without animation
+                    WidgetDataBinder.bindStaticClockViews(context, views, now.hour, now.minute, is24h)
+                } else {
+                    // Layout has ViewFlippers and flip animation is enabled
+                    WidgetDataBinder.bindClockViews(context, views, appWidgetId, now.hour, now.minute, is24h, isIncremental = isMinuteTick)
+                }
 
                 listOf(
                     com.clockweather.app.R.id.digit_h1,
@@ -101,13 +124,20 @@ abstract class BaseWidgetUpdater(
                     if (android.os.Build.VERSION.SDK_INT >= 31) {
                         views.setViewLayoutHeight(id, context.resources.getDimension(dimHeight), android.util.TypedValue.COMPLEX_UNIT_PX)
                     }
-                    
-                    val entryName = context.resources.getResourceEntryName(id)
-                    for (i in 0..9) {
-                        val childId = context.resources.getIdentifier("${entryName}_$i", "id", context.packageName)
-                        if (childId != 0) {
-                            views.setTextColor(childId, digitColor)
-                            views.setTextViewTextSize(childId, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
+
+                    if (usesSimpleClockDigits) {
+                        // Layout has plain TextViews — style them directly
+                        views.setTextColor(id, digitColor)
+                        views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
+                    } else {
+                        // Layout has ViewFlippers — style each child TextView
+                        val entryName = context.resources.getResourceEntryName(id)
+                        for (i in 0..9) {
+                            val childId = context.resources.getIdentifier("${entryName}_$i", "id", context.packageName)
+                            if (childId != 0) {
+                                views.setTextColor(childId, digitColor)
+                                views.setTextViewTextSize(childId, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
+                            }
                         }
                     }
                 }
@@ -149,11 +179,11 @@ abstract class BaseWidgetUpdater(
                 if (location == null) {
                     appWidgetManager.updateAppWidget(appWidgetId, views)
                     WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
-                    return@launch
+                    return@withContext
                 }
                 
                 var weather = weatherRepo.getCachedWeatherData(location.id).first()
-                if (weather == null && !isMinuteTick) { // Don't block minute ticks on network
+                if (weather == null && allowWeatherRefresh) {
                     try {
                         weatherRepo.refreshWeatherData(location)
                         weather = weatherRepo.getCachedWeatherData(location.id).first()
@@ -177,45 +207,71 @@ abstract class BaseWidgetUpdater(
     /**
      * Reuses full update function for clock ticks.
      */
-    fun updateClockOnly(appWidgetId: Int) {
-        Log.d(tag, "Updating clock only for widget $appWidgetId")
-        scope.launch {
+    suspend fun updateClockOnly(appWidgetId: Int) {
+        Log.d(tag, "Updating clock only for widget $appWidgetId usesSimpleClockDigits=$usesSimpleClockDigits")
+        withContext(Dispatchers.IO) {
             try {
+                // Use in-memory cache instead of disk I/O for the hot minute-tick path
+                val prefs = WidgetPrefsCache.get(entryPoint.dataStore())
+                val useSimple = resolveUsesSimpleDigits(prefs)
+
+                if (!useSimple && !WidgetClockStateStore.isBaselineReady(context, appWidgetId)) {
+                    // One-time full refresh without setDisplayedChild to reset host-side merged actions.
+                    updateWidget(appWidgetId, allowWeatherRefresh = false)
+                    WidgetClockStateStore.markBaselineReady(context, appWidgetId)
+                    Log.d(tag, "Widget $appWidgetId baseline full refresh completed.")
+                    return@withContext
+                }
+
                 val currentEpochMinute = System.currentTimeMillis() / 60000L
                 val lastRenderedEpochMinute = WidgetClockStateStore.getLastRenderedEpochMinute(context, appWidgetId)
                 val updateMode = WidgetClockUpdateModeResolver.resolve(lastRenderedEpochMinute, currentEpochMinute)
+                Log.d(tag, "Clock-only mode for $appWidgetId: last=$lastRenderedEpochMinute current=$currentEpochMinute mode=$updateMode useSimple=$useSimple")
                 if (updateMode == WidgetClockUpdateMode.FULL) {
                     Log.d(tag, "Falling back to full update for widget $appWidgetId. last=$lastRenderedEpochMinute current=$currentEpochMinute")
-                    updateWidget(appWidgetId)
-                    return@launch
+                    updateWidget(appWidgetId, allowWeatherRefresh = false)
+                    return@withContext
                 }
 
-                // Fetch prefs and weather on IO thread
-                val prefs = entryPoint.dataStore().data.first()
                 val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: android.text.format.DateFormat.is24HourFormat(context)
                 
                 val views = RemoteViews(context.packageName, layoutResId)
                 val now = LocalTime.now()
 
-                // Ensure all areas (digits, root, etc) remain bound to our app during partial updates
-                bindAllClicks(views, appWidgetId)
+                // Avoid rebinding click actions on every incremental tick for ViewFlipper layouts,
+                // as this can force host-side redraws that look like multi-digit flicker.
+                if (useSimple) {
+                    bindAllClicks(views, appWidgetId)
+                }
 
-                WidgetDataBinder.bindClockViews(
-                    context, 
-                    views, 
-                    appWidgetId, 
-                    now.hour, 
-                    now.minute, 
-                    is24h, 
-                    isIncremental = true
-                )
+                if (usesSimpleClockDigits) {
+                    // Layout has plain TextViews
+                    WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
+                } else if (useSimple) {
+                    // Layout has ViewFlippers but flip animation is disabled
+                    WidgetDataBinder.bindStaticClockViews(context, views, now.hour, now.minute, is24h)
+                } else {
+                    WidgetDataBinder.bindClockViews(
+                        context,
+                        views,
+                        appWidgetId,
+                        now.hour,
+                        now.minute,
+                        is24h,
+                        isIncremental = true
+                    )
+                }
 
-                // IMPORTANT: For minute ticks we MUST use partiallyUpdateAppWidget to prevent the 
-                // launcher from completely destroying and recreating the widget hierarchy (which causes a full screen flicker).
-                // `WidgetDataBinder` now guarantees we don't spam `setDisplayedChild` for identical digits, bypassing the Android infinite animation bug.
-                appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
-                WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
-                Log.d(tag, "Widget $appWidgetId clock-only update successful.")
+                if (useSimple) {
+                    // Non-animated mode: full refresh to update the entire widget cleanly.
+                    updateWidget(appWidgetId, allowWeatherRefresh = false)
+                    Log.d(tag, "Widget $appWidgetId minute update completed via full refresh (no flip).")
+                } else {
+                    // ViewFlipper-based digits need partial updates to trigger flip animations.
+                    appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
+                    WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
+                    Log.d(tag, "Widget $appWidgetId clock-only update successful.")
+                }
             } catch (e: Exception) {
                 Log.e(tag, "Clock-only update failed for widget $appWidgetId", e)
             }

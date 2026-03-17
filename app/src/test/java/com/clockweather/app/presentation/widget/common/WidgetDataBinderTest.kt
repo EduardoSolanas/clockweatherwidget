@@ -2,16 +2,13 @@ package com.clockweather.app.presentation.widget.common
 
 import android.content.Context
 import android.content.res.Resources
+import android.util.Log
 import android.widget.RemoteViews
 import com.clockweather.app.R
-import android.util.Log
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import io.mockk.clearMocks
 import org.junit.Before
 import org.junit.Test
 
@@ -35,7 +32,6 @@ class WidgetDataBinderTest {
         every { context.resources } returns resources
         every { context.packageName } returns "com.clockweather.app"
 
-        // Mock getIdentifier to return 1-9 for digit 0-9
         every {
             resources.getIdentifier(any(), eq("id"), eq("com.clockweather.app"))
         } answers {
@@ -45,7 +41,7 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindClockViews non-incremental uses setViewVisibility — no setDisplayedChild`() {
+    fun `bindClockViews non-incremental sets visibility for all digits`() {
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -56,20 +52,28 @@ class WidgetDataBinderTest {
             isIncremental = false
         )
 
-        // Full update must NOT call setDisplayedChild — that would accumulate into
-        // mergeRemoteViews and trigger flip animations on ALL digits on every tick.
+        // Non-incremental uses setViewVisibility (via setDigitVisibility), NOT setDisplayedChild
         verify(exactly = 0) { views.setDisplayedChild(any(), any()) }
 
-        // Instead it sets visibility on each child directly (idempotent, no animation side effects)
-        val h1Id = resources.getIdentifier("digit_h1_1", "id", "com.clockweather.app")
-        verify { views.setViewVisibility(h1Id, android.view.View.VISIBLE) }
-        val h2Id = resources.getIdentifier("digit_h2_0", "id", "com.clockweather.app")
-        verify { views.setViewVisibility(h2Id, android.view.View.VISIBLE) }
+        // digit_h1 -> 1: child 1 VISIBLE, others GONE
+        val h1_1 = resources.getIdentifier("digit_h1_1", "id", "com.clockweather.app")
+        verify { views.setViewVisibility(h1_1, android.view.View.VISIBLE) }
+
+        // digit_h2 -> 0: child 0 VISIBLE
+        val h2_0 = resources.getIdentifier("digit_h2_0", "id", "com.clockweather.app")
+        verify { views.setViewVisibility(h2_0, android.view.View.VISIBLE) }
+
+        // digit_m1 -> 2: child 2 VISIBLE
+        val m1_2 = resources.getIdentifier("digit_m1_2", "id", "com.clockweather.app")
+        verify { views.setViewVisibility(m1_2, android.view.View.VISIBLE) }
+
+        // digit_m2 -> 5: child 5 VISIBLE
+        val m2_5 = resources.getIdentifier("digit_m2_5", "id", "com.clockweather.app")
+        verify { views.setViewVisibility(m2_5, android.view.View.VISIBLE) }
     }
 
     @Test
     fun `bindClockViews incremental only sets displayed child for changed digits`() {
-        // Assume time ticked from 10:25 to 10:26
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -80,17 +84,14 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
-        // h1, h2, m1 are unchanged. m2 is changed
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h2, any()) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m1, any()) }
-        
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 6) }
     }
 
     @Test
     fun `bindClockViews incremental handles hour boundary`() {
-        // Assume time ticked from 09:59 to 10:00
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -101,11 +102,6 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
-        // Previous hour: 09:59. Current: 10:00
-        // h1 changed (0 -> 1)
-        // h2 changed (9 -> 0)
-        // m1 changed (5 -> 0)
-        // m2 changed (9 -> 0)
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h1, 1) }
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h2, 0) }
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 0) }
@@ -114,7 +110,6 @@ class WidgetDataBinderTest {
 
     @Test
     fun `bindClockViews incremental handles minute tens boundary`() {
-        // Assume time ticked from 10:29 to 10:30
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -125,10 +120,6 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
-        // Previous hour: 10:29. Current: 10:30
-        // h1, h2: unchanged
-        // m1 changed (2 -> 3)
-        // m2 changed (9 -> 0)
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h2, any()) }
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 3) }
@@ -136,8 +127,7 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `incremental mode sends NO setTextViewText for any digit — only setDisplayedChild`() {
-        // 10:25 -> 10:26: only m2 changes
+    fun `incremental mode sends NO setTextViewText for any digit only setDisplayedChild`() {
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -148,10 +138,6 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
-        // Incremental path must emit ZERO text commands for all digits (changed or not).
-        // This prevents partiallyUpdateAppWidget / mergeRemoteViews from accumulating
-        // text actions that would cause all ViewFlippers to visually refresh and suppress
-        // the flip animation on the next minute tick.
         val allDigitPrefixes = listOf("digit_h1", "digit_h2", "digit_m1", "digit_m2")
         allDigitPrefixes.forEach { prefix ->
             (0..9).forEach { i ->
@@ -162,7 +148,6 @@ class WidgetDataBinderTest {
             }
         }
 
-        // Only changed digit (m2=6) gets setDisplayedChild
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h2, any()) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m1, any()) }
@@ -171,7 +156,6 @@ class WidgetDataBinderTest {
 
     @Test
     fun `incremental 12h mode handles noon boundary correctly`() {
-        // 11:59 -> 12:00 in 12h mode: display goes from 11:59 to 12:00
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -182,8 +166,6 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
-        // 12h display: prev = 11:59, current = 12:00
-        // h1: 1->1 (unchanged), h2: 1->2 (changed), m1: 5->0 (changed), m2: 9->0 (changed)
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h2, 2) }
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 0) }
@@ -192,7 +174,6 @@ class WidgetDataBinderTest {
 
     @Test
     fun `incremental midnight boundary in 24h mode`() {
-        // 23:59 -> 00:00
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -203,7 +184,6 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
-        // prev = 23:59, current = 00:00 — all digits change
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h1, 0) }
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h2, 0) }
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 0) }

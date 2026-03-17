@@ -130,6 +130,8 @@
     <string name="settings_clock_tile_size_desc">Elige qué tan grandes se verán los números en tu pantalla</string>
     <string name="settings_24h_clock_label">Formato 24 horas</string>
     <string name="settings_24h_clock_desc">Usar formato 24h en lugar de AM/PM</string>
+    <string name="settings_flip_animation_label">Animación de volteo</string>
+    <string name="settings_flip_animation_desc">Animar los dígitos del reloj con un efecto de volteo cuando cambia la hora</string>
     <string name="settings_show_date_label">Mostrar fecha</string>
     <string name="settings_show_date_desc">Mostrar la fecha actual debajo del reloj</string>
     <string name="settings_date_font_size_label">Tamaño fuente fecha</string>

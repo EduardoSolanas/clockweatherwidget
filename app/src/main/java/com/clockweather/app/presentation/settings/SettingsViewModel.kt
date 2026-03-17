@@ -49,6 +49,7 @@ class SettingsViewModel @Inject constructor(
         val KEY_CLOCK_TILE_SIZE = stringPreferencesKey("clock_tile_size")
         val KEY_LANGUAGE = stringPreferencesKey("language")
         val KEY_HIGH_PRECISION = booleanPreferencesKey("high_precision_clock")
+        val KEY_FLIP_ANIMATION = booleanPreferencesKey("flip_animation_enabled")
         const val DEFAULT_DATE_FONT_SP = 15f
         const val CLOCK_THEME_DARK = "dark"
         const val CLOCK_THEME_LIGHT = "light"
@@ -112,8 +113,12 @@ class SettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "system")
 
     val isHighPrecisionEnabled: StateFlow<Boolean> = dataStore.data
-        .map { prefs -> prefs[KEY_HIGH_PRECISION] ?: false }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+        .map { prefs -> prefs[KEY_HIGH_PRECISION] ?: true }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    val flipAnimationEnabled: StateFlow<Boolean> = dataStore.data
+        .map { prefs -> prefs[KEY_FLIP_ANIMATION] ?: true }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     private val _isExactAlarmPermissionGranted = MutableStateFlow(checkExactAlarmPermission())
     val isExactAlarmPermissionGranted = _isExactAlarmPermissionGranted.asStateFlow()
@@ -217,6 +222,31 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setFlipAnimationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_FLIP_ANIMATION] = enabled }
+            // Clear baseline state so widgets do a full rebuild with the new mode
+            resetClockStateForActiveWidgets()
+            triggerWidgetUpdate()
+        }
+    }
+
+    private fun resetClockStateForActiveWidgets() {
+        val mgr = AppWidgetManager.getInstance(context)
+        val providerClasses = listOf(
+            com.clockweather.app.presentation.widget.compact.CompactWidgetProvider::class.java,
+            com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider::class.java,
+            com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider::class.java,
+            com.clockweather.app.presentation.widget.large.LargeWidgetProvider::class.java
+        )
+        providerClasses.forEach { providerClass ->
+            val ids = mgr.getAppWidgetIds(android.content.ComponentName(context, providerClass))
+            ids.forEach { id ->
+                com.clockweather.app.presentation.widget.common.WidgetClockStateStore.clearWidget(context, id)
+            }
+        }
+    }
+
     fun refreshPermissionStatus() {
         _isExactAlarmPermissionGranted.value = checkExactAlarmPermission()
     }
@@ -236,6 +266,8 @@ class SettingsViewModel @Inject constructor(
      */
     private fun triggerWidgetUpdate() {
         val app = context.applicationContext as? ClockWeatherApplication
-        app?.refreshAllWidgets(context, isClockTick = false)
+        viewModelScope.launch {
+            app?.refreshAllWidgets(context, isClockTick = false)
+        }
     }
 }

@@ -10,6 +10,7 @@ import com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider
 import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
 import com.clockweather.app.presentation.widget.large.LargeWidgetProvider
 import io.mockk.*
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,7 +51,9 @@ class ClockWeatherApplicationTest {
         // For simplicity in this test, we verify that getAppWidgetIds was called for all 4 types.
         
         // Act
-        app.refreshAllWidgets(context, isClockTick = true)
+        runBlocking {
+            app.refreshAllWidgets(context, isClockTick = true)
+        }
 
         // Assert
         verify { appWidgetManager.getAppWidgetIds(match { it.className == CompactWidgetProvider::class.java.name }) }

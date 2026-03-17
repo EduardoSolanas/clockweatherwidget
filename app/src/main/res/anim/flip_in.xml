@@ -1,16 +1,20 @@
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:shareInterpolator="false">
-    <!-- Unfold from the center crease with a subtle settle bounce -->
+    <!-- Open from the top edge so the new tile feels like it flips into place. -->
     <scale
-        android:duration="200"
-        android:fromYScale="0.0"
-        android:toYScale="1.0"
-        android:pivotY="50%"
-        android:startOffset="150"
-        android:interpolator="@android:anim/overshoot_interpolator" />
-    <alpha
         android:duration="150"
-        android:fromAlpha="0.0"
+        android:fromYScale="0.08"
+        android:toYScale="1.0"
+        android:pivotY="0%"
+        android:interpolator="@android:anim/decelerate_interpolator" />
+    <translate
+        android:duration="150"
+        android:fromYDelta="-8%p"
+        android:toYDelta="0"
+        android:interpolator="@android:anim/decelerate_interpolator" />
+    <alpha
+        android:duration="120"
+        android:fromAlpha="0.55"
         android:toAlpha="1.0"
-        android:startOffset="150" />
+        android:interpolator="@android:anim/decelerate_interpolator" />
 </set>

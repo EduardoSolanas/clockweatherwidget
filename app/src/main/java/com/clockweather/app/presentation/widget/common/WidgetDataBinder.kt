@@ -14,6 +14,59 @@ import java.time.LocalDate
 
 object WidgetDataBinder {
 
+    fun bindSimpleClockViews(
+        views: RemoteViews,
+        hour: Int,
+        minute: Int,
+        is24h: Boolean = true
+    ) {
+        val displayHour = if (is24h) hour
+            else if (hour == 0) 12
+            else if (hour > 12) hour - 12
+            else hour
+
+        val h1 = displayHour / 10
+        val h2 = displayHour % 10
+        val m1 = minute / 10
+        val m2 = minute % 10
+
+        views.setTextViewText(R.id.digit_h1, h1.toString())
+        views.setTextViewText(R.id.digit_h2, h2.toString())
+        views.setTextViewText(R.id.digit_m1, m1.toString())
+        views.setTextViewText(R.id.digit_m2, m2.toString())
+        views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
+    }
+
+    /**
+     * Sets the correct digit on ViewFlipper layouts WITHOUT animation.
+     * Used when the user disables flip animation but the layout still uses ViewFlippers.
+     * Sets the displayed child directly and makes only the active digit visible.
+     */
+    fun bindStaticClockViews(
+        context: Context,
+        views: RemoteViews,
+        hour: Int,
+        minute: Int,
+        is24h: Boolean = true
+    ) {
+        val displayHour = if (is24h) hour
+            else if (hour == 0) 12
+            else if (hour > 12) hour - 12
+            else hour
+
+        val h1 = displayHour / 10
+        val h2 = displayHour % 10
+        val m1 = minute / 10
+        val m2 = minute % 10
+
+        // Use visibility to show correct digit — no setDisplayedChild, no animation
+        setDigitVisibility(context, views, "digit_h1", h1)
+        setDigitVisibility(context, views, "digit_h2", h2)
+        setDigitVisibility(context, views, "digit_m1", m1)
+        setDigitVisibility(context, views, "digit_m2", m2)
+        views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
+    }
+
     fun bindClockViews(
         context: Context,
         views: RemoteViews,
@@ -55,18 +108,22 @@ object WidgetDataBinder {
             // Incremental: ONLY setDisplayedChild for changed digits.
             // AND: Ensure the newly selected child is VISIBLE (in case a previous full update set it to GONE)
             if (h1 != ph1) {
+                android.util.Log.d("WidgetDataBinder", "Incremental flip h1: $ph1 -> $h1")
                 views.setDisplayedChild(R.id.digit_h1, h1)
                 setDigitVisibility(context, views, "digit_h1", h1)
             }
             if (h2 != ph2) {
+                android.util.Log.d("WidgetDataBinder", "Incremental flip h2: $ph2 -> $h2")
                 views.setDisplayedChild(R.id.digit_h2, h2)
                 setDigitVisibility(context, views, "digit_h2", h2)
             }
             if (m1 != pm1) {
+                android.util.Log.d("WidgetDataBinder", "Incremental flip m1: $pm1 -> $m1")
                 views.setDisplayedChild(R.id.digit_m1, m1)
                 setDigitVisibility(context, views, "digit_m1", m1)
             }
             if (m2 != pm2) {
+                android.util.Log.d("WidgetDataBinder", "Incremental flip m2: $pm2 -> $m2")
                 views.setDisplayedChild(R.id.digit_m2, m2)
                 setDigitVisibility(context, views, "digit_m2", m2)
             }
@@ -75,13 +132,12 @@ object WidgetDataBinder {
             val prevAmpmText = if (is24h) "" else if (prevHour < 12) "AM" else "PM"
             if (ampmText != prevAmpmText) views.setTextViewText(R.id.ampm, ampmText)
         } else {
-            // Full update: use visibility only so a full refresh does not enqueue
-            // flip commands for every digit and suppress the next incremental animation.
+            // For full refreshes, avoid enqueueing setDisplayedChild on every digit.
+            // Those actions can accumulate with partial updates and cause all tiles to flicker.
             setDigitVisibility(context, views, "digit_h1", h1)
             setDigitVisibility(context, views, "digit_h2", h2)
             setDigitVisibility(context, views, "digit_m1", m1)
             setDigitVisibility(context, views, "digit_m2", m2)
-            
             views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
         }
     }

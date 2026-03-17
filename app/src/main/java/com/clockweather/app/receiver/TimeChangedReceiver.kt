@@ -4,6 +4,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.clockweather.app.ClockWeatherApplication
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class TimeChangedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -11,12 +14,18 @@ class TimeChangedReceiver : BroadcastReceiver() {
             Intent.ACTION_TIMEZONE_CHANGED,
             Intent.ACTION_TIME_CHANGED,
             Intent.ACTION_DATE_CHANGED -> {
-                // Trigger immediate full widget refresh via the Application class helper
-                val app = context.applicationContext as? ClockWeatherApplication
-                app?.refreshAllWidgets(context, isClockTick = false)
-                
-                // Reschedule the alarm for the new time's next minute boundary
-                ClockAlarmReceiver.scheduleNextTick(context)
+                val pendingResult = goAsync()
+                CoroutineScope(Dispatchers.Default).launch {
+                    try {
+                        val app = context.applicationContext as? ClockWeatherApplication
+                        app?.refreshAllWidgets(context, isClockTick = false)
+
+                        val isHighPrecision = app?.resolveHighPrecision() ?: true
+                        ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
+                    } finally {
+                        pendingResult.finish()
+                    }
+                }
             }
         }
     }
