@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clockweather.app.ClockWeatherApplication
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
@@ -204,13 +205,9 @@ class SettingsViewModel @Inject constructor(
 
     /**
      * Kicks all active widgets to re-draw immediately after a pref change.
-     * Uses the same broadcast mechanism as the clock-tick alarm.
      */
     private fun triggerWidgetUpdate() {
-        val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
-            setPackage(context.packageName)
-        }
-        com.clockweather.app.presentation.widget.common.WidgetUpdateScheduler
-            .sendUpdateBroadcast(context)
+        val app = context.applicationContext as? ClockWeatherApplication
+        app?.refreshAllWidgets(context, isClockTick = false)
     }
 }

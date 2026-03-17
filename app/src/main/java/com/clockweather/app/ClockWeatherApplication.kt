@@ -7,12 +7,19 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import com.clockweather.app.presentation.widget.common.WidgetUpdateScheduler
+import com.clockweather.app.di.WidgetEntryPoint
+import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
+import com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider
+import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
+import com.clockweather.app.presentation.widget.large.LargeWidgetProvider
 import com.clockweather.app.presentation.settings.SettingsViewModel
+import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
@@ -31,24 +38,48 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        // Restore saved language setting before any Activity launches
         restoreLanguageSetting()
 
-        // Register for system time ticks to update widgets every minute
+        // Centralized time tick handler
         val timeTickReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                if (intent?.action == Intent.ACTION_TIME_TICK) {
-                    context?.let { WidgetUpdateScheduler.sendUpdateBroadcast(it, isClockTick = true) }
-                }
+                if (intent?.action != Intent.ACTION_TIME_TICK) return
+                context?.let { refreshAllWidgets(it, isClockTick = true) }
             }
         }
         registerReceiver(timeTickReceiver, IntentFilter(Intent.ACTION_TIME_TICK))
     }
 
+    /**
+     * Internal helper to refresh all active widgets.
+     * @param isClockTick If true, it performs a partial 'incremental' clock update (animations enabled).
+     *                    If false, it performs a full widget update.
+     */
+    fun refreshAllWidgets(context: Context, isClockTick: Boolean) {
+        val mgr = AppWidgetManager.getInstance(context)
+        val entryPoint = EntryPointAccessors.fromApplication(context, WidgetEntryPoint::class.java)
+        
+        val providers = listOf(
+            CompactWidgetProvider(),
+            ExtendedWidgetProvider(),
+            ForecastWidgetProvider(),
+            LargeWidgetProvider()
+        )
+
+        providers.forEach { provider ->
+            val ids = mgr.getAppWidgetIds(ComponentName(context, provider::class.java))
+            if (ids.isNotEmpty()) {
+                val updater = provider.getUpdater(context, mgr, entryPoint)
+                ids.forEach { id ->
+                    if (isClockTick) updater.updateClockOnly(id)
+                    else updater.updateWidget(id)
+                }
+            }
+        }
+    }
+
     private fun restoreLanguageSetting() {
         try {
-            // Use a temporary scope so we don't conflict with Hilt's singleton DataStore.
-            // We just need a one-shot read before any Activity starts.
             val tempScope = CoroutineScope(Dispatchers.IO)
             val tempStore = PreferenceDataStoreFactory.create(scope = tempScope) {
                 File(filesDir, "datastore/settings.preferences_pb")
@@ -58,7 +89,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                     .map { prefs -> prefs[SettingsViewModel.KEY_LANGUAGE] ?: "system" }
                     .first()
             }
-            tempScope.cancel() // cancel immediately after read
+            tempScope.cancel() 
             val locale = if (languageCode == "system") {
                 LocaleListCompat.getEmptyLocaleList()
             } else {
@@ -66,7 +97,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             }
             AppCompatDelegate.setApplicationLocales(locale)
         } catch (_: Exception) {
-            // First launch or read failure — leave system locale
+            // First launch or read failure
         }
     }
 

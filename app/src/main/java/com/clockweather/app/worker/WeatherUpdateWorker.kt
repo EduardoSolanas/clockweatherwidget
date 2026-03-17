@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.clockweather.app.ClockWeatherApplication
 import com.clockweather.app.domain.repository.LocationRepository
 import com.clockweather.app.domain.repository.WeatherRepository
-import com.clockweather.app.presentation.widget.common.WidgetUpdateScheduler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -25,8 +25,10 @@ class WeatherUpdateWorker @AssistedInject constructor(
             locations.forEach { location ->
                 weatherRepository.refreshWeatherData(location)
             }
-            // Notify widgets to update
-            WidgetUpdateScheduler.sendUpdateBroadcast(applicationContext)
+            // Notify widgets to update via centralized helper
+            val app = applicationContext as? ClockWeatherApplication
+            app?.refreshAllWidgets(applicationContext, isClockTick = false)
+            
             Result.success()
         } catch (e: Exception) {
             if (runAttemptCount < 3) Result.retry() else Result.failure()
@@ -37,4 +39,3 @@ class WeatherUpdateWorker @AssistedInject constructor(
         const val WORK_NAME = "weather_update_work"
     }
 }
-

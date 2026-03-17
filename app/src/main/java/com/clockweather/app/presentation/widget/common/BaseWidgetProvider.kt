@@ -17,16 +17,7 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
         appWidgetIds.forEach { updater.updateWidget(it) }
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
-        if (intent.action == WidgetUpdateScheduler.ACTION_CLOCK_TICK) {
-            val appWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS) ?: return
-            val mgr = AppWidgetManager.getInstance(context)
-            val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
-            val updater = getUpdater(context, mgr, entryPoint)
-            appWidgetIds.forEach { updater.updateClockOnly(it) }
-        }
-    }
+
 
     override fun onEnabled(context: Context) {
         // No longer need manual alarm scheduling; 
