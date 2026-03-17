@@ -50,27 +50,28 @@ object WidgetDataBinder {
         val pm2 = prevMinute % 10
 
         if (isIncremental) {
-            // Incremental: ONLY setDisplayedChild for changed digits — no text commands.
-            // partiallyUpdateAppWidget uses mergeRemoteViews() which accumulates all prior
-            // full-update actions plus new ones. Any extra commands (setTextViewText, etc.)
-            // would replay the full-update's digit restoration, causing all digits to visually
-            // refresh and suppressing the ViewFlipper flip animation.
+            // Incremental: ONLY setDisplayedChild for changed digits.
             if (h1 != ph1) views.setDisplayedChild(R.id.digit_h1, h1)
             if (h2 != ph2) views.setDisplayedChild(R.id.digit_h2, h2)
             if (m1 != pm1) views.setDisplayedChild(R.id.digit_m1, m1)
             if (m2 != pm2) views.setDisplayedChild(R.id.digit_m2, m2)
+            
             val ampmText = if (is24h) "" else if (hour < 12) "AM" else "PM"
             val prevAmpmText = if (is24h) "" else if (prevHour < 12) "AM" else "PM"
             if (ampmText != prevAmpmText) views.setTextViewText(R.id.ampm, ampmText)
         } else {
-            // Full update: set digit children via setViewVisibility — NOT setDisplayedChild.
-            // setDisplayedChild triggers animation and accumulates into mergeRemoteViews, so
-            // every subsequent partial update's reapply() would replay it and animate all digits.
-            // setViewVisibility is idempotent: replaying it has no animation side effects.
+            // Full update: set digit children via setDisplayedChild to fix index,
+            // AND set visibility for all children to ensure robustness.
+            views.setDisplayedChild(R.id.digit_h1, h1)
+            views.setDisplayedChild(R.id.digit_h2, h2)
+            views.setDisplayedChild(R.id.digit_m1, m1)
+            views.setDisplayedChild(R.id.digit_m2, m2)
+            
             setDigitVisibility(context, views, "digit_h1", h1)
             setDigitVisibility(context, views, "digit_h2", h2)
             setDigitVisibility(context, views, "digit_m1", m1)
             setDigitVisibility(context, views, "digit_m2", m2)
+            
             views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
         }
     }
@@ -81,15 +82,15 @@ object WidgetDataBinder {
         prefix: String,
         value: Int
     ) {
+        val packageName = context.packageName
+        val resources = context.resources
         for (i in 0..9) {
-            val childId = context.resources.getIdentifier("${prefix}_$i", "id", context.packageName)
+            val childId = resources.getIdentifier("${prefix}_$i", "id", packageName)
             if (childId != 0) {
                 views.setTextViewText(childId, i.toString())
                 views.setViewVisibility(childId, if (i == value) android.view.View.VISIBLE else android.view.View.GONE)
             }
         }
-        // No setDisplayedChild — that would accumulate into mergeRemoteViews and trigger
-        // flip animations on ALL digits every minute tick via reapply()
     }
 
     fun bindWeatherViews(

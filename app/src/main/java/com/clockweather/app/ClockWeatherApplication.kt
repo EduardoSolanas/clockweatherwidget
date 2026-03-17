@@ -57,48 +57,49 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
      */
     fun refreshAllWidgets(context: Context, isClockTick: Boolean) {
         val mgr = AppWidgetManager.getInstance(context)
-        val entryPoint = EntryPointAccessors.fromApplication(context, WidgetEntryPoint::class.java)
-        
-        val providers = listOf(
-            CompactWidgetProvider(),
-            ExtendedWidgetProvider(),
-            ForecastWidgetProvider(),
-            LargeWidgetProvider()
-        )
+        try {
+            val entryPoint = EntryPointAccessors.fromApplication(context, WidgetEntryPoint::class.java)
+            
+            val providers = listOf(
+                CompactWidgetProvider(),
+                ExtendedWidgetProvider(),
+                ForecastWidgetProvider(),
+                LargeWidgetProvider()
+            )
 
-        providers.forEach { provider ->
-            val ids = mgr.getAppWidgetIds(ComponentName(context, provider::class.java))
-            if (ids.isNotEmpty()) {
-                val updater = provider.getUpdater(context, mgr, entryPoint)
-                ids.forEach { id ->
-                    if (isClockTick) updater.updateClockOnly(id)
-                    else updater.updateWidget(id)
+            providers.forEach { provider ->
+                val ids = mgr.getAppWidgetIds(ComponentName(context, provider::class.java))
+                if (ids.isNotEmpty()) {
+                    val updater = provider.getUpdater(context.applicationContext, mgr, entryPoint)
+                    ids.forEach { id ->
+                        if (isClockTick) updater.updateClockOnly(id)
+                        else updater.updateWidget(id)
+                    }
                 }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("ClockWeatherApp", "Failed to refresh widgets", e)
         }
     }
 
     private fun restoreLanguageSetting() {
         try {
-            val tempScope = CoroutineScope(Dispatchers.IO)
-            val tempStore = PreferenceDataStoreFactory.create(scope = tempScope) {
-                File(filesDir, "datastore/settings.preferences_pb")
-            }
-            val languageCode = runBlocking {
-                tempStore.data
-                    .map { prefs -> prefs[SettingsViewModel.KEY_LANGUAGE] ?: "system" }
-                    .first()
-            }
-            tempScope.cancel() 
+            // Use the shared delegate accessor (guarantees single instance)
+            val languageCode = kotlin.runCatching {
+                runBlocking {
+                    com.clockweather.app.util.dataStore.data
+                        .map { prefs -> prefs[SettingsViewModel.KEY_LANGUAGE] ?: "system" }
+                        .first()
+                }
+            }.getOrDefault("system")
+
             val locale = if (languageCode == "system") {
                 LocaleListCompat.getEmptyLocaleList()
             } else {
                 LocaleListCompat.forLanguageTags(languageCode)
             }
             AppCompatDelegate.setApplicationLocales(locale)
-        } catch (_: Exception) {
-            // First launch or read failure
-        }
+        } catch (_: Exception) { }
     }
 
     override val workManagerConfiguration: Configuration
