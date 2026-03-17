@@ -54,10 +54,11 @@ object WidgetDataBinder {
         bindDigit(context, views, R.id.digit_m1, "digit_m1", m1, !isIncremental || m1 != pm1)
         bindDigit(context, views, R.id.digit_m2, "digit_m2", m2, !isIncremental || m2 != pm2)
 
-        if (is24h) {
-            views.setTextViewText(R.id.ampm, "")
-        } else {
-            views.setTextViewText(R.id.ampm, if (hour < 12) "AM" else "PM")
+        val ampmText = if (is24h) "" else if (hour < 12) "AM" else "PM"
+        val prevAmpmText = if (is24h) "" else if (prevHour < 12) "AM" else "PM"
+        
+        if (!isIncremental || ampmText != prevAmpmText) {
+            views.setTextViewText(R.id.ampm, ampmText)
         }
     }
 
