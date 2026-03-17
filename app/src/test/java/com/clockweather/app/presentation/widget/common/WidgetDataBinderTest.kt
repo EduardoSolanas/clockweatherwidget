@@ -125,4 +125,87 @@ class WidgetDataBinderTest {
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 3) }
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 0) }
     }
+
+    @Test
+    fun `incremental unchanged digits receive no RemoteViews commands at all`() {
+        // Track all setTextViewText calls for h1 children
+        val h1ChildIds = (0..9).map { i ->
+            resources.getIdentifier("digit_h1_$i", "id", "com.clockweather.app")
+        }.filter { it != 0 }
+
+        val h2ChildIds = (0..9).map { i ->
+            resources.getIdentifier("digit_h2_$i", "id", "com.clockweather.app")
+        }.filter { it != 0 }
+
+        clearMocks(views, answers = false)
+
+        // 10:25 -> 10:26: only m2 changes
+        WidgetDataBinder.bindClockViews(
+            context = context,
+            views = views,
+            appWidgetId = 1,
+            hour = 10,
+            minute = 26,
+            is24h = true,
+            isIncremental = true
+        )
+
+        // Unchanged digits (h1, h2, m1) must not receive ANY setTextViewText calls
+        // This prevents partiallyUpdateAppWidget from touching those ViewFlippers at all
+        h1ChildIds.forEach { childId ->
+            verify(exactly = 0) { views.setTextViewText(childId, any()) }
+        }
+        h2ChildIds.forEach { childId ->
+            verify(exactly = 0) { views.setTextViewText(childId, any()) }
+        }
+
+        // Changed digit (m2) SHOULD receive setTextViewText to restore 0-9 labels
+        val m2ChildIds = (0..9).map { i ->
+            resources.getIdentifier("digit_m2_$i", "id", "com.clockweather.app")
+        }.filter { it != 0 }
+        m2ChildIds.forEach { childId ->
+            verify(exactly = 1) { views.setTextViewText(childId, any()) }
+        }
+    }
+
+    @Test
+    fun `incremental 12h mode handles noon boundary correctly`() {
+        // 11:59 -> 12:00 in 12h mode: display goes from 11:59 to 12:00
+        WidgetDataBinder.bindClockViews(
+            context = context,
+            views = views,
+            appWidgetId = 1,
+            hour = 12,
+            minute = 0,
+            is24h = false,
+            isIncremental = true
+        )
+
+        // 12h display: prev = 11:59, current = 12:00
+        // h1: 1->1 (unchanged), h2: 1->2 (changed), m1: 5->0 (changed), m2: 9->0 (changed)
+        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h2, 2) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 0) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 0) }
+    }
+
+    @Test
+    fun `incremental midnight boundary in 24h mode`() {
+        // 23:59 -> 00:00
+        WidgetDataBinder.bindClockViews(
+            context = context,
+            views = views,
+            appWidgetId = 1,
+            hour = 0,
+            minute = 0,
+            is24h = true,
+            isIncremental = true
+        )
+
+        // prev = 23:59, current = 00:00 — all digits change
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h1, 0) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h2, 0) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 0) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 0) }
+    }
 }

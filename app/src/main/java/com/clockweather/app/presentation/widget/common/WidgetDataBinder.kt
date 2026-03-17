@@ -69,26 +69,16 @@ object WidgetDataBinder {
         value: Int,
         changed: Boolean
     ) {
-        if (changed) {
-            // Restore actual digits 0-9
-            for (i in 0..9) {
-                val childId = context.resources.getIdentifier("${flipperName}_$i", "id", context.packageName)
-                if (childId != 0) {
-                    views.setTextViewText(childId, i.toString())
-                }
-            }
-            views.setDisplayedChild(flipperId, value)
-        } else {
-            // Unchanged: DO NOT call setDisplayedChild!
-            // Just force all children to show the current value so that no matter which child is visible, it's correct.
-            val valueStr = value.toString()
-            for (i in 0..9) {
-                val childId = context.resources.getIdentifier("${flipperName}_$i", "id", context.packageName)
-                if (childId != 0) {
-                    views.setTextViewText(childId, valueStr)
-                }
+        if (!changed) return // Skip entirely — no RemoteViews commands means partiallyUpdateAppWidget won't touch this digit
+
+        // Restore actual digits 0-9 then flip to the correct child
+        for (i in 0..9) {
+            val childId = context.resources.getIdentifier("${flipperName}_$i", "id", context.packageName)
+            if (childId != 0) {
+                views.setTextViewText(childId, i.toString())
             }
         }
+        views.setDisplayedChild(flipperId, value)
     }
 
     fun bindWeatherViews(
