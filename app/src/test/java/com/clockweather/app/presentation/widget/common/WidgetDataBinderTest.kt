@@ -38,7 +38,7 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindClockViews non-incremental sets all digits as changed`() {
+    fun `bindClockViews non-incremental uses setViewVisibility — no setDisplayedChild`() {
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -49,13 +49,15 @@ class WidgetDataBinderTest {
             isIncremental = false
         )
 
-        // All digits should receive setDisplayedChild in non-incremental (full) mode
-        verify {
-            views.setDisplayedChild(R.id.digit_h1, 1)
-            views.setDisplayedChild(R.id.digit_h2, 0)
-            views.setDisplayedChild(R.id.digit_m1, 2)
-            views.setDisplayedChild(R.id.digit_m2, 5)
-        }
+        // Full update must NOT call setDisplayedChild — that would accumulate into
+        // mergeRemoteViews and trigger flip animations on ALL digits on every tick.
+        verify(exactly = 0) { views.setDisplayedChild(any(), any()) }
+
+        // Instead it sets visibility on each child directly (idempotent, no animation side effects)
+        val h1Id = resources.getIdentifier("digit_h1_1", "id", "com.clockweather.app")
+        verify { views.setViewVisibility(h1Id, android.view.View.VISIBLE) }
+        val h2Id = resources.getIdentifier("digit_h2_0", "id", "com.clockweather.app")
+        verify { views.setViewVisibility(h2Id, android.view.View.VISIBLE) }
     }
 
     @Test
