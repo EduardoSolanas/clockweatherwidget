@@ -16,46 +16,64 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <ViewFlipper android:animateFirstView="false"
-            android:id="@+id/digit_h1"
+        <FrameLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/flip_digit_bg"
-            android:inAnimation="@anim/flip_in"
-            android:outAnimation="@anim/flip_out">
-            <TextView android:id="@+id/digit_h1_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h1_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h1_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h1_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h1_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h1_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h1_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h1_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h1_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h1_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-        </ViewFlipper>
+            android:layout_weight="1">
+            <ViewFlipper android:animateFirstView="false"
+                android:id="@+id/digit_h1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flip_digit_bg"
+                android:inAnimation="@anim/flip_in"
+                android:outAnimation="@anim/flip_out">
+                <TextView android:id="@+id/digit_h1_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h1_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h1_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h1_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h1_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h1_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h1_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h1_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h1_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h1_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            </ViewFlipper>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1.5dp"
+                android:layout_gravity="center_vertical"
+                android:background="#A0000000" />
+        </FrameLayout>
 
-        <ViewFlipper android:animateFirstView="false"
-            android:id="@+id/digit_h2"
+        <FrameLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="@dimen/flip_digit_gap"
-            android:background="@drawable/flip_digit_bg"
-            android:inAnimation="@anim/flip_in"
-            android:outAnimation="@anim/flip_out">
-            <TextView android:id="@+id/digit_h2_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h2_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h2_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h2_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h2_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h2_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h2_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h2_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h2_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_h2_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-        </ViewFlipper>
+            android:layout_marginStart="@dimen/flip_digit_gap">
+            <ViewFlipper android:animateFirstView="false"
+                android:id="@+id/digit_h2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flip_digit_bg"
+                android:inAnimation="@anim/flip_in"
+                android:outAnimation="@anim/flip_out">
+                <TextView android:id="@+id/digit_h2_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h2_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h2_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h2_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h2_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h2_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h2_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h2_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h2_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_h2_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            </ViewFlipper>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1.5dp"
+                android:layout_gravity="center_vertical"
+                android:background="#A0000000" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/colon"
@@ -70,46 +88,64 @@
             android:textStyle="bold"
             android:fontFamily="monospace" />
 
-        <ViewFlipper android:animateFirstView="false"
-            android:id="@+id/digit_m1"
+        <FrameLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/flip_digit_bg"
-            android:inAnimation="@anim/flip_in"
-            android:outAnimation="@anim/flip_out">
-            <TextView android:id="@+id/digit_m1_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m1_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m1_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m1_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m1_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m1_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m1_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m1_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m1_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m1_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-        </ViewFlipper>
+            android:layout_weight="1">
+            <ViewFlipper android:animateFirstView="false"
+                android:id="@+id/digit_m1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flip_digit_bg"
+                android:inAnimation="@anim/flip_in"
+                android:outAnimation="@anim/flip_out">
+                <TextView android:id="@+id/digit_m1_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m1_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m1_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m1_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m1_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m1_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m1_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m1_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m1_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m1_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            </ViewFlipper>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1.5dp"
+                android:layout_gravity="center_vertical"
+                android:background="#A0000000" />
+        </FrameLayout>
 
-        <ViewFlipper android:animateFirstView="false"
-            android:id="@+id/digit_m2"
+        <FrameLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="@dimen/flip_digit_gap"
-            android:background="@drawable/flip_digit_bg"
-            android:inAnimation="@anim/flip_in"
-            android:outAnimation="@anim/flip_out">
-            <TextView android:id="@+id/digit_m2_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m2_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m2_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m2_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m2_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m2_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m2_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m2_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m2_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-            <TextView android:id="@+id/digit_m2_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
-        </ViewFlipper>
+            android:layout_marginStart="@dimen/flip_digit_gap">
+            <ViewFlipper android:animateFirstView="false"
+                android:id="@+id/digit_m2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flip_digit_bg"
+                android:inAnimation="@anim/flip_in"
+                android:outAnimation="@anim/flip_out">
+                <TextView android:id="@+id/digit_m2_0" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="0" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m2_1" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="1" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m2_2" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="2" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m2_3" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="3" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m2_4" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="4" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m2_5" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="5" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m2_6" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="6" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m2_7" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="7" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m2_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+                <TextView android:id="@+id/digit_m2_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
+            </ViewFlipper>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1.5dp"
+                android:layout_gravity="center_vertical"
+                android:background="#A0000000" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/ampm"
