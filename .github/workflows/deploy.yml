@@ -88,6 +88,22 @@ jobs:
 
       - run: chmod +x gradlew
 
+      - name: Auto-increment Version Patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          old_patch=$(grep '^VERSION_PATCH=' gradle.properties | cut -d'=' -f2 | tr -d '\r')
+          new_patch=$((old_patch + 1))
+          sed -i "s/^VERSION_PATCH=.*/VERSION_PATCH=$new_patch/" gradle.properties
+          
+          git add gradle.properties
+          git commit -m "chore: bump version to $new_patch [skip ci]"
+          
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
+
       - name: Build Release Bundle
         run: ./gradlew bundleRelease
         env:
