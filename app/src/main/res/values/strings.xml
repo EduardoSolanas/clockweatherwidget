@@ -139,6 +139,13 @@
     <string name="settings_show_weather_compact_desc">Display the current weather card below the clock</string>
     <string name="settings_show_today_forecast_label">Show today — forecast widget</string>
     <string name="settings_show_today_forecast_desc">Display today\'s weather above the 7-day forecast rows</string>
+    <string name="settings_category_advanced">Advanced / Reliability</string>
+    <string name="settings_high_precision_clock_label">High Precision Clock</string>
+    <string name="settings_high_precision_clock_desc">Wake up the device every minute to ensure the time is perfectly accurate. Use if the clock stops ticking.</string>
+    <string name="settings_exact_alarm_permission_title">System Permission Required</string>
+    <string name="settings_exact_alarm_permission_desc">High Precision mode requires the \'Alarms &amp; reminders\' permission on Android 12+. Without this, updates may be delayed by a few minutes in battery saver mode.</string>
+    <string name="settings_exact_alarm_permission_button">Grant Permission</string>
+    <string name="settings_exact_alarm_permission_granted">Permission Granted</string>
 
     <!-- Language Settings -->
     <string name="settings_language">Language</string>

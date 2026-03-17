@@ -225,27 +225,58 @@ abstract class BaseWidgetUpdater(
     private fun bindAllClicks(views: RemoteViews, appWidgetId: Int) {
         val pendingIntent = WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId)
         try {
-            // Bind root
-            views.setOnClickPendingIntent(rootViewId, pendingIntent)
-            
-            // Bind date view
-            views.setOnClickPendingIntent(dateViewId, pendingIntent)
-            
-            // Bind each digit container
-            listOf(
-                com.clockweather.app.R.id.digit_h1,
-                com.clockweather.app.R.id.digit_h2,
-                com.clockweather.app.R.id.digit_m1,
-                com.clockweather.app.R.id.digit_m2,
-                com.clockweather.app.R.id.colon,
-                com.clockweather.app.R.id.ampm
-            ).forEach { id ->
+            val clickableIds = buildList {
+                add(rootViewId)
+                add(dateViewId)
+                add(com.clockweather.app.R.id.weather_card)
+                add(com.clockweather.app.R.id.city_name)
+                add(com.clockweather.app.R.id.condition_text)
+                add(com.clockweather.app.R.id.weather_icon)
+                add(com.clockweather.app.R.id.current_temp)
+                add(com.clockweather.app.R.id.high_low)
+                add(com.clockweather.app.R.id.forecast_container)
+                add(com.clockweather.app.R.id.fday1_name)
+                add(com.clockweather.app.R.id.fday1_icon)
+                add(com.clockweather.app.R.id.fday1_high)
+                add(com.clockweather.app.R.id.fday2_name)
+                add(com.clockweather.app.R.id.fday2_icon)
+                add(com.clockweather.app.R.id.fday2_high)
+                add(com.clockweather.app.R.id.fday3_name)
+                add(com.clockweather.app.R.id.fday3_icon)
+                add(com.clockweather.app.R.id.fday3_high)
+                add(com.clockweather.app.R.id.fday4_name)
+                add(com.clockweather.app.R.id.fday4_icon)
+                add(com.clockweather.app.R.id.fday4_high)
+                add(com.clockweather.app.R.id.fday5_name)
+                add(com.clockweather.app.R.id.fday5_icon)
+                add(com.clockweather.app.R.id.fday5_high)
+                add(com.clockweather.app.R.id.fday6_name)
+                add(com.clockweather.app.R.id.fday6_icon)
+                add(com.clockweather.app.R.id.fday6_high)
+                add(com.clockweather.app.R.id.fday7_name)
+                add(com.clockweather.app.R.id.fday7_icon)
+                add(com.clockweather.app.R.id.fday7_high)
+                addAll(
+                    listOf(
+                        com.clockweather.app.R.id.digit_h1,
+                        com.clockweather.app.R.id.digit_h2,
+                        com.clockweather.app.R.id.digit_m1,
+                        com.clockweather.app.R.id.digit_m2,
+                        com.clockweather.app.R.id.colon,
+                        com.clockweather.app.R.id.ampm
+                    )
+                )
+                listOf("digit_h1", "digit_h2", "digit_m1", "digit_m2").forEach { prefix ->
+                    for (i in 0..9) {
+                        val childId = context.resources.getIdentifier("${prefix}_$i", "id", context.packageName)
+                        if (childId != 0) add(childId)
+                    }
+                }
+            }
+
+            clickableIds.distinct().forEach { id ->
                 views.setOnClickPendingIntent(id, pendingIntent)
             }
-            
-            // Bind weather card area if it exists
-            views.setOnClickPendingIntent(com.clockweather.app.R.id.weather_card, pendingIntent)
-            
         } catch (e: Exception) {
             Log.w(tag, "Failed to bind clicks for widget $appWidgetId", e)
         }

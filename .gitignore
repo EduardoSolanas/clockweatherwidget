@@ -9,6 +9,7 @@ app/build/
 *.aab
 *.jks
 *.keystore
+*.txt
 
 # Scratch scripts
 *.ps1

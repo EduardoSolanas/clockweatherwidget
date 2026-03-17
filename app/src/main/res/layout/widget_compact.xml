@@ -40,11 +40,11 @@
             </ViewFlipper>
 
             <!-- Mechanical Hinge Overlay -->
-            <View
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="1.5dp"
+                android:layout_height="1dp"
                 android:layout_gravity="center_vertical"
-                android:background="#A0000000" />
+                android:background="#80000000" />
         </FrameLayout>
 
         <FrameLayout
@@ -71,11 +71,11 @@
                 <TextView android:id="@+id/digit_h2_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
                 <TextView android:id="@+id/digit_h2_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
             </ViewFlipper>
-            <View
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="1.5dp"
+                android:layout_height="1dp"
                 android:layout_gravity="center_vertical"
-                android:background="#A0000000" />
+                android:background="#80000000" />
         </FrameLayout>
 
         <TextView
@@ -113,11 +113,11 @@
                 <TextView android:id="@+id/digit_m1_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
                 <TextView android:id="@+id/digit_m1_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
             </ViewFlipper>
-            <View
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="1.5dp"
+                android:layout_height="1dp"
                 android:layout_gravity="center_vertical"
-                android:background="#A0000000" />
+                android:background="#80000000" />
         </FrameLayout>
 
         <FrameLayout
@@ -144,11 +144,11 @@
                 <TextView android:id="@+id/digit_m2_8" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="8" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
                 <TextView android:id="@+id/digit_m2_9" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:text="9" android:gravity="center" android:textColor="@color/flip_digit_text" android:textSize="48sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" />
             </ViewFlipper>
-            <View
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="1.5dp"
+                android:layout_height="1dp"
                 android:layout_gravity="center_vertical"
-                android:background="#A0000000" />
+                android:background="#80000000" />
         </FrameLayout>
 
         <TextView

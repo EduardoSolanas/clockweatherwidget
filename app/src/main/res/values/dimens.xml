@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Flip Clock Dimensions (actively used in BaseWidgetUpdater) -->
-    <dimen name="flip_digit_gap">4dp</dimen>
+    <dimen name="flip_digit_gap">2dp</dimen>
     <dimen name="flip_ampm_text_size">12sp</dimen>
 
     <!-- Small -->

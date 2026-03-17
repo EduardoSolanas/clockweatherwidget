@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.ClockTileSize
+import android.content.Intent
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +32,15 @@ fun SettingsScreen(
     val dateFontSizeSp   by viewModel.dateFontSizeSp.collectAsStateWithLifecycle()
     val clockTheme       by viewModel.clockTheme.collectAsStateWithLifecycle()
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
+    val isHighPrecisionEnabled by viewModel.isHighPrecisionEnabled.collectAsStateWithLifecycle()
+    val isExactAlarmGranted by viewModel.isExactAlarmPermissionGranted.collectAsStateWithLifecycle()
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    
+    // Refresh permission status when activity is resumed
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        viewModel.refreshPermissionStatus()
+    }
 
     Scaffold(
         topBar = {
@@ -235,6 +245,60 @@ fun SettingsScreen(
                 checked     = showTodayExtended,
                 onCheckedChange = { viewModel.setShowTodayExtended(it) }
             )
+
+            // ══════════════════════════════════════════════════════════
+            // ⚙️  ADVANCED
+            // ══════════════════════════════════════════════════════════
+            SettingsSectionHeader(stringResource(R.string.settings_category_advanced))
+
+            SettingsToggleRow(
+                label       = stringResource(R.string.settings_high_precision_clock_label),
+                description = stringResource(R.string.settings_high_precision_clock_desc),
+                checked     = isHighPrecisionEnabled,
+                onCheckedChange = { viewModel.setHighPrecisionEnabled(it) }
+            )
+
+            if (isHighPrecisionEnabled && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.settings_exact_alarm_permission_title),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            stringResource(R.string.settings_exact_alarm_permission_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    if (isExactAlarmGranted) {
+                        Text(
+                            stringResource(R.string.settings_exact_alarm_permission_granted),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 16.dp)
+                        )
+                    } else {
+                        Button(
+                            onClick = {
+                                val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                    data = android.net.Uri.parse("package:${context.packageName}")
+                                }
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.padding(start = 16.dp)
+                        ) {
+                            Text(stringResource(R.string.settings_exact_alarm_permission_button))
+                        }
+                    }
+                }
+            }
 
             Spacer(Modifier.height(24.dp))
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
