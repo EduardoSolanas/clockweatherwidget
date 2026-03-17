@@ -10,8 +10,6 @@ class TimeChangedReceiver : BroadcastReceiver() {
         when (intent.action) {
             Intent.ACTION_TIMEZONE_CHANGED,
             Intent.ACTION_TIME_CHANGED -> {
-                // Re-schedule clock alarm with updated timezone
-                WidgetUpdateScheduler.scheduleClockAlarm(context)
                 // Trigger immediate widget refresh
                 WidgetUpdateScheduler.sendUpdateBroadcast(context)
             }

@@ -29,10 +29,11 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onEnabled(context: Context) {
-        WidgetUpdateScheduler.scheduleClockAlarm(context)
+        // No longer need manual alarm scheduling; 
+        // ACTION_TIME_TICK is handled by ClockWeatherApplication
     }
 
     override fun onDisabled(context: Context) {
-        WidgetUpdateScheduler.cancelClockAlarmIfNoWidgets(context)
+        // No longer need manual alarm cancellation
     }
 }

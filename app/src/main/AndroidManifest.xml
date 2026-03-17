@@ -121,14 +121,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Clock Tick Receiver (Minute Updates) -->
-        <receiver
-            android:name=".receiver.ClockTickReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.clockweather.app.ACTION_CLOCK_TICK" />
-            </intent-filter>
-        </receiver>
+
 
         <!-- WorkManager Initializer -->
         <provider

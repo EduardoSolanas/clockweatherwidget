@@ -12,8 +12,6 @@ class BootCompletedReceiver : BroadcastReceiver() {
         ) {
             // Re-schedule weather updates after reboot
             WeatherUpdateScheduler.schedule(context)
-            // Re-schedule widget clock alarm
-            com.clockweather.app.presentation.widget.common.WidgetUpdateScheduler.scheduleClockAlarm(context)
         }
     }
 }

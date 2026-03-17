@@ -7,6 +7,11 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import com.clockweather.app.presentation.widget.common.WidgetUpdateScheduler
 import com.clockweather.app.presentation.settings.SettingsViewModel
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.cancel
@@ -28,6 +33,16 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         super.onCreate()
         // Restore saved language setting before any Activity launches
         restoreLanguageSetting()
+
+        // Register for system time ticks to update widgets every minute
+        val timeTickReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == Intent.ACTION_TIME_TICK) {
+                    context?.let { WidgetUpdateScheduler.sendUpdateBroadcast(it, isClockTick = true) }
+                }
+            }
+        }
+        registerReceiver(timeTickReceiver, IntentFilter(Intent.ACTION_TIME_TICK))
     }
 
     private fun restoreLanguageSetting() {
