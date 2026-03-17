@@ -49,10 +49,10 @@ object WidgetDataBinder {
         val pm1 = prevMinute / 10
         val pm2 = prevMinute % 10
 
-        bindDigit(context, views, R.id.digit_h1, "digit_h1", h1, isIncremental && h1 != ph1)
-        bindDigit(context, views, R.id.digit_h2, "digit_h2", h2, isIncremental && h2 != ph2)
-        bindDigit(context, views, R.id.digit_m1, "digit_m1", m1, isIncremental && m1 != pm1)
-        bindDigit(context, views, R.id.digit_m2, "digit_m2", m2, isIncremental && m2 != pm2)
+        bindDigit(context, views, R.id.digit_h1, "digit_h1", h1, !isIncremental || h1 != ph1)
+        bindDigit(context, views, R.id.digit_h2, "digit_h2", h2, !isIncremental || h2 != ph2)
+        bindDigit(context, views, R.id.digit_m1, "digit_m1", m1, !isIncremental || m1 != pm1)
+        bindDigit(context, views, R.id.digit_m2, "digit_m2", m2, !isIncremental || m2 != pm2)
 
         if (is24h) {
             views.setTextViewText(R.id.ampm, "")
