@@ -49,16 +49,25 @@ object WidgetDataBinder {
         val pm1 = prevMinute / 10
         val pm2 = prevMinute % 10
 
-        bindDigit(context, views, R.id.digit_h1, "digit_h1", h1, !isIncremental || h1 != ph1)
-        bindDigit(context, views, R.id.digit_h2, "digit_h2", h2, !isIncremental || h2 != ph2)
-        bindDigit(context, views, R.id.digit_m1, "digit_m1", m1, !isIncremental || m1 != pm1)
-        bindDigit(context, views, R.id.digit_m2, "digit_m2", m2, !isIncremental || m2 != pm2)
-
-        val ampmText = if (is24h) "" else if (hour < 12) "AM" else "PM"
-        val prevAmpmText = if (is24h) "" else if (prevHour < 12) "AM" else "PM"
-        
-        if (!isIncremental || ampmText != prevAmpmText) {
-            views.setTextViewText(R.id.ampm, ampmText)
+        if (isIncremental) {
+            // Incremental: ONLY setDisplayedChild for changed digits — no text commands.
+            // partiallyUpdateAppWidget uses mergeRemoteViews() which accumulates all prior
+            // full-update actions plus new ones. Any extra commands (setTextViewText, etc.)
+            // would replay the full-update's digit restoration, causing all digits to visually
+            // refresh and suppressing the ViewFlipper flip animation.
+            if (h1 != ph1) views.setDisplayedChild(R.id.digit_h1, h1)
+            if (h2 != ph2) views.setDisplayedChild(R.id.digit_h2, h2)
+            if (m1 != pm1) views.setDisplayedChild(R.id.digit_m1, m1)
+            if (m2 != pm2) views.setDisplayedChild(R.id.digit_m2, m2)
+            val ampmText = if (is24h) "" else if (hour < 12) "AM" else "PM"
+            val prevAmpmText = if (is24h) "" else if (prevHour < 12) "AM" else "PM"
+            if (ampmText != prevAmpmText) views.setTextViewText(R.id.ampm, ampmText)
+        } else {
+            bindDigit(context, views, R.id.digit_h1, "digit_h1", h1, true)
+            bindDigit(context, views, R.id.digit_h2, "digit_h2", h2, true)
+            bindDigit(context, views, R.id.digit_m1, "digit_m1", m1, true)
+            bindDigit(context, views, R.id.digit_m2, "digit_m2", m2, true)
+            views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
         }
     }
 

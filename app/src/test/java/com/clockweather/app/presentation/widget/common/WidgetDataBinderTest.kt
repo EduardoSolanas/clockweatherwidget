@@ -127,18 +127,7 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `incremental unchanged digits receive no RemoteViews commands at all`() {
-        // Track all setTextViewText calls for h1 children
-        val h1ChildIds = (0..9).map { i ->
-            resources.getIdentifier("digit_h1_$i", "id", "com.clockweather.app")
-        }.filter { it != 0 }
-
-        val h2ChildIds = (0..9).map { i ->
-            resources.getIdentifier("digit_h2_$i", "id", "com.clockweather.app")
-        }.filter { it != 0 }
-
-        clearMocks(views, answers = false)
-
+    fun `incremental mode sends NO setTextViewText for any digit — only setDisplayedChild`() {
         // 10:25 -> 10:26: only m2 changes
         WidgetDataBinder.bindClockViews(
             context = context,
@@ -150,22 +139,25 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
-        // Unchanged digits (h1, h2, m1) must not receive ANY setTextViewText calls
-        // This prevents partiallyUpdateAppWidget from touching those ViewFlippers at all
-        h1ChildIds.forEach { childId ->
-            verify(exactly = 0) { views.setTextViewText(childId, any()) }
-        }
-        h2ChildIds.forEach { childId ->
-            verify(exactly = 0) { views.setTextViewText(childId, any()) }
+        // Incremental path must emit ZERO text commands for all digits (changed or not).
+        // This prevents partiallyUpdateAppWidget / mergeRemoteViews from accumulating
+        // text actions that would cause all ViewFlippers to visually refresh and suppress
+        // the flip animation on the next minute tick.
+        val allDigitPrefixes = listOf("digit_h1", "digit_h2", "digit_m1", "digit_m2")
+        allDigitPrefixes.forEach { prefix ->
+            (0..9).forEach { i ->
+                val childId = resources.getIdentifier("${prefix}_$i", "id", "com.clockweather.app")
+                if (childId != 0) {
+                    verify(exactly = 0) { views.setTextViewText(childId, any()) }
+                }
+            }
         }
 
-        // Changed digit (m2) SHOULD receive setTextViewText to restore 0-9 labels
-        val m2ChildIds = (0..9).map { i ->
-            resources.getIdentifier("digit_m2_$i", "id", "com.clockweather.app")
-        }.filter { it != 0 }
-        m2ChildIds.forEach { childId ->
-            verify(exactly = 1) { views.setTextViewText(childId, any()) }
-        }
+        // Only changed digit (m2=6) gets setDisplayedChild
+        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
+        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h2, any()) }
+        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m1, any()) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 6) }
     }
 
     @Test

@@ -15,7 +15,7 @@
     <string name="condition_mainly_clear">Mainly clear</string>
     <string name="condition_partly_cloudy">Partly cloudy</string>
     <string name="label_current_location">Current Location</string>
-    <string name="label_default_location">London (Default)</string>
+    <string name="label_default_location">London</string>
     <string name="condition_overcast">Overcast</string>
     <string name="condition_fog">Fog</string>
     <string name="condition_rime_fog">Rime fog</string>
