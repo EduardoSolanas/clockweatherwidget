@@ -12,6 +12,9 @@ class BootCompletedReceiver : BroadcastReceiver() {
         ) {
             // Re-schedule weather updates after reboot
             WeatherUpdateScheduler.schedule(context)
+            
+            // Re-schedule clock ticks
+            ClockAlarmReceiver.scheduleNextTick(context)
         }
     }
 }

@@ -9,10 +9,14 @@ class TimeChangedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             Intent.ACTION_TIMEZONE_CHANGED,
-            Intent.ACTION_TIME_CHANGED -> {
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_DATE_CHANGED -> {
                 // Trigger immediate full widget refresh via the Application class helper
                 val app = context.applicationContext as? ClockWeatherApplication
                 app?.refreshAllWidgets(context, isClockTick = false)
+                
+                // Reschedule the alarm for the new time's next minute boundary
+                ClockAlarmReceiver.scheduleNextTick(context)
             }
         }
     }

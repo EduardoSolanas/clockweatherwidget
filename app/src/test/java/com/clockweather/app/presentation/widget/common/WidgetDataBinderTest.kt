@@ -4,10 +4,12 @@ import android.content.Context
 import android.content.res.Resources
 import android.widget.RemoteViews
 import com.clockweather.app.R
+import android.util.Log
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import io.mockk.clearMocks
 import org.junit.Before
@@ -21,6 +23,11 @@ class WidgetDataBinderTest {
 
     @Before
     fun setup() {
+        mockkStatic(Log::class)
+        every { Log.d(any<String>(), any<String>()) } returns 0
+        every { Log.e(any<String>(), any<String>(), any<Throwable>()) } returns 0
+        every { Log.w(any<String>(), any<String>()) } returns 0
+
         context = mockk()
         resources = mockk()
         views = mockk(relaxed = true)

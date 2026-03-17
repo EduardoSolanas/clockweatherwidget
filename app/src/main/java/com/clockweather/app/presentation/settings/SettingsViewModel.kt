@@ -48,6 +48,7 @@ class SettingsViewModel @Inject constructor(
         val KEY_CLOCK_THEME = stringPreferencesKey("clock_theme")
         val KEY_CLOCK_TILE_SIZE = stringPreferencesKey("clock_tile_size")
         val KEY_LANGUAGE = stringPreferencesKey("language")
+        val KEY_HIGH_PRECISION = booleanPreferencesKey("high_precision_clock")
         const val DEFAULT_DATE_FONT_SP = 15f
         const val CLOCK_THEME_DARK = "dark"
         const val CLOCK_THEME_LIGHT = "light"
@@ -109,6 +110,13 @@ class SettingsViewModel @Inject constructor(
     val selectedLanguage: StateFlow<String> = dataStore.data
         .map { prefs -> prefs[KEY_LANGUAGE] ?: "system" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "system")
+
+    val isHighPrecisionEnabled: StateFlow<Boolean> = dataStore.data
+        .map { prefs -> prefs[KEY_HIGH_PRECISION] ?: false }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    private val _isExactAlarmPermissionGranted = MutableStateFlow(checkExactAlarmPermission())
+    val isExactAlarmPermissionGranted = _isExactAlarmPermissionGranted.asStateFlow()
 
     // ── Setters (all trigger a widget redraw) ──────────────────────────────────
 
@@ -199,6 +207,26 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             locationRepository.deleteLocation(locationId)
         }
+    }
+
+    fun setHighPrecisionEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_HIGH_PRECISION] = enabled }
+            // If enabling, ensure we poke the alarm receiver to pick up the change
+            com.clockweather.app.receiver.ClockAlarmReceiver.scheduleNextTick(context)
+        }
+    }
+
+    fun refreshPermissionStatus() {
+        _isExactAlarmPermissionGranted.value = checkExactAlarmPermission()
+    }
+
+    private fun checkExactAlarmPermission(): Boolean {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+            return alarmManager.canScheduleExactAlarms()
+        }
+        return true // Pre-Android 12 doesn't have this restriction
     }
 
     // ── Private ────────────────────────────────────────────────────────────────

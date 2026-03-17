@@ -118,10 +118,20 @@
             <intent-filter>
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
                 <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
             </intent-filter>
         </receiver>
 
 
+
+        <!-- Clock Tick Alarm Receiver -->
+        <receiver
+            android:name=".receiver.ClockAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.clockweather.app.ACTION_ALARM_TICK" />
+            </intent-filter>
+        </receiver>
 
         <!-- WorkManager Initializer -->
         <provider

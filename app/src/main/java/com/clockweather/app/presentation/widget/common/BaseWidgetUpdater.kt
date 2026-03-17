@@ -49,9 +49,10 @@ abstract class BaseWidgetUpdater(
         scope.launch {
             try {
                 val now = LocalTime.now()
+                val currentEpochMinute = System.currentTimeMillis() / 60000L
                 // Fetch prefs and weather on IO thread
                 val prefs = entryPoint.dataStore().data.first()
-                val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: true
+                val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: android.text.format.DateFormat.is24HourFormat(context)
                 val showDate = prefs[booleanPreferencesKey("show_date_in_widget")] ?: true
                 val tempUnitName = prefs[stringPreferencesKey("temperature_unit")] ?: TemperatureUnit.CELSIUS.name
                 val tempUnit = runCatching { TemperatureUnit.valueOf(tempUnitName) }.getOrDefault(TemperatureUnit.CELSIUS)
@@ -93,6 +94,9 @@ abstract class BaseWidgetUpdater(
                     com.clockweather.app.R.id.digit_m2
                 ).forEach { id ->
                     views.setInt(id, "setBackgroundResource", tileBgRes)
+                    try {
+                        views.setOnClickPendingIntent(id, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
+                    } catch (e: Exception) { /* ignore */ }
 
                     if (android.os.Build.VERSION.SDK_INT >= 31) {
                         views.setViewLayoutHeight(id, context.resources.getDimension(dimHeight), android.util.TypedValue.COMPLEX_UNIT_PX)
@@ -131,6 +135,9 @@ abstract class BaseWidgetUpdater(
                     views.setViewVisibility(dateViewId, View.GONE)
                 }
 
+                // Bind clicks to prevent launcher hijacking (like opening Calendar)
+                bindAllClicks(views, appWidgetId)
+
                 // Weather
                 val locationRepo = entryPoint.locationRepository()
                 val weatherRepo = entryPoint.weatherRepository()
@@ -141,6 +148,7 @@ abstract class BaseWidgetUpdater(
                 
                 if (location == null) {
                     appWidgetManager.updateAppWidget(appWidgetId, views)
+                    WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
                     return@launch
                 }
                 
@@ -158,8 +166,10 @@ abstract class BaseWidgetUpdater(
                 }
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
+                WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
+                Log.d(tag, "Widget $appWidgetId fully updated successfully.")
             } catch (e: Exception) {
-                Log.w(tag, "Widget update failed for widget $appWidgetId", e)
+                Log.e(tag, "Widget update failed for widget $appWidgetId", e)
             }
         }
     }
@@ -168,14 +178,27 @@ abstract class BaseWidgetUpdater(
      * Reuses full update function for clock ticks.
      */
     fun updateClockOnly(appWidgetId: Int) {
+        Log.d(tag, "Updating clock only for widget $appWidgetId")
         scope.launch {
             try {
+                val currentEpochMinute = System.currentTimeMillis() / 60000L
+                val lastRenderedEpochMinute = WidgetClockStateStore.getLastRenderedEpochMinute(context, appWidgetId)
+                val updateMode = WidgetClockUpdateModeResolver.resolve(lastRenderedEpochMinute, currentEpochMinute)
+                if (updateMode == WidgetClockUpdateMode.FULL) {
+                    Log.d(tag, "Falling back to full update for widget $appWidgetId. last=$lastRenderedEpochMinute current=$currentEpochMinute")
+                    updateWidget(appWidgetId)
+                    return@launch
+                }
+
                 // Fetch prefs and weather on IO thread
                 val prefs = entryPoint.dataStore().data.first()
-                val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: true
+                val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: android.text.format.DateFormat.is24HourFormat(context)
                 
                 val views = RemoteViews(context.packageName, layoutResId)
                 val now = LocalTime.now()
+
+                // Ensure all areas (digits, root, etc) remain bound to our app during partial updates
+                bindAllClicks(views, appWidgetId)
 
                 WidgetDataBinder.bindClockViews(
                     context, 
@@ -191,9 +214,40 @@ abstract class BaseWidgetUpdater(
                 // launcher from completely destroying and recreating the widget hierarchy (which causes a full screen flicker).
                 // `WidgetDataBinder` now guarantees we don't spam `setDisplayedChild` for identical digits, bypassing the Android infinite animation bug.
                 appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
+                WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
+                Log.d(tag, "Widget $appWidgetId clock-only update successful.")
             } catch (e: Exception) {
-                Log.w(tag, "Clock-only update failed for widget $appWidgetId", e)
+                Log.e(tag, "Clock-only update failed for widget $appWidgetId", e)
             }
+        }
+    }
+
+    private fun bindAllClicks(views: RemoteViews, appWidgetId: Int) {
+        val pendingIntent = WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId)
+        try {
+            // Bind root
+            views.setOnClickPendingIntent(rootViewId, pendingIntent)
+            
+            // Bind date view
+            views.setOnClickPendingIntent(dateViewId, pendingIntent)
+            
+            // Bind each digit container
+            listOf(
+                com.clockweather.app.R.id.digit_h1,
+                com.clockweather.app.R.id.digit_h2,
+                com.clockweather.app.R.id.digit_m1,
+                com.clockweather.app.R.id.digit_m2,
+                com.clockweather.app.R.id.colon,
+                com.clockweather.app.R.id.ampm
+            ).forEach { id ->
+                views.setOnClickPendingIntent(id, pendingIntent)
+            }
+            
+            // Bind weather card area if it exists
+            views.setOnClickPendingIntent(com.clockweather.app.R.id.weather_card, pendingIntent)
+            
+        } catch (e: Exception) {
+            Log.w(tag, "Failed to bind clicks for widget $appWidgetId", e)
         }
     }
 }

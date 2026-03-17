@@ -33,6 +33,8 @@ object WidgetDataBinder {
         val m1 = minute / 10
         val m2 = minute % 10
 
+        android.util.Log.d("WidgetDataBinder", "Binding clock: $hour:$minute (24h=$is24h, incremental=$isIncremental) -> digits $h1$h2:$m1$m2")
+
         // Only update digits that changed from the previous minute
         val prevMinute = if (minute == 0) 59 else minute - 1
         val prevHour = if (minute == 0) {
@@ -51,22 +53,30 @@ object WidgetDataBinder {
 
         if (isIncremental) {
             // Incremental: ONLY setDisplayedChild for changed digits.
-            if (h1 != ph1) views.setDisplayedChild(R.id.digit_h1, h1)
-            if (h2 != ph2) views.setDisplayedChild(R.id.digit_h2, h2)
-            if (m1 != pm1) views.setDisplayedChild(R.id.digit_m1, m1)
-            if (m2 != pm2) views.setDisplayedChild(R.id.digit_m2, m2)
+            // AND: Ensure the newly selected child is VISIBLE (in case a previous full update set it to GONE)
+            if (h1 != ph1) {
+                views.setDisplayedChild(R.id.digit_h1, h1)
+                setDigitVisibility(context, views, "digit_h1", h1)
+            }
+            if (h2 != ph2) {
+                views.setDisplayedChild(R.id.digit_h2, h2)
+                setDigitVisibility(context, views, "digit_h2", h2)
+            }
+            if (m1 != pm1) {
+                views.setDisplayedChild(R.id.digit_m1, m1)
+                setDigitVisibility(context, views, "digit_m1", m1)
+            }
+            if (m2 != pm2) {
+                views.setDisplayedChild(R.id.digit_m2, m2)
+                setDigitVisibility(context, views, "digit_m2", m2)
+            }
             
             val ampmText = if (is24h) "" else if (hour < 12) "AM" else "PM"
             val prevAmpmText = if (is24h) "" else if (prevHour < 12) "AM" else "PM"
             if (ampmText != prevAmpmText) views.setTextViewText(R.id.ampm, ampmText)
         } else {
-            // Full update: set digit children via setDisplayedChild to fix index,
-            // AND set visibility for all children to ensure robustness.
-            views.setDisplayedChild(R.id.digit_h1, h1)
-            views.setDisplayedChild(R.id.digit_h2, h2)
-            views.setDisplayedChild(R.id.digit_m1, m1)
-            views.setDisplayedChild(R.id.digit_m2, m2)
-            
+            // Full update: use visibility only so a full refresh does not enqueue
+            // flip commands for every digit and suppress the next incremental animation.
             setDigitVisibility(context, views, "digit_h1", h1)
             setDigitVisibility(context, views, "digit_h2", h2)
             setDigitVisibility(context, views, "digit_m1", m1)
@@ -87,7 +97,6 @@ object WidgetDataBinder {
         for (i in 0..9) {
             val childId = resources.getIdentifier("${prefix}_$i", "id", packageName)
             if (childId != 0) {
-                views.setTextViewText(childId, i.toString())
                 views.setViewVisibility(childId, if (i == value) android.view.View.VISIBLE else android.view.View.GONE)
             }
         }
