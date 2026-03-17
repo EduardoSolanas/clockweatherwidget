@@ -168,6 +168,32 @@ abstract class BaseWidgetUpdater(
      * Reuses full update function for clock ticks.
      */
     fun updateClockOnly(appWidgetId: Int) {
-        updateWidget(appWidgetId, isMinuteTick = true)
+        scope.launch {
+            try {
+                // Fetch prefs and weather on IO thread
+                val prefs = entryPoint.dataStore().data.first()
+                val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: true
+                
+                val views = RemoteViews(context.packageName, layoutResId)
+                val now = LocalTime.now()
+
+                WidgetDataBinder.bindClockViews(
+                    context, 
+                    views, 
+                    appWidgetId, 
+                    now.hour, 
+                    now.minute, 
+                    is24h, 
+                    isIncremental = true
+                )
+
+                // IMPORTANT: For minute ticks we MUST use partiallyUpdateAppWidget to prevent the 
+                // launcher from completely destroying and recreating the widget hierarchy (which causes a full screen flicker).
+                // `WidgetDataBinder` now guarantees we don't spam `setDisplayedChild` for identical digits, bypassing the Android infinite animation bug.
+                appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
+            } catch (e: Exception) {
+                Log.w(tag, "Clock-only update failed for widget $appWidgetId", e)
+            }
+        }
     }
 }
