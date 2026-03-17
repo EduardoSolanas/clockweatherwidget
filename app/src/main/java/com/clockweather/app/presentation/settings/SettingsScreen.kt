@@ -237,6 +237,21 @@ fun SettingsScreen(
             )
 
             Spacer(Modifier.height(24.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            
+            // Build Info
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Version ${com.clockweather.app.BuildConfig.VERSION_NAME} (${com.clockweather.app.BuildConfig.VERSION_CODE})",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
+            }
+            
+            Spacer(Modifier.height(16.dp))
         }
     }
 }

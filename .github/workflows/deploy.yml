@@ -132,7 +132,7 @@ jobs:
           releaseFiles: ${{ steps.sign_app.outputs.signedReleaseFile }}
           mappingFile: app/build/outputs/mapping/release/mapping.txt
           track: internal
-          status: completed
+          status: draft
           releaseName: ${{ env.VERSION_NAME }}
 
       - name: Create Git Tag on Success
