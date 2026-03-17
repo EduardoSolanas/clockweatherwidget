@@ -15,6 +15,7 @@ app/build/
 *.py
 *.js
 *.html
+!docs/**/*.html
 *.png
 build_output.txt
 
