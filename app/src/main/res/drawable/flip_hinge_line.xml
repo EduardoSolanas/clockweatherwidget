@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mechanical hinge crease line drawn over the center of each digit tile -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Dark shadow line (the gap/slot) -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#CC000000" />
+        </shape>
+    </item>
+    <!-- Thin highlight at the bottom edge — light catching the lower tile lip -->
+    <item android:top="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#28FFFFFF" />
+        </shape>
+    </item>
+</layer-list>
+

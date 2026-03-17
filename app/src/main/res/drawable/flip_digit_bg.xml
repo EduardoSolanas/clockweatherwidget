@@ -1,48 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Overall base shape -->
+    <!-- Base dark tile -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#1F1F1F" />
-            <corners android:radius="8dp" />
-            <stroke android:width="1dp" android:color="#33FFFFFF" />
+            <solid android:color="#1A1A1A" />
+            <corners android:radius="6dp" />
         </shape>
     </item>
 
-    <!-- Sharp Top/Bottom split for 3D appearance -->
+    <!-- Top half lighter / bottom half darker — classic split-flap tile -->
     <item>
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#333333" 
-                android:centerColor="#333333"
+                android:startColor="#2C2C2C"
+                android:centerColor="#2C2C2C"
+                android:centerY="0.48"
+                android:endColor="#141414" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+
+    <!-- Top-edge highlight — light catch on the upper tile surface -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#18FFFFFF"
+                android:centerColor="#00000000"
+                android:centerY="0.15"
+                android:endColor="#00000000" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+
+    <!-- Sharp center crease shadow — the hinge gap -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#00000000"
+                android:centerColor="#E0000000"
                 android:centerY="0.50"
-                android:endColor="#1F1F1F" />
-            <corners android:radius="8dp" />
+                android:endColor="#00000000" />
         </shape>
     </item>
 
-    <!-- Pronounced Center Crease Shadow -->
+    <!-- Hairline highlight just above center — top-flap bottom edge catches light -->
     <item>
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
                 android:startColor="#00000000"
-                android:centerColor="#DF000000"
-                android:centerY="0.5"
+                android:centerColor="#35FFFFFF"
+                android:centerY="0.485"
                 android:endColor="#00000000" />
         </shape>
     </item>
 
-    <!-- Hairline highlight at center edge -->
+    <!-- Subtle outer border -->
     <item>
-        <shape>
-            <gradient
-                android:angle="270"
-                android:startColor="#00000000"
-                android:centerColor="#40FFFFFF"
-                android:centerY="0.51"
-                android:endColor="#00000000" />
+        <shape android:shape="rectangle">
+            <stroke android:width="0.5dp" android:color="#22FFFFFF" />
+            <corners android:radius="6dp" />
         </shape>
     </item>
 </layer-list>

@@ -1,20 +1,24 @@
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:shareInterpolator="false">
-    <!-- Open from the top edge so the new tile feels like it flips into place. -->
+    <!--
+        Mechanical split-flap IN: the new digit unfolds downward from the top hinge,
+        with a slight overshoot bounce when it lands — mimicking a real flap clacking
+        into place.  Pivot at top edge (0 %) so it grows downward.
+    -->
     <scale
-        android:duration="150"
-        android:fromYScale="0.08"
+        android:startOffset="100"
+        android:duration="300"
+        android:fromXScale="1.0"
+        android:toXScale="1.0"
+        android:fromYScale="0.0"
         android:toYScale="1.0"
+        android:pivotX="50%"
         android:pivotY="0%"
-        android:interpolator="@android:anim/decelerate_interpolator" />
-    <translate
-        android:duration="150"
-        android:fromYDelta="-8%p"
-        android:toYDelta="0"
-        android:interpolator="@android:anim/decelerate_interpolator" />
+        android:interpolator="@android:anim/overshoot_interpolator" />
     <alpha
-        android:duration="120"
-        android:fromAlpha="0.55"
+        android:startOffset="100"
+        android:duration="200"
+        android:fromAlpha="0.0"
         android:toAlpha="1.0"
         android:interpolator="@android:anim/decelerate_interpolator" />
 </set>

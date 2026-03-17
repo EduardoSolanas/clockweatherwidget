@@ -40,9 +40,9 @@
             </ViewFlipper>
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="2dp"
                 android:layout_gravity="center_vertical"
-                android:background="#80000000" />
+                android:background="@drawable/flip_hinge_line" />
         </FrameLayout>
 
         <FrameLayout
@@ -70,9 +70,9 @@
             </ViewFlipper>
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="2dp"
                 android:layout_gravity="center_vertical"
-                android:background="#80000000" />
+                android:background="@drawable/flip_hinge_line" />
         </FrameLayout>
 
         <TextView
@@ -112,9 +112,9 @@
             </ViewFlipper>
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="2dp"
                 android:layout_gravity="center_vertical"
-                android:background="#80000000" />
+                android:background="@drawable/flip_hinge_line" />
         </FrameLayout>
 
         <FrameLayout
@@ -142,9 +142,9 @@
             </ViewFlipper>
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="2dp"
                 android:layout_gravity="center_vertical"
-                android:background="#80000000" />
+                android:background="@drawable/flip_hinge_line" />
         </FrameLayout>
 
         <TextView
