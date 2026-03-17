@@ -33,39 +33,61 @@ object WidgetDataBinder {
         val m1 = minute / 10
         val m2 = minute % 10
 
-        if (isIncremental) {
-            // Only update digits that changed from the previous minute
-            val prevMinute = if (minute == 0) 59 else minute - 1
-            val prevHour = if (minute == 0) {
-                if (hour == 0) 23 else hour - 1
-            } else hour
+        // Only update digits that changed from the previous minute
+        val prevMinute = if (minute == 0) 59 else minute - 1
+        val prevHour = if (minute == 0) {
+            if (hour == 0) 23 else hour - 1
+        } else hour
 
-            val prevDisplayHour = if (is24h) prevHour
-                else if (prevHour == 0) 12
-                else if (prevHour > 12) prevHour - 12
-                else prevHour
+        val prevDisplayHour = if (is24h) prevHour
+            else if (prevHour == 0) 12
+            else if (prevHour > 12) prevHour - 12
+            else prevHour
 
-            val ph1 = prevDisplayHour / 10
-            val ph2 = prevDisplayHour % 10
-            val pm1 = prevMinute / 10
-            val pm2 = prevMinute % 10
+        val ph1 = prevDisplayHour / 10
+        val ph2 = prevDisplayHour % 10
+        val pm1 = prevMinute / 10
+        val pm2 = prevMinute % 10
 
-            if (h1 != ph1) views.setDisplayedChild(R.id.digit_h1, h1)
-            if (h2 != ph2) views.setDisplayedChild(R.id.digit_h2, h2)
-            if (m1 != pm1) views.setDisplayedChild(R.id.digit_m1, m1)
-            if (m2 != pm2) views.setDisplayedChild(R.id.digit_m2, m2)
-        } else {
-            // Full update: set all digits
-            views.setDisplayedChild(R.id.digit_h1, h1)
-            views.setDisplayedChild(R.id.digit_h2, h2)
-            views.setDisplayedChild(R.id.digit_m1, m1)
-            views.setDisplayedChild(R.id.digit_m2, m2)
-        }
+        bindDigit(context, views, R.id.digit_h1, "digit_h1", h1, isIncremental && h1 != ph1)
+        bindDigit(context, views, R.id.digit_h2, "digit_h2", h2, isIncremental && h2 != ph2)
+        bindDigit(context, views, R.id.digit_m1, "digit_m1", m1, isIncremental && m1 != pm1)
+        bindDigit(context, views, R.id.digit_m2, "digit_m2", m2, isIncremental && m2 != pm2)
 
         if (is24h) {
             views.setTextViewText(R.id.ampm, "")
         } else {
             views.setTextViewText(R.id.ampm, if (hour < 12) "AM" else "PM")
+        }
+    }
+
+    private fun bindDigit(
+        context: Context,
+        views: RemoteViews,
+        flipperId: Int,
+        flipperName: String,
+        value: Int,
+        changed: Boolean
+    ) {
+        if (changed) {
+            // Restore actual digits 0-9
+            for (i in 0..9) {
+                val childId = context.resources.getIdentifier("${flipperName}_$i", "id", context.packageName)
+                if (childId != 0) {
+                    views.setTextViewText(childId, i.toString())
+                }
+            }
+            views.setDisplayedChild(flipperId, value)
+        } else {
+            // Unchanged: DO NOT call setDisplayedChild!
+            // Just force all children to show the current value so that no matter which child is visible, it's correct.
+            val valueStr = value.toString()
+            for (i in 0..9) {
+                val childId = context.resources.getIdentifier("${flipperName}_$i", "id", context.packageName)
+                if (childId != 0) {
+                    views.setTextViewText(childId, valueStr)
+                }
+            }
         }
     }
 
