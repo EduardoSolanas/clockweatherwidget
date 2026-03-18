@@ -26,11 +26,6 @@ import java.util.Calendar
 /**
  * High-reliability clock tick receiver using AlarmManager.
  * This is the primary driver for off-process widget updates.
- *
- * Battery-aware scheduling tiers:
- * - Battery > 15 %  → honour user's high-precision setting
- * - Battery 6–15 %  → force non-wakeup + inexact
- * - Battery ≤ 5 %   → cancel alarm entirely (screen-on receiver will resume)
  */
 class ClockAlarmReceiver : BroadcastReceiver() {
 
@@ -49,7 +44,6 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                     app.refreshAllWidgets(context, isClockTick = true)
                 }
             } catch (e: Exception) {
-                // Timeout or refresh failure — still reschedule to keep the chain alive
                 Log.w(TAG, "Widget refresh timed out or failed; rescheduling anyway", e)
             } finally {
                 if (reschedule) {
@@ -71,51 +65,20 @@ class ClockAlarmReceiver : BroadcastReceiver() {
             LargeWidgetProvider::class.java
         )
 
-        // ── Scheduling ─────────────────────────────────────────────────
-
-        /**
-         * Schedules the next alarm at the start of the next minute.
-         *
-         * @param isHighPrecision  When `true` (default), uses exact wakeup alarms.
-         *                         When `false`, uses non-wakeup inexact alarms.
-         *                         Callers with DataStore access should resolve
-         *                         [com.clockweather.app.presentation.settings.SettingsViewModel.KEY_HIGH_PRECISION].
-         */
         fun scheduleNextTick(context: Context, isHighPrecision: Boolean = true) {
             if (!hasAnyActiveWidgets(context)) {
                 cancelNextTick(context)
                 return
             }
 
-            // ── Battery awareness ───────────────────────────────────
             val batteryPct = getBatteryPercent(context)
-            val effectiveHighPrecision: Boolean
-            val useWakeup: Boolean
-
-            when {
-                batteryPct in 0..5 -> {
-                    // Critical battery — don't schedule at all.
-                    // The ScreenStateReceiver will resume when the screen turns on.
-                    Log.d(TAG, "Battery critical ($batteryPct %) — skipping alarm scheduling")
-                    cancelNextTick(context)
-                    return
-                }
-                batteryPct in 6..15 -> {
-                    // Low battery — force battery-friendly mode regardless of setting
-                    Log.d(TAG, "Battery low ($batteryPct %) — forcing non-wakeup inexact")
-                    effectiveHighPrecision = false
-                    useWakeup = false
-                }
-                else -> {
-                    // Normal battery — respect user setting
-                    effectiveHighPrecision = isHighPrecision
-                    useWakeup = isHighPrecision
-                }
+            if (batteryPct <= 5) {
+                Log.d(TAG, "Battery critical ($batteryPct %) — skipping alarm scheduling")
+                cancelNextTick(context)
+                return
             }
 
-
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
                 0,
@@ -129,37 +92,30 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                 add(Calendar.MINUTE, 1)
             }
 
-            val alarmType = if (useWakeup) AlarmManager.RTC_WAKEUP else AlarmManager.RTC
+            // Always use RTC_WAKEUP for the minute tick to ensure reliability
+            val alarmType = AlarmManager.RTC_WAKEUP
 
-            if (effectiveHighPrecision) {
-                // Exact scheduling
+            if (isHighPrecision && batteryPct > 15) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     if (alarmManager.canScheduleExactAlarms()) {
-                        Log.d(TAG, "High-Precision: EXACT alarm (type=$alarmType)")
                         alarmManager.setExactAndAllowWhileIdle(alarmType, calendar.timeInMillis, pendingIntent)
                     } else {
-                        Log.d(TAG, "High-Precision: permission missing → inexact allowWhileIdle")
                         alarmManager.setAndAllowWhileIdle(alarmType, calendar.timeInMillis, pendingIntent)
                     }
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    Log.d(TAG, "High-Precision: EXACT allowWhileIdle (type=$alarmType)")
                     alarmManager.setExactAndAllowWhileIdle(alarmType, calendar.timeInMillis, pendingIntent)
                 } else {
                     alarmManager.setExact(alarmType, calendar.timeInMillis, pendingIntent)
                 }
             } else {
-                // Battery-friendly inexact scheduling
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    Log.d(TAG, "Battery-Friendly: inexact allowWhileIdle (type=$alarmType)")
                     alarmManager.setAndAllowWhileIdle(alarmType, calendar.timeInMillis, pendingIntent)
                 } else {
-                    Log.d(TAG, "Battery-Friendly: standard alarm (type=$alarmType)")
                     alarmManager.set(alarmType, calendar.timeInMillis, pendingIntent)
                 }
             }
+            Log.d(TAG, "Scheduled next tick for ${calendar.time} (precision=$isHighPrecision)")
         }
-
-        // ── Helpers ─────────────────────────────────────────────────
 
         fun hasAnyActiveWidgets(context: Context): Boolean {
             val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -180,10 +136,6 @@ class ClockAlarmReceiver : BroadcastReceiver() {
             Log.d(TAG, "Alarm cancelled")
         }
 
-        /**
-         * Returns the current battery percentage (0–100), or 100 if unknown.
-         * Uses a sticky broadcast — no registration needed.
-         */
         private fun getBatteryPercent(context: Context): Int {
             val batteryStatus: Intent? = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
             val level = batteryStatus?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
