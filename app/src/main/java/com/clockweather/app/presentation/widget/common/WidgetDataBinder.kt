@@ -150,10 +150,14 @@ object WidgetDataBinder {
      */
     @Suppress("DEPRECATION")
     private fun flipDigit(views: RemoteViews, viewId: Int, from: Int, to: Int) {
+        // If the change is +1 (mod 10), use showNext() to trigger the flip animation.
         if ((from + 1) % 10 == to) {
-            // showNext() is the only RemoteViews API that triggers ViewFlipper animations
             views.showNext(viewId)
         } else {
+            // For larger jumps (e.g. 5 minutes or after a deep sleep/Doze gap),
+            // we use setDisplayedChild() to jump directly to the correct digit.
+            // This prevents the widget from performing multiple awkward-looking
+            // single-step animations to "catch up."
             views.setDisplayedChild(viewId, to)
         }
     }
