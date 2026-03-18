@@ -106,22 +106,18 @@ object WidgetDataBinder {
             if (h1 != prev.h1) {
                 android.util.Log.d("WidgetDataBinder", "Incremental flip h1: ${prev.h1} -> $h1")
                 flipDigit(views, R.id.digit_h1, prev.h1, h1)
-                setDigitVisibility(context, views, "digit_h1", h1)
             }
             if (h2 != prev.h2) {
                 android.util.Log.d("WidgetDataBinder", "Incremental flip h2: ${prev.h2} -> $h2")
                 flipDigit(views, R.id.digit_h2, prev.h2, h2)
-                setDigitVisibility(context, views, "digit_h2", h2)
             }
             if (m1 != prev.m1) {
                 android.util.Log.d("WidgetDataBinder", "Incremental flip m1: ${prev.m1} -> $m1")
                 flipDigit(views, R.id.digit_m1, prev.m1, m1)
-                setDigitVisibility(context, views, "digit_m1", m1)
             }
             if (m2 != prev.m2) {
                 android.util.Log.d("WidgetDataBinder", "Incremental flip m2: ${prev.m2} -> $m2")
                 flipDigit(views, R.id.digit_m2, prev.m2, m2)
-                setDigitVisibility(context, views, "digit_m2", m2)
             }
 
             val ampmText = if (is24h) "" else if (hour < 12) "AM" else "PM"
