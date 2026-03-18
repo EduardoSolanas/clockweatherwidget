@@ -41,7 +41,7 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindClockViews non-incremental sets visibility for all digits`() {
+    fun `bindClockViews non-incremental sets visibility and displayed child for all digits`() {
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -52,8 +52,11 @@ class WidgetDataBinderTest {
             isIncremental = false
         )
 
-        // Non-incremental uses setViewVisibility (via setDigitVisibility), NOT setDisplayedChild
-        verify(exactly = 0) { views.setDisplayedChild(any(), any()) }
+        // Non-incremental now uses both setDisplayedChild AND setViewVisibility
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h1, 1) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h2, 0) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 2) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 5) }
 
         // digit_h1 -> 1: child 1 VISIBLE, others GONE
         val h1_1 = resources.getIdentifier("digit_h1_1", "id", "com.clockweather.app")

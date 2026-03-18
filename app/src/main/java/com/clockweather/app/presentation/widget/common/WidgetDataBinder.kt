@@ -59,10 +59,14 @@ object WidgetDataBinder {
         val m1 = minute / 10
         val m2 = minute % 10
 
-        // Use visibility to show correct digit — no setDisplayedChild, no animation
+        // Use visibility to show correct digit AND setDisplayedChild for state
+        views.setDisplayedChild(R.id.digit_h1, h1)
         setDigitVisibility(context, views, "digit_h1", h1)
+        views.setDisplayedChild(R.id.digit_h2, h2)
         setDigitVisibility(context, views, "digit_h2", h2)
+        views.setDisplayedChild(R.id.digit_m1, m1)
         setDigitVisibility(context, views, "digit_m1", m1)
+        views.setDisplayedChild(R.id.digit_m2, m2)
         setDigitVisibility(context, views, "digit_m2", m2)
         views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
     }
@@ -126,10 +130,14 @@ object WidgetDataBinder {
             ) "AM" else "PM"
             if (ampmText != prevAmpmText) views.setTextViewText(R.id.ampm, ampmText)
         } else {
-            // Full refresh: use visibility only (no setDisplayedChild) to avoid flicker
+            // Full refresh: use visibility AND setDisplayedChild to ensure correct state update
+            views.setDisplayedChild(R.id.digit_h1, h1)
             setDigitVisibility(context, views, "digit_h1", h1)
+            views.setDisplayedChild(R.id.digit_h2, h2)
             setDigitVisibility(context, views, "digit_h2", h2)
+            views.setDisplayedChild(R.id.digit_m1, m1)
             setDigitVisibility(context, views, "digit_m1", m1)
+            views.setDisplayedChild(R.id.digit_m2, m2)
             setDigitVisibility(context, views, "digit_m2", m2)
             views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
         }
