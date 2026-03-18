@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -134,15 +135,22 @@ fun WeatherDetailScreen(
                     }
                 }
                 is UiState.Success -> {
-                    WeatherDetailContent(
-                        weatherData = state.data,
-                        temperatureUnit = temperatureUnit,
-                        selectedDayIndex = selectedDayIndex,
-                        onDaySelected = { selectedDayIndex = it }
-                    )
+                    PullToRefreshBox(
+                        isRefreshing = isRefreshing,
+                        onRefresh = { viewModel.refresh() },
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        WeatherDetailContent(
+                            weatherData = state.data,
+                            temperatureUnit = temperatureUnit,
+                            selectedDayIndex = selectedDayIndex,
+                            onDaySelected = { selectedDayIndex = it }
+                        )
+                    }
                 }
             }
-            if (isRefreshing) {
+            // Show a progress bar during initial load or background refresh on non-Success states
+            if (isRefreshing && uiState !is UiState.Success) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter)
                 )

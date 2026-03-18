@@ -15,6 +15,8 @@ import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -31,6 +33,9 @@ class WeatherRepositoryImpl @Inject constructor(
     private val apiMapper: WeatherApiMapper,
     private val entityMapper: WeatherEntityMapper
 ) : WeatherRepository {
+
+    // B4: prevents concurrent widgets from firing duplicate network requests for the same location
+    private val refreshMutex = Mutex()
 
     override fun getWeatherData(location: Location): Flow<WeatherData> {
         return combine(
@@ -50,14 +55,16 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshWeatherData(location: Location) {
-        val query = "${location.latitude},${location.longitude}"
-        val response = weatherApi.getForecast(
-            apiKey = apiKey,
-            query = query,
-            days = 7
-        )
-        val weatherData = apiMapper.mapToWeatherData(response, location)
-        persistWeatherData(weatherData, location.id)
+        refreshMutex.withLock {
+            val query = "${location.latitude},${location.longitude}"
+            val response = weatherApi.getForecast(
+                apiKey = apiKey,
+                query = query,
+                days = 7
+            )
+            val weatherData = apiMapper.mapToWeatherData(response, location)
+            persistWeatherData(weatherData, location.id)
+        }
     }
 
     override fun getCachedWeatherData(locationId: Long): Flow<WeatherData?> {

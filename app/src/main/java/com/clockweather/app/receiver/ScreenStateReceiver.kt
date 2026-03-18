@@ -1,5 +1,4 @@
 package com.clockweather.app.receiver
-
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -8,57 +7,58 @@ import android.util.Log
 import com.clockweather.app.ClockWeatherApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.withTimeout
 /**
  * Dynamically-registered receiver for screen on/off events.
  *
- * - Screen OFF â†’ cancels the minute-tick alarm so the CPU is never woken for invisible updates.
- * - Screen ON  â†’ re-schedules the alarm and performs an immediate full refresh to catch up.
+ * - Screen OFF ? cancels the minute-tick alarm (CPU never woken for invisible updates).
+ * - Screen ON  ? re-schedules the alarm respecting the user's high-precision pref and
+ *                performs an immediate full refresh to catch up.
  *
- * Must be registered via [Context.registerReceiver] â€” screen intents are not
- * deliverable to manifest-declared receivers since API 26.
+ * Must be registered via [Context.registerReceiver] — screen intents are not deliverable
+ * to manifest-declared receivers since API 26.
  */
 class ScreenStateReceiver : BroadcastReceiver() {
-
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             Intent.ACTION_SCREEN_OFF -> {
-                Log.d(TAG, "Screen OFF â€” cancelling clock alarm to save battery")
+                Log.d(TAG, "Screen OFF — cancelling clock alarm to save battery")
                 ClockAlarmReceiver.cancelNextTick(context)
             }
-
             Intent.ACTION_SCREEN_ON -> {
-                Log.d(TAG, "Screen ON â€” resuming clock alarm + full widget refresh")
-                ClockAlarmReceiver.scheduleNextTick(context)
-
+                Log.d(TAG, "Screen ON — resuming clock alarm + full widget refresh")
                 val app = context.applicationContext as? ClockWeatherApplication ?: return
                 val pendingResult = goAsync()
-                CoroutineScope(Dispatchers.Default).launch {
+                CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
                     try {
-                        // Full refresh so the time + weather are correct immediately
-                        app.refreshAllWidgets(context, isClockTick = false)
+                        withTimeout(12_000) {
+                            // B1: resolve user preference instead of hardcoding true
+                            val isHighPrecision = app.resolveHighPrecision()
+                            ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
+                            app.refreshAllWidgets(context, isClockTick = false)
+                        }
                     } finally {
                         pendingResult.finish()
                     }
                 }
             }
-
-            // Ambient / screensaver (AOD) handling
             Intent.ACTION_DREAMING_STARTED -> {
-                Log.d(TAG, "Dreaming started (AOD/screensaver) â€” cancelling clock alarm")
+                Log.d(TAG, "Dreaming started (AOD/screensaver) — cancelling clock alarm")
                 ClockAlarmReceiver.cancelNextTick(context)
             }
-
             Intent.ACTION_DREAMING_STOPPED -> {
-                Log.d(TAG, "Dreaming stopped â€” resuming clock alarm")
-                ClockAlarmReceiver.scheduleNextTick(context)
-
+                Log.d(TAG, "Dreaming stopped — resuming clock alarm")
                 val app = context.applicationContext as? ClockWeatherApplication ?: return
                 val pendingResult = goAsync()
-                CoroutineScope(Dispatchers.Default).launch {
+                CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
                     try {
-                        app.refreshAllWidgets(context, isClockTick = false)
+                        withTimeout(12_000) {
+                            val isHighPrecision = app.resolveHighPrecision()
+                            ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
+                            app.refreshAllWidgets(context, isClockTick = false)
+                        }
                     } finally {
                         pendingResult.finish()
                     }
@@ -66,11 +66,8 @@ class ScreenStateReceiver : BroadcastReceiver() {
             }
         }
     }
-
     companion object {
         private const val TAG = "ScreenStateReceiver"
-
-        /** Build the IntentFilter for dynamic registration. */
         fun buildIntentFilter(): IntentFilter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_SCREEN_OFF)
@@ -79,4 +76,3 @@ class ScreenStateReceiver : BroadcastReceiver() {
         }
     }
 }
-

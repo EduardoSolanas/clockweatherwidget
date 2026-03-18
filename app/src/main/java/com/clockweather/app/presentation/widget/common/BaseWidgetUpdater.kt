@@ -110,6 +110,9 @@ abstract class BaseWidgetUpdater(
                     WidgetDataBinder.bindClockViews(context, views, appWidgetId, now.hour, now.minute, is24h, isIncremental = isMinuteTick)
                 }
 
+                // C1: store the rendered digits so the next incremental tick diffs correctly
+                WidgetClockStateStore.saveLastDigits(context, appWidgetId, DigitState.from(now.hour, now.minute, is24h))
+
                 listOf(
                     com.clockweather.app.R.id.digit_h1,
                     com.clockweather.app.R.id.digit_h2,
@@ -238,11 +241,11 @@ abstract class BaseWidgetUpdater(
                 val views = RemoteViews(context.packageName, layoutResId)
                 val now = LocalTime.now()
 
-                // Avoid rebinding click actions on every incremental tick for ViewFlipper layouts,
-                // as this can force host-side redraws that look like multi-digit flicker.
-                if (useSimple) {
-                    bindAllClicks(views, appWidgetId)
-                }
+                // C1: read stored digits for accurate incremental diff (fixes Doze-gap off-by-N flips)
+                val prevDigits = WidgetClockStateStore.getLastDigits(context, appWidgetId)
+
+                // B5: Don't rebind click actions on every tick — they are already set by the last
+                // full updateWidget() call. Partial updates merge actions, so they are preserved.
 
                 if (usesSimpleClockDigits) {
                     // Layout has plain TextViews
@@ -258,20 +261,20 @@ abstract class BaseWidgetUpdater(
                         now.hour,
                         now.minute,
                         is24h,
-                        isIncremental = true
+                        isIncremental = true,
+                        prevDigits = prevDigits   // C1: accurate digit diff
                     )
                 }
 
-                if (useSimple) {
-                    // Non-animated mode: full refresh to update the entire widget cleanly.
-                    updateWidget(appWidgetId, allowWeatherRefresh = false)
-                    Log.d(tag, "Widget $appWidgetId minute update completed via full refresh (no flip).")
-                } else {
-                    // ViewFlipper-based digits need partial updates to trigger flip animations.
-                    appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
-                    WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
-                    Log.d(tag, "Widget $appWidgetId clock-only update successful.")
-                }
+                // C1: persist the just-rendered digits for the next tick's diff
+                val newDigits = DigitState.from(now.hour, now.minute, is24h)
+                WidgetClockStateStore.saveLastDigits(context, appWidgetId, newDigits)
+
+                // B5: partiallyUpdateAppWidget for BOTH paths — only the changed digit
+                //     views are serialised; full weather/date/click state is untouched.
+                appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
+                WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
+                Log.d(tag, "Widget $appWidgetId clock-only update successful (useSimple=$useSimple).")
             } catch (e: Exception) {
                 Log.e(tag, "Clock-only update failed for widget $appWidgetId", e)
             }

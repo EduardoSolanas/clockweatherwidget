@@ -10,21 +10,33 @@ import java.util.concurrent.TimeUnit
 
 object WeatherUpdateScheduler {
 
-    fun schedule(context: Context) {
+    /** WorkManager enforces a minimum repeat interval of 15 minutes. */
+    private const val MIN_INTERVAL_MINUTES = 15L
+
+    /**
+     * Enqueue (or update) the periodic weather-fetch worker.
+     *
+     * @param intervalMinutes How often to fetch weather. Clamped to [MIN_INTERVAL_MINUTES].
+     *                        Defaults to 30 minutes.
+     */
+    fun schedule(context: Context, intervalMinutes: Int = 30) {
+        val clampedInterval = intervalMinutes.toLong().coerceAtLeast(MIN_INTERVAL_MINUTES)
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresBatteryNotLow(true)
             .build()
 
         val workRequest = PeriodicWorkRequestBuilder<WeatherUpdateWorker>(
-            30, TimeUnit.MINUTES
+            clampedInterval, TimeUnit.MINUTES
         )
             .setConstraints(constraints)
             .build()
 
+        // UPDATE: adjusts interval on existing work without cancelling any in-progress run
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             WeatherUpdateWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             workRequest
         )
     }

@@ -2,10 +2,28 @@ package com.clockweather.app.presentation.widget.common
 
 import android.content.Context
 
+/**
+ * Stores the actual h1/h2/m1/m2 digit values last rendered on a widget.
+ * Used by [WidgetDataBinder.bindClockViews] to compute an accurate incremental
+ * diff even after Doze gaps (where arithmetic "minute - 1" would be wrong).
+ */
+data class DigitState(val h1: Int, val h2: Int, val m1: Int, val m2: Int) {
+    companion object {
+        fun from(hour: Int, minute: Int, is24h: Boolean): DigitState {
+            val displayHour = if (is24h) hour
+                else if (hour == 0) 12
+                else if (hour > 12) hour - 12
+                else hour
+            return DigitState(displayHour / 10, displayHour % 10, minute / 10, minute % 10)
+        }
+    }
+}
+
 object WidgetClockStateStore {
     private const val PREFS_NAME = "widget_clock_state"
     private const val KEY_PREFIX = "last_rendered_epoch_minute_"
     private const val KEY_BASELINE_PREFIX = "baseline_ready_"
+    private const val DIGITS_PREFIX = "digits_"
 
     fun getLastRenderedEpochMinute(context: Context, appWidgetId: Int): Long? {
         val prefs = prefs(context)
@@ -21,7 +39,36 @@ object WidgetClockStateStore {
         prefs(context).edit()
             .remove(key(appWidgetId))
             .remove(baselineKey(appWidgetId))
+            .remove("${DIGITS_PREFIX}${appWidgetId}_h1")
+            .remove("${DIGITS_PREFIX}${appWidgetId}_h2")
+            .remove("${DIGITS_PREFIX}${appWidgetId}_m1")
+            .remove("${DIGITS_PREFIX}${appWidgetId}_m2")
             .apply()
+    }
+
+    /** Persist the actual digit values that were last rendered so the next incremental
+     *  tick can diff against them accurately (fixes Doze gap off-by-N digit flips). */
+    fun saveLastDigits(context: Context, appWidgetId: Int, digits: DigitState) {
+        val key = "${DIGITS_PREFIX}${appWidgetId}"
+        prefs(context).edit()
+            .putInt("${key}_h1", digits.h1)
+            .putInt("${key}_h2", digits.h2)
+            .putInt("${key}_m1", digits.m1)
+            .putInt("${key}_m2", digits.m2)
+            .apply()
+    }
+
+    /** Returns the last stored digits, or null if never stored for this widget. */
+    fun getLastDigits(context: Context, appWidgetId: Int): DigitState? {
+        val p = prefs(context)
+        val key = "${DIGITS_PREFIX}${appWidgetId}"
+        if (!p.contains("${key}_h1")) return null
+        return DigitState(
+            h1 = p.getInt("${key}_h1", 0),
+            h2 = p.getInt("${key}_h2", 0),
+            m1 = p.getInt("${key}_m1", 0),
+            m2 = p.getInt("${key}_m2", 0)
+        )
     }
 
     fun isBaselineReady(context: Context, appWidgetId: Int): Boolean {

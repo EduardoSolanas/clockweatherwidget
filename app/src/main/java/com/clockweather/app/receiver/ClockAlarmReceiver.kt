@@ -19,7 +19,9 @@ import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
 import com.clockweather.app.presentation.widget.large.LargeWidgetProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.util.Calendar
 
 /**
@@ -36,19 +38,17 @@ class ClockAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext as? ClockWeatherApplication ?: return
         val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.Default).launch {
+        CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
             try {
-                if (!hasAnyActiveWidgets(context)) {
-                    cancelNextTick(context)
-                    return@launch
+                withTimeout(10_000) {
+                    if (!hasAnyActiveWidgets(context)) {
+                        cancelNextTick(context)
+                        return@withTimeout
+                    }
+                    app.refreshAllWidgets(context, isClockTick = true)
+                    val isHighPrecision = app.resolveHighPrecision()
+                    scheduleNextTick(context, isHighPrecision)
                 }
-
-                // Update all widgets with the current time
-                app.refreshAllWidgets(context, isClockTick = true)
-
-                // Self-reschedule for the next minute boundary, respecting user preference
-                val isHighPrecision = app.resolveHighPrecision()
-                scheduleNextTick(context, isHighPrecision)
             } finally {
                 pendingResult.finish()
             }

@@ -74,7 +74,8 @@ object WidgetDataBinder {
         hour: Int,
         minute: Int,
         is24h: Boolean = true,
-        isIncremental: Boolean = false
+        isIncremental: Boolean = false,
+        prevDigits: DigitState? = null
     ) {
         val displayHour = if (is24h) hour
             else if (hour == 0) 12
@@ -88,52 +89,48 @@ object WidgetDataBinder {
 
         android.util.Log.d("WidgetDataBinder", "Binding clock: $hour:$minute (24h=$is24h, incremental=$isIncremental) -> digits $h1$h2:$m1$m2")
 
-        // Only update digits that changed from the previous minute
-        val prevMinute = if (minute == 0) 59 else minute - 1
-        val prevHour = if (minute == 0) {
-            if (hour == 0) 23 else hour - 1
-        } else hour
-
-        val prevDisplayHour = if (is24h) prevHour
-            else if (prevHour == 0) 12
-            else if (prevHour > 12) prevHour - 12
-            else prevHour
-
-        val ph1 = prevDisplayHour / 10
-        val ph2 = prevDisplayHour % 10
-        val pm1 = prevMinute / 10
-        val pm2 = prevMinute % 10
-
         if (isIncremental) {
-            // Incremental: ONLY setDisplayedChild for changed digits.
-            // AND: Ensure the newly selected child is VISIBLE (in case a previous full update set it to GONE)
-            if (h1 != ph1) {
-                android.util.Log.d("WidgetDataBinder", "Incremental flip h1: $ph1 -> $h1")
+            // Incremental: use stored previous digits for accurate diff.
+            // Falls back to arithmetic "minute - 1" when no stored state is available
+            // (e.g. first tick after install or after a widget clear).
+            val prev = prevDigits ?: run {
+                val pMin = if (minute == 0) 59 else minute - 1
+                val pHour = if (minute == 0) { if (hour == 0) 23 else hour - 1 } else hour
+                val pDisplay = if (is24h) pHour
+                    else if (pHour == 0) 12
+                    else if (pHour > 12) pHour - 12
+                    else pHour
+                DigitState(pDisplay / 10, pDisplay % 10, pMin / 10, pMin % 10)
+            }
+
+            if (h1 != prev.h1) {
+                android.util.Log.d("WidgetDataBinder", "Incremental flip h1: ${prev.h1} -> $h1")
                 views.setDisplayedChild(R.id.digit_h1, h1)
                 setDigitVisibility(context, views, "digit_h1", h1)
             }
-            if (h2 != ph2) {
-                android.util.Log.d("WidgetDataBinder", "Incremental flip h2: $ph2 -> $h2")
+            if (h2 != prev.h2) {
+                android.util.Log.d("WidgetDataBinder", "Incremental flip h2: ${prev.h2} -> $h2")
                 views.setDisplayedChild(R.id.digit_h2, h2)
                 setDigitVisibility(context, views, "digit_h2", h2)
             }
-            if (m1 != pm1) {
-                android.util.Log.d("WidgetDataBinder", "Incremental flip m1: $pm1 -> $m1")
+            if (m1 != prev.m1) {
+                android.util.Log.d("WidgetDataBinder", "Incremental flip m1: ${prev.m1} -> $m1")
                 views.setDisplayedChild(R.id.digit_m1, m1)
                 setDigitVisibility(context, views, "digit_m1", m1)
             }
-            if (m2 != pm2) {
-                android.util.Log.d("WidgetDataBinder", "Incremental flip m2: $pm2 -> $m2")
+            if (m2 != prev.m2) {
+                android.util.Log.d("WidgetDataBinder", "Incremental flip m2: ${prev.m2} -> $m2")
                 views.setDisplayedChild(R.id.digit_m2, m2)
                 setDigitVisibility(context, views, "digit_m2", m2)
             }
-            
+
             val ampmText = if (is24h) "" else if (hour < 12) "AM" else "PM"
-            val prevAmpmText = if (is24h) "" else if (prevHour < 12) "AM" else "PM"
+            val prevAmpmText = if (is24h) "" else if (
+                (if (minute == 0) { if (hour == 0) 23 else hour - 1 } else hour) < 12
+            ) "AM" else "PM"
             if (ampmText != prevAmpmText) views.setTextViewText(R.id.ampm, ampmText)
         } else {
-            // For full refreshes, avoid enqueueing setDisplayedChild on every digit.
-            // Those actions can accumulate with partial updates and cause all tiles to flicker.
+            // Full refresh: use visibility only (no setDisplayedChild) to avoid flicker
             setDigitVisibility(context, views, "digit_h1", h1)
             setDigitVisibility(context, views, "digit_h2", h2)
             setDigitVisibility(context, views, "digit_m1", m1)

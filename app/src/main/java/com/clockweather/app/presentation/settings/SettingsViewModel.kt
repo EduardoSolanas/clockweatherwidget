@@ -156,6 +156,8 @@ class SettingsViewModel @Inject constructor(
     fun setUpdateInterval(minutes: Int) {
         viewModelScope.launch {
             dataStore.edit { it[KEY_UPDATE_INTERVAL] = minutes }
+            // B3: immediately reschedule the periodic worker with the new interval
+            com.clockweather.app.worker.WeatherUpdateScheduler.schedule(context, minutes)
         }
     }
 
@@ -217,8 +219,8 @@ class SettingsViewModel @Inject constructor(
     fun setHighPrecisionEnabled(enabled: Boolean) {
         viewModelScope.launch {
             dataStore.edit { it[KEY_HIGH_PRECISION] = enabled }
-            // If enabling, ensure we poke the alarm receiver to pick up the change
-            com.clockweather.app.receiver.ClockAlarmReceiver.scheduleNextTick(context)
+            // B2: pass the new value directly — don't rely on DataStore read racing the write
+            com.clockweather.app.receiver.ClockAlarmReceiver.scheduleNextTick(context, enabled)
         }
     }
 
