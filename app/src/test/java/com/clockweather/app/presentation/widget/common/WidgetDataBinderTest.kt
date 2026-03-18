@@ -84,14 +84,21 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
+        // h1, h2, m1 unchanged — no flip calls
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
+        verify(exactly = 0) { views.showNext(R.id.digit_h1) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h2, any()) }
+        verify(exactly = 0) { views.showNext(R.id.digit_h2) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m1, any()) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 6) }
+        verify(exactly = 0) { views.showNext(R.id.digit_m1) }
+        // m2: 5→6 is +1, so showNext (not setDisplayedChild)
+        verify(exactly = 1) { views.showNext(R.id.digit_m2) }
+        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m2, any()) }
     }
 
     @Test
     fun `bindClockViews incremental handles hour boundary`() {
+        // prev fallback: 9:59 → 10:00
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -102,14 +109,19 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h1, 1) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h2, 0) }
+        // h1: 0→1 (+1) → showNext
+        verify(exactly = 1) { views.showNext(R.id.digit_h1) }
+        // h2: 9→0 (+1 mod 10) → showNext
+        verify(exactly = 1) { views.showNext(R.id.digit_h2) }
+        // m1: 5→0 (not +1) → setDisplayedChild
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 0) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 0) }
+        // m2: 9→0 (+1 mod 10) → showNext
+        verify(exactly = 1) { views.showNext(R.id.digit_m2) }
     }
 
     @Test
     fun `bindClockViews incremental handles minute tens boundary`() {
+        // prev fallback: 10:29 → 10:30
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -121,9 +133,13 @@ class WidgetDataBinderTest {
         )
 
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
+        verify(exactly = 0) { views.showNext(R.id.digit_h1) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h2, any()) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 3) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 0) }
+        verify(exactly = 0) { views.showNext(R.id.digit_h2) }
+        // m1: 2→3 (+1) → showNext
+        verify(exactly = 1) { views.showNext(R.id.digit_m1) }
+        // m2: 9→0 (+1 mod 10) → showNext
+        verify(exactly = 1) { views.showNext(R.id.digit_m2) }
     }
 
     @Test
@@ -149,9 +165,14 @@ class WidgetDataBinderTest {
         }
 
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
+        verify(exactly = 0) { views.showNext(R.id.digit_h1) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h2, any()) }
+        verify(exactly = 0) { views.showNext(R.id.digit_h2) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m1, any()) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 6) }
+        verify(exactly = 0) { views.showNext(R.id.digit_m1) }
+        // m2: 5→6 (+1) → showNext
+        verify(exactly = 1) { views.showNext(R.id.digit_m2) }
+        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m2, any()) }
     }
 
     @Test
@@ -166,14 +187,20 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
+        // h1: 1→1, no change
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h2, 2) }
+        verify(exactly = 0) { views.showNext(R.id.digit_h1) }
+        // h2: 1→2 (+1) → showNext
+        verify(exactly = 1) { views.showNext(R.id.digit_h2) }
+        // m1: 5→0 (not +1) → setDisplayedChild
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 0) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 0) }
+        // m2: 9→0 (+1 mod 10) → showNext
+        verify(exactly = 1) { views.showNext(R.id.digit_m2) }
     }
 
     @Test
     fun `incremental midnight boundary in 24h mode`() {
+        // prev fallback: 23:59 → 0:00
         WidgetDataBinder.bindClockViews(
             context = context,
             views = views,
@@ -184,9 +211,13 @@ class WidgetDataBinderTest {
             isIncremental = true
         )
 
+        // h1: 2→0 (not +1) → setDisplayedChild
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h1, 0) }
+        // h2: 3→0 (not +1) → setDisplayedChild
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_h2, 0) }
+        // m1: 5→0 (not +1) → setDisplayedChild
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m1, 0) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 0) }
+        // m2: 9→0 (+1 mod 10) → showNext
+        verify(exactly = 1) { views.showNext(R.id.digit_m2) }
     }
 }
