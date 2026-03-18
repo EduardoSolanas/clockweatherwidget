@@ -1,4 +1,5 @@
 package com.clockweather.app.receiver
+
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -10,25 +11,26 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+
 /**
  * Dynamically-registered receiver for screen on/off events.
  *
- * - Screen OFF ? cancels the minute-tick alarm (CPU never woken for invisible updates).
- * - Screen ON  ? re-schedules the alarm respecting the user's high-precision pref and
+ * - Screen OFF -> cancels the minute-tick alarm (CPU never woken for invisible updates).
+ * - Screen ON  -> re-schedules the alarm respecting the user's high-precision pref and
  *                performs an immediate full refresh to catch up.
  *
- * Must be registered via [Context.registerReceiver] — screen intents are not deliverable
+ * Must be registered via [Context.registerReceiver] â€” screen intents are not deliverable
  * to manifest-declared receivers since API 26.
  */
 class ScreenStateReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             Intent.ACTION_SCREEN_OFF -> {
-                Log.d(TAG, "Screen OFF — cancelling clock alarm to save battery")
+                Log.d(TAG, "Screen OFF â€” cancelling clock alarm to save battery")
                 ClockAlarmReceiver.cancelNextTick(context)
             }
             Intent.ACTION_SCREEN_ON -> {
-                Log.d(TAG, "Screen ON — resuming clock alarm + full widget refresh")
+                Log.d(TAG, "Screen ON â€” resuming clock alarm + full widget refresh")
                 val app = context.applicationContext as? ClockWeatherApplication ?: return
                 val pendingResult = goAsync()
                 CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
@@ -45,11 +47,11 @@ class ScreenStateReceiver : BroadcastReceiver() {
                 }
             }
             Intent.ACTION_DREAMING_STARTED -> {
-                Log.d(TAG, "Dreaming started (AOD/screensaver) — cancelling clock alarm")
-                ClockAlarmReceiver.cancelNextTick(context)
+                Log.d(TAG, "Dreaming started (AOD/screensaver) â€” keeping clock alarm active if battery allows")
+                // No longer cancel here; allow ClockAlarmReceiver's battery logic to handle it
             }
             Intent.ACTION_DREAMING_STOPPED -> {
-                Log.d(TAG, "Dreaming stopped — resuming clock alarm")
+                Log.d(TAG, "Dreaming stopped â€” resuming clock alarm")
                 val app = context.applicationContext as? ClockWeatherApplication ?: return
                 val pendingResult = goAsync()
                 CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
