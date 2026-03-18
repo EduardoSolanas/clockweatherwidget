@@ -10,7 +10,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
-import android.os.PowerManager
 import android.util.Log
 import com.clockweather.app.ClockWeatherApplication
 import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
@@ -39,17 +38,24 @@ class ClockAlarmReceiver : BroadcastReceiver() {
         val app = context.applicationContext as? ClockWeatherApplication ?: return
         val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+            var reschedule = true
             try {
                 withTimeout(10_000) {
                     if (!hasAnyActiveWidgets(context)) {
                         cancelNextTick(context)
+                        reschedule = false
                         return@withTimeout
                     }
                     app.refreshAllWidgets(context, isClockTick = true)
+                }
+            } catch (e: Exception) {
+                // Timeout or refresh failure — still reschedule to keep the chain alive
+                Log.w(TAG, "Widget refresh timed out or failed; rescheduling anyway", e)
+            } finally {
+                if (reschedule) {
                     val isHighPrecision = app.resolveHighPrecision()
                     scheduleNextTick(context, isHighPrecision)
                 }
-            } finally {
                 pendingResult.finish()
             }
         }
@@ -107,15 +113,6 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                 }
             }
 
-            // ── Screen check ────────────────────────────────────────
-            // If screen is off, don't bother scheduling a wakeup alarm.
-            // The ScreenStateReceiver will reschedule when the screen turns on.
-            val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-            val screenOn = pm.isInteractive
-            if (!screenOn && useWakeup) {
-                Log.d(TAG, "Screen off — skipping wakeup alarm (ScreenStateReceiver will resume)")
-                return
-            }
 
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
