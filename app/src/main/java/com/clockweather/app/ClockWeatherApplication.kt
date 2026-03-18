@@ -19,6 +19,7 @@ import com.clockweather.app.presentation.widget.large.LargeWidgetProvider
 import com.clockweather.app.presentation.widget.common.WidgetClockStateStore
 import com.clockweather.app.receiver.ClockAlarmReceiver
 import com.clockweather.app.receiver.ScreenStateReceiver
+import com.clockweather.app.receiver.TimeTickReceiver
 import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.util.WidgetPrefsCache
 import dagger.hilt.android.EntryPointAccessors
@@ -42,6 +43,9 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
     /** Dynamically registered — must be kept as an instance field to unregister later. */
     private var screenStateReceiver: ScreenStateReceiver? = null
 
+    /** Registered while screen is on to receive the free system minute tick. */
+    private var timeTickReceiver: TimeTickReceiver? = null
+
     override fun onCreate() {
         super.onCreate()
         restoreLanguageSetting()
@@ -51,13 +55,16 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
 
         if (ClockAlarmReceiver.hasAnyActiveWidgets(this)) {
             registerScreenStateReceiver()
+            // Screen may already be on when the process starts (e.g. after OEM kill).
+            // Register TIME_TICK immediately so we don't miss ticks until the next
+            // ACTION_SCREEN_ON event.
+            registerTimeTickReceiver()
 
             appScope.launch {
                 resetClockStateForActiveWidgets(this@ClockWeatherApplication)
 
-                // Resolve the user's high-precision preference for alarm scheduling
-                val isHighPrecision = resolveHighPrecision()
-                ClockAlarmReceiver.scheduleNextTick(this@ClockWeatherApplication, isHighPrecision)
+                // Instant sync + alarm backup
+                syncClockNow(this@ClockWeatherApplication)
             }
         }
     }
@@ -82,6 +89,48 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             screenStateReceiver = null
             android.util.Log.d("ClockWeatherApp", "ScreenStateReceiver unregistered")
         }
+        unregisterTimeTickReceiver()
+    }
+
+    // ── TIME_TICK receiver management ────────────────────────────────
+
+    /**
+     * Registers for [Intent.ACTION_TIME_TICK] — the free system broadcast that fires
+     * every minute while the screen is on. This is the primary tick source.
+     * Call on screen-on; unregister on screen-off to avoid leaks.
+     */
+    fun registerTimeTickReceiver() {
+        if (timeTickReceiver != null) return // already registered
+        val receiver = TimeTickReceiver()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(receiver, TimeTickReceiver.buildIntentFilter(), Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(receiver, TimeTickReceiver.buildIntentFilter())
+        }
+        timeTickReceiver = receiver
+        android.util.Log.d("ClockWeatherApp", "TimeTickReceiver registered")
+    }
+
+    fun unregisterTimeTickReceiver() {
+        timeTickReceiver?.let {
+            try { unregisterReceiver(it) } catch (_: Exception) {}
+            timeTickReceiver = null
+            android.util.Log.d("ClockWeatherApp", "TimeTickReceiver unregistered")
+        }
+    }
+
+    // ── Instant clock sync ────────────────────────────────────────
+
+    /**
+     * Instantly syncs the clock on all widgets (no animation) and restarts
+     * the alarm chain. Call this whenever the widget may be showing stale
+     * time — screen unlock, return from detail activity, etc.
+     */
+    suspend fun syncClockNow(context: Context) {
+        android.util.Log.d("ClockWeatherApp", "syncClockNow: instant refresh + alarm restart")
+        refreshAllWidgets(context, isClockTick = false)
+        val isHighPrecision = resolveHighPrecision()
+        ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
     }
 
     // ── Helpers ─────────────────────────────────────────────────────
