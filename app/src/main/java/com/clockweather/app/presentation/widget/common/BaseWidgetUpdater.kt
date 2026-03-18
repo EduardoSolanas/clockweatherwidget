@@ -228,6 +228,14 @@ abstract class BaseWidgetUpdater(
 
                 val currentEpochMinute = System.currentTimeMillis() / 60000L
                 val lastRenderedEpochMinute = WidgetClockStateStore.getLastRenderedEpochMinute(context, appWidgetId)
+
+                // Dedup: if this minute was already rendered (e.g. syncClockNow + TIME_TICK
+                // both fired), skip entirely to avoid a wasteful full rebuild.
+                if (lastRenderedEpochMinute != null && lastRenderedEpochMinute == currentEpochMinute) {
+                    Log.d(tag, "Widget $appWidgetId already rendered for minute $currentEpochMinute — skipping")
+                    return@withContext
+                }
+
                 val updateMode = WidgetClockUpdateModeResolver.resolve(lastRenderedEpochMinute, currentEpochMinute)
                 Log.d(tag, "Clock-only mode for $appWidgetId: last=$lastRenderedEpochMinute current=$currentEpochMinute mode=$updateMode useSimple=$useSimple")
                 if (updateMode == WidgetClockUpdateMode.FULL) {
