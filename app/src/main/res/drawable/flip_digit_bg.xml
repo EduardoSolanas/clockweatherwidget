@@ -13,10 +13,10 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#2C2C2C"
-                android:centerColor="#2C2C2C"
+                android:startColor="#353535"
+                android:centerColor="#353535"
                 android:centerY="0.48"
-                android:endColor="#141414" />
+                android:endColor="#0F0F0F" />
             <corners android:radius="6dp" />
         </shape>
     </item>
@@ -26,10 +26,23 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#18FFFFFF"
+                android:startColor="#28FFFFFF"
                 android:centerColor="#00000000"
-                android:centerY="0.15"
+                android:centerY="0.20"
                 android:endColor="#00000000" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+
+    <!-- Bottom-half shadow vignette — darkens the lower flap -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#00000000"
+                android:centerColor="#00000000"
+                android:centerY="0.55"
+                android:endColor="#40000000" />
             <corners android:radius="6dp" />
         </shape>
     </item>
@@ -40,7 +53,7 @@
             <gradient
                 android:angle="270"
                 android:startColor="#00000000"
-                android:centerColor="#E0000000"
+                android:centerColor="#F0000000"
                 android:centerY="0.50"
                 android:endColor="#00000000" />
         </shape>
@@ -52,7 +65,7 @@
             <gradient
                 android:angle="270"
                 android:startColor="#00000000"
-                android:centerColor="#35FFFFFF"
+                android:centerColor="#45FFFFFF"
                 android:centerY="0.485"
                 android:endColor="#00000000" />
         </shape>

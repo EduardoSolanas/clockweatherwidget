@@ -9,39 +9,52 @@
         </shape>
     </item>
 
-    <!-- 50% Split Gradient for 3D appearance -->
+    <!-- Top half brighter / bottom half slightly shaded — split-flap depth -->
     <item>
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#B3FFFFFF"
+                android:startColor="#CCFFFFFF"
                 android:centerColor="#00FFFFFF"
-                android:centerY="0.5"
-                android:endColor="#1A000000" />
+                android:centerY="0.48"
+                android:endColor="#26000000" />
             <corners android:radius="8dp" />
         </shape>
     </item>
 
-    <!-- Perfectly Centered Fold Line -->
+    <!-- Bottom-half shadow vignette -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#00000000"
+                android:centerColor="#00000000"
+                android:centerY="0.55"
+                android:endColor="#18000000" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+
+    <!-- Centered fold line shadow -->
     <item android:top="0dp" android:bottom="0dp">
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
                 android:startColor="#00000000"
-                android:centerColor="#33000000"
+                android:centerColor="#44000000"
                 android:centerY="0.5"
                 android:endColor="#00000000" />
         </shape>
     </item>
 
-    <!-- Hairline highlight at center -->
+    <!-- Hairline highlight just above center -->
     <item android:top="0dp" android:bottom="0dp">
         <shape>
             <gradient
                 android:angle="270"
                 android:startColor="#00000000"
-                android:centerColor="#80FFFFFF"
-                android:centerY="0.51"
+                android:centerColor="#99FFFFFF"
+                android:centerY="0.49"
                 android:endColor="#00000000" />
         </shape>
     </item>
