@@ -202,14 +202,15 @@
 
         <ImageView
             android:id="@+id/weather_icon"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="86dp"
+            android:layout_height="86dp"
+            android:layout_marginEnd="8dp"
             android:scaleType="fitCenter" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="0.8"
             android:gravity="end|center_vertical"
             android:orientation="vertical">
 

@@ -4,22 +4,41 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.clockweather.app.ClockWeatherApplication
 import com.clockweather.app.di.WidgetEntryPoint
 import com.clockweather.app.receiver.ClockAlarmReceiver
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 abstract class BaseWidgetProvider : AppWidgetProvider() {
     
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     abstract fun getUpdater(context: Context, appWidgetManager: AppWidgetManager, entryPoint: WidgetEntryPoint): BaseWidgetUpdater
 
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        // B1: Force a full refresh when user is back on home screen (ACTION_USER_PRESENT)
+        // to catch up on any drift during the lock/unlock period.
+        if (intent.action == Intent.ACTION_USER_PRESENT || intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
+            Log.d("BaseWidgetProvider", "onReceive: ${intent.action} — forcing full refresh")
+            val app = context.applicationContext as? ClockWeatherApplication
+            app?.let {
+                scope.launch {
+                    it.refreshAllWidgets(context, isClockTick = false)
+                }
+            }
+        }
+    }
+
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        android.util.Log.d("ClockWeatherApp", "onUpdate called for ${this::class.simpleName}. IDs count: ${appWidgetIds.size}")
+        Log.d("ClockWeatherApp", "onUpdate called for ${this::class.simpleName}. IDs count: ${appWidgetIds.size}")
         val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.Default).launch {
+        scope.launch {
             try {
                 val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
                 val updater = getUpdater(context, appWidgetManager, entryPoint)
@@ -35,7 +54,7 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
         val app = context.applicationContext as? ClockWeatherApplication
         app?.registerScreenStateReceiver()
 
-        CoroutineScope(Dispatchers.Default).launch {
+        scope.launch {
             val isHighPrecision = app?.resolveHighPrecision() ?: true
             ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
         }
@@ -48,7 +67,7 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
 
     override fun onDisabled(context: Context) {
         if (ClockAlarmReceiver.hasAnyActiveWidgets(context)) {
-            CoroutineScope(Dispatchers.Default).launch {
+            scope.launch {
                 val app = context.applicationContext as? ClockWeatherApplication
                 val isHighPrecision = app?.resolveHighPrecision() ?: true
                 ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
