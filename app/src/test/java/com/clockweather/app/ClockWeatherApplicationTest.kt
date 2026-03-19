@@ -54,7 +54,7 @@ class ClockWeatherApplicationTest {
     }
 
     @Test
-    fun `syncClockNow calls refreshAllWidgets then schedules alarm`() {
+    fun `syncClockNow calls pushClockInstant then refreshAllWidgets then schedules alarm`() {
         val ids = intArrayOf(1)
         every { appWidgetManager.getAppWidgetIds(any()) } returns ids
 
@@ -65,13 +65,18 @@ class ClockWeatherApplicationTest {
 
         val spyApp = spyk(app)
         coEvery { spyApp.resolveHighPrecision() } returns true
+        every { spyApp.pushClockInstant() } just Runs
 
         runBlocking {
             spyApp.syncClockNow(context)
         }
 
-        // refreshAllWidgets was called (checked via getAppWidgetIds)
-        verify { appWidgetManager.getAppWidgetIds(any()) }
+        // pushClockInstant is called FIRST (before the full refresh)
+        verifyOrder {
+            spyApp.pushClockInstant()
+            appWidgetManager.getAppWidgetIds(any()) // part of refreshAllWidgets
+        }
+
         // Alarm was rescheduled as backup
         verify { ClockAlarmReceiver.scheduleNextTick(context, true) }
     }

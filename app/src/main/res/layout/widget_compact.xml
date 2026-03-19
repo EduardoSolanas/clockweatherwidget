@@ -219,9 +219,8 @@
 
         <ImageView
             android:id="@+id/weather_icon"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:contentDescription="@null"
             android:scaleType="fitCenter" />
 

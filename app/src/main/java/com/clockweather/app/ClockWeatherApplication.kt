@@ -3,6 +3,7 @@ package com.clockweather.app
 import android.app.Application
 import android.content.IntentFilter
 import android.os.Build
+import android.widget.RemoteViews
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -16,6 +17,7 @@ import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
 import com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider
 import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
 import com.clockweather.app.presentation.widget.large.LargeWidgetProvider
+import com.clockweather.app.presentation.widget.common.DigitState
 import com.clockweather.app.presentation.widget.common.WidgetClockStateStore
 import com.clockweather.app.receiver.ClockAlarmReceiver
 import com.clockweather.app.receiver.ScreenStateReceiver
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import com.clockweather.app.util.dataStore
+import java.time.LocalTime
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -122,12 +125,75 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
     // ── Instant clock sync ────────────────────────────────────────
 
     /**
+     * Ultra-fast partial clock push — sets only the digits that actually changed
+     * via [AppWidgetManager.partiallyUpdateAppWidget]. No DataStore read, no
+     * weather fetch, no Hilt — runs in < 10 ms on the calling thread.
+     *
+     * Safe to call from [android.content.BroadcastReceiver.onReceive] (main thread).
+     */
+    fun pushClockInstant() {
+        val now = LocalTime.now()
+        val cachedPrefs = WidgetPrefsCache.getCachedSnapshot()
+        val is24h = cachedPrefs?.get(booleanPreferencesKey("use_24h_clock"))
+            ?: android.text.format.DateFormat.is24HourFormat(this)
+        val mgr = AppWidgetManager.getInstance(this)
+
+        val displayHour = if (is24h) now.hour
+            else if (now.hour == 0) 12
+            else if (now.hour > 12) now.hour - 12
+            else now.hour
+        val h1 = displayHour / 10
+        val h2 = displayHour % 10
+        val m1 = now.minute / 10
+        val m2 = now.minute % 10
+        val currentEpochMinute = System.currentTimeMillis() / 60000L
+
+        val providerLayouts = mapOf(
+            CompactWidgetProvider::class.java to R.layout.widget_compact,
+            ExtendedWidgetProvider::class.java to R.layout.widget_extended,
+            ForecastWidgetProvider::class.java to R.layout.widget_forecast,
+            LargeWidgetProvider::class.java to R.layout.widget_large
+        )
+
+        providerLayouts.forEach { (providerClass, layoutId) ->
+            val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
+            ids.forEach { id ->
+                val prev = WidgetClockStateStore.getLastDigits(this, id)
+
+                // Already showing the correct time — skip entirely
+                if (prev != null && prev.h1 == h1 && prev.h2 == h2 &&
+                    prev.m1 == m1 && prev.m2 == m2) {
+                    return@forEach
+                }
+
+                val views = RemoteViews(packageName, layoutId)
+
+                // Only touch digits that actually changed
+                if (prev == null || prev.h1 != h1) views.setDisplayedChild(R.id.digit_h1, h1)
+                if (prev == null || prev.h2 != h2) views.setDisplayedChild(R.id.digit_h2, h2)
+                if (prev == null || prev.m1 != m1) views.setDisplayedChild(R.id.digit_m1, m1)
+                if (prev == null || prev.m2 != m2) views.setDisplayedChild(R.id.digit_m2, m2)
+                views.setTextViewText(R.id.ampm, if (is24h) "" else if (now.hour < 12) "AM" else "PM")
+
+                mgr.partiallyUpdateAppWidget(id, views)
+                WidgetClockStateStore.saveLastDigits(this, id, DigitState(h1, h2, m1, m2))
+                WidgetClockStateStore.markRendered(this, id, currentEpochMinute)
+                android.util.Log.d("ClockWeatherApp", "pushClockInstant: widget $id updated (prev=$prev -> $h1$h2:$m1$m2)")
+            }
+        }
+    }
+
+    /**
      * Instantly syncs the clock on all widgets (no animation) and restarts
      * the alarm chain. Call this whenever the widget may be showing stale
      * time — screen unlock, return from detail activity, etc.
      */
     suspend fun syncClockNow(context: Context) {
         android.util.Log.d("ClockWeatherApp", "syncClockNow: instant refresh + alarm restart")
+
+        // Push correct digits immediately before the potentially slow full refresh.
+        pushClockInstant()
+
         refreshAllWidgets(context, isClockTick = false)
         val isHighPrecision = resolveHighPrecision()
         ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)

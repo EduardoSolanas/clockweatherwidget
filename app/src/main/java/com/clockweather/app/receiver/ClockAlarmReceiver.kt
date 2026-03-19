@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
+import android.os.PowerManager
 import android.util.Log
 import com.clockweather.app.ClockWeatherApplication
 import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
@@ -31,6 +32,9 @@ class ClockAlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext as? ClockWeatherApplication ?: return
+        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        val isScreenOn = pm.isInteractive
+
         val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
             var reschedule = true
@@ -41,14 +45,24 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                         reschedule = false
                         return@withTimeout
                     }
-                    app.refreshAllWidgets(context, isClockTick = true)
+                    if (isScreenOn) {
+                        // Screen is on — full clock tick update
+                        app.refreshAllWidgets(context, isClockTick = true)
+                    }
+                    // Screen off — skip widget work; this alarm is just a keepalive
+                    // to ensure the process stays alive and ScreenStateReceiver is registered.
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Widget refresh timed out or failed; rescheduling anyway", e)
             } finally {
                 if (reschedule) {
-                    val isHighPrecision = app.resolveHighPrecision()
-                    scheduleNextTick(context, isHighPrecision)
+                    if (isScreenOn) {
+                        val isHighPrecision = app.resolveHighPrecision()
+                        scheduleNextTick(context, isHighPrecision)
+                    } else {
+                        // Screen off — reschedule as keepalive, not per-minute
+                        scheduleKeepalive(context)
+                    }
                 }
                 pendingResult.finish()
             }
@@ -58,6 +72,9 @@ class ClockAlarmReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "ClockAlarmReceiver"
         const val ACTION_ALARM_TICK = "com.clockweather.app.ACTION_ALARM_TICK"
+        /** Low-frequency alarm while screen is off — just keeps the process alive
+         *  so that [ScreenStateReceiver] survives OEM kills and is ready for SCREEN_ON. */
+        private const val KEEPALIVE_INTERVAL_MS = 5 * 60 * 1000L // 5 minutes
         private val widgetProviders = listOf(
             CompactWidgetProvider::class.java,
             ExtendedWidgetProvider::class.java,
@@ -122,6 +139,37 @@ class ClockAlarmReceiver : BroadcastReceiver() {
             return widgetProviders.any { providerClass ->
                 appWidgetManager.getAppWidgetIds(ComponentName(context, providerClass)).isNotEmpty()
             }
+        }
+
+        /**
+         * Schedules a low-frequency keepalive alarm while the screen is off.
+         * Uses the same PendingIntent as [scheduleNextTick] so they naturally
+         * replace each other — no risk of duplicate alarms.
+         */
+        fun scheduleKeepalive(context: Context) {
+            if (!hasAnyActiveWidgets(context)) return
+
+            val batteryPct = getBatteryPercent(context)
+            if (batteryPct <= 5) {
+                Log.d(TAG, "Battery critical ($batteryPct %) — skipping keepalive")
+                return
+            }
+
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                0,
+                Intent(context, ClockAlarmReceiver::class.java).apply { action = ACTION_ALARM_TICK },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val triggerAt = System.currentTimeMillis() + KEEPALIVE_INTERVAL_MS
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            } else {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            }
+            Log.d(TAG, "Keepalive alarm scheduled for ${KEEPALIVE_INTERVAL_MS / 1000}s from now")
         }
 
         fun cancelNextTick(context: Context) {

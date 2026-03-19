@@ -50,5 +50,12 @@ object WidgetPrefsCache {
             dataStore.data.first().also { snapshot = it }
         }
     }
+
+    /**
+     * Returns the in-memory snapshot without any disk I/O, or null if
+     * the cache hasn't been seeded yet. Used by ultra-fast clock push paths
+     * where blocking is unacceptable.
+     */
+    fun getCachedSnapshot(): Preferences? = snapshot
 }
 

@@ -22,17 +22,8 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        // B1: Force a full refresh when user is back on home screen (ACTION_USER_PRESENT)
-        // to catch up on any drift during the lock/unlock period.
-        if (intent.action == Intent.ACTION_USER_PRESENT || intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
-            Log.d("BaseWidgetProvider", "onReceive: ${intent.action} — forcing full refresh")
-            val app = context.applicationContext as? ClockWeatherApplication
-            app?.let {
-                scope.launch {
-                    it.refreshAllWidgets(context, isClockTick = false)
-                }
-            }
-        }
+        // Widget providers only receive widget-related intents (ACTION_APPWIDGET_UPDATE, etc.).
+        // ACTION_USER_PRESENT is handled by the dynamically-registered ScreenStateReceiver.
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
