@@ -64,8 +64,6 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             registerTimeTickReceiver()
 
             appScope.launch {
-                resetClockStateForActiveWidgets(this@ClockWeatherApplication)
-
                 // Instant sync + alarm backup
                 syncClockNow(this@ClockWeatherApplication)
             }
@@ -131,7 +129,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
      *
      * Safe to call from [android.content.BroadcastReceiver.onReceive] (main thread).
      */
-    fun pushClockInstant() {
+    fun pushClockInstant(forceAllDigits: Boolean = false) {
         val now = LocalTime.now()
         val cachedPrefs = WidgetPrefsCache.getCachedSnapshot()
         val is24h = cachedPrefs?.get(booleanPreferencesKey("use_24h_clock"))
@@ -159,28 +157,60 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
             ids.forEach { id ->
                 val prev = WidgetClockStateStore.getLastDigits(this, id)
-
-                // Already showing the correct time — skip entirely
-                if (prev != null && prev.h1 == h1 && prev.h2 == h2 &&
-                    prev.m1 == m1 && prev.m2 == m2) {
-                    return@forEach
-                }
-
                 val views = RemoteViews(packageName, layoutId)
 
-                // Only touch digits that actually changed
-                if (prev == null || prev.h1 != h1) views.setDisplayedChild(R.id.digit_h1, h1)
-                if (prev == null || prev.h2 != h2) views.setDisplayedChild(R.id.digit_h2, h2)
-                if (prev == null || prev.m1 != m1) views.setDisplayedChild(R.id.digit_m1, m1)
-                if (prev == null || prev.m2 != m2) views.setDisplayedChild(R.id.digit_m2, m2)
-                views.setTextViewText(R.id.ampm, if (is24h) "" else if (now.hour < 12) "AM" else "PM")
+                val ampm = if (is24h) "" else if (now.hour < 12) "AM" else "PM"
+                var hasChanges = false
 
-                mgr.partiallyUpdateAppWidget(id, views)
+                if (forceAllDigits || prev == null) {
+                    applyDigitVisibility(views, H1_DIGIT_IDS, h1)
+                    applyDigitVisibility(views, H2_DIGIT_IDS, h2)
+                    applyDigitVisibility(views, M1_DIGIT_IDS, m1)
+                    applyDigitVisibility(views, M2_DIGIT_IDS, m2)
+                    views.setTextViewText(R.id.ampm, ampm)
+                    hasChanges = true
+                } else {
+                    hasChanges = applyDigitDelta(views, H1_DIGIT_IDS, prev.h1, h1) || hasChanges
+                    hasChanges = applyDigitDelta(views, H2_DIGIT_IDS, prev.h2, h2) || hasChanges
+                    hasChanges = applyDigitDelta(views, M1_DIGIT_IDS, prev.m1, m1) || hasChanges
+                    hasChanges = applyDigitDelta(views, M2_DIGIT_IDS, prev.m2, m2) || hasChanges
+
+                    val previousDisplayHour = prev.h1 * 10 + prev.h2
+                    val previousAmpm = if (is24h) "" else if (previousDisplayHour < 12) "AM" else "PM"
+                    if (ampm != previousAmpm) {
+                        views.setTextViewText(R.id.ampm, ampm)
+                        hasChanges = true
+                    }
+                }
+
+                if (hasChanges) {
+                    mgr.partiallyUpdateAppWidget(id, views)
+                }
                 WidgetClockStateStore.saveLastDigits(this, id, DigitState(h1, h2, m1, m2))
                 WidgetClockStateStore.markRendered(this, id, currentEpochMinute)
-                android.util.Log.d("ClockWeatherApp", "pushClockInstant: widget $id updated (prev=$prev -> $h1$h2:$m1$m2)")
+                if (hasChanges) {
+                    android.util.Log.d("ClockWeatherApp", "pushClockInstant: widget $id updated (prev=$prev -> $h1$h2:$m1$m2)")
+                }
             }
         }
+    }
+
+    private fun applyDigitVisibility(views: RemoteViews, digitIds: IntArray, value: Int) {
+        digitIds.forEachIndexed { index, childId ->
+            views.setViewVisibility(childId, if (index == value) android.view.View.VISIBLE else android.view.View.GONE)
+        }
+    }
+
+    private fun applyDigitDelta(
+        views: RemoteViews,
+        digitIds: IntArray,
+        previousValue: Int,
+        newValue: Int
+    ): Boolean {
+        if (previousValue == newValue) return false
+        views.setViewVisibility(digitIds[previousValue], android.view.View.GONE)
+        views.setViewVisibility(digitIds[newValue], android.view.View.VISIBLE)
+        return true
     }
 
     /**
@@ -306,4 +336,23 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
+
+    companion object {
+        private val H1_DIGIT_IDS = intArrayOf(
+            R.id.digit_h1_0, R.id.digit_h1_1, R.id.digit_h1_2, R.id.digit_h1_3, R.id.digit_h1_4,
+            R.id.digit_h1_5, R.id.digit_h1_6, R.id.digit_h1_7, R.id.digit_h1_8, R.id.digit_h1_9
+        )
+        private val H2_DIGIT_IDS = intArrayOf(
+            R.id.digit_h2_0, R.id.digit_h2_1, R.id.digit_h2_2, R.id.digit_h2_3, R.id.digit_h2_4,
+            R.id.digit_h2_5, R.id.digit_h2_6, R.id.digit_h2_7, R.id.digit_h2_8, R.id.digit_h2_9
+        )
+        private val M1_DIGIT_IDS = intArrayOf(
+            R.id.digit_m1_0, R.id.digit_m1_1, R.id.digit_m1_2, R.id.digit_m1_3, R.id.digit_m1_4,
+            R.id.digit_m1_5, R.id.digit_m1_6, R.id.digit_m1_7, R.id.digit_m1_8, R.id.digit_m1_9
+        )
+        private val M2_DIGIT_IDS = intArrayOf(
+            R.id.digit_m2_0, R.id.digit_m2_1, R.id.digit_m2_2, R.id.digit_m2_3, R.id.digit_m2_4,
+            R.id.digit_m2_5, R.id.digit_m2_6, R.id.digit_m2_7, R.id.digit_m2_8, R.id.digit_m2_9
+        )
+    }
 }

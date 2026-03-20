@@ -106,8 +106,14 @@ abstract class BaseWidgetUpdater(
                     views.setOnClickPendingIntent(rootViewId, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
                 } catch (e: Exception) { /* ignore */ }
 
-                if (isFirstRender) {
-                    // First render — must set ALL digits to establish baseline state
+                val useIncrementalClockBinding = shouldUseIncrementalClockBinding(
+                    isFirstRender = isFirstRender,
+                    isMinuteTick = isMinuteTick
+                )
+
+                if (!useIncrementalClockBinding) {
+                    // First render and non-minute refreshes (time/timezone/weather/manual)
+                    // must set all digits to keep flipper state synchronized.
                     if (usesSimpleClockDigits) {
                         WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
                     } else if (useSimple) {
@@ -377,3 +383,8 @@ abstract class BaseWidgetUpdater(
         }
     }
 }
+
+internal fun shouldUseIncrementalClockBinding(
+    isFirstRender: Boolean,
+    isMinuteTick: Boolean
+): Boolean = !isFirstRender && isMinuteTick

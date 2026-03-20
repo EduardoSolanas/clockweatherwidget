@@ -22,8 +22,7 @@ import java.time.LocalTime
  * Tests for [ClockWeatherApplication.pushClockInstant].
  *
  * Verifies that:
- * - Only changed digits are pushed (not all 4)
- * - Already-correct widgets are skipped entirely
+ * - Widgets are pushed with absolute digit visibility (self-heals host drift)
  * - State is persisted after push
  * - 12h/24h mode is respected
  */
@@ -99,7 +98,7 @@ class PushClockInstantTest {
     }
 
     @Test
-    fun `pushClockInstant skips widget if stored digits already match current time`() {
+    fun `pushClockInstant skips widget push when stored digits already match current time`() {
         every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
 
@@ -108,8 +107,18 @@ class PushClockInstantTest {
 
         app.pushClockInstant()
 
-        // Should NOT push — digits already correct
-        verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(any<Int>(), any()) }
+        verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(42, any()) }
+    }
+
+    @Test
+    fun `pushClockInstant force mode still pushes when stored digits already match current time`() {
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
+        stubWidgetIds(CompactWidgetProvider::class.java, 42)
+        WidgetClockStateStore.saveLastDigits(realContext, 42, DigitState(1, 4, 3, 7))
+
+        app.pushClockInstant(forceAllDigits = true)
+
+        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(42, any()) }
     }
 
     @Test
