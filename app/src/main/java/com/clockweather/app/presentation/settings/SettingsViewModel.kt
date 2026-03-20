@@ -269,6 +269,9 @@ class SettingsViewModel @Inject constructor(
     private fun triggerWidgetUpdate() {
         val app = context.applicationContext as? ClockWeatherApplication
         viewModelScope.launch {
+            // Clear stored digit state so the refresh uses updateAppWidget()
+            // (full replacement) — necessary because theme/size/style changed.
+            app?.invalidateAllWidgetBaselines()
             app?.refreshAllWidgets(context, isClockTick = false)
         }
     }

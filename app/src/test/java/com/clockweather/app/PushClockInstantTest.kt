@@ -57,6 +57,11 @@ class PushClockInstantTest {
         // Freeze time for deterministic tests
         mockkStatic(LocalTime::class)
 
+        // Ensure the prefs cache doesn't leak state from other tests
+        // (getCachedSnapshot returning a stale use_24h_clock=true would bypass DateFormat mock)
+        mockkObject(com.clockweather.app.util.WidgetPrefsCache)
+        every { com.clockweather.app.util.WidgetPrefsCache.getCachedSnapshot() } returns null
+
         // Clear any leftover state
         WidgetClockStateStore.clearWidget(realContext, 42)
         WidgetClockStateStore.clearWidget(realContext, 43)

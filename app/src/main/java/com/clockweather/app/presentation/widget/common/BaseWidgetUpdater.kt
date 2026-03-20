@@ -91,26 +91,43 @@ abstract class BaseWidgetUpdater(
                     ClockTileSize.LARGE -> com.clockweather.app.R.dimen.flip_text_size_large
                     ClockTileSize.EXTRA_LARGE -> com.clockweather.app.R.dimen.flip_text_size_xl
                 }
-                
+
+                // Check if this widget has been rendered before — if so we can use
+                // partiallyUpdateAppWidget() which MERGES actions with existing host
+                // state, avoiding the ViewFlipper reset/flicker caused by a full
+                // updateAppWidget() replacement.
+                val prevDigits = WidgetClockStateStore.getLastDigits(context, appWidgetId)
+                val isFirstRender = prevDigits == null
+
                 // Build fresh RemoteViews
                 val views = RemoteViews(context.packageName, layoutResId)
-                
+
                 try {
                     views.setOnClickPendingIntent(rootViewId, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
                 } catch (e: Exception) { /* ignore */ }
 
-                if (usesSimpleClockDigits) {
-                    // Layout has plain TextViews — set text directly
-                    WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
-                } else if (useSimple) {
-                    // Layout has ViewFlippers but flip animation is disabled — show correct digit without animation
-                    WidgetDataBinder.bindStaticClockViews(context, views, now.hour, now.minute, is24h)
+                if (isFirstRender) {
+                    // First render — must set ALL digits to establish baseline state
+                    if (usesSimpleClockDigits) {
+                        WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
+                    } else if (useSimple) {
+                        WidgetDataBinder.bindStaticClockViews(context, views, now.hour, now.minute, is24h)
+                    } else {
+                        WidgetDataBinder.bindClockViews(context, views, appWidgetId, now.hour, now.minute, is24h, isIncremental = false)
+                    }
                 } else {
-                    // Layout has ViewFlippers and flip animation is enabled
-                    WidgetDataBinder.bindClockViews(context, views, appWidgetId, now.hour, now.minute, is24h, isIncremental = isMinuteTick)
+                    // Subsequent render — only touch digits that actually changed.
+                    // This prevents ViewFlipper flicker when only weather/date changed.
+                    if (usesSimpleClockDigits) {
+                        WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
+                    } else if (useSimple) {
+                        WidgetDataBinder.bindStaticClockViews(context, views, now.hour, now.minute, is24h)
+                    } else {
+                        WidgetDataBinder.bindClockViews(context, views, appWidgetId, now.hour, now.minute, is24h, isIncremental = true, prevDigits = prevDigits)
+                    }
                 }
 
-                // C1: store the rendered digits so the next incremental tick diffs correctly
+                // Store the rendered digits so the next update diffs correctly
                 WidgetClockStateStore.saveLastDigits(context, appWidgetId, DigitState.from(now.hour, now.minute, is24h))
 
                 listOf(
@@ -144,7 +161,7 @@ abstract class BaseWidgetUpdater(
                         }
                     }
                 }
-                
+
                 val colonSize = context.resources.getDimension(dimText) * 0.8f
                 views.setTextViewTextSize(com.clockweather.app.R.id.colon, android.util.TypedValue.COMPLEX_UNIT_PX, colonSize)
                 val ampmSize = when (tileSize) {
@@ -178,13 +195,17 @@ abstract class BaseWidgetUpdater(
                 val location = locations.firstOrNull() ?: locationRepo.getCurrentLocation()?.also {
                     locationRepo.saveLocation(it)
                 }
-                
+
                 if (location == null) {
-                    appWidgetManager.updateAppWidget(appWidgetId, views)
+                    if (isFirstRender) {
+                        appWidgetManager.updateAppWidget(appWidgetId, views)
+                    } else {
+                        appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
+                    }
                     WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
                     return@withContext
                 }
-                
+
                 var weather = weatherRepo.getCachedWeatherData(location.id).first()
                 if (weather == null && allowWeatherRefresh) {
                     try {
@@ -198,9 +219,16 @@ abstract class BaseWidgetUpdater(
                     bindExtra(views, weather, tempUnit, prefs)
                 }
 
-                appWidgetManager.updateAppWidget(appWidgetId, views)
+                if (isFirstRender) {
+                    // First render — full replacement to establish base widget state
+                    appWidgetManager.updateAppWidget(appWidgetId, views)
+                } else {
+                    // Subsequent render — merge with existing state so unchanged
+                    // ViewFlipper digits are not reset (no flicker)
+                    appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
+                }
                 WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
-                Log.d(tag, "Widget $appWidgetId fully updated successfully.")
+                Log.d(tag, "Widget $appWidgetId updated (firstRender=$isFirstRender).")
             } catch (e: Exception) {
                 Log.e(tag, "Widget update failed for widget $appWidgetId", e)
             }

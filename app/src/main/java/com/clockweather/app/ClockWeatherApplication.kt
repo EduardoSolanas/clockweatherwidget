@@ -210,6 +210,26 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         }
     }
 
+    /**
+     * Clears stored digit state for ALL active widgets, forcing the next
+     * [updateWidget] call to use [updateAppWidget] (full replacement).
+     * Call this when settings change (theme, tile size) so the full
+     * layout/styling is pushed fresh.
+     */
+    fun invalidateAllWidgetBaselines() {
+        val mgr = AppWidgetManager.getInstance(this)
+        val providerClasses = listOf(
+            CompactWidgetProvider::class.java,
+            ExtendedWidgetProvider::class.java,
+            ForecastWidgetProvider::class.java,
+            LargeWidgetProvider::class.java
+        )
+        providerClasses.forEach { providerClass ->
+            val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
+            ids.forEach { id -> WidgetClockStateStore.clearDigits(this, id) }
+        }
+    }
+
     private fun resetClockStateForActiveWidgets(context: Context) {
         val mgr = AppWidgetManager.getInstance(context)
         val providerClasses = listOf(

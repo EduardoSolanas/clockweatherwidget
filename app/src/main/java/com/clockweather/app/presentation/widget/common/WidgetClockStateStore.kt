@@ -46,6 +46,19 @@ object WidgetClockStateStore {
             .apply()
     }
 
+    /** Clears only the stored digit state for a widget, forcing the next
+     *  [updateWidget] call to treat it as a first render (full [updateAppWidget]).
+     *  Used when settings change (theme, tile size) requires a full layout rebuild. */
+    fun clearDigits(context: Context, appWidgetId: Int) {
+        val key = "${DIGITS_PREFIX}${appWidgetId}"
+        prefs(context).edit()
+            .remove("${key}_h1")
+            .remove("${key}_h2")
+            .remove("${key}_m1")
+            .remove("${key}_m2")
+            .apply()
+    }
+
     /** Persist the actual digit values that were last rendered so the next incremental
      *  tick can diff against them accurately (fixes Doze gap off-by-N digit flips). */
     fun saveLastDigits(context: Context, appWidgetId: Int, digits: DigitState) {

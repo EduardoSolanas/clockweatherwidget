@@ -10,10 +10,6 @@ import com.clockweather.app.presentation.detail.screen.WeatherDetailScreen
 import com.clockweather.app.presentation.detail.theme.WeatherDetailTheme
 import com.clockweather.app.presentation.settings.SettingsActivity
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class WeatherDetailActivity : AppCompatActivity() {
@@ -36,16 +32,15 @@ class WeatherDetailActivity : AppCompatActivity() {
     }
 
     /**
-     * When the user leaves (back to home, task switch, etc.) instantly sync
-     * the clock widget so it shows the correct time without animation delay,
-     * and restart the alarm chain.
+     * When the user leaves (back to home, task switch, etc.) instantly push
+     * only the changed clock digits via a partial widget update.
+     * No full rebuild — avoids the flicker caused by updateAppWidget replacing
+     * all ViewFlippers. Weather is already cached; alarm chain is already running.
      */
     override fun onStop() {
         super.onStop()
         val app = applicationContext as? ClockWeatherApplication ?: return
-        CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
-            app.syncClockNow(applicationContext)
-        }
+        app.pushClockInstant()
     }
 
     companion object {
