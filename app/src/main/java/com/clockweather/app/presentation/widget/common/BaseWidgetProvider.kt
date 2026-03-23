@@ -34,6 +34,23 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
                 val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
                 val updater = getUpdater(context, appWidgetManager, entryPoint)
                 appWidgetIds.forEach { updater.updateWidget(it) }
+                // Fresh placement hardening: suppress animation on the next tick so
+                // launchers don't perform a full-clock flip right after drag/drop.
+                val currentEpochMinute = System.currentTimeMillis() / 60000L
+                appWidgetIds.forEach { id ->
+                    WidgetClockStateStore.markNoAnimationUntilEpochMinute(
+                        context,
+                        id,
+                        currentEpochMinute + 1L
+                    )
+                }
+                // Fresh placement path hardening: immediately converge clock digits
+                // after the full update work completes (weather/data can be slow).
+                val app = context.applicationContext as? ClockWeatherApplication
+                app?.pushClockInstant(
+                    forceAllDigits = false,
+                    suppressAnimationWindow = true
+                )
             } finally {
                 pendingResult.finish()
             }
@@ -44,6 +61,7 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
         // First widget of this type placed — make sure alarm + screen receiver are active
         val app = context.applicationContext as? ClockWeatherApplication
         app?.registerScreenStateReceiver()
+        app?.registerTimeTickReceiver()
 
         scope.launch {
             val isHighPrecision = app?.resolveHighPrecision() ?: true

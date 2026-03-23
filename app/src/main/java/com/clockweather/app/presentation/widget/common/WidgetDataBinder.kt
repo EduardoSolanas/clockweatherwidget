@@ -142,8 +142,11 @@ object WidgetDataBinder {
      */
     @Suppress("DEPRECATION")
     private fun flipDigit(views: RemoteViews, viewId: Int, from: Int, to: Int) {
-        // If the change is +1 (mod 10), use showNext() to trigger the flip animation.
+        // If the change is +1 (mod 10), prime the flipper to the known previous
+        // child and animate one step. This keeps animation while avoiding launcher
+        // drift from stale internal ViewFlipper indices.
         if ((from + 1) % 10 == to) {
+            views.setDisplayedChild(viewId, from)
             views.showNext(viewId)
         } else {
             // For larger jumps (e.g. 5 minutes or after a deep sleep/Doze gap),

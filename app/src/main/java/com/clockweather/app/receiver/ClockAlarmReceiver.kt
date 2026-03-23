@@ -46,7 +46,7 @@ class ClockAlarmReceiver : BroadcastReceiver() {
 
                     if (action == ACTION_ALARM_KEEPALIVE) {
                         app.pushClockInstant(forceAllDigits = true)
-                        scheduleKeepalive(context)
+                        scheduleNextTick(context, app.resolveHighPrecision())
                         reschedule = false
                         return@withTimeout
                     }
@@ -54,14 +54,26 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                     val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
                     val isInteractive = powerManager?.isInteractive ?: true
                     if (isInteractive) {
-                        app.refreshAllWidgets(context, isClockTick = true)
+                        app.refreshAllWidgets(
+                            context,
+                            isClockTick = true,
+                            allowAnimation = true
+                        )
                     } else {
-                        scheduleKeepalive(context)
-                        reschedule = false
+                        // While non-interactive, keep digits synchronized without animation.
+                        app.pushClockInstant(forceAllDigits = false)
                     }
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Widget refresh timed out or failed; rescheduling anyway", e)
+                runCatching {
+                    app.pushClockInstant(
+                        forceAllDigits = true,
+                        suppressAnimationWindow = true
+                    )
+                }.onFailure { pushError ->
+                    Log.w(TAG, "Fallback instant push failed", pushError)
+                }
             } finally {
                 if (reschedule) {
                     val isHighPrecision = app.resolveHighPrecision()

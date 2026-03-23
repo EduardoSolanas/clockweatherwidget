@@ -79,7 +79,14 @@ class ClockAlarmReceiverTest {
         // Give the coroutine time to run
         Thread.sleep(1000)
 
-        coVerify(timeout = 3000) { app.refreshAllWidgets(any(), isClockTick = true) }
+        coVerify(timeout = 3000) {
+            app.refreshAllWidgets(
+                context,
+                isClockTick = true,
+                allowAnimation = true
+            )
+        }
+        verify(exactly = 0) { app.pushClockInstant(any(), any()) }
     }
 
     @Test
@@ -103,6 +110,26 @@ class ClockAlarmReceiverTest {
         Thread.sleep(1000)
 
         coVerify(exactly = 0, timeout = 3000) { app.refreshAllWidgets(any(), any()) }
+    }
+
+    @Test
+    fun `onReceive with refresh failure falls back to instant push`() {
+        every { powerManager.isInteractive } returns true
+        coEvery {
+            app.refreshAllWidgets(
+                context,
+                isClockTick = true,
+                allowAnimation = true
+            )
+        } throws RuntimeException("boom")
+
+        receiver.onReceive(context, Intent(ClockAlarmReceiver.ACTION_ALARM_TICK))
+
+        Thread.sleep(1000)
+
+        verify(timeout = 3000) {
+            app.pushClockInstant(forceAllDigits = true, suppressAnimationWindow = true)
+        }
     }
 
     // ── scheduleKeepalive ─────────────────────────────────────

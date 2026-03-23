@@ -122,6 +122,34 @@ class PushClockInstantTest {
     }
 
     @Test
+    fun `pushClockInstant force mode with suppression sets no-animation window`() {
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
+        stubWidgetIds(CompactWidgetProvider::class.java, 42)
+
+        app.pushClockInstant(forceAllDigits = true, suppressAnimationWindow = true)
+
+        val renderedMinute = WidgetClockStateStore.getLastRenderedEpochMinute(realContext, 42)
+        assertNotNull(renderedMinute)
+        val minute = renderedMinute!!
+        assertTrue(WidgetClockStateStore.shouldSuppressAnimation(realContext, 42, minute))
+        assertTrue(WidgetClockStateStore.shouldSuppressAnimation(realContext, 42, minute + 1))
+        assertTrue(WidgetClockStateStore.shouldSuppressAnimation(realContext, 42, minute + 2))
+        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(realContext, 42, minute + 3))
+    }
+
+    @Test
+    fun `pushClockInstant force mode does not set suppression unless requested`() {
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
+        stubWidgetIds(CompactWidgetProvider::class.java, 42)
+
+        app.pushClockInstant(forceAllDigits = true)
+
+        val renderedMinute = WidgetClockStateStore.getLastRenderedEpochMinute(realContext, 42)
+        assertNotNull(renderedMinute)
+        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(realContext, 42, renderedMinute!!))
+    }
+
+    @Test
     fun `pushClockInstant updates widget when stored digits differ from current time`() {
         every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)

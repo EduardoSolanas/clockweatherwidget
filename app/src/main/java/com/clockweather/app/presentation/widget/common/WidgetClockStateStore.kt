@@ -23,6 +23,7 @@ object WidgetClockStateStore {
     private const val PREFS_NAME = "widget_clock_state"
     private const val KEY_PREFIX = "last_rendered_epoch_minute_"
     private const val KEY_BASELINE_PREFIX = "baseline_ready_"
+    private const val KEY_NO_ANIM_UNTIL_PREFIX = "no_anim_until_"
     private const val DIGITS_PREFIX = "digits_"
 
     fun getLastRenderedEpochMinute(context: Context, appWidgetId: Int): Long? {
@@ -39,6 +40,7 @@ object WidgetClockStateStore {
         prefs(context).edit()
             .remove(key(appWidgetId))
             .remove(baselineKey(appWidgetId))
+            .remove(noAnimUntilKey(appWidgetId))
             .remove("${DIGITS_PREFIX}${appWidgetId}_h1")
             .remove("${DIGITS_PREFIX}${appWidgetId}_h2")
             .remove("${DIGITS_PREFIX}${appWidgetId}_m1")
@@ -92,9 +94,24 @@ object WidgetClockStateStore {
         prefs(context).edit().putBoolean(baselineKey(appWidgetId), true).apply()
     }
 
+    fun markNoAnimationUntilEpochMinute(context: Context, appWidgetId: Int, epochMinute: Long) {
+        prefs(context).edit().putLong(noAnimUntilKey(appWidgetId), epochMinute).apply()
+    }
+
+    fun shouldSuppressAnimation(context: Context, appWidgetId: Int, currentEpochMinute: Long): Boolean {
+        val p = prefs(context)
+        val key = noAnimUntilKey(appWidgetId)
+        if (!p.contains(key)) return false
+        val untilEpochMinute = p.getLong(key, -1L)
+        if (currentEpochMinute <= untilEpochMinute) return true
+        p.edit().remove(key).apply()
+        return false
+    }
+
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private fun key(appWidgetId: Int) = "$KEY_PREFIX$appWidgetId"
     private fun baselineKey(appWidgetId: Int) = "$KEY_BASELINE_PREFIX$appWidgetId"
+    private fun noAnimUntilKey(appWidgetId: Int) = "$KEY_NO_ANIM_UNTIL_PREFIX$appWidgetId"
 }

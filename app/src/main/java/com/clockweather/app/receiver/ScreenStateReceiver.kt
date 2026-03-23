@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.SystemClock
 import android.util.Log
 import com.clockweather.app.ClockWeatherApplication
 import kotlinx.coroutines.CoroutineScope
@@ -29,23 +30,13 @@ class ScreenStateReceiver : BroadcastReceiver() {
                 ClockAlarmReceiver.scheduleKeepalive(context)
             }
             Intent.ACTION_SCREEN_ON -> {
-                Log.d(TAG, "Screen ON - register TIME_TICK + instant clock push + ensure alarm backup")
+                Log.d(TAG, "Screen ON - register TIME_TICK + unlock convergence")
                 app.registerTimeTickReceiver()
-                app.pushClockInstant()
-                launchAlarmSchedule(app, context)
+                launchUnlockConvergence(app, context, Intent.ACTION_SCREEN_ON)
             }
             Intent.ACTION_USER_PRESENT -> {
-                Log.d(TAG, "User present - full sync")
-                val pendingResult = goAsync()
-                CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
-                    try {
-                        withTimeout(10_000) {
-                            app.syncClockNow(context)
-                        }
-                    } finally {
-                        pendingResult.finish()
-                    }
-                }
+                Log.d(TAG, "User present - unlock convergence")
+                launchUnlockConvergence(app, context, Intent.ACTION_USER_PRESENT)
             }
             Intent.ACTION_DREAMING_STARTED -> {
                 Log.d(TAG, "Dreaming started - unregister TIME_TICK + keepalive")
@@ -53,21 +44,39 @@ class ScreenStateReceiver : BroadcastReceiver() {
                 ClockAlarmReceiver.scheduleKeepalive(context)
             }
             Intent.ACTION_DREAMING_STOPPED -> {
-                Log.d(TAG, "Dreaming stopped - register TIME_TICK + instant clock push + ensure alarm backup")
+                Log.d(TAG, "Dreaming stopped - register TIME_TICK + unlock convergence")
                 app.registerTimeTickReceiver()
-                app.pushClockInstant()
-                launchAlarmSchedule(app, context)
+                launchUnlockConvergence(app, context, Intent.ACTION_DREAMING_STOPPED)
             }
         }
     }
 
-    private fun launchAlarmSchedule(app: ClockWeatherApplication, context: Context) {
+    private fun launchUnlockConvergence(
+        app: ClockWeatherApplication,
+        context: Context,
+        sourceAction: String
+    ) {
+        val now = SystemClock.elapsedRealtime()
+        val throttleEnabled = sourceAction != Intent.ACTION_USER_PRESENT
+        if (throttleEnabled &&
+            lastUnlockConvergenceMs > 0L &&
+            now - lastUnlockConvergenceMs < UNLOCK_CONVERGENCE_THROTTLE_MS
+        ) {
+            Log.d(TAG, "Unlock convergence throttled")
+            return
+        }
+        lastUnlockConvergenceMs = now
+
         val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
             try {
-                withTimeout(5_000) {
-                    val isHighPrecision = app.resolveHighPrecision()
-                    ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
+                withTimeout(12_000) {
+                    // All unlock/screen transitions are quiet no-animation sync paths.
+                    app.syncClockNow(
+                        context,
+                        suppressAnimation = true,
+                        reassertAfterReschedule = sourceAction != Intent.ACTION_USER_PRESENT
+                    )
                 }
             } finally {
                 pendingResult.finish()
@@ -77,6 +86,11 @@ class ScreenStateReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "ScreenStateReceiver"
+        @Volatile private var lastUnlockConvergenceMs: Long = 0L
+        private const val UNLOCK_CONVERGENCE_THROTTLE_MS = 2_500L
+        internal fun resetUnlockConvergenceThrottleForTests() {
+            lastUnlockConvergenceMs = 0L
+        }
         fun buildIntentFilter(): IntentFilter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_SCREEN_OFF)

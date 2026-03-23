@@ -27,6 +27,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import java.time.LocalTime
 
 /**
  * Tests for [BaseWidgetUpdater] partial vs full update logic.
@@ -177,6 +178,15 @@ class BaseWidgetUpdaterTest {
         assertNotNull(WidgetClockStateStore.getLastRenderedEpochMinute(realContext, widgetId))
     }
 
+    @Test
+    fun `full update marks baseline ready so next tick can animate incrementally`() = runBlocking {
+        assertFalse(WidgetClockStateStore.isBaselineReady(realContext, widgetId))
+
+        updater.updateWidget(widgetId)
+
+        assertTrue(WidgetClockStateStore.isBaselineReady(realContext, widgetId))
+    }
+
     // ── clearDigits forces full re-render ──────────────────────
 
     @Test
@@ -232,6 +242,31 @@ class BaseWidgetUpdaterTest {
 
         verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+    }
+
+    @Test
+    fun `updateClockOnly with allowAnimation true still suppresses during no-animation window`() = runBlocking {
+        mockkStatic(LocalTime::class)
+        every { LocalTime.now() } returns LocalTime.of(10, 26)
+
+        // Previous rendered state is exactly one minute behind -> INCREMENTAL mode.
+        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState.from(10, 25, true))
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
+        val currentMinute = System.currentTimeMillis() / 60000L
+        WidgetClockStateStore.markRendered(realContext, widgetId, currentMinute - 1)
+        WidgetClockStateStore.markNoAnimationUntilEpochMinute(realContext, widgetId, currentMinute + 1)
+
+        com.clockweather.app.util.WidgetPrefsCache.init(
+            mockk<DataStore<Preferences>> { every { data } returns flowOf(prefs) },
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined)
+        )
+        kotlinx.coroutines.delay(100)
+
+        updater.updateClockOnly(widgetId, allowAnimation = true)
+
+        // Suppression window must override animation path: no showNext() calls.
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(any()) }
+        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
     }
 
     // ── Multiple consecutive calls ──────────────────────────────

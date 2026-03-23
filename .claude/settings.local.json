@@ -17,7 +17,27 @@
       "Bash(npm list:*)",
       "Bash(node capture_mockup.mjs)",
       "Bash(npm install:*)",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(./gradlew :app:compileDebugKotlin)",
+      "Bash(grep -r \"showNext\\\\|showPrevious\" --include=*.java app/build/intermediates/)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(./gradlew test:*)",
+      "Bash(find /c/projects/clockweatherwidget/app/src/main/res -name widget*.xml -o -name flip*.xml -o -name digit*.xml)",
+      "Bash(grep -r \"showNext\\\\|setDisplayedChild\" /c/projects/clockweatherwidget/app/src --include=*.kt)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:cs.android.com)",
+      "WebFetch(domain:android.googlesource.com)",
+      "Bash(./gradlew testDebugUnitTest)",
+      "Bash(./gradlew lintDebug)",
+      "Bash(./gradlew testDebugUnitTest --tests \"com.clockweather.app.receiver.ScreenStateReceiverTest\")",
+      "Bash(./gradlew testDebugUnitTest --tests \"com.clockweather.app.receiver.ScreenStateReceiverTest.screen off unregisters TIME_TICK and cancels alarm\" --info)",
+      "Bash(find /c/projects/clockweatherwidget/app/src/androidTest -type f \\\\\\(-name *.kt -o -name *.java \\\\\\))",
+      "Bash(tree /c/projects/clockweatherwidget/app/src/test -I *.class)"
     ]
   }
 }

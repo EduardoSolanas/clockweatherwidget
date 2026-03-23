@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.Before
 import org.junit.Test
 
@@ -94,9 +95,28 @@ class WidgetDataBinderTest {
         verify(exactly = 0) { views.showNext(R.id.digit_h2) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m1, any()) }
         verify(exactly = 0) { views.showNext(R.id.digit_m1) }
-        // m2: 5→6 is +1, so showNext (not setDisplayedChild)
+        // m2: 5→6 is +1. Prime flipper to previous value then animate once.
         verify(exactly = 1) { views.showNext(R.id.digit_m2) }
-        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m2, any()) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 5) }
+    }
+
+    @Test
+    fun `incremental plus-one primes previous child before animation`() {
+        WidgetDataBinder.bindClockViews(
+            context = context,
+            views = views,
+            appWidgetId = 1,
+            hour = 10,
+            minute = 26,
+            is24h = true,
+            isIncremental = true
+        )
+
+        verifyOrder {
+            views.setDisplayedChild(R.id.digit_m2, 5)
+            views.showNext(R.id.digit_m2)
+        }
+        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m2, 6) }
     }
 
     @Test
@@ -173,9 +193,9 @@ class WidgetDataBinderTest {
         verify(exactly = 0) { views.showNext(R.id.digit_h2) }
         verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m1, any()) }
         verify(exactly = 0) { views.showNext(R.id.digit_m1) }
-        // m2: 5→6 (+1) → showNext
+        // m2 changes by +1: prime previous + animate.
         verify(exactly = 1) { views.showNext(R.id.digit_m2) }
-        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m2, any()) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 5) }
     }
 
     @Test
