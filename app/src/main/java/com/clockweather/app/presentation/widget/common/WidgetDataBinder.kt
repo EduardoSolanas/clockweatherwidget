@@ -14,6 +14,29 @@ import java.time.LocalDate
 
 object WidgetDataBinder {
 
+    fun bindAtomicClockViews(
+        views: RemoteViews,
+        hour: Int,
+        minute: Int,
+        is24h: Boolean = true
+    ) {
+        val displayHour = if (is24h) hour
+            else if (hour == 0) 12
+            else if (hour > 12) hour - 12
+            else hour
+
+        val h1 = displayHour / 10
+        val h2 = displayHour % 10
+        val m1 = minute / 10
+        val m2 = minute % 10
+
+        views.setTextViewText(R.id.digit_h1, h1.toString())
+        views.setTextViewText(R.id.digit_h2, h2.toString())
+        views.setTextViewText(R.id.digit_m1, m1.toString())
+        views.setTextViewText(R.id.digit_m2, m2.toString())
+        views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
+    }
+
     fun bindSimpleClockViews(
         views: RemoteViews,
         hour: Int,
@@ -103,22 +126,38 @@ object WidgetDataBinder {
                 DigitState(pDisplay / 10, pDisplay % 10, pMin / 10, pMin % 10)
             }
 
-            if (h1 != prev.h1) {
+            val h1Changed = h1 != prev.h1
+            val h2Changed = h2 != prev.h2
+            val m1Changed = m1 != prev.m1
+            val m2Changed = m2 != prev.m2
+
+            if (h1Changed) {
+                setAllDigitChildrenVisible(context, views, "digit_h1")
                 android.util.Log.d("WidgetDataBinder", "Incremental flip h1: ${prev.h1} -> $h1")
                 flipDigit(views, R.id.digit_h1, prev.h1, h1)
             }
-            if (h2 != prev.h2) {
+            if (h2Changed) {
+                setAllDigitChildrenVisible(context, views, "digit_h2")
                 android.util.Log.d("WidgetDataBinder", "Incremental flip h2: ${prev.h2} -> $h2")
                 flipDigit(views, R.id.digit_h2, prev.h2, h2)
             }
-            if (m1 != prev.m1) {
+            if (m1Changed) {
+                setAllDigitChildrenVisible(context, views, "digit_m1")
                 android.util.Log.d("WidgetDataBinder", "Incremental flip m1: ${prev.m1} -> $m1")
                 flipDigit(views, R.id.digit_m1, prev.m1, m1)
             }
-            if (m2 != prev.m2) {
+            if (m2Changed) {
+                setAllDigitChildrenVisible(context, views, "digit_m2")
                 android.util.Log.d("WidgetDataBinder", "Incremental flip m2: ${prev.m2} -> $m2")
                 flipDigit(views, R.id.digit_m2, prev.m2, m2)
             }
+
+            val changedCount = listOf(h1Changed, h2Changed, m1Changed, m2Changed).count { it }
+            android.util.Log.d(
+                "WidgetDataBinder",
+                "CLOCK_TRACE bindClockViews widget=$appWidgetId mode=incremental " +
+                    "changedCount=$changedCount prev=${prev.h1}${prev.h2}:${prev.m1}${prev.m2} new=$h1$h2:$m1$m2"
+            )
 
             val ampmText = if (is24h) "" else if (hour < 12) "AM" else "PM"
             val prevAmpmText = if (is24h) "" else if (
@@ -132,6 +171,10 @@ object WidgetDataBinder {
             setDigitVisibility(context, views, "digit_m1", m1)
             setDigitVisibility(context, views, "digit_m2", m2)
             views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
+            android.util.Log.d(
+                "WidgetDataBinder",
+                "CLOCK_TRACE bindClockViews widget=$appWidgetId mode=full_no_animation digits=$h1$h2:$m1$m2"
+            )
         }
     }
 
@@ -146,6 +189,10 @@ object WidgetDataBinder {
         // child and animate one step. This keeps animation while avoiding launcher
         // drift from stale internal ViewFlipper indices.
         if ((from + 1) % 10 == to) {
+            android.util.Log.d(
+                "WidgetDataBinder",
+                "CLOCK_TRACE flipDigit viewId=$viewId from=$from to=$to mode=animated_showNext"
+            )
             views.setDisplayedChild(viewId, from)
             views.showNext(viewId)
         } else {
@@ -153,6 +200,10 @@ object WidgetDataBinder {
             // we use setDisplayedChild() to jump directly to the correct digit.
             // This prevents the widget from performing multiple awkward-looking
             // single-step animations to "catch up."
+            android.util.Log.d(
+                "WidgetDataBinder",
+                "CLOCK_TRACE flipDigit viewId=$viewId from=$from to=$to mode=direct_setDisplayedChild"
+            )
             views.setDisplayedChild(viewId, to)
         }
     }
@@ -169,6 +220,21 @@ object WidgetDataBinder {
             val childId = resources.getIdentifier("${prefix}_$i", "id", packageName)
             if (childId != 0) {
                 views.setViewVisibility(childId, if (i == value) android.view.View.VISIBLE else android.view.View.GONE)
+            }
+        }
+    }
+
+    private fun setAllDigitChildrenVisible(
+        context: Context,
+        views: RemoteViews,
+        prefix: String
+    ) {
+        val packageName = context.packageName
+        val resources = context.resources
+        for (i in 0..9) {
+            val childId = resources.getIdentifier("${prefix}_$i", "id", packageName)
+            if (childId != 0) {
+                views.setViewVisibility(childId, android.view.View.VISIBLE)
             }
         }
     }

@@ -48,8 +48,14 @@ class ScreenStateReceiverTest {
     }
 
     @Test
-    fun `intent filter has exactly 5 actions`() {
+    fun `intent filter contains ACTION_CLOSE_SYSTEM_DIALOGS`() {
         val filter = ScreenStateReceiver.buildIntentFilter()
-        assertTrue("Expected 5 actions", filter.countActions() == 5)
+        assertTrue(filter.hasAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
+    }
+
+    @Test
+    fun `intent filter has exactly 6 actions`() {
+        val filter = ScreenStateReceiver.buildIntentFilter()
+        assertTrue("Expected 6 actions", filter.countActions() == 6)
     }
 }

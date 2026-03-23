@@ -48,6 +48,13 @@ class ScreenStateReceiver : BroadcastReceiver() {
                 app.registerTimeTickReceiver()
                 launchUnlockConvergence(app, context, Intent.ACTION_DREAMING_STOPPED)
             }
+            Intent.ACTION_CLOSE_SYSTEM_DIALOGS -> {
+                val reason = intent.getStringExtra("reason")
+                if (reason == "homekey") {
+                    Log.d(TAG, "Home key detected - quiet home convergence")
+                    launchUnlockConvergence(app, context, Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+                }
+            }
         }
     }
 
@@ -75,7 +82,9 @@ class ScreenStateReceiver : BroadcastReceiver() {
                     app.syncClockNow(
                         context,
                         suppressAnimation = true,
-                        reassertAfterReschedule = sourceAction != Intent.ACTION_USER_PRESENT
+                        reassertAfterReschedule =
+                            sourceAction == Intent.ACTION_SCREEN_ON ||
+                            sourceAction == Intent.ACTION_DREAMING_STOPPED
                     )
                 }
             } finally {
@@ -97,6 +106,7 @@ class ScreenStateReceiver : BroadcastReceiver() {
             addAction(Intent.ACTION_USER_PRESENT)
             addAction(Intent.ACTION_DREAMING_STARTED)
             addAction(Intent.ACTION_DREAMING_STOPPED)
+            addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
         }
     }
 }
