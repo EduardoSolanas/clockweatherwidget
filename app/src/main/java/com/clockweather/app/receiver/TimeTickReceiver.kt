@@ -26,9 +26,11 @@ class TimeTickReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_TIME_TICK) return
-        Log.d(TAG, "TIME_TICK received — incremental clock update")
+        val currentEpochMinute = System.currentTimeMillis() / 60000L
+        Log.d(TAG, "TIME_TICK received — incremental clock update minute=$currentEpochMinute")
 
         val app = context.applicationContext as? ClockWeatherApplication ?: return
+        app.markTimeTickObserved(currentEpochMinute)
         val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
             try {

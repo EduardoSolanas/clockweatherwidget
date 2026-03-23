@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.PowerManager
 import android.util.Log
 import com.clockweather.app.ClockWeatherApplication
+import com.clockweather.app.presentation.widget.common.WidgetClockStateStore
 import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
 import com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider
 import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
@@ -20,6 +21,7 @@ import com.clockweather.app.presentation.widget.large.LargeWidgetProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import java.util.Calendar
@@ -53,15 +55,51 @@ class ClockAlarmReceiver : BroadcastReceiver() {
 
                     val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
                     val isInteractive = powerManager?.isInteractive ?: true
+                    Log.d(
+                        TAG,
+                        "CLOCK_TRACE alarmReceive action=$action interactive=$isInteractive " +
+                            "timeTickRegistered=${app.isTimeTickReceiverRegistered()}"
+                    )
                     if (isInteractive) {
-                        app.refreshAllWidgets(
-                            context,
-                            isClockTick = true,
-                            allowAnimation = true
-                        )
+                        if (app.isTimeTickReceiverRegistered()) {
+                            // TIME_TICK is the primary interactive minute source.
+                            // Wait briefly to let it arrive; if this minute is still stale,
+                            // run the normal clock-only backup update.
+                            delay(TIME_TICK_GRACE_MS)
+                            val currentEpochMinute = System.currentTimeMillis() / 60000L
+                            val timeTickObserved = app.getLastObservedTimeTickEpochMinute() == currentEpochMinute
+                            val staleForMinute = hasAnyWidgetStaleForMinute(context, currentEpochMinute)
+                            if (staleForMinute) {
+                                Log.d(
+                                    TAG,
+                                    "Interactive backup tick: minute=$currentEpochMinute stale=true timeTickObserved=$timeTickObserved"
+                                )
+                                app.pushClockInstant(
+                                    forceAllDigits = true,
+                                    suppressAnimationWindow = false,
+                                    quietRender = true
+                                )
+                            } else if (timeTickObserved) {
+                                Log.d(TAG, "CLOCK_TRACE alarmDecision minute=$currentEpochMinute action=skip reason=time_tick_observed_and_not_stale")
+                            } else {
+                                Log.d(TAG, "CLOCK_TRACE alarmDecision minute=$currentEpochMinute action=skip reason=already_rendered_not_stale")
+                            }
+                        } else {
+                            Log.d(TAG, "CLOCK_TRACE alarmDecision action=refreshAllWidgets reason=time_tick_receiver_not_registered")
+                            app.refreshAllWidgets(
+                                context,
+                                isClockTick = true,
+                                allowAnimation = true
+                            )
+                        }
                     } else {
                         // While non-interactive, keep digits synchronized without animation.
-                        app.pushClockInstant(forceAllDigits = false)
+                        Log.d(TAG, "CLOCK_TRACE alarmDecision action=pushClockInstant_quiet reason=non_interactive")
+                        app.pushClockInstant(
+                            forceAllDigits = true,
+                            suppressAnimationWindow = false,
+                            quietRender = true
+                        )
                     }
                 }
             } catch (e: Exception) {
@@ -91,6 +129,7 @@ class ClockAlarmReceiver : BroadcastReceiver() {
         private const val REQUEST_CODE_TICK = 0
         private const val REQUEST_CODE_KEEPALIVE = 1
         private const val KEEPALIVE_INTERVAL_MS = 60 * 1000L
+        private const val TIME_TICK_GRACE_MS = 1200L
 
         private val widgetProviders = listOf(
             CompactWidgetProvider::class.java,
@@ -98,6 +137,16 @@ class ClockAlarmReceiver : BroadcastReceiver() {
             ForecastWidgetProvider::class.java,
             LargeWidgetProvider::class.java
         )
+
+        internal fun hasAnyWidgetStaleForMinute(context: Context, epochMinute: Long): Boolean {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            return widgetProviders.any { providerClass ->
+                val ids = appWidgetManager.getAppWidgetIds(ComponentName(context, providerClass))
+                ids.any { id ->
+                    WidgetClockStateStore.getLastRenderedEpochMinute(context, id) != epochMinute
+                }
+            }
+        }
 
         fun scheduleNextTick(context: Context, isHighPrecision: Boolean = true) {
             if (!hasAnyActiveWidgets(context)) {

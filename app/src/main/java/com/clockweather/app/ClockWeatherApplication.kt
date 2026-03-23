@@ -42,6 +42,8 @@ import javax.inject.Inject
 class ClockWeatherApplication : Application(), Configuration.Provider {
     private val appScope = CoroutineScope(Dispatchers.Default)
     private val widgetRefreshMutex = Mutex()
+    @Volatile
+    private var lastObservedTimeTickEpochMinute: Long = -1L
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
@@ -123,6 +125,14 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         }
     }
 
+    fun isTimeTickReceiverRegistered(): Boolean = timeTickReceiver != null
+
+    fun markTimeTickObserved(epochMinute: Long) {
+        lastObservedTimeTickEpochMinute = epochMinute
+    }
+
+    fun getLastObservedTimeTickEpochMinute(): Long = lastObservedTimeTickEpochMinute
+
     // ── Instant clock sync ────────────────────────────────────────
 
     /**
@@ -134,7 +144,9 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
      */
     fun pushClockInstant(
         forceAllDigits: Boolean = false,
-        suppressAnimationWindow: Boolean = false
+        suppressAnimationWindow: Boolean = false,
+        quietRender: Boolean = false,
+        alignDisplayedChildrenOnly: Boolean = false
     ) {
         val now = LocalTime.now()
         val cachedPrefs = WidgetPrefsCache.getCachedSnapshot()
@@ -158,49 +170,110 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             ForecastWidgetProvider::class.java to R.layout.widget_forecast,
             LargeWidgetProvider::class.java to R.layout.widget_large
         )
+        val atomicClockProviders = setOf(CompactWidgetProvider::class.java)
 
         providerLayouts.forEach { (providerClass, layoutId) ->
+            val usesAtomicClockText = providerClass in atomicClockProviders
             val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
             ids.forEach { id ->
                 if (suppressAnimationWindow) {
                     // Pre-arm suppression before any RemoteViews push so concurrent
                     // minute ticks observe the quiet window immediately.
-                    WidgetClockStateStore.markNoAnimationUntilEpochMinute(this, id, currentEpochMinute + 2L)
+                    WidgetClockStateStore.markNoAnimationUntilEpochMinute(this, id, currentEpochMinute + 1L)
                 }
                 val prev = WidgetClockStateStore.getLastDigits(this, id)
                 val views = RemoteViews(packageName, layoutId)
+                val useQuietRender = quietRender || suppressAnimationWindow
+                val changedDigitsCount = if (forceAllDigits || prev == null) {
+                    4
+                } else {
+                    listOf(prev.h1 != h1, prev.h2 != h2, prev.m1 != m1, prev.m2 != m2).count { it }
+                }
+                val renderPath = when {
+                    usesAtomicClockText && forceAllDigits -> "atomic_force_text"
+                    usesAtomicClockText && prev == null -> "atomic_baseline_text"
+                    usesAtomicClockText -> "atomic_delta_text"
+                    forceAllDigits && alignDisplayedChildrenOnly -> "force_align_displayed_children"
+                    forceAllDigits && useQuietRender -> "force_full_visibility_no_animation"
+                    forceAllDigits -> "force_full_with_displayed_child_alignment"
+                    prev == null -> "baseline_full_visibility"
+                    else -> "delta_visibility_only"
+                }
 
                 val ampm = if (is24h) "" else if (now.hour < 12) "AM" else "PM"
                 var hasChanges = false
 
                 if (forceAllDigits || prev == null) {
-                    // When suppression is requested (weather->home / unlock convergence),
-                    // avoid setDisplayedChild to prevent visible flip transitions.
-                    if (!suppressAnimationWindow) {
-                        // Align ViewFlipper internal state so next incremental showNext()
-                        // animates correctly after a forced sync.
+                    if (usesAtomicClockText) {
+                        views.setTextViewText(R.id.digit_h1, h1.toString())
+                        views.setTextViewText(R.id.digit_h2, h2.toString())
+                        views.setTextViewText(R.id.digit_m1, m1.toString())
+                        views.setTextViewText(R.id.digit_m2, m2.toString())
+                        views.setTextViewText(R.id.ampm, ampm)
+                        hasChanges = true
+                    } else if (alignDisplayedChildrenOnly) {
+                        // Launcher-host reassert path: align flipper indices only,
+                        // avoid visibility fan-out that can look like a full-tile refresh.
                         views.setDisplayedChild(R.id.digit_h1, h1)
                         views.setDisplayedChild(R.id.digit_h2, h2)
                         views.setDisplayedChild(R.id.digit_m1, m1)
                         views.setDisplayedChild(R.id.digit_m2, m2)
-                    }
-                    applyDigitVisibility(views, H1_DIGIT_IDS, h1)
-                    applyDigitVisibility(views, H2_DIGIT_IDS, h2)
-                    applyDigitVisibility(views, M1_DIGIT_IDS, m1)
-                    applyDigitVisibility(views, M2_DIGIT_IDS, m2)
-                    views.setTextViewText(R.id.ampm, ampm)
-                    hasChanges = true
-                } else {
-                    hasChanges = applyDigitDelta(views, H1_DIGIT_IDS, prev.h1, h1) || hasChanges
-                    hasChanges = applyDigitDelta(views, H2_DIGIT_IDS, prev.h2, h2) || hasChanges
-                    hasChanges = applyDigitDelta(views, M1_DIGIT_IDS, prev.m1, m1) || hasChanges
-                    hasChanges = applyDigitDelta(views, M2_DIGIT_IDS, prev.m2, m2) || hasChanges
-
-                    val previousDisplayHour = prev.h1 * 10 + prev.h2
-                    val previousAmpm = if (is24h) "" else if (previousDisplayHour < 12) "AM" else "PM"
-                    if (ampm != previousAmpm) {
                         views.setTextViewText(R.id.ampm, ampm)
                         hasChanges = true
+                    } else {
+                        // When suppression is requested (weather->home / unlock convergence),
+                        // avoid setDisplayedChild to prevent visible flip transitions.
+                        if (!useQuietRender) {
+                            // Align ViewFlipper internal state so next incremental showNext()
+                            // animates correctly after a forced sync.
+                            views.setDisplayedChild(R.id.digit_h1, h1)
+                            views.setDisplayedChild(R.id.digit_h2, h2)
+                            views.setDisplayedChild(R.id.digit_m1, m1)
+                            views.setDisplayedChild(R.id.digit_m2, m2)
+                        }
+                        applyDigitVisibility(views, H1_DIGIT_IDS, h1)
+                        applyDigitVisibility(views, H2_DIGIT_IDS, h2)
+                        applyDigitVisibility(views, M1_DIGIT_IDS, m1)
+                        applyDigitVisibility(views, M2_DIGIT_IDS, m2)
+                        views.setTextViewText(R.id.ampm, ampm)
+                        hasChanges = true
+                    }
+                } else {
+                    if (usesAtomicClockText) {
+                        if (prev.h1 != h1) {
+                            views.setTextViewText(R.id.digit_h1, h1.toString())
+                            hasChanges = true
+                        }
+                        if (prev.h2 != h2) {
+                            views.setTextViewText(R.id.digit_h2, h2.toString())
+                            hasChanges = true
+                        }
+                        if (prev.m1 != m1) {
+                            views.setTextViewText(R.id.digit_m1, m1.toString())
+                            hasChanges = true
+                        }
+                        if (prev.m2 != m2) {
+                            views.setTextViewText(R.id.digit_m2, m2.toString())
+                            hasChanges = true
+                        }
+                        val previousDisplayHour = prev.h1 * 10 + prev.h2
+                        val previousAmpm = if (is24h) "" else if (previousDisplayHour < 12) "AM" else "PM"
+                        if (ampm != previousAmpm) {
+                            views.setTextViewText(R.id.ampm, ampm)
+                            hasChanges = true
+                        }
+                    } else {
+                        hasChanges = applyDigitDelta(views, H1_DIGIT_IDS, prev.h1, h1) || hasChanges
+                        hasChanges = applyDigitDelta(views, H2_DIGIT_IDS, prev.h2, h2) || hasChanges
+                        hasChanges = applyDigitDelta(views, M1_DIGIT_IDS, prev.m1, m1) || hasChanges
+                        hasChanges = applyDigitDelta(views, M2_DIGIT_IDS, prev.m2, m2) || hasChanges
+
+                        val previousDisplayHour = prev.h1 * 10 + prev.h2
+                        val previousAmpm = if (is24h) "" else if (previousDisplayHour < 12) "AM" else "PM"
+                        if (ampm != previousAmpm) {
+                            views.setTextViewText(R.id.ampm, ampm)
+                            hasChanges = true
+                        }
                     }
                 }
 
@@ -210,7 +283,19 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                 WidgetClockStateStore.saveLastDigits(this, id, DigitState(h1, h2, m1, m2))
                 WidgetClockStateStore.markRendered(this, id, currentEpochMinute)
                 if (hasChanges) {
-                    android.util.Log.d("ClockWeatherApp", "pushClockInstant: widget $id updated (prev=$prev -> $h1$h2:$m1$m2)")
+                    android.util.Log.d(
+                        "ClockWeatherApp",
+                        "CLOCK_TRACE pushClockInstant widget=$id minute=$currentEpochMinute " +
+                            "path=$renderPath changedDigits=$changedDigitsCount " +
+                            "quietRender=$quietRender suppressWindow=$suppressAnimationWindow " +
+                            "forceAll=$forceAllDigits prev=$prev new=$h1$h2:$m1$m2"
+                    )
+                } else {
+                    android.util.Log.d(
+                        "ClockWeatherApp",
+                        "CLOCK_TRACE pushClockInstant widget=$id minute=$currentEpochMinute " +
+                            "path=$renderPath changedDigits=0 no-op prev=$prev new=$h1$h2:$m1$m2"
+                    )
                 }
             }
         }

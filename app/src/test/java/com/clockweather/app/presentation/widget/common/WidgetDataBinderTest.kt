@@ -77,6 +77,38 @@ class WidgetDataBinderTest {
     }
 
     @Test
+    fun `bindAtomicClockViews writes hour and minute text in 24h mode`() {
+        WidgetDataBinder.bindAtomicClockViews(
+            views = views,
+            hour = 9,
+            minute = 7,
+            is24h = true
+        )
+
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h1, "0") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h2, "9") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m1, "0") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m2, "7") }
+        verify(exactly = 1) { views.setTextViewText(R.id.ampm, "") }
+    }
+
+    @Test
+    fun `bindAtomicClockViews converts to 12h text and ampm`() {
+        WidgetDataBinder.bindAtomicClockViews(
+            views = views,
+            hour = 15,
+            minute = 5,
+            is24h = false
+        )
+
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h1, "0") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h2, "3") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m1, "0") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m2, "5") }
+        verify(exactly = 1) { views.setTextViewText(R.id.ampm, "PM") }
+    }
+
+    @Test
     fun `bindClockViews incremental only sets displayed child for changed digits`() {
         WidgetDataBinder.bindClockViews(
             context = context,
@@ -98,6 +130,28 @@ class WidgetDataBinderTest {
         // m2: 5→6 is +1. Prime flipper to previous value then animate once.
         verify(exactly = 1) { views.showNext(R.id.digit_m2) }
         verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 5) }
+    }
+
+    @Test
+    fun `bindClockViews incremental restores changed flipper children visibility`() {
+        WidgetDataBinder.bindClockViews(
+            context = context,
+            views = views,
+            appWidgetId = 1,
+            hour = 10,
+            minute = 26,
+            is24h = true,
+            isIncremental = true
+        )
+
+        (0..9).forEach { i ->
+            val m2Id = resources.getIdentifier("digit_m2_$i", "id", "com.clockweather.app")
+            verify(exactly = 1) { views.setViewVisibility(m2Id, android.view.View.VISIBLE) }
+        }
+        (0..9).forEach { i ->
+            val m1Id = resources.getIdentifier("digit_m1_$i", "id", "com.clockweather.app")
+            verify(exactly = 0) { views.setViewVisibility(m1Id, android.view.View.VISIBLE) }
+        }
     }
 
     @Test

@@ -133,8 +133,7 @@ class PushClockInstantTest {
         val minute = renderedMinute!!
         assertTrue(WidgetClockStateStore.shouldSuppressAnimation(realContext, 42, minute))
         assertTrue(WidgetClockStateStore.shouldSuppressAnimation(realContext, 42, minute + 1))
-        assertTrue(WidgetClockStateStore.shouldSuppressAnimation(realContext, 42, minute + 2))
-        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(realContext, 42, minute + 3))
+        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(realContext, 42, minute + 2))
     }
 
     @Test

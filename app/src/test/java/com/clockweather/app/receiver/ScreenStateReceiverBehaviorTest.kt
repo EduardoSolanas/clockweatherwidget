@@ -54,7 +54,7 @@ class ScreenStateReceiverBehaviorTest {
     fun `SCREEN_ON runs quiet no-animation sync`() {
         receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_ON))
         coVerify(timeout = 3000) { app.syncClockNow(any(), suppressAnimation = true) }
-        verify(timeout = 3000, exactly = 0) { app.pushClockInstant(any(), any()) }
+        verify(timeout = 3000, exactly = 0) { app.pushClockInstant(any(), any(), any()) }
     }
 
     @Test
@@ -93,5 +93,25 @@ class ScreenStateReceiverBehaviorTest {
         receiver.onReceive(context, Intent(Intent.ACTION_DREAMING_STOPPED))
         verify(exactly = 1) { app.registerTimeTickReceiver() }
         coVerify(timeout = 3000) { app.syncClockNow(any(), suppressAnimation = true) }
+    }
+
+    @Test
+    fun `CLOSE_SYSTEM_DIALOGS with homekey runs quiet sync without reassert`() {
+        receiver.onReceive(
+            context,
+            Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS).apply { putExtra("reason", "homekey") }
+        )
+
+        coVerify(timeout = 3000) { app.syncClockNow(any(), true, false) }
+    }
+
+    @Test
+    fun `CLOSE_SYSTEM_DIALOGS without homekey does nothing`() {
+        receiver.onReceive(
+            context,
+            Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS).apply { putExtra("reason", "recentapps") }
+        )
+
+        coVerify(timeout = 3000, exactly = 0) { app.syncClockNow(any(), any(), any()) }
     }
 }
