@@ -33,10 +33,22 @@ class TimeTickReceiver : BroadcastReceiver() {
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
             try {
                 withTimeout(10_000) {
-                    app.refreshAllWidgets(context, isClockTick = true)
+                    app.refreshAllWidgets(
+                        context,
+                        isClockTick = true,
+                        allowAnimation = true
+                    )
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "TIME_TICK refresh failed", e)
+                runCatching {
+                    app.pushClockInstant(
+                        forceAllDigits = true,
+                        suppressAnimationWindow = true
+                    )
+                }.onFailure { pushError ->
+                    Log.w(TAG, "TIME_TICK fallback instant push failed", pushError)
+                }
             } finally {
                 pendingResult.finish()
             }

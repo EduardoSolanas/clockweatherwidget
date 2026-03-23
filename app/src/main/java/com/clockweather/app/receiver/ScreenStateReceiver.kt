@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.SystemClock
 import android.util.Log
 import com.clockweather.app.ClockWeatherApplication
 import kotlinx.coroutines.CoroutineScope
@@ -13,26 +14,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 /**
- * Dynamically-registered receiver for screen on/off events.
+ * Dynamically registered receiver for screen on/off events.
  *
- * Orchestrates two tick sources:
- * 1. **TIME_TICK** (primary) — free system broadcast every minute while screen is on.
- *    Registered on screen-on, unregistered on screen-off.
- * 2. **AlarmManager** (backup) — wakes the process if it was killed while screen was on.
- *    Scheduled on screen-on, cancelled on screen-off.
- *
- * On SCREEN_ON an ultra-fast partial clock push is performed synchronously so the
- * correct time is visible within milliseconds — even before the lock screen is dismissed.
- *
- * On USER_PRESENT (unlock) the full sync (weather + date + clock) is launched
- * asynchronously, since the home screen is now visible and weather data is useful.
- *
- * On SCREEN_OFF a low-frequency "keepalive" alarm is scheduled (instead of fully
- * cancelling) so that the process restarts after an OEM kill and re-registers this
- * receiver before the next unlock.
- *
- * Must be registered via [Context.registerReceiver] — screen intents are not deliverable
- * to manifest-declared receivers since API 26.
+ * TIME_TICK is used while the screen is on.
+ * AlarmManager minute ticks remain as backup for process restarts and screen-off periods.
  */
 class ScreenStateReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -40,67 +25,58 @@ class ScreenStateReceiver : BroadcastReceiver() {
 
         when (intent.action) {
             Intent.ACTION_SCREEN_OFF -> {
-                Log.d(TAG, "Screen OFF — unregister TIME_TICK + schedule keepalive alarm")
+                Log.d(TAG, "Screen OFF - unregister TIME_TICK + keepalive")
                 app.unregisterTimeTickReceiver()
-                // Keep a slow-cadence alarm alive so the process is restarted after
-                // an OEM kill, which re-registers this receiver via Application.onCreate().
                 ClockAlarmReceiver.scheduleKeepalive(context)
             }
             Intent.ACTION_SCREEN_ON -> {
-                Log.d(TAG, "Screen ON — register TIME_TICK + instant clock push + schedule alarm backup")
+                Log.d(TAG, "Screen ON - register TIME_TICK + unlock convergence")
                 app.registerTimeTickReceiver()
-                // Synchronous partial push — only changed digits, < 10 ms.
-                app.pushClockInstant()
-                // Restart the regular per-minute alarm chain.
-                launchAlarmSchedule(app, context)
+                launchUnlockConvergence(app, context, Intent.ACTION_SCREEN_ON)
             }
             Intent.ACTION_USER_PRESENT -> {
-                Log.d(TAG, "User present (unlocked) — full sync (clock + weather)")
-                // Full async sync — updates weather, date, and pushes a complete widget rebuild.
-                launchFullSync(app, context)
+                Log.d(TAG, "User present - unlock convergence")
+                launchUnlockConvergence(app, context, Intent.ACTION_USER_PRESENT)
             }
             Intent.ACTION_DREAMING_STARTED -> {
-                Log.d(TAG, "Dreaming started — unregister TIME_TICK + schedule keepalive alarm")
+                Log.d(TAG, "Dreaming started - unregister TIME_TICK + keepalive")
                 app.unregisterTimeTickReceiver()
                 ClockAlarmReceiver.scheduleKeepalive(context)
             }
             Intent.ACTION_DREAMING_STOPPED -> {
-                Log.d(TAG, "Dreaming stopped — register TIME_TICK + instant clock push + schedule alarm backup")
+                Log.d(TAG, "Dreaming stopped - register TIME_TICK + unlock convergence")
                 app.registerTimeTickReceiver()
-                app.pushClockInstant()
-                launchAlarmSchedule(app, context)
+                launchUnlockConvergence(app, context, Intent.ACTION_DREAMING_STOPPED)
             }
         }
     }
 
-    /**
-     * Launches a full async sync (clock + weather + date).
-     * Used on USER_PRESENT when the home screen is visible.
-     */
-    private fun launchFullSync(app: ClockWeatherApplication, context: Context) {
+    private fun launchUnlockConvergence(
+        app: ClockWeatherApplication,
+        context: Context,
+        sourceAction: String
+    ) {
+        val now = SystemClock.elapsedRealtime()
+        val throttleEnabled = sourceAction != Intent.ACTION_USER_PRESENT
+        if (throttleEnabled &&
+            lastUnlockConvergenceMs > 0L &&
+            now - lastUnlockConvergenceMs < UNLOCK_CONVERGENCE_THROTTLE_MS
+        ) {
+            Log.d(TAG, "Unlock convergence throttled")
+            return
+        }
+        lastUnlockConvergenceMs = now
+
         val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
             try {
                 withTimeout(12_000) {
-                    app.syncClockNow(context)
-                }
-            } finally {
-                pendingResult.finish()
-            }
-        }
-    }
-
-    /**
-     * Schedules the regular per-minute alarm backup on a background thread
-     * (reads high-precision preference from DataStore).
-     */
-    private fun launchAlarmSchedule(app: ClockWeatherApplication, context: Context) {
-        val pendingResult = goAsync()
-        CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
-            try {
-                withTimeout(5_000) {
-                    val isHighPrecision = app.resolveHighPrecision()
-                    ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
+                    // All unlock/screen transitions are quiet no-animation sync paths.
+                    app.syncClockNow(
+                        context,
+                        suppressAnimation = true,
+                        reassertAfterReschedule = sourceAction != Intent.ACTION_USER_PRESENT
+                    )
                 }
             } finally {
                 pendingResult.finish()
@@ -110,6 +86,11 @@ class ScreenStateReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "ScreenStateReceiver"
+        @Volatile private var lastUnlockConvergenceMs: Long = 0L
+        private const val UNLOCK_CONVERGENCE_THROTTLE_MS = 2_500L
+        internal fun resetUnlockConvergenceThrottleForTests() {
+            lastUnlockConvergenceMs = 0L
+        }
         fun buildIntentFilter(): IntentFilter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_SCREEN_OFF)

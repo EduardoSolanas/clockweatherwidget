@@ -40,7 +40,7 @@ object WidgetDataBinder {
     /**
      * Sets the correct digit on ViewFlipper layouts WITHOUT animation.
      * Used when the user disables flip animation but the layout still uses ViewFlippers.
-     * Sets the displayed child directly and makes only the active digit visible.
+     * Uses visibility only to avoid triggering ViewFlipper animations on all tiles.
      */
     fun bindStaticClockViews(
         context: Context,
@@ -59,14 +59,10 @@ object WidgetDataBinder {
         val m1 = minute / 10
         val m2 = minute % 10
 
-        // Use visibility to show correct digit AND setDisplayedChild for state
-        views.setDisplayedChild(R.id.digit_h1, h1)
+        // Use visibility only to avoid triggering flip animations in static mode.
         setDigitVisibility(context, views, "digit_h1", h1)
-        views.setDisplayedChild(R.id.digit_h2, h2)
         setDigitVisibility(context, views, "digit_h2", h2)
-        views.setDisplayedChild(R.id.digit_m1, m1)
         setDigitVisibility(context, views, "digit_m1", m1)
-        views.setDisplayedChild(R.id.digit_m2, m2)
         setDigitVisibility(context, views, "digit_m2", m2)
         views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
     }
@@ -130,14 +126,10 @@ object WidgetDataBinder {
             ) "AM" else "PM"
             if (ampmText != prevAmpmText) views.setTextViewText(R.id.ampm, ampmText)
         } else {
-            // Full refresh: use visibility AND setDisplayedChild to ensure correct state update
-            views.setDisplayedChild(R.id.digit_h1, h1)
+            // Full refresh: avoid setDisplayedChild on all tiles (causes whole-clock flicker).
             setDigitVisibility(context, views, "digit_h1", h1)
-            views.setDisplayedChild(R.id.digit_h2, h2)
             setDigitVisibility(context, views, "digit_h2", h2)
-            views.setDisplayedChild(R.id.digit_m1, m1)
             setDigitVisibility(context, views, "digit_m1", m1)
-            views.setDisplayedChild(R.id.digit_m2, m2)
             setDigitVisibility(context, views, "digit_m2", m2)
             views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
         }
@@ -150,8 +142,11 @@ object WidgetDataBinder {
      */
     @Suppress("DEPRECATION")
     private fun flipDigit(views: RemoteViews, viewId: Int, from: Int, to: Int) {
-        // If the change is +1 (mod 10), use showNext() to trigger the flip animation.
+        // If the change is +1 (mod 10), prime the flipper to the known previous
+        // child and animate one step. This keeps animation while avoiding launcher
+        // drift from stale internal ViewFlipper indices.
         if ((from + 1) % 10 == to) {
+            views.setDisplayedChild(viewId, from)
             views.showNext(viewId)
         } else {
             // For larger jumps (e.g. 5 minutes or after a deep sleep/Doze gap),

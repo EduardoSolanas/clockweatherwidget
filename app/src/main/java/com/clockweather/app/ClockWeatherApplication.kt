@@ -32,6 +32,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import com.clockweather.app.util.dataStore
 import java.time.LocalTime
 import javax.inject.Inject
@@ -39,6 +41,7 @@ import javax.inject.Inject
 @HiltAndroidApp
 class ClockWeatherApplication : Application(), Configuration.Provider {
     private val appScope = CoroutineScope(Dispatchers.Default)
+    private val widgetRefreshMutex = Mutex()
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
@@ -64,8 +67,6 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             registerTimeTickReceiver()
 
             appScope.launch {
-                resetClockStateForActiveWidgets(this@ClockWeatherApplication)
-
                 // Instant sync + alarm backup
                 syncClockNow(this@ClockWeatherApplication)
             }
@@ -131,7 +132,10 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
      *
      * Safe to call from [android.content.BroadcastReceiver.onReceive] (main thread).
      */
-    fun pushClockInstant() {
+    fun pushClockInstant(
+        forceAllDigits: Boolean = false,
+        suppressAnimationWindow: Boolean = false
+    ) {
         val now = LocalTime.now()
         val cachedPrefs = WidgetPrefsCache.getCachedSnapshot()
         val is24h = cachedPrefs?.get(booleanPreferencesKey("use_24h_clock"))
@@ -158,29 +162,76 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         providerLayouts.forEach { (providerClass, layoutId) ->
             val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
             ids.forEach { id ->
-                val prev = WidgetClockStateStore.getLastDigits(this, id)
-
-                // Already showing the correct time — skip entirely
-                if (prev != null && prev.h1 == h1 && prev.h2 == h2 &&
-                    prev.m1 == m1 && prev.m2 == m2) {
-                    return@forEach
+                if (suppressAnimationWindow) {
+                    // Pre-arm suppression before any RemoteViews push so concurrent
+                    // minute ticks observe the quiet window immediately.
+                    WidgetClockStateStore.markNoAnimationUntilEpochMinute(this, id, currentEpochMinute + 2L)
                 }
-
+                val prev = WidgetClockStateStore.getLastDigits(this, id)
                 val views = RemoteViews(packageName, layoutId)
 
-                // Only touch digits that actually changed
-                if (prev == null || prev.h1 != h1) views.setDisplayedChild(R.id.digit_h1, h1)
-                if (prev == null || prev.h2 != h2) views.setDisplayedChild(R.id.digit_h2, h2)
-                if (prev == null || prev.m1 != m1) views.setDisplayedChild(R.id.digit_m1, m1)
-                if (prev == null || prev.m2 != m2) views.setDisplayedChild(R.id.digit_m2, m2)
-                views.setTextViewText(R.id.ampm, if (is24h) "" else if (now.hour < 12) "AM" else "PM")
+                val ampm = if (is24h) "" else if (now.hour < 12) "AM" else "PM"
+                var hasChanges = false
 
-                mgr.partiallyUpdateAppWidget(id, views)
+                if (forceAllDigits || prev == null) {
+                    // When suppression is requested (weather->home / unlock convergence),
+                    // avoid setDisplayedChild to prevent visible flip transitions.
+                    if (!suppressAnimationWindow) {
+                        // Align ViewFlipper internal state so next incremental showNext()
+                        // animates correctly after a forced sync.
+                        views.setDisplayedChild(R.id.digit_h1, h1)
+                        views.setDisplayedChild(R.id.digit_h2, h2)
+                        views.setDisplayedChild(R.id.digit_m1, m1)
+                        views.setDisplayedChild(R.id.digit_m2, m2)
+                    }
+                    applyDigitVisibility(views, H1_DIGIT_IDS, h1)
+                    applyDigitVisibility(views, H2_DIGIT_IDS, h2)
+                    applyDigitVisibility(views, M1_DIGIT_IDS, m1)
+                    applyDigitVisibility(views, M2_DIGIT_IDS, m2)
+                    views.setTextViewText(R.id.ampm, ampm)
+                    hasChanges = true
+                } else {
+                    hasChanges = applyDigitDelta(views, H1_DIGIT_IDS, prev.h1, h1) || hasChanges
+                    hasChanges = applyDigitDelta(views, H2_DIGIT_IDS, prev.h2, h2) || hasChanges
+                    hasChanges = applyDigitDelta(views, M1_DIGIT_IDS, prev.m1, m1) || hasChanges
+                    hasChanges = applyDigitDelta(views, M2_DIGIT_IDS, prev.m2, m2) || hasChanges
+
+                    val previousDisplayHour = prev.h1 * 10 + prev.h2
+                    val previousAmpm = if (is24h) "" else if (previousDisplayHour < 12) "AM" else "PM"
+                    if (ampm != previousAmpm) {
+                        views.setTextViewText(R.id.ampm, ampm)
+                        hasChanges = true
+                    }
+                }
+
+                if (hasChanges) {
+                    mgr.partiallyUpdateAppWidget(id, views)
+                }
                 WidgetClockStateStore.saveLastDigits(this, id, DigitState(h1, h2, m1, m2))
                 WidgetClockStateStore.markRendered(this, id, currentEpochMinute)
-                android.util.Log.d("ClockWeatherApp", "pushClockInstant: widget $id updated (prev=$prev -> $h1$h2:$m1$m2)")
+                if (hasChanges) {
+                    android.util.Log.d("ClockWeatherApp", "pushClockInstant: widget $id updated (prev=$prev -> $h1$h2:$m1$m2)")
+                }
             }
         }
+    }
+
+    private fun applyDigitVisibility(views: RemoteViews, digitIds: IntArray, value: Int) {
+        digitIds.forEachIndexed { index, childId ->
+            views.setViewVisibility(childId, if (index == value) android.view.View.VISIBLE else android.view.View.GONE)
+        }
+    }
+
+    private fun applyDigitDelta(
+        views: RemoteViews,
+        digitIds: IntArray,
+        previousValue: Int,
+        newValue: Int
+    ): Boolean {
+        if (previousValue == newValue) return false
+        views.setViewVisibility(digitIds[previousValue], android.view.View.GONE)
+        views.setViewVisibility(digitIds[newValue], android.view.View.VISIBLE)
+        return true
     }
 
     /**
@@ -188,15 +239,48 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
      * the alarm chain. Call this whenever the widget may be showing stale
      * time — screen unlock, return from detail activity, etc.
      */
-    suspend fun syncClockNow(context: Context) {
-        android.util.Log.d("ClockWeatherApp", "syncClockNow: instant refresh + alarm restart")
+    suspend fun syncClockNow(
+        context: Context,
+        suppressAnimation: Boolean = false,
+        reassertAfterReschedule: Boolean = true
+    ) {
+        android.util.Log.d(
+            "ClockWeatherApp",
+            "syncClockNow: instant refresh + alarm restart " +
+                "(suppressAnimation=$suppressAnimation, reassert=$reassertAfterReschedule)"
+        )
+
+        if (suppressAnimation) {
+            // Transition-safe path (weather->home / lock->home):
+            // avoid full widget rebuild to prevent visible old/new layout blending.
+            pushClockInstant(
+                forceAllDigits = true,
+                suppressAnimationWindow = true
+            )
+            val isHighPrecision = resolveHighPrecision()
+            ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
+            if (reassertAfterReschedule) {
+                // Re-assert once more to handle launchers that defer host redraw
+                // during activity/screen transitions.
+                pushClockInstant(
+                    forceAllDigits = true,
+                    suppressAnimationWindow = true
+                )
+            }
+            return
+        }
 
         // Push correct digits immediately before the potentially slow full refresh.
-        pushClockInstant()
-
+        pushClockInstant(forceAllDigits = true)
         refreshAllWidgets(context, isClockTick = false)
         val isHighPrecision = resolveHighPrecision()
         ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
+        // Push again after full refresh to eliminate minute-boundary races
+        // that can happen while weather/date binding is executing.
+        pushClockInstant(
+            forceAllDigits = true,
+            suppressAnimationWindow = suppressAnimation
+        )
     }
 
     // ── Helpers ─────────────────────────────────────────────────────
@@ -249,36 +333,48 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
      * @param isClockTick If true, it performs a partial 'incremental' clock update (animations enabled).
      *                    If false, it performs a full widget update.
      */
-    suspend fun refreshAllWidgets(context: Context, isClockTick: Boolean) {
-        android.util.Log.d("ClockWeatherApp", "Refreshing all widgets. isClockTick=$isClockTick")
-        val mgr = AppWidgetManager.getInstance(context)
-        try {
-            val entryPoint = EntryPointAccessors.fromApplication(context, WidgetEntryPoint::class.java)
-            
-            val providers = listOf(
-                CompactWidgetProvider(),
-                ExtendedWidgetProvider(),
-                ForecastWidgetProvider(),
-                LargeWidgetProvider()
+    suspend fun refreshAllWidgets(
+        context: Context,
+        isClockTick: Boolean,
+        allowAnimation: Boolean = false
+    ) {
+        widgetRefreshMutex.withLock {
+            android.util.Log.d(
+                "ClockWeatherApp",
+                "Refreshing all widgets. isClockTick=$isClockTick allowAnimation=$allowAnimation"
             )
+            val mgr = AppWidgetManager.getInstance(context)
+            try {
+                val entryPoint = EntryPointAccessors.fromApplication(context, WidgetEntryPoint::class.java)
 
-            providers.forEach { provider ->
-                val component = ComponentName(context, provider::class.java)
-                val ids = mgr.getAppWidgetIds(component)
-                android.util.Log.d("ClockWeatherApp", "Checking provider ${component.shortClassName}: found ${ids.size} IDs")
-                if (ids.isNotEmpty()) {
-                    val updater = provider.getUpdater(context.applicationContext, mgr, entryPoint)
-                    ids.forEach { id ->
-                        if (isClockTick) {
-                            updater.updateClockOnly(id)
-                        } else {
-                            updater.updateWidget(id)
+                val providers = listOf(
+                    CompactWidgetProvider(),
+                    ExtendedWidgetProvider(),
+                    ForecastWidgetProvider(),
+                    LargeWidgetProvider()
+                )
+
+                providers.forEach { provider ->
+                    val component = ComponentName(context, provider::class.java)
+                    val ids = mgr.getAppWidgetIds(component)
+                    android.util.Log.d("ClockWeatherApp", "Checking provider ${component.shortClassName}: found ${ids.size} IDs")
+                    if (ids.isNotEmpty()) {
+                        val updater = provider.getUpdater(context.applicationContext, mgr, entryPoint)
+                        ids.forEach { id ->
+                            if (isClockTick) {
+                                updater.updateClockOnly(
+                                    appWidgetId = id,
+                                    allowAnimation = allowAnimation
+                                )
+                            } else {
+                                updater.updateWidget(id)
+                            }
                         }
                     }
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("ClockWeatherApp", "Failed to refresh widgets", e)
             }
-        } catch (e: Exception) {
-            android.util.Log.e("ClockWeatherApp", "Failed to refresh widgets", e)
         }
     }
 
@@ -306,4 +402,23 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
+
+    companion object {
+        private val H1_DIGIT_IDS = intArrayOf(
+            R.id.digit_h1_0, R.id.digit_h1_1, R.id.digit_h1_2, R.id.digit_h1_3, R.id.digit_h1_4,
+            R.id.digit_h1_5, R.id.digit_h1_6, R.id.digit_h1_7, R.id.digit_h1_8, R.id.digit_h1_9
+        )
+        private val H2_DIGIT_IDS = intArrayOf(
+            R.id.digit_h2_0, R.id.digit_h2_1, R.id.digit_h2_2, R.id.digit_h2_3, R.id.digit_h2_4,
+            R.id.digit_h2_5, R.id.digit_h2_6, R.id.digit_h2_7, R.id.digit_h2_8, R.id.digit_h2_9
+        )
+        private val M1_DIGIT_IDS = intArrayOf(
+            R.id.digit_m1_0, R.id.digit_m1_1, R.id.digit_m1_2, R.id.digit_m1_3, R.id.digit_m1_4,
+            R.id.digit_m1_5, R.id.digit_m1_6, R.id.digit_m1_7, R.id.digit_m1_8, R.id.digit_m1_9
+        )
+        private val M2_DIGIT_IDS = intArrayOf(
+            R.id.digit_m2_0, R.id.digit_m2_1, R.id.digit_m2_2, R.id.digit_m2_3, R.id.digit_m2_4,
+            R.id.digit_m2_5, R.id.digit_m2_6, R.id.digit_m2_7, R.id.digit_m2_8, R.id.digit_m2_9
+        )
+    }
 }

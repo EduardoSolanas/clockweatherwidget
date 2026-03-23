@@ -106,8 +106,14 @@ abstract class BaseWidgetUpdater(
                     views.setOnClickPendingIntent(rootViewId, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
                 } catch (e: Exception) { /* ignore */ }
 
-                if (isFirstRender) {
-                    // First render — must set ALL digits to establish baseline state
+                val useIncrementalClockBinding = shouldUseIncrementalClockBinding(
+                    isFirstRender = isFirstRender,
+                    isMinuteTick = isMinuteTick
+                )
+
+                if (!useIncrementalClockBinding) {
+                    // First render and non-minute refreshes (time/timezone/weather/manual)
+                    // must set all digits to keep flipper state synchronized.
                     if (usesSimpleClockDigits) {
                         WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
                     } else if (useSimple) {
@@ -203,6 +209,7 @@ abstract class BaseWidgetUpdater(
                         appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
                     }
                     WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
+                    WidgetClockStateStore.markBaselineReady(context, appWidgetId)
                     return@withContext
                 }
 
@@ -228,6 +235,7 @@ abstract class BaseWidgetUpdater(
                     appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
                 }
                 WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
+                WidgetClockStateStore.markBaselineReady(context, appWidgetId)
                 Log.d(tag, "Widget $appWidgetId updated (firstRender=$isFirstRender).")
             } catch (e: Exception) {
                 Log.e(tag, "Widget update failed for widget $appWidgetId", e)
@@ -238,8 +246,14 @@ abstract class BaseWidgetUpdater(
     /**
      * Reuses full update function for clock ticks.
      */
-    suspend fun updateClockOnly(appWidgetId: Int) {
-        Log.d(tag, "Updating clock only for widget $appWidgetId usesSimpleClockDigits=$usesSimpleClockDigits")
+    suspend fun updateClockOnly(
+        appWidgetId: Int,
+        allowAnimation: Boolean = false
+    ) {
+        Log.d(
+            tag,
+            "Updating clock only for widget $appWidgetId usesSimpleClockDigits=$usesSimpleClockDigits allowAnimation=$allowAnimation"
+        )
         withContext(Dispatchers.IO) {
             try {
                 // Use in-memory cache instead of disk I/O for the hot minute-tick path
@@ -264,6 +278,11 @@ abstract class BaseWidgetUpdater(
                     return@withContext
                 }
 
+                val suppressAnimationOnce = WidgetClockStateStore.shouldSuppressAnimation(
+                    context,
+                    appWidgetId,
+                    currentEpochMinute
+                )
                 val updateMode = WidgetClockUpdateModeResolver.resolve(lastRenderedEpochMinute, currentEpochMinute)
                 Log.d(tag, "Clock-only mode for $appWidgetId: last=$lastRenderedEpochMinute current=$currentEpochMinute mode=$updateMode useSimple=$useSimple")
                 if (updateMode == WidgetClockUpdateMode.FULL) {
@@ -289,6 +308,16 @@ abstract class BaseWidgetUpdater(
                 } else if (useSimple) {
                     // Layout has ViewFlippers but flip animation is disabled
                     WidgetDataBinder.bindStaticClockViews(context, views, now.hour, now.minute, is24h)
+                } else if (suppressAnimationOnce || !allowAnimation) {
+                    WidgetDataBinder.bindClockViews(
+                        context,
+                        views,
+                        appWidgetId,
+                        now.hour,
+                        now.minute,
+                        is24h,
+                        isIncremental = false
+                    )
                 } else {
                     WidgetDataBinder.bindClockViews(
                         context,
@@ -377,3 +406,8 @@ abstract class BaseWidgetUpdater(
         }
     }
 }
+
+internal fun shouldUseIncrementalClockBinding(
+    isFirstRender: Boolean,
+    isMinuteTick: Boolean
+): Boolean = !isFirstRender && isMinuteTick

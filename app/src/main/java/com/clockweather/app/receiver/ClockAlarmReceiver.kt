@@ -25,15 +25,13 @@ import kotlinx.coroutines.withTimeout
 import java.util.Calendar
 
 /**
- * High-reliability clock tick receiver using AlarmManager.
- * This is the primary driver for off-process widget updates.
+ * High-reliability minute tick receiver driven by AlarmManager.
  */
 class ClockAlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext as? ClockWeatherApplication ?: return
-        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        val isScreenOn = pm.isInteractive
+        val action = intent.action
 
         val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
@@ -45,24 +43,41 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                         reschedule = false
                         return@withTimeout
                     }
-                    if (isScreenOn) {
-                        // Screen is on — full clock tick update
-                        app.refreshAllWidgets(context, isClockTick = true)
+
+                    if (action == ACTION_ALARM_KEEPALIVE) {
+                        app.pushClockInstant(forceAllDigits = true)
+                        scheduleNextTick(context, app.resolveHighPrecision())
+                        reschedule = false
+                        return@withTimeout
                     }
-                    // Screen off — skip widget work; this alarm is just a keepalive
-                    // to ensure the process stays alive and ScreenStateReceiver is registered.
+
+                    val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+                    val isInteractive = powerManager?.isInteractive ?: true
+                    if (isInteractive) {
+                        app.refreshAllWidgets(
+                            context,
+                            isClockTick = true,
+                            allowAnimation = true
+                        )
+                    } else {
+                        // While non-interactive, keep digits synchronized without animation.
+                        app.pushClockInstant(forceAllDigits = false)
+                    }
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Widget refresh timed out or failed; rescheduling anyway", e)
+                runCatching {
+                    app.pushClockInstant(
+                        forceAllDigits = true,
+                        suppressAnimationWindow = true
+                    )
+                }.onFailure { pushError ->
+                    Log.w(TAG, "Fallback instant push failed", pushError)
+                }
             } finally {
                 if (reschedule) {
-                    if (isScreenOn) {
-                        val isHighPrecision = app.resolveHighPrecision()
-                        scheduleNextTick(context, isHighPrecision)
-                    } else {
-                        // Screen off — reschedule as keepalive, not per-minute
-                        scheduleKeepalive(context)
-                    }
+                    val isHighPrecision = app.resolveHighPrecision()
+                    scheduleNextTick(context, isHighPrecision)
                 }
                 pendingResult.finish()
             }
@@ -72,9 +87,11 @@ class ClockAlarmReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "ClockAlarmReceiver"
         const val ACTION_ALARM_TICK = "com.clockweather.app.ACTION_ALARM_TICK"
-        /** Low-frequency alarm while screen is off — just keeps the process alive
-         *  so that [ScreenStateReceiver] survives OEM kills and is ready for SCREEN_ON. */
-        private const val KEEPALIVE_INTERVAL_MS = 5 * 60 * 1000L // 5 minutes
+        private const val ACTION_ALARM_KEEPALIVE = "com.clockweather.app.ACTION_ALARM_KEEPALIVE"
+        private const val REQUEST_CODE_TICK = 0
+        private const val REQUEST_CODE_KEEPALIVE = 1
+        private const val KEEPALIVE_INTERVAL_MS = 60 * 1000L
+
         private val widgetProviders = listOf(
             CompactWidgetProvider::class.java,
             ExtendedWidgetProvider::class.java,
@@ -90,18 +107,14 @@ class ClockAlarmReceiver : BroadcastReceiver() {
 
             val batteryPct = getBatteryPercent(context)
             if (batteryPct <= 5) {
-                Log.d(TAG, "Battery critical ($batteryPct %) — skipping alarm scheduling")
+                Log.d(TAG, "Battery critical ($batteryPct %) - skipping alarm scheduling")
                 cancelNextTick(context)
                 return
             }
 
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                0,
-                Intent(context, ClockAlarmReceiver::class.java).apply { action = ACTION_ALARM_TICK },
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
+            cancelKeepaliveAlarm(context)
+            val pendingIntent = tickPendingIntent(context)
 
             val calendar = Calendar.getInstance().apply {
                 set(Calendar.SECOND, 0)
@@ -109,9 +122,7 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                 add(Calendar.MINUTE, 1)
             }
 
-            // Always use RTC_WAKEUP for the minute tick to ensure reliability
             val alarmType = AlarmManager.RTC_WAKEUP
-
             if (isHighPrecision && batteryPct > 15) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     if (alarmManager.canScheduleExactAlarms()) {
@@ -134,34 +145,18 @@ class ClockAlarmReceiver : BroadcastReceiver() {
             Log.d(TAG, "Scheduled next tick for ${calendar.time} (precision=$isHighPrecision)")
         }
 
-        fun hasAnyActiveWidgets(context: Context): Boolean {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            return widgetProviders.any { providerClass ->
-                appWidgetManager.getAppWidgetIds(ComponentName(context, providerClass)).isNotEmpty()
-            }
-        }
-
-        /**
-         * Schedules a low-frequency keepalive alarm while the screen is off.
-         * Uses the same PendingIntent as [scheduleNextTick] so they naturally
-         * replace each other — no risk of duplicate alarms.
-         */
         fun scheduleKeepalive(context: Context) {
             if (!hasAnyActiveWidgets(context)) return
 
             val batteryPct = getBatteryPercent(context)
             if (batteryPct <= 5) {
-                Log.d(TAG, "Battery critical ($batteryPct %) — skipping keepalive")
+                Log.d(TAG, "Battery critical ($batteryPct %) - skipping keepalive")
                 return
             }
 
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                0,
-                Intent(context, ClockAlarmReceiver::class.java).apply { action = ACTION_ALARM_TICK },
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
+            cancelTickAlarm(context)
+            val pendingIntent = keepalivePendingIntent(context)
 
             val triggerAt = System.currentTimeMillis() + KEEPALIVE_INTERVAL_MS
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -172,16 +167,64 @@ class ClockAlarmReceiver : BroadcastReceiver() {
             Log.d(TAG, "Keepalive alarm scheduled for ${KEEPALIVE_INTERVAL_MS / 1000}s from now")
         }
 
+        fun hasAnyActiveWidgets(context: Context): Boolean {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            return widgetProviders.any { providerClass ->
+                appWidgetManager.getAppWidgetIds(ComponentName(context, providerClass)).isNotEmpty()
+            }
+        }
+
         fun cancelNextTick(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val pendingIntent = PendingIntent.getBroadcast(
+            existingTickPendingIntent(context)?.let { alarmManager.cancel(it) }
+            existingKeepalivePendingIntent(context)?.let { alarmManager.cancel(it) }
+            Log.d(TAG, "Alarm cancelled")
+        }
+
+        private fun cancelTickAlarm(context: Context) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            existingTickPendingIntent(context)?.let { alarmManager.cancel(it) }
+        }
+
+        private fun cancelKeepaliveAlarm(context: Context) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            existingKeepalivePendingIntent(context)?.let { alarmManager.cancel(it) }
+        }
+
+        private fun tickPendingIntent(context: Context): PendingIntent {
+            return PendingIntent.getBroadcast(
                 context,
-                0,
+                REQUEST_CODE_TICK,
+                Intent(context, ClockAlarmReceiver::class.java).apply { action = ACTION_ALARM_TICK },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+
+        private fun keepalivePendingIntent(context: Context): PendingIntent {
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_KEEPALIVE,
+                Intent(context, ClockAlarmReceiver::class.java).apply { action = ACTION_ALARM_KEEPALIVE },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+
+        private fun existingTickPendingIntent(context: Context): PendingIntent? {
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_TICK,
                 Intent(context, ClockAlarmReceiver::class.java).apply { action = ACTION_ALARM_TICK },
                 PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-            ) ?: return
-            alarmManager.cancel(pendingIntent)
-            Log.d(TAG, "Alarm cancelled")
+            )
+        }
+
+        private fun existingKeepalivePendingIntent(context: Context): PendingIntent? {
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_KEEPALIVE,
+                Intent(context, ClockAlarmReceiver::class.java).apply { action = ACTION_ALARM_KEEPALIVE },
+                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         private fun getBatteryPercent(context: Context): Int {
