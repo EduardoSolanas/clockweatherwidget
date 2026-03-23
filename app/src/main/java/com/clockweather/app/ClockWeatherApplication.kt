@@ -17,7 +17,6 @@ import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
 import com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider
 import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
 import com.clockweather.app.presentation.widget.large.LargeWidgetProvider
-import com.clockweather.app.presentation.widget.common.ClockSnapshot
 import com.clockweather.app.presentation.widget.common.DigitState
 import com.clockweather.app.presentation.widget.common.WidgetClockStateStore
 import com.clockweather.app.receiver.ClockAlarmReceiver
@@ -36,6 +35,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import com.clockweather.app.util.dataStore
+import java.time.LocalTime
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -148,9 +148,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         quietRender: Boolean = false,
         alignDisplayedChildrenOnly: Boolean = false
     ) {
-        val snapshot = ClockSnapshot.now()
-        val now = snapshot.localTime
-        val currentEpochMinute = snapshot.epochMinute
+        val now = LocalTime.now()
         val cachedPrefs = WidgetPrefsCache.getCachedSnapshot()
         val is24h = cachedPrefs?.get(booleanPreferencesKey("use_24h_clock"))
             ?: android.text.format.DateFormat.is24HourFormat(this)
@@ -164,6 +162,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         val h2 = displayHour % 10
         val m1 = now.minute / 10
         val m2 = now.minute % 10
+        val currentEpochMinute = System.currentTimeMillis() / 60000L
 
         val providerLayouts = mapOf(
             CompactWidgetProvider::class.java to R.layout.widget_compact,
@@ -211,11 +210,6 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                         views.setTextViewText(R.id.digit_m1, m1.toString())
                         views.setTextViewText(R.id.digit_m2, m2.toString())
                         views.setTextViewText(R.id.ampm, ampm)
-                        com.clockweather.app.presentation.widget.common.WidgetDataBinder.clearAtomicFoldOverlays(
-                            views,
-                            com.clockweather.app.presentation.widget.common.DigitState(h1, h2, m1, m2),
-                            resetFoldOverlaysToFront = !useQuietRender
-                        )
                         hasChanges = true
                     } else if (alignDisplayedChildrenOnly) {
                         // Launcher-host reassert path: align flipper indices only,
@@ -246,14 +240,6 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                     }
                 } else {
                     if (usesAtomicClockText) {
-                        val anyDigitChanged = prev.h1 != h1 || prev.h2 != h2 || prev.m1 != m1 || prev.m2 != m2
-                        if (anyDigitChanged) {
-                            com.clockweather.app.presentation.widget.common.WidgetDataBinder.clearAtomicFoldOverlays(
-                                views,
-                                com.clockweather.app.presentation.widget.common.DigitState(h1, h2, m1, m2),
-                                resetFoldOverlaysToFront = !useQuietRender
-                            )
-                        }
                         if (prev.h1 != h1) {
                             views.setTextViewText(R.id.digit_h1, h1.toString())
                             hasChanges = true

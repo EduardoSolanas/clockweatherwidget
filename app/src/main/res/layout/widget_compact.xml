@@ -14,132 +14,36 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <FrameLayout
+        <TextView
+            android:id="@+id/digit_h1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:background="@drawable/flip_digit_bg"
+            android:fontFamily="monospace"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="8dp"
+            android:text="0"
+            android:textColor="@color/flip_digit_text"
+            android:textSize="48sp"
+            android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/digit_h1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/flip_digit_bg"
-                android:fontFamily="monospace"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:padding="8dp"
-                android:text="0"
-                android:textColor="@color/flip_digit_text"
-                android:textSize="48sp"
-                android:textStyle="bold" />
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/flip_hinge_line" />
-
-            <ViewFlipper
-                android:id="@+id/fold_h1"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:animateFirstView="false"
-                android:inAnimation="@anim/flip_atomic_in"
-                android:outAnimation="@anim/flip_atomic_out">
-
-                <TextView
-                    android:id="@+id/fold_h1_from"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/transparent"
-                    android:fontFamily="monospace"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:padding="8dp"
-                    android:text=""
-                    android:textColor="@color/flip_digit_text"
-                    android:textSize="48sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/fold_h1_to"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/transparent"
-                    android:fontFamily="monospace"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:padding="8dp"
-                    android:text=""
-                    android:textColor="@color/flip_digit_text"
-                    android:textSize="48sp"
-                    android:textStyle="bold" />
-            </ViewFlipper>
-        </FrameLayout>
-
-        <FrameLayout
+        <TextView
+            android:id="@+id/digit_h2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/flip_digit_gap"
-            android:layout_weight="1">
-
-            <TextView
-                android:id="@+id/digit_h2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/flip_digit_bg"
-                android:fontFamily="monospace"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:padding="8dp"
-                android:text="0"
-                android:textColor="@color/flip_digit_text"
-                android:textSize="48sp"
-                android:textStyle="bold" />
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/flip_hinge_line" />
-
-            <ViewFlipper
-                android:id="@+id/fold_h2"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:animateFirstView="false"
-                android:inAnimation="@anim/flip_atomic_in"
-                android:outAnimation="@anim/flip_atomic_out">
-
-                <TextView
-                    android:id="@+id/fold_h2_from"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/transparent"
-                    android:fontFamily="monospace"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:padding="8dp"
-                    android:text=""
-                    android:textColor="@color/flip_digit_text"
-                    android:textSize="48sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/fold_h2_to"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/transparent"
-                    android:fontFamily="monospace"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:padding="8dp"
-                    android:text=""
-                    android:textColor="@color/flip_digit_text"
-                    android:textSize="48sp"
-                    android:textStyle="bold" />
-            </ViewFlipper>
-        </FrameLayout>
+            android:layout_weight="1"
+            android:background="@drawable/flip_digit_bg"
+            android:fontFamily="monospace"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="8dp"
+            android:text="0"
+            android:textColor="@color/flip_digit_text"
+            android:textSize="48sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/colon"
@@ -153,132 +57,36 @@
             android:textSize="44sp"
             android:textStyle="bold" />
 
-        <FrameLayout
+        <TextView
+            android:id="@+id/digit_m1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:background="@drawable/flip_digit_bg"
+            android:fontFamily="monospace"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="8dp"
+            android:text="0"
+            android:textColor="@color/flip_digit_text"
+            android:textSize="48sp"
+            android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/digit_m1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/flip_digit_bg"
-                android:fontFamily="monospace"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:padding="8dp"
-                android:text="0"
-                android:textColor="@color/flip_digit_text"
-                android:textSize="48sp"
-                android:textStyle="bold" />
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/flip_hinge_line" />
-
-            <ViewFlipper
-                android:id="@+id/fold_m1"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:animateFirstView="false"
-                android:inAnimation="@anim/flip_atomic_in"
-                android:outAnimation="@anim/flip_atomic_out">
-
-                <TextView
-                    android:id="@+id/fold_m1_from"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/transparent"
-                    android:fontFamily="monospace"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:padding="8dp"
-                    android:text=""
-                    android:textColor="@color/flip_digit_text"
-                    android:textSize="48sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/fold_m1_to"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/transparent"
-                    android:fontFamily="monospace"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:padding="8dp"
-                    android:text=""
-                    android:textColor="@color/flip_digit_text"
-                    android:textSize="48sp"
-                    android:textStyle="bold" />
-            </ViewFlipper>
-        </FrameLayout>
-
-        <FrameLayout
+        <TextView
+            android:id="@+id/digit_m2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/flip_digit_gap"
-            android:layout_weight="1">
-
-            <TextView
-                android:id="@+id/digit_m2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/flip_digit_bg"
-                android:fontFamily="monospace"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:padding="8dp"
-                android:text="0"
-                android:textColor="@color/flip_digit_text"
-                android:textSize="48sp"
-                android:textStyle="bold" />
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/flip_hinge_line" />
-
-            <ViewFlipper
-                android:id="@+id/fold_m2"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:animateFirstView="false"
-                android:inAnimation="@anim/flip_atomic_in"
-                android:outAnimation="@anim/flip_atomic_out">
-
-                <TextView
-                    android:id="@+id/fold_m2_from"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/transparent"
-                    android:fontFamily="monospace"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:padding="8dp"
-                    android:text=""
-                    android:textColor="@color/flip_digit_text"
-                    android:textSize="48sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/fold_m2_to"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/transparent"
-                    android:fontFamily="monospace"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:padding="8dp"
-                    android:text=""
-                    android:textColor="@color/flip_digit_text"
-                    android:textSize="48sp"
-                    android:textStyle="bold" />
-            </ViewFlipper>
-        </FrameLayout>
+            android:layout_weight="1"
+            android:background="@drawable/flip_digit_bg"
+            android:fontFamily="monospace"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="8dp"
+            android:text="0"
+            android:textColor="@color/flip_digit_text"
+            android:textSize="48sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/ampm"
@@ -342,8 +150,8 @@
 
         <ImageView
             android:id="@+id/weather_icon"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:contentDescription="@null"
             android:scaleType="fitCenter" />
 

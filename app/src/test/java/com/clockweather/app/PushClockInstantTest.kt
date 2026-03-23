@@ -3,7 +3,6 @@ package com.clockweather.app
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
-import com.clockweather.app.presentation.widget.common.ClockSnapshot
 import com.clockweather.app.presentation.widget.common.DigitState
 import com.clockweather.app.presentation.widget.common.WidgetClockStateStore
 import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
@@ -55,7 +54,7 @@ class PushClockInstantTest {
         every { android.text.format.DateFormat.is24HourFormat(any()) } returns true
 
         // Freeze time for deterministic tests
-        stubSnapshot(hour = 14, minute = 37, epochMinute = 1_000_000L)
+        mockkStatic(LocalTime::class)
 
         // Ensure the prefs cache doesn't leak state from other tests
         // (getCachedSnapshot returning a stale use_24h_clock=true would bypass DateFormat mock)
@@ -78,17 +77,9 @@ class PushClockInstantTest {
         } returns ids.toList().toIntArray()
     }
 
-    private fun stubSnapshot(hour: Int, minute: Int, epochMinute: Long) {
-        mockkObject(ClockSnapshot.Companion)
-        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
-            localTime = LocalTime.of(hour, minute),
-            epochMinute = epochMinute
-        )
-    }
-
     @Test
     fun `pushClockInstant calls partiallyUpdateAppWidget for active widgets`() {
-        stubSnapshot(14, 37, 1_000_001L)
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
 
         app.pushClockInstant()
@@ -98,7 +89,7 @@ class PushClockInstantTest {
 
     @Test
     fun `pushClockInstant skips providers with no active widgets`() {
-        stubSnapshot(14, 37, 1_000_002L)
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
         // No widgets active
 
         app.pushClockInstant()
@@ -108,7 +99,7 @@ class PushClockInstantTest {
 
     @Test
     fun `pushClockInstant skips widget push when stored digits already match current time`() {
-        stubSnapshot(14, 37, 1_000_003L)
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
 
         // Pre-store the exact digits that match 14:37
@@ -121,7 +112,7 @@ class PushClockInstantTest {
 
     @Test
     fun `pushClockInstant force mode still pushes when stored digits already match current time`() {
-        stubSnapshot(14, 37, 1_000_004L)
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
         WidgetClockStateStore.saveLastDigits(realContext, 42, DigitState(1, 4, 3, 7))
 
@@ -132,7 +123,7 @@ class PushClockInstantTest {
 
     @Test
     fun `pushClockInstant force mode with suppression sets no-animation window`() {
-        stubSnapshot(14, 37, 1_000_005L)
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
 
         app.pushClockInstant(forceAllDigits = true, suppressAnimationWindow = true)
@@ -147,7 +138,7 @@ class PushClockInstantTest {
 
     @Test
     fun `pushClockInstant force mode does not set suppression unless requested`() {
-        stubSnapshot(14, 37, 1_000_006L)
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
 
         app.pushClockInstant(forceAllDigits = true)
@@ -159,7 +150,7 @@ class PushClockInstantTest {
 
     @Test
     fun `pushClockInstant updates widget when stored digits differ from current time`() {
-        stubSnapshot(14, 37, 1_000_007L)
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
 
         // Pre-store stale digits (14:36 → 14:37, only m2 changed)
@@ -172,7 +163,7 @@ class PushClockInstantTest {
 
     @Test
     fun `pushClockInstant persists new digits after push`() {
-        stubSnapshot(14, 37, 1_000_008L)
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
 
         app.pushClockInstant()
@@ -184,7 +175,7 @@ class PushClockInstantTest {
 
     @Test
     fun `pushClockInstant marks epoch minute as rendered`() {
-        stubSnapshot(14, 37, 1_000_009L)
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
 
         app.pushClockInstant()
@@ -196,7 +187,7 @@ class PushClockInstantTest {
     @Test
     fun `pushClockInstant handles 12h mode correctly`() {
         // 15:00 in 12h mode → display hour = 3 → digits 0, 3
-        stubSnapshot(15, 0, 1_000_010L)
+        every { LocalTime.now() } returns LocalTime.of(15, 0)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
         every { android.text.format.DateFormat.is24HourFormat(any()) } returns false
 
@@ -213,7 +204,7 @@ class PushClockInstantTest {
     @Test
     fun `pushClockInstant handles midnight in 12h mode`() {
         // hour=0, 12h mode → display hour = 12
-        stubSnapshot(0, 0, 1_000_011L)
+        every { LocalTime.now() } returns LocalTime.of(0, 0)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
         every { android.text.format.DateFormat.is24HourFormat(any()) } returns false
 
@@ -227,7 +218,7 @@ class PushClockInstantTest {
 
     @Test
     fun `pushClockInstant handles multiple providers and widget IDs`() {
-        stubSnapshot(10, 30, 1_000_012L)
+        every { LocalTime.now() } returns LocalTime.of(10, 30)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
         stubWidgetIds(ExtendedWidgetProvider::class.java, 43)
 
@@ -239,7 +230,7 @@ class PushClockInstantTest {
 
     @Test
     fun `pushClockInstant with no previous state updates all digits`() {
-        stubSnapshot(14, 37, 1_000_013L)
+        every { LocalTime.now() } returns LocalTime.of(14, 37)
         stubWidgetIds(CompactWidgetProvider::class.java, 42)
         // No previous state stored for widget 42
 

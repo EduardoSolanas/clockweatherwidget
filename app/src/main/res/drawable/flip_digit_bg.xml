@@ -21,57 +21,6 @@
         </shape>
     </item>
 
-    <!-- Stronger top-half shade -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#6F000000"
-                android:centerColor="#27000000"
-                android:centerY="0.50"
-                android:endColor="#00000000" />
-            <corners android:radius="6dp" />
-        </shape>
-    </item>
-
-    <!-- Top surface contour highlight (curved look) -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#52FFFFFF"
-                android:centerColor="#12FFFFFF"
-                android:centerY="0.34"
-                android:endColor="#00000000" />
-            <corners android:radius="6dp" />
-        </shape>
-    </item>
-
-    <!-- Side-edge vignette to avoid flat slab look -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="0"
-                android:startColor="#36000000"
-                android:centerColor="#00000000"
-                android:centerX="0.50"
-                android:endColor="#36000000" />
-            <corners android:radius="6dp" />
-        </shape>
-    </item>
-
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#24000000"
-                android:centerColor="#10000000"
-                android:centerY="0.50"
-                android:endColor="#00000000" />
-            <corners android:radius="6dp" />
-        </shape>
-    </item>
-
     <!-- Top-edge highlight — light catch on the upper tile surface -->
     <item>
         <shape android:shape="rectangle">

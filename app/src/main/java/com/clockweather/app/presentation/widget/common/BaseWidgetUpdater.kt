@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -61,9 +62,8 @@ abstract class BaseWidgetUpdater(
         withContext(Dispatchers.IO) {
             try {
                 Log.d(tag, "updateWidget id=$appWidgetId isMinuteTick=$isMinuteTick usesSimpleClockDigits=$usesSimpleClockDigits")
-                val snapshot = ClockSnapshot.now()
-                val now = snapshot.localTime
-                val currentEpochMinute = snapshot.epochMinute
+                val now = LocalTime.now()
+                val currentEpochMinute = System.currentTimeMillis() / 60000L
                 // Fetch prefs and weather on IO thread
                 val prefs = entryPoint.dataStore().data.first()
                 val useSimple = resolveUsesSimpleDigits(prefs)
@@ -191,22 +191,6 @@ abstract class BaseWidgetUpdater(
                         views.setTextColor(id, digitColor)
                         views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
                     }
-                    listOf(
-                        com.clockweather.app.R.id.fold_h1_from,
-                        com.clockweather.app.R.id.fold_h1_to,
-                        com.clockweather.app.R.id.fold_h2_from,
-                        com.clockweather.app.R.id.fold_h2_to,
-                        com.clockweather.app.R.id.fold_m1_from,
-                        com.clockweather.app.R.id.fold_m1_to,
-                        com.clockweather.app.R.id.fold_m2_from,
-                        com.clockweather.app.R.id.fold_m2_to
-                    ).forEach { id ->
-                        // Keep fold overlay opaque so base digit does not bleed through
-                        // during the outgoing frame of the animation.
-                        views.setInt(id, "setBackgroundResource", tileBgRes)
-                        views.setTextColor(id, digitColor)
-                        views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
-                    }
                 }
 
                 val colonSize = context.resources.getDimension(dimText) * 0.8f
@@ -309,8 +293,7 @@ abstract class BaseWidgetUpdater(
                     return@withContext
                 }
 
-                val snapshot = ClockSnapshot.now()
-                val currentEpochMinute = snapshot.epochMinute
+                val currentEpochMinute = System.currentTimeMillis() / 60000L
                 val lastRenderedEpochMinute = WidgetClockStateStore.getLastRenderedEpochMinute(context, appWidgetId)
 
                 // Dedup: if this minute was already rendered (e.g. syncClockNow + TIME_TICK
@@ -336,34 +319,16 @@ abstract class BaseWidgetUpdater(
                 val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: android.text.format.DateFormat.is24HourFormat(context)
                 
                 val views = RemoteViews(context.packageName, layoutResId)
-                val now = snapshot.localTime
-                val newDigits = DigitState.from(now.hour, now.minute, is24h)
+                val now = LocalTime.now()
 
                 // C1: read stored digits for accurate incremental diff (fixes Doze-gap off-by-N flips)
                 val prevDigits = WidgetClockStateStore.getLastDigits(context, appWidgetId)
-                val changedDigitsCount = if (prevDigits != null) {
-                    listOf(
-                        prevDigits.h1 != newDigits.h1,
-                        prevDigits.h2 != newDigits.h2,
-                        prevDigits.m1 != newDigits.m1,
-                        prevDigits.m2 != newDigits.m2
-                    ).count { it }
-                } else {
-                    0
-                }
-                val canRunAtomicSingleDigitAnimation =
-                    !suppressAnimationOnce && allowAnimation && prevDigits != null && changedDigitsCount == 1
 
                 // B5: Don't rebind click actions on every tick — they are already set by the last
                 // full updateWidget() call. Partial updates merge actions, so they are preserved.
 
                 val renderPath = when {
-                    usesAtomicClockText && suppressAnimationOnce -> "atomic_text_no_animation:suppression_window"
-                    usesAtomicClockText && !allowAnimation -> "atomic_text_no_animation:allowAnimation_false"
-                    usesAtomicClockText && prevDigits == null -> "atomic_text_no_animation:no_previous_digits"
-                    usesAtomicClockText && changedDigitsCount != 1 ->
-                        "atomic_text_no_animation:changed_digits=$changedDigitsCount"
-                    usesAtomicClockText -> "atomic_fold_animation:changed_digits=1"
+                    usesAtomicClockText -> "atomic_text_no_animation"
                     usesSimpleClockDigits -> "simple_text_no_animation"
                     useSimple -> "static_viewflipper_no_animation"
                     suppressAnimationOnce -> "full_visibility_no_animation:suppression_window"
@@ -373,29 +338,12 @@ abstract class BaseWidgetUpdater(
                 Log.d(
                     tag,
                     "CLOCK_TRACE updateClockOnly id=$appWidgetId minute=$currentEpochMinute " +
-                        "path=$renderPath last=$lastRenderedEpochMinute suppressAnimationOnce=$suppressAnimationOnce " +
-                        "changedDigits=$changedDigitsCount prev=$prevDigits new=$newDigits"
+                        "path=$renderPath last=$lastRenderedEpochMinute suppressAnimationOnce=$suppressAnimationOnce"
                 )
 
                 when {
                     usesAtomicClockText -> {
-                        if (canRunAtomicSingleDigitAnimation) {
-                            // Keep atomic minute ticks truly incremental: update base text,
-                            // then animate only the digits that changed.
-                            WidgetDataBinder.bindAtomicClockTextOnly(views, now.hour, now.minute, is24h)
-                            WidgetDataBinder.animateAtomicFoldOverlays(views, prevDigits, newDigits)
-                        } else {
-                            // Quiet / suppressed path: keep overlays aligned to current digits
-                            // without forcing all fold flippers back to child 0, which can
-                            // look like a full-tile repaint on some launchers.
-                            WidgetDataBinder.bindAtomicClockViews(
-                                views,
-                                now.hour,
-                                now.minute,
-                                is24h,
-                                resetFoldOverlaysToFront = false
-                            )
-                        }
+                        WidgetDataBinder.bindAtomicClockViews(views, now.hour, now.minute, is24h)
                     }
                     usesSimpleClockDigits -> {
                         // Layout has plain TextViews
@@ -431,6 +379,7 @@ abstract class BaseWidgetUpdater(
                 }
 
                 // C1: persist the just-rendered digits for the next tick's diff
+                val newDigits = DigitState.from(now.hour, now.minute, is24h)
                 WidgetClockStateStore.saveLastDigits(context, appWidgetId, newDigits)
 
                 // B5: partiallyUpdateAppWidget for BOTH paths — only the changed digit
@@ -484,18 +433,6 @@ abstract class BaseWidgetUpdater(
                         com.clockweather.app.R.id.digit_h2,
                         com.clockweather.app.R.id.digit_m1,
                         com.clockweather.app.R.id.digit_m2,
-                        com.clockweather.app.R.id.fold_h1,
-                        com.clockweather.app.R.id.fold_h2,
-                        com.clockweather.app.R.id.fold_m1,
-                        com.clockweather.app.R.id.fold_m2,
-                        com.clockweather.app.R.id.fold_h1_from,
-                        com.clockweather.app.R.id.fold_h1_to,
-                        com.clockweather.app.R.id.fold_h2_from,
-                        com.clockweather.app.R.id.fold_h2_to,
-                        com.clockweather.app.R.id.fold_m1_from,
-                        com.clockweather.app.R.id.fold_m1_to,
-                        com.clockweather.app.R.id.fold_m2_from,
-                        com.clockweather.app.R.id.fold_m2_to,
                         com.clockweather.app.R.id.colon,
                         com.clockweather.app.R.id.ampm
                     )
