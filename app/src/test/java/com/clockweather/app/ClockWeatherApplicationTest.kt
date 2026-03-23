@@ -112,4 +112,33 @@ class ClockWeatherApplicationTest {
         coVerify(exactly = 0) { spyApp.refreshAllWidgets(any(), any(), any()) }
         verify { ClockAlarmReceiver.scheduleNextTick(context, true) }
     }
+
+    @Test
+    fun `syncClockNow suppress mode with reassert performs two quiet force pushes`() {
+        val ids = intArrayOf(1)
+        every { appWidgetManager.getAppWidgetIds(any()) } returns ids
+
+        mockkObject(ClockAlarmReceiver.Companion)
+        every { ClockAlarmReceiver.scheduleNextTick(any(), any()) } just Runs
+        every { ClockAlarmReceiver.hasAnyActiveWidgets(any()) } returns true
+
+        val spyApp = spyk(app)
+        coEvery { spyApp.resolveHighPrecision() } returns true
+        every { spyApp.pushClockInstant(any(), any()) } just Runs
+        coEvery { spyApp.refreshAllWidgets(any(), any(), any()) } just Runs
+
+        runBlocking {
+            spyApp.syncClockNow(
+                context,
+                suppressAnimation = true,
+                reassertAfterReschedule = true
+            )
+        }
+
+        verify(exactly = 2) {
+            spyApp.pushClockInstant(forceAllDigits = true, suppressAnimationWindow = true)
+        }
+        coVerify(exactly = 0) { spyApp.refreshAllWidgets(any(), any(), any()) }
+        verify { ClockAlarmReceiver.scheduleNextTick(context, true) }
+    }
 }

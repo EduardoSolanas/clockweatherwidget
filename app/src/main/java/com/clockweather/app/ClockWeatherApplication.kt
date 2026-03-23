@@ -162,6 +162,11 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         providerLayouts.forEach { (providerClass, layoutId) ->
             val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
             ids.forEach { id ->
+                if (suppressAnimationWindow) {
+                    // Pre-arm suppression before any RemoteViews push so concurrent
+                    // minute ticks observe the quiet window immediately.
+                    WidgetClockStateStore.markNoAnimationUntilEpochMinute(this, id, currentEpochMinute + 2L)
+                }
                 val prev = WidgetClockStateStore.getLastDigits(this, id)
                 val views = RemoteViews(packageName, layoutId)
 
@@ -201,11 +206,6 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
 
                 if (hasChanges) {
                     mgr.partiallyUpdateAppWidget(id, views)
-                }
-                if (suppressAnimationWindow) {
-                    // Suppress flip animations for a short window after forced sync
-                    // to avoid transition-time race flicker on the next minute tick(s).
-                    WidgetClockStateStore.markNoAnimationUntilEpochMinute(this, id, currentEpochMinute + 2L)
                 }
                 WidgetClockStateStore.saveLastDigits(this, id, DigitState(h1, h2, m1, m2))
                 WidgetClockStateStore.markRendered(this, id, currentEpochMinute)
