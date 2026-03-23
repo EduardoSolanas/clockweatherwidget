@@ -22,6 +22,57 @@
         </shape>
     </item>
 
+    <!-- Stronger top-half shade -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#3F000000"
+                android:centerColor="#1B000000"
+                android:centerY="0.50"
+                android:endColor="#00000000" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+
+    <!-- Top surface contour highlight (curved look) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#30FFFFFF"
+                android:centerColor="#10FFFFFF"
+                android:centerY="0.34"
+                android:endColor="#00000000" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+
+    <!-- Side-edge vignette for depth -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="0"
+                android:startColor="#1E000000"
+                android:centerColor="#00000000"
+                android:centerX="0.50"
+                android:endColor="#1E000000" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#12000000"
+                android:centerColor="#07000000"
+                android:centerY="0.50"
+                android:endColor="#00000000" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+
     <!-- Bottom-half shadow vignette -->
     <item>
         <shape android:shape="rectangle">

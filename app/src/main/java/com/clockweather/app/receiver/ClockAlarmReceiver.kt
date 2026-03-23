@@ -65,8 +65,28 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                             // TIME_TICK is the primary interactive minute source.
                             // Wait briefly to let it arrive; if this minute is still stale,
                             // run the normal clock-only backup update.
+                            val receivedAtMillis = System.currentTimeMillis()
+                            val receivedEpochMinute = receivedAtMillis / 60000L
+                            val receivedMsInMinute = receivedAtMillis % 60000L
                             delay(TIME_TICK_GRACE_MS)
-                            val currentEpochMinute = System.currentTimeMillis() / 60000L
+                            var currentEpochMinute = System.currentTimeMillis() / 60000L
+                            var waitedExtraMs = 0L
+                            while (
+                                receivedMsInMinute >= EARLY_ALARM_WINDOW_START_MS &&
+                                currentEpochMinute <= receivedEpochMinute &&
+                                waitedExtraMs < EARLY_ALARM_MAX_EXTRA_WAIT_MS
+                            ) {
+                                delay(EARLY_ALARM_POLL_MS)
+                                waitedExtraMs += EARLY_ALARM_POLL_MS
+                                currentEpochMinute = System.currentTimeMillis() / 60000L
+                            }
+                            if (waitedExtraMs > 0L) {
+                                Log.d(
+                                    TAG,
+                                    "CLOCK_TRACE alarmBoundaryWait receivedMinute=$receivedEpochMinute " +
+                                        "currentMinute=$currentEpochMinute waitedExtraMs=$waitedExtraMs"
+                                )
+                            }
                             val timeTickObserved = app.getLastObservedTimeTickEpochMinute() == currentEpochMinute
                             val staleForMinute = hasAnyWidgetStaleForMinute(context, currentEpochMinute)
                             if (staleForMinute) {
@@ -75,7 +95,9 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                                     "Interactive backup tick: minute=$currentEpochMinute stale=true timeTickObserved=$timeTickObserved"
                                 )
                                 app.pushClockInstant(
-                                    forceAllDigits = true,
+                                    // Backup should correct stale time with minimal visual churn.
+                                    // Delta mode updates only changed digits instead of repainting all 4.
+                                    forceAllDigits = false,
                                     suppressAnimationWindow = false,
                                     quietRender = true
                                 )
@@ -130,6 +152,9 @@ class ClockAlarmReceiver : BroadcastReceiver() {
         private const val REQUEST_CODE_KEEPALIVE = 1
         private const val KEEPALIVE_INTERVAL_MS = 60 * 1000L
         private const val TIME_TICK_GRACE_MS = 1200L
+        private const val EARLY_ALARM_WINDOW_START_MS = 58_000L
+        private const val EARLY_ALARM_POLL_MS = 250L
+        private const val EARLY_ALARM_MAX_EXTRA_WAIT_MS = 2000L
 
         private val widgetProviders = listOf(
             CompactWidgetProvider::class.java,

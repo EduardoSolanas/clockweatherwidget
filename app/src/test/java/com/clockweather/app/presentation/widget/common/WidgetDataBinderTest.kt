@@ -109,6 +109,70 @@ class WidgetDataBinderTest {
     }
 
     @Test
+    fun `bindAtomicClockViews clears fold overlays`() {
+        WidgetDataBinder.bindAtomicClockViews(
+            views = views,
+            hour = 10,
+            minute = 26,
+            is24h = true
+        )
+
+        listOf(
+            Triple(R.id.fold_h1, R.id.fold_h1_from, Pair(R.id.fold_h1_to, "1")),
+            Triple(R.id.fold_h2, R.id.fold_h2_from, Pair(R.id.fold_h2_to, "0")),
+            Triple(R.id.fold_m1, R.id.fold_m1_from, Pair(R.id.fold_m1_to, "2")),
+            Triple(R.id.fold_m2, R.id.fold_m2_from, Pair(R.id.fold_m2_to, "6"))
+        ).forEach { (flipperId, fromId, toWithText) ->
+            val (toId, text) = toWithText
+            verify(exactly = 1) { views.setTextViewText(fromId, text) }
+            verify(exactly = 1) { views.setTextViewText(toId, text) }
+            verify(exactly = 1) { views.setDisplayedChild(flipperId, 0) }
+        }
+    }
+
+    @Test
+    fun `clearAtomicFoldOverlays can keep current fold child without reset`() {
+        WidgetDataBinder.clearAtomicFoldOverlays(
+            views = views,
+            digits = DigitState(1, 0, 2, 6),
+            resetFoldOverlaysToFront = false
+        )
+
+        verify(exactly = 0) { views.setDisplayedChild(R.id.fold_h1, any()) }
+        verify(exactly = 0) { views.setDisplayedChild(R.id.fold_h2, any()) }
+        verify(exactly = 0) { views.setDisplayedChild(R.id.fold_m1, any()) }
+        verify(exactly = 0) { views.setDisplayedChild(R.id.fold_m2, any()) }
+
+        verify(exactly = 1) { views.setTextViewText(R.id.fold_h1_from, "1") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fold_h1_to, "1") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fold_h2_from, "0") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fold_h2_to, "0") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fold_m1_from, "2") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fold_m1_to, "2") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fold_m2_from, "6") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fold_m2_to, "6") }
+    }
+
+    @Test
+    fun `animateAtomicFoldOverlays animates only changed tile`() {
+        WidgetDataBinder.animateAtomicFoldOverlays(
+            views = views,
+            previousDigits = DigitState(1, 2, 3, 4),
+            currentDigits = DigitState(1, 2, 3, 5)
+        )
+
+        verify(exactly = 1) { views.setTextViewText(R.id.fold_m2_from, "4") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fold_m2_to, "5") }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.fold_m2, 0) }
+        verify(exactly = 1) { views.showNext(R.id.fold_m2) }
+        verify(exactly = 1) { views.setDisplayedChild(R.id.fold_m2, 1) }
+
+        verify(exactly = 0) { views.showNext(R.id.fold_h1) }
+        verify(exactly = 0) { views.showNext(R.id.fold_h2) }
+        verify(exactly = 0) { views.showNext(R.id.fold_m1) }
+    }
+
+    @Test
     fun `bindClockViews incremental only sets displayed child for changed digits`() {
         WidgetDataBinder.bindClockViews(
             context = context,

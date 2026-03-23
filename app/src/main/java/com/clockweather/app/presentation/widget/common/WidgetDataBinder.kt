@@ -14,7 +14,7 @@ import java.time.LocalDate
 
 object WidgetDataBinder {
 
-    fun bindAtomicClockViews(
+    fun bindAtomicClockTextOnly(
         views: RemoteViews,
         hour: Int,
         minute: Int,
@@ -35,6 +35,75 @@ object WidgetDataBinder {
         views.setTextViewText(R.id.digit_m1, m1.toString())
         views.setTextViewText(R.id.digit_m2, m2.toString())
         views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
+    }
+
+    fun bindAtomicClockViews(
+        views: RemoteViews,
+        hour: Int,
+        minute: Int,
+        is24h: Boolean = true,
+        resetFoldOverlaysToFront: Boolean = true
+    ) {
+        val displayHour = if (is24h) hour
+            else if (hour == 0) 12
+            else if (hour > 12) hour - 12
+            else hour
+        val digits = DigitState(displayHour / 10, displayHour % 10, minute / 10, minute % 10)
+        bindAtomicClockTextOnly(views, hour, minute, is24h)
+        clearAtomicFoldOverlays(views, digits, resetFoldOverlaysToFront)
+    }
+
+    fun animateAtomicFoldOverlays(
+        views: RemoteViews,
+        previousDigits: DigitState,
+        currentDigits: DigitState
+    ) {
+        animateAtomicDigit(views, previousDigits.h1, currentDigits.h1, R.id.fold_h1, R.id.fold_h1_from, R.id.fold_h1_to)
+        animateAtomicDigit(views, previousDigits.h2, currentDigits.h2, R.id.fold_h2, R.id.fold_h2_from, R.id.fold_h2_to)
+        animateAtomicDigit(views, previousDigits.m1, currentDigits.m1, R.id.fold_m1, R.id.fold_m1_from, R.id.fold_m1_to)
+        animateAtomicDigit(views, previousDigits.m2, currentDigits.m2, R.id.fold_m2, R.id.fold_m2_from, R.id.fold_m2_to)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun animateAtomicDigit(
+        views: RemoteViews,
+        from: Int,
+        to: Int,
+        flipperId: Int,
+        fromViewId: Int,
+        toViewId: Int
+    ) {
+        if (from == to) return
+        views.setTextViewText(fromViewId, from.toString())
+        views.setTextViewText(toViewId, to.toString())
+        views.setDisplayedChild(flipperId, 0)
+        views.showNext(flipperId)
+        // Reliability fallback: some launchers occasionally skip ViewFlipper animation
+        // state transitions on partial updates. Force final child to "to" so the
+        // rendered digit is still correct even if showNext() is dropped.
+        views.setDisplayedChild(flipperId, 1)
+    }
+
+    @Suppress("DEPRECATION")
+    fun clearAtomicFoldOverlays(
+        views: RemoteViews,
+        digits: DigitState,
+        resetFoldOverlaysToFront: Boolean = true
+    ) {
+        val overlayDefaults = listOf(
+            Triple(R.id.fold_h1, R.id.fold_h1_from, Pair(R.id.fold_h1_to, digits.h1.toString())),
+            Triple(R.id.fold_h2, R.id.fold_h2_from, Pair(R.id.fold_h2_to, digits.h2.toString())),
+            Triple(R.id.fold_m1, R.id.fold_m1_from, Pair(R.id.fold_m1_to, digits.m1.toString())),
+            Triple(R.id.fold_m2, R.id.fold_m2_from, Pair(R.id.fold_m2_to, digits.m2.toString()))
+        )
+        overlayDefaults.forEach { (flipper, fromId, toWithText) ->
+            val (toId, text) = toWithText
+            views.setTextViewText(fromId, text)
+            views.setTextViewText(toId, text)
+            if (resetFoldOverlaysToFront) {
+                views.setDisplayedChild(flipper, 0)
+            }
+        }
     }
 
     fun bindSimpleClockViews(

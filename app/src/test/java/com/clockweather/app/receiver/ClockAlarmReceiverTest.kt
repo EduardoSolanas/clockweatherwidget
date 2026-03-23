@@ -115,7 +115,7 @@ class ClockAlarmReceiverTest {
         }
         verify(timeout = 3000) {
             app.pushClockInstant(
-                forceAllDigits = true,
+                forceAllDigits = false,
                 suppressAnimationWindow = false,
                 quietRender = true
             )
