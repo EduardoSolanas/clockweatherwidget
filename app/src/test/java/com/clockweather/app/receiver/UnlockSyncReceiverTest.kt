@@ -55,7 +55,7 @@ class UnlockSyncReceiverTest {
         verify(timeout = 5000) { app.registerTimeTickReceiver() }
         verify(timeout = 5000) { app.registerScreenStateReceiver() }
         verify(timeout = 5000) { ClockAlarmReceiver.scheduleNextTick(context, true) }
-        verify(timeout = 3000, exactly = 0) { app.pushClockInstant(any(), any(), any()) }
+        verify(timeout = 3000, exactly = 0) { app.pushClockInstant(any(), any()) }
     }
 
     @Test

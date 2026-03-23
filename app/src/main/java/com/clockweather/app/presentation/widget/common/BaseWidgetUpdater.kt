@@ -2,6 +2,7 @@ package com.clockweather.app.presentation.widget.common
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.graphics.Color
 import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
@@ -38,7 +39,6 @@ abstract class BaseWidgetUpdater(
     abstract val rootViewId: Int
     abstract val dateViewId: Int
     open val usesSimpleClockDigits: Boolean = false
-    open val usesAtomicClockText: Boolean = false
 
     /**
      * Resolves whether simple (non-animated) clock digits should be used.
@@ -46,7 +46,7 @@ abstract class BaseWidgetUpdater(
      * OR when the subclass has hardcoded usesSimpleClockDigits = true.
      */
     protected fun resolveUsesSimpleDigits(prefs: Preferences): Boolean {
-        if (usesSimpleClockDigits || usesAtomicClockText) return true
+        if (usesSimpleClockDigits) return true
         val flipEnabled = prefs[booleanPreferencesKey("flip_animation_enabled")] ?: true
         return !flipEnabled
     }
@@ -114,9 +114,7 @@ abstract class BaseWidgetUpdater(
                 if (!useIncrementalClockBinding) {
                     // First render and non-minute refreshes (time/timezone/weather/manual)
                     // must set all digits to keep flipper state synchronized.
-                    if (usesAtomicClockText) {
-                        WidgetDataBinder.bindAtomicClockViews(views, now.hour, now.minute, is24h)
-                    } else if (usesSimpleClockDigits) {
+                    if (usesSimpleClockDigits) {
                         WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
                     } else if (useSimple) {
                         WidgetDataBinder.bindStaticClockViews(context, views, now.hour, now.minute, is24h)
@@ -126,9 +124,7 @@ abstract class BaseWidgetUpdater(
                 } else {
                     // Subsequent render — only touch digits that actually changed.
                     // This prevents ViewFlipper flicker when only weather/date changed.
-                    if (usesAtomicClockText) {
-                        WidgetDataBinder.bindAtomicClockViews(views, now.hour, now.minute, is24h)
-                    } else if (usesSimpleClockDigits) {
+                    if (usesSimpleClockDigits) {
                         WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
                     } else if (useSimple) {
                         WidgetDataBinder.bindStaticClockViews(context, views, now.hour, now.minute, is24h)
@@ -140,13 +136,12 @@ abstract class BaseWidgetUpdater(
                 // Store the rendered digits so the next update diffs correctly
                 WidgetClockStateStore.saveLastDigits(context, appWidgetId, DigitState.from(now.hour, now.minute, is24h))
 
-                if (!usesAtomicClockText) {
-                    listOf(
+                listOf(
                     com.clockweather.app.R.id.digit_h1,
                     com.clockweather.app.R.id.digit_h2,
                     com.clockweather.app.R.id.digit_m1,
                     com.clockweather.app.R.id.digit_m2
-                    ).forEach { id ->
+                ).forEach { id ->
                     views.setInt(id, "setBackgroundResource", tileBgRes)
                     try {
                         views.setOnClickPendingIntent(id, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
@@ -170,26 +165,6 @@ abstract class BaseWidgetUpdater(
                                 views.setTextViewTextSize(childId, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
                             }
                         }
-                    }
-                }
-                }
-
-                if (usesAtomicClockText) {
-                    listOf(
-                        com.clockweather.app.R.id.digit_h1,
-                        com.clockweather.app.R.id.digit_h2,
-                        com.clockweather.app.R.id.digit_m1,
-                        com.clockweather.app.R.id.digit_m2
-                    ).forEach { id ->
-                        views.setInt(id, "setBackgroundResource", tileBgRes)
-                        try {
-                            views.setOnClickPendingIntent(id, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
-                        } catch (e: Exception) { /* ignore */ }
-                        if (android.os.Build.VERSION.SDK_INT >= 31) {
-                            views.setViewLayoutHeight(id, context.resources.getDimension(dimHeight), android.util.TypedValue.COMPLEX_UNIT_PX)
-                        }
-                        views.setTextColor(id, digitColor)
-                        views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
                     }
                 }
 
@@ -277,7 +252,7 @@ abstract class BaseWidgetUpdater(
     ) {
         Log.d(
             tag,
-            "Updating clock only for widget $appWidgetId usesSimpleClockDigits=$usesSimpleClockDigits usesAtomicClockText=$usesAtomicClockText allowAnimation=$allowAnimation"
+            "Updating clock only for widget $appWidgetId usesSimpleClockDigits=$usesSimpleClockDigits allowAnimation=$allowAnimation"
         )
         withContext(Dispatchers.IO) {
             try {
@@ -327,55 +302,33 @@ abstract class BaseWidgetUpdater(
                 // B5: Don't rebind click actions on every tick — they are already set by the last
                 // full updateWidget() call. Partial updates merge actions, so they are preserved.
 
-                val renderPath = when {
-                    usesAtomicClockText -> "atomic_text_no_animation"
-                    usesSimpleClockDigits -> "simple_text_no_animation"
-                    useSimple -> "static_viewflipper_no_animation"
-                    suppressAnimationOnce -> "full_visibility_no_animation:suppression_window"
-                    !allowAnimation -> "full_visibility_no_animation:allowAnimation_false"
-                    else -> "incremental_flip_animation"
-                }
-                Log.d(
-                    tag,
-                    "CLOCK_TRACE updateClockOnly id=$appWidgetId minute=$currentEpochMinute " +
-                        "path=$renderPath last=$lastRenderedEpochMinute suppressAnimationOnce=$suppressAnimationOnce"
-                )
-
-                when {
-                    usesAtomicClockText -> {
-                        WidgetDataBinder.bindAtomicClockViews(views, now.hour, now.minute, is24h)
-                    }
-                    usesSimpleClockDigits -> {
-                        // Layout has plain TextViews
-                        WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
-                    }
-                    useSimple -> {
-                        // Layout has ViewFlippers but flip animation is disabled
-                        WidgetDataBinder.bindStaticClockViews(context, views, now.hour, now.minute, is24h)
-                    }
-                    suppressAnimationOnce || !allowAnimation -> {
-                        WidgetDataBinder.bindClockViews(
-                            context,
-                            views,
-                            appWidgetId,
-                            now.hour,
-                            now.minute,
-                            is24h,
-                            isIncremental = false
-                        )
-                    }
-                    else -> {
-                        WidgetDataBinder.bindClockViews(
-                            context,
-                            views,
-                            appWidgetId,
-                            now.hour,
-                            now.minute,
-                            is24h,
-                            isIncremental = true,
-                            prevDigits = prevDigits   // C1: accurate digit diff
-                        )
-                    }
+                if (usesSimpleClockDigits) {
+                    // Layout has plain TextViews
+                    WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
+                } else if (useSimple) {
+                    // Layout has ViewFlippers but flip animation is disabled
+                    WidgetDataBinder.bindStaticClockViews(context, views, now.hour, now.minute, is24h)
+                } else if (suppressAnimationOnce || !allowAnimation) {
+                    WidgetDataBinder.bindClockViews(
+                        context,
+                        views,
+                        appWidgetId,
+                        now.hour,
+                        now.minute,
+                        is24h,
+                        isIncremental = false
+                    )
+                } else {
+                    WidgetDataBinder.bindClockViews(
+                        context,
+                        views,
+                        appWidgetId,
+                        now.hour,
+                        now.minute,
+                        is24h,
+                        isIncremental = true,
+                        prevDigits = prevDigits   // C1: accurate digit diff
+                    )
                 }
 
                 // C1: persist the just-rendered digits for the next tick's diff

@@ -65,7 +65,7 @@ class ClockWeatherApplicationTest {
 
         val spyApp = spyk(app)
         coEvery { spyApp.resolveHighPrecision() } returns true
-        every { spyApp.pushClockInstant(any(), any(), any()) } just Runs
+        every { spyApp.pushClockInstant(any(), any()) } just Runs
 
         runBlocking {
             spyApp.syncClockNow(context)
@@ -73,22 +73,12 @@ class ClockWeatherApplicationTest {
 
         // First force push happens before the full refresh.
         verifyOrder {
-            spyApp.pushClockInstant(
-                forceAllDigits = true,
-                suppressAnimationWindow = false,
-                quietRender = false
-            )
+            spyApp.pushClockInstant(forceAllDigits = true, suppressAnimationWindow = false)
             appWidgetManager.getAppWidgetIds(any()) // part of refreshAllWidgets
         }
 
         // And a second force push is applied after refresh to avoid minute-boundary race.
-        verify(exactly = 2) {
-            spyApp.pushClockInstant(
-                forceAllDigits = true,
-                suppressAnimationWindow = false,
-                quietRender = false
-            )
-        }
+        verify(exactly = 2) { spyApp.pushClockInstant(forceAllDigits = true, suppressAnimationWindow = false) }
 
         // Alarm was rescheduled as backup
         verify { ClockAlarmReceiver.scheduleNextTick(context, true) }
@@ -105,7 +95,7 @@ class ClockWeatherApplicationTest {
 
         val spyApp = spyk(app)
         coEvery { spyApp.resolveHighPrecision() } returns true
-        every { spyApp.pushClockInstant(any(), any(), any()) } just Runs
+        every { spyApp.pushClockInstant(any(), any()) } just Runs
         coEvery { spyApp.refreshAllWidgets(any(), any(), any()) } just Runs
 
         runBlocking {
@@ -117,11 +107,7 @@ class ClockWeatherApplicationTest {
         }
 
         verify(exactly = 1) {
-            spyApp.pushClockInstant(
-                forceAllDigits = true,
-                suppressAnimationWindow = true,
-                quietRender = false
-            )
+            spyApp.pushClockInstant(forceAllDigits = true, suppressAnimationWindow = true)
         }
         coVerify(exactly = 0) { spyApp.refreshAllWidgets(any(), any(), any()) }
         verify { ClockAlarmReceiver.scheduleNextTick(context, true) }
@@ -138,7 +124,7 @@ class ClockWeatherApplicationTest {
 
         val spyApp = spyk(app)
         coEvery { spyApp.resolveHighPrecision() } returns true
-        every { spyApp.pushClockInstant(any(), any(), any()) } just Runs
+        every { spyApp.pushClockInstant(any(), any()) } just Runs
         coEvery { spyApp.refreshAllWidgets(any(), any(), any()) } just Runs
 
         runBlocking {
@@ -150,11 +136,7 @@ class ClockWeatherApplicationTest {
         }
 
         verify(exactly = 2) {
-            spyApp.pushClockInstant(
-                forceAllDigits = true,
-                suppressAnimationWindow = true,
-                quietRender = false
-            )
+            spyApp.pushClockInstant(forceAllDigits = true, suppressAnimationWindow = true)
         }
         coVerify(exactly = 0) { spyApp.refreshAllWidgets(any(), any(), any()) }
         verify { ClockAlarmReceiver.scheduleNextTick(context, true) }

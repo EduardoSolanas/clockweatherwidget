@@ -71,11 +71,7 @@ class TimeTickReceiverTest {
         receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
 
         verify(timeout = 3000) {
-            app.pushClockInstant(
-                forceAllDigits = true,
-                suppressAnimationWindow = true,
-                quietRender = false
-            )
+            app.pushClockInstant(forceAllDigits = true, suppressAnimationWindow = true)
         }
     }
 }
