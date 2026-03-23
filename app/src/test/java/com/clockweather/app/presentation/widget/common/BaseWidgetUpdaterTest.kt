@@ -79,6 +79,25 @@ class BaseWidgetUpdaterTest {
         ) { }
     }
 
+    class AtomicTestWidgetUpdater(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        entryPoint: WidgetEntryPoint
+    ) : BaseWidgetUpdater(context, appWidgetManager, entryPoint) {
+        override val layoutResId = R.layout.widget_compact
+        override val rootViewId = R.id.widget_root
+        override val dateViewId = R.id.widget_date
+        override val usesSimpleClockDigits = false
+        override val usesAtomicClockText = true
+
+        override fun bindExtra(
+            views: RemoteViews,
+            weather: WeatherData,
+            tempUnit: TemperatureUnit,
+            prefs: Preferences
+        ) { }
+    }
+
     @Before
     fun setup() {
         mockkStatic(Log::class)
@@ -246,13 +265,16 @@ class BaseWidgetUpdaterTest {
 
     @Test
     fun `updateClockOnly with allowAnimation true still suppresses during no-animation window`() = runBlocking {
-        mockkStatic(LocalTime::class)
-        every { LocalTime.now() } returns LocalTime.of(10, 26)
+        val currentMinute = System.currentTimeMillis() / 60000L
+        mockkObject(ClockSnapshot.Companion)
+        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
+            localTime = LocalTime.of(10, 26),
+            epochMinute = currentMinute
+        )
 
         // Previous rendered state is exactly one minute behind -> INCREMENTAL mode.
         WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState.from(10, 25, true))
         WidgetClockStateStore.markBaselineReady(realContext, widgetId)
-        val currentMinute = System.currentTimeMillis() / 60000L
         WidgetClockStateStore.markRendered(realContext, widgetId, currentMinute - 1)
         WidgetClockStateStore.markNoAnimationUntilEpochMinute(realContext, widgetId, currentMinute + 1)
 
@@ -266,6 +288,96 @@ class BaseWidgetUpdaterTest {
 
         // Suppression window must override animation path: no showNext() calls.
         verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(any()) }
+        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+    }
+
+    @Test
+    fun `atomic updateClockOnly animates only changed fold digit`() = runBlocking {
+        val currentMinute = System.currentTimeMillis() / 60000L
+        mockkObject(ClockSnapshot.Companion)
+        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
+            localTime = LocalTime.of(10, 26),
+            epochMinute = currentMinute
+        )
+
+        val atomicUpdater = AtomicTestWidgetUpdater(mockContext, appWidgetManager, entryPoint)
+        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState.from(10, 25, true))
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
+        WidgetClockStateStore.markRendered(realContext, widgetId, currentMinute - 1)
+
+        com.clockweather.app.util.WidgetPrefsCache.init(
+            mockk<DataStore<Preferences>> { every { data } returns flowOf(prefs) },
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined)
+        )
+        kotlinx.coroutines.delay(100)
+
+        atomicUpdater.updateClockOnly(widgetId, allowAnimation = true)
+
+        verify(exactly = 1) { anyConstructed<RemoteViews>().showNext(R.id.fold_m2) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_h1) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_h2) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_m1) }
+    }
+
+    @Test
+    fun `atomic suppression path avoids fold flipper resets`() = runBlocking {
+        val currentMinute = System.currentTimeMillis() / 60000L
+        mockkObject(ClockSnapshot.Companion)
+        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
+            localTime = LocalTime.of(10, 26),
+            epochMinute = currentMinute
+        )
+
+        val atomicUpdater = AtomicTestWidgetUpdater(mockContext, appWidgetManager, entryPoint)
+        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState.from(10, 25, true))
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
+        WidgetClockStateStore.markRendered(realContext, widgetId, currentMinute - 1)
+        WidgetClockStateStore.markNoAnimationUntilEpochMinute(realContext, widgetId, currentMinute + 1)
+
+        com.clockweather.app.util.WidgetPrefsCache.init(
+            mockk<DataStore<Preferences>> { every { data } returns flowOf(prefs) },
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined)
+        )
+        kotlinx.coroutines.delay(100)
+
+        atomicUpdater.updateClockOnly(widgetId, allowAnimation = true)
+
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_h1) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_h2) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_m1) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_m2) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().setDisplayedChild(R.id.fold_h1, any()) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().setDisplayedChild(R.id.fold_h2, any()) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().setDisplayedChild(R.id.fold_m1, any()) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().setDisplayedChild(R.id.fold_m2, any()) }
+    }
+
+    @Test
+    fun `atomic updateClockOnly disables animation when multiple digits change`() = runBlocking {
+        val currentMinute = System.currentTimeMillis() / 60000L
+        mockkObject(ClockSnapshot.Companion)
+        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
+            localTime = LocalTime.of(10, 20),
+            epochMinute = currentMinute
+        )
+
+        val atomicUpdater = AtomicTestWidgetUpdater(mockContext, appWidgetManager, entryPoint)
+        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState.from(10, 19, true))
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
+        WidgetClockStateStore.markRendered(realContext, widgetId, currentMinute - 1)
+
+        com.clockweather.app.util.WidgetPrefsCache.init(
+            mockk<DataStore<Preferences>> { every { data } returns flowOf(prefs) },
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined)
+        )
+        kotlinx.coroutines.delay(100)
+
+        atomicUpdater.updateClockOnly(widgetId, allowAnimation = true)
+
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_h1) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_h2) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_m1) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_m2) }
         verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
     }
 
