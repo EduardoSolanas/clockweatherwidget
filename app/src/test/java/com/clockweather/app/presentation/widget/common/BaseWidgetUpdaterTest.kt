@@ -292,7 +292,7 @@ class BaseWidgetUpdaterTest {
     }
 
     @Test
-    fun `atomic updateClockOnly animates only changed fold digit`() = runBlocking {
+    fun `atomic updateClockOnly updates only changed base digit without fold animation`() = runBlocking {
         val currentMinute = System.currentTimeMillis() / 60000L
         mockkObject(ClockSnapshot.Companion)
         every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
@@ -313,10 +313,11 @@ class BaseWidgetUpdaterTest {
 
         atomicUpdater.updateClockOnly(widgetId, allowAnimation = true)
 
-        verify(exactly = 1) { anyConstructed<RemoteViews>().showNext(R.id.fold_m2) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_m2) }
         verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_h1) }
         verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_h2) }
         verify(exactly = 0) { anyConstructed<RemoteViews>().showNext(R.id.fold_m1) }
+        verify(exactly = 1) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m2, "6") }
     }
 
     @Test
@@ -411,6 +412,25 @@ class BaseWidgetUpdaterTest {
         updater.updateWidget(widgetId)
 
         verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
+        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+    }
+
+    @Test
+    fun `same minute non-tick update preserves existing clock digit views`() = runBlocking {
+        val currentMinute = System.currentTimeMillis() / 60000L
+        mockkObject(ClockSnapshot.Companion)
+        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
+            localTime = LocalTime.of(10, 26),
+            epochMinute = currentMinute
+        )
+
+        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState.from(10, 26, true))
+        WidgetClockStateStore.markRendered(realContext, widgetId, currentMinute)
+
+        updater.updateWidget(widgetId, isMinuteTick = false, allowWeatherRefresh = false)
+
+        // In preservation mode, clock digit child visibility should not be rebound.
+        verify(exactly = 0) { anyConstructed<RemoteViews>().setViewVisibility(12345, any()) }
         verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
     }
 }

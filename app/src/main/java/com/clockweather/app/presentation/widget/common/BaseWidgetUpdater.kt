@@ -98,6 +98,14 @@ abstract class BaseWidgetUpdater(
                 // updateAppWidget() replacement.
                 val prevDigits = WidgetClockStateStore.getLastDigits(context, appWidgetId)
                 val isFirstRender = prevDigits == null
+                val lastRenderedEpochMinute = WidgetClockStateStore.getLastRenderedEpochMinute(context, appWidgetId)
+                val preserveClockForSameMinuteNonTick =
+                    !isFirstRender &&
+                        !isMinuteTick &&
+                        lastRenderedEpochMinute == currentEpochMinute
+                if (preserveClockForSameMinuteNonTick) {
+                    Log.d(tag, "CLOCK_TRACE preserving clock tiles for same-minute non-tick update id=$appWidgetId minute=$currentEpochMinute")
+                }
 
                 // Build fresh RemoteViews
                 val views = RemoteViews(context.packageName, layoutResId)
@@ -106,6 +114,7 @@ abstract class BaseWidgetUpdater(
                     views.setOnClickPendingIntent(rootViewId, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
                 } catch (e: Exception) { /* ignore */ }
 
+                if (!preserveClockForSameMinuteNonTick) {
                 val useIncrementalClockBinding = shouldUseIncrementalClockBinding(
                     isFirstRender = isFirstRender,
                     isMinuteTick = isMinuteTick
@@ -136,11 +145,14 @@ abstract class BaseWidgetUpdater(
                         WidgetDataBinder.bindClockViews(context, views, appWidgetId, now.hour, now.minute, is24h, isIncremental = true, prevDigits = prevDigits)
                     }
                 }
+                }
 
                 // Store the rendered digits so the next update diffs correctly
-                WidgetClockStateStore.saveLastDigits(context, appWidgetId, DigitState.from(now.hour, now.minute, is24h))
+                if (!preserveClockForSameMinuteNonTick) {
+                    WidgetClockStateStore.saveLastDigits(context, appWidgetId, DigitState.from(now.hour, now.minute, is24h))
+                }
 
-                if (!usesAtomicClockText) {
+                if (!usesAtomicClockText && !preserveClockForSameMinuteNonTick) {
                     listOf(
                     com.clockweather.app.R.id.digit_h1,
                     com.clockweather.app.R.id.digit_h2,
@@ -174,7 +186,7 @@ abstract class BaseWidgetUpdater(
                 }
                 }
 
-                if (usesAtomicClockText) {
+                if (usesAtomicClockText && !preserveClockForSameMinuteNonTick) {
                     listOf(
                         com.clockweather.app.R.id.digit_h1,
                         com.clockweather.app.R.id.digit_h2,
@@ -209,17 +221,19 @@ abstract class BaseWidgetUpdater(
                     }
                 }
 
-                val colonSize = context.resources.getDimension(dimText) * 0.8f
-                views.setTextViewTextSize(com.clockweather.app.R.id.colon, android.util.TypedValue.COMPLEX_UNIT_PX, colonSize)
-                val ampmSize = when (tileSize) {
-                    ClockTileSize.SMALL -> 10f
-                    ClockTileSize.MEDIUM -> 12f
-                    ClockTileSize.LARGE -> 14f
-                    ClockTileSize.EXTRA_LARGE -> 16f
+                if (!preserveClockForSameMinuteNonTick) {
+                    val colonSize = context.resources.getDimension(dimText) * 0.8f
+                    views.setTextViewTextSize(com.clockweather.app.R.id.colon, android.util.TypedValue.COMPLEX_UNIT_PX, colonSize)
+                    val ampmSize = when (tileSize) {
+                        ClockTileSize.SMALL -> 10f
+                        ClockTileSize.MEDIUM -> 12f
+                        ClockTileSize.LARGE -> 14f
+                        ClockTileSize.EXTRA_LARGE -> 16f
+                    }
+                    views.setTextViewTextSize(com.clockweather.app.R.id.ampm, android.util.TypedValue.COMPLEX_UNIT_SP, ampmSize)
+                    views.setTextColor(com.clockweather.app.R.id.colon, digitColor)
+                    views.setTextColor(com.clockweather.app.R.id.ampm, digitColor)
                 }
-                views.setTextViewTextSize(com.clockweather.app.R.id.ampm, android.util.TypedValue.COMPLEX_UNIT_SP, ampmSize)
-                views.setTextColor(com.clockweather.app.R.id.colon, digitColor)
-                views.setTextColor(com.clockweather.app.R.id.ampm, digitColor)
 
                 // Bind date
                 if (showDate) {
@@ -380,10 +394,15 @@ abstract class BaseWidgetUpdater(
                 when {
                     usesAtomicClockText -> {
                         if (canRunAtomicSingleDigitAnimation) {
-                            // Keep atomic minute ticks truly incremental: update base text,
-                            // then animate only the digits that changed.
-                            WidgetDataBinder.bindAtomicClockTextOnly(views, now.hour, now.minute, is24h)
-                            WidgetDataBinder.animateAtomicFoldOverlays(views, prevDigits, newDigits)
+                            // Safety path: update only changed base digits and keep fold
+                            // overlays aligned to the current value without running the
+                            // fold flipper animation, which can desync on some launchers.
+                            WidgetDataBinder.bindAtomicClockChangedDigitsOnly(views, prevDigits, newDigits)
+                            WidgetDataBinder.clearAtomicFoldOverlays(
+                                views,
+                                newDigits,
+                                resetFoldOverlaysToFront = false
+                            )
                         } else {
                             // Quiet / suppressed path: keep overlays aligned to current digits
                             // without forcing all fold flippers back to child 0, which can

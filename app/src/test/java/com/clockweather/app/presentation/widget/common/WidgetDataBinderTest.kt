@@ -165,7 +165,7 @@ class WidgetDataBinderTest {
         verify(exactly = 1) { views.setTextViewText(R.id.fold_m2_to, "5") }
         verify(exactly = 1) { views.setDisplayedChild(R.id.fold_m2, 0) }
         verify(exactly = 1) { views.showNext(R.id.fold_m2) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.fold_m2, 1) }
+        verify(exactly = 0) { views.setDisplayedChild(R.id.fold_m2, 1) }
 
         verify(exactly = 0) { views.showNext(R.id.fold_h1) }
         verify(exactly = 0) { views.showNext(R.id.fold_h2) }

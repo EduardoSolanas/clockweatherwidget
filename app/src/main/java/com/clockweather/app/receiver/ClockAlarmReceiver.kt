@@ -87,9 +87,38 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                                         "currentMinute=$currentEpochMinute waitedExtraMs=$waitedExtraMs"
                                 )
                             }
+                            var waitedLateTimeTickMs = 0L
+                            var lastObservedTimeTick = app.getLastObservedTimeTickEpochMinute()
+                            var msInCurrentMinute = System.currentTimeMillis() % 60000L
+                            while (
+                                lastObservedTimeTick != currentEpochMinute &&
+                                msInCurrentMinute < LATE_TIME_TICK_MAX_WAIT_MS &&
+                                waitedLateTimeTickMs < LATE_TIME_TICK_MAX_WAIT_MS
+                            ) {
+                                delay(LATE_TIME_TICK_POLL_MS)
+                                waitedLateTimeTickMs += LATE_TIME_TICK_POLL_MS
+                                currentEpochMinute = System.currentTimeMillis() / 60000L
+                                msInCurrentMinute = System.currentTimeMillis() % 60000L
+                                lastObservedTimeTick = app.getLastObservedTimeTickEpochMinute()
+                            }
+                            if (waitedLateTimeTickMs > 0L) {
+                                Log.d(
+                                    TAG,
+                                    "CLOCK_TRACE alarmLateTickWait minute=$currentEpochMinute " +
+                                        "waitedMs=$waitedLateTimeTickMs observedTick=$lastObservedTimeTick"
+                                )
+                            }
                             val timeTickObserved = app.getLastObservedTimeTickEpochMinute() == currentEpochMinute
                             val staleForMinute = hasAnyWidgetStaleForMinute(context, currentEpochMinute)
-                            if (staleForMinute) {
+                            if (timeTickObserved) {
+                                // TIME_TICK already drove this minute's render path.
+                                // Avoid running an overlapping backup push in the same
+                                // minute because that can repaint all tiles and flicker.
+                                Log.d(
+                                    TAG,
+                                    "CLOCK_TRACE alarmDecision minute=$currentEpochMinute action=skip reason=time_tick_observed"
+                                )
+                            } else if (staleForMinute) {
                                 Log.d(
                                     TAG,
                                     "Interactive backup tick: minute=$currentEpochMinute stale=true timeTickObserved=$timeTickObserved"
@@ -101,8 +130,6 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                                     suppressAnimationWindow = false,
                                     quietRender = true
                                 )
-                            } else if (timeTickObserved) {
-                                Log.d(TAG, "CLOCK_TRACE alarmDecision minute=$currentEpochMinute action=skip reason=time_tick_observed_and_not_stale")
                             } else {
                                 Log.d(TAG, "CLOCK_TRACE alarmDecision minute=$currentEpochMinute action=skip reason=already_rendered_not_stale")
                             }
@@ -155,6 +182,8 @@ class ClockAlarmReceiver : BroadcastReceiver() {
         private const val EARLY_ALARM_WINDOW_START_MS = 58_000L
         private const val EARLY_ALARM_POLL_MS = 250L
         private const val EARLY_ALARM_MAX_EXTRA_WAIT_MS = 2000L
+        private const val LATE_TIME_TICK_MAX_WAIT_MS = 2500L
+        private const val LATE_TIME_TICK_POLL_MS = 100L
 
         private val widgetProviders = listOf(
             CompactWidgetProvider::class.java,

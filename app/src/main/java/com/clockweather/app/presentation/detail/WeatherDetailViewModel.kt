@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import android.content.Context
@@ -41,6 +42,7 @@ class WeatherDetailViewModel @Inject constructor(
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+    private var weatherLoadJob: Job? = null
 
     /** Observes the temperature unit from DataStore — updates immediately when changed in Settings. */
     val temperatureUnit: StateFlow<TemperatureUnit> = dataStore.data
@@ -55,7 +57,8 @@ class WeatherDetailViewModel @Inject constructor(
     }
 
     private fun loadWeather() {
-        viewModelScope.launch {
+        weatherLoadJob?.cancel()
+        weatherLoadJob = viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
                 var locations = locationRepository.getSavedLocations().first()
@@ -94,9 +97,47 @@ class WeatherDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                val locations = locationRepository.getSavedLocations().first()
-                val location = locations.firstOrNull() ?: return@launch
-                refreshWeatherUseCase(location)
+                val savedLocations = locationRepository.getSavedLocations().first()
+                val currentUiLocation = (uiState.value as? UiState.Success)?.data?.location
+                val primaryLocation = savedLocations.firstOrNull() ?: currentUiLocation
+
+                val latestCurrentLocation = withTimeoutOrNull(6_000L) {
+                    locationRepository.getCurrentLocation()
+                }
+
+                val shouldTrackCurrentLocation = primaryLocation?.isCurrentLocation == true || primaryLocation == null
+
+                val resolvedLocation = when {
+                    shouldTrackCurrentLocation && latestCurrentLocation != null -> {
+                        val reusedId = primaryLocation?.id ?: 0L
+                        val candidate = latestCurrentLocation.copy(
+                            id = reusedId,
+                            isCurrentLocation = true
+                        )
+                        val insertedId = locationRepository.saveLocation(candidate)
+                        val finalId = if (candidate.id == 0L) insertedId else candidate.id
+                        candidate.copy(id = finalId)
+                    }
+                    primaryLocation != null -> primaryLocation
+                    latestCurrentLocation != null -> {
+                        val insertedId = locationRepository.saveLocation(
+                            latestCurrentLocation.copy(isCurrentLocation = true)
+                        )
+                        latestCurrentLocation.copy(id = insertedId, isCurrentLocation = true)
+                    }
+                    else -> {
+                        val fallback = locationRepository.getFallbackLocation()
+                        val insertedId = locationRepository.saveLocation(fallback)
+                        fallback.copy(id = insertedId)
+                    }
+                }
+
+                if (currentUiLocation == null || currentUiLocation.id != resolvedLocation.id) {
+                    // Location context changed (or we had no active context): restart the load stream.
+                    loadWeather()
+                } else {
+                    refreshWeatherUseCase(resolvedLocation)
+                }
             } catch (e: Exception) {
                 // ignore
             } finally {

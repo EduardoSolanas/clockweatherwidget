@@ -40,6 +40,13 @@ class TimeTickReceiver : BroadcastReceiver() {
                         isClockTick = true,
                         allowAnimation = true
                     )
+                    // Re-anchor backup alarm cadence to the system minute tick.
+                    // This keeps AlarmManager fallback aligned to minute boundaries
+                    // and reduces chance of pre-tick backup overlap.
+                    ClockAlarmReceiver.scheduleNextTick(
+                        context,
+                        isHighPrecision = app.resolveHighPrecision()
+                    )
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "TIME_TICK refresh failed", e)

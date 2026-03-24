@@ -145,6 +145,29 @@ class ClockAlarmReceiverTest {
     }
 
     @Test
+    fun `onReceive with screen ON and TIME_TICK observed skips stale backup push`() {
+        every { powerManager.isInteractive } returns true
+        every { app.isTimeTickReceiverRegistered() } returns true
+        // Simulate stale widget state for current minute.
+        every { sharedPreferences.contains(any()) } returns false
+        // But TIME_TICK has already been observed for that minute.
+        every { app.getLastObservedTimeTickEpochMinute() } answers { System.currentTimeMillis() / 60000L }
+
+        receiver.onReceive(context, Intent(ClockAlarmReceiver.ACTION_ALARM_TICK))
+
+        Thread.sleep(3400)
+
+        coVerify(exactly = 0, timeout = 3000) {
+            app.refreshAllWidgets(
+                any(),
+                isClockTick = true,
+                allowAnimation = true
+            )
+        }
+        verify(exactly = 0, timeout = 3000) { app.pushClockInstant(any(), any(), any()) }
+    }
+
+    @Test
     fun `onReceive with screen OFF does NOT refresh widgets`() {
         every { powerManager.isInteractive } returns false
 

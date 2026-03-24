@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -41,8 +41,8 @@
             android:gravity="center"
             android:orientation="vertical">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mon" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
-            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_weather_clear_day" android:contentDescription="@null" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="17°" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_widget_weather_clear_day" android:contentDescription="@null" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="17Â°" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -52,8 +52,8 @@
             android:gravity="center"
             android:orientation="vertical">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tue" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
-            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_weather_partly_cloudy_day" android:contentDescription="@null" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16°" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_widget_weather_partly_cloudy_day" android:contentDescription="@null" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16Â°" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -63,8 +63,8 @@
             android:gravity="center"
             android:orientation="vertical">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wed" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
-            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_weather_cloudy" android:contentDescription="@null" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="14°" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_widget_weather_cloudy" android:contentDescription="@null" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="14Â°" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -74,8 +74,8 @@
             android:gravity="center"
             android:orientation="vertical">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Thu" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
-            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_weather_rain_light" android:contentDescription="@null" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="12°" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_widget_weather_rain" android:contentDescription="@null" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="12Â°" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -85,9 +85,10 @@
             android:gravity="center"
             android:orientation="vertical">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Fri" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
-            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_weather_partly_cloudy_day" android:contentDescription="@null" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="15°" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_widget_weather_partly_cloudy_day" android:contentDescription="@null" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="15Â°" android:textColor="@color/widget_text_primary" android:textSize="10sp" />
         </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>
+

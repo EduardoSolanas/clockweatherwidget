@@ -307,7 +307,7 @@
     <LinearLayout
         android:id="@+id/weather_card"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="76dp"
         android:layout_marginTop="8dp"
         android:background="@drawable/weather_card_bg"
         android:gravity="center_vertical"
@@ -342,8 +342,8 @@
 
         <ImageView
             android:id="@+id/weather_icon"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="104dp"
+            android:layout_height="72dp"
             android:contentDescription="@null"
             android:scaleType="fitCenter" />
 

@@ -37,6 +37,60 @@ object WidgetDataBinder {
         views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
     }
 
+    /**
+     * Updates only the atomic base digit TextViews that changed.
+     * This avoids repainting all four tiles during minute ticks.
+     */
+    fun bindAtomicClockChangedDigitsOnly(
+        views: RemoteViews,
+        previousDigits: DigitState,
+        currentDigits: DigitState
+    ) {
+        if (previousDigits.h1 != currentDigits.h1) {
+            views.setTextViewText(R.id.digit_h1, currentDigits.h1.toString())
+        }
+        if (previousDigits.h2 != currentDigits.h2) {
+            views.setTextViewText(R.id.digit_h2, currentDigits.h2.toString())
+        }
+        if (previousDigits.m1 != currentDigits.m1) {
+            views.setTextViewText(R.id.digit_m1, currentDigits.m1.toString())
+        }
+        if (previousDigits.m2 != currentDigits.m2) {
+            views.setTextViewText(R.id.digit_m2, currentDigits.m2.toString())
+        }
+    }
+
+    /**
+     * Keeps fold-overlay text in sync by touching only digits that changed.
+     * Use this on hot minute paths to avoid repainting all 4 tiles.
+     */
+    fun bindAtomicFoldOverlayChangedDigitsOnly(
+        views: RemoteViews,
+        previousDigits: DigitState,
+        currentDigits: DigitState
+    ) {
+        if (previousDigits.h1 != currentDigits.h1) {
+            val text = currentDigits.h1.toString()
+            views.setTextViewText(R.id.fold_h1_from, text)
+            views.setTextViewText(R.id.fold_h1_to, text)
+        }
+        if (previousDigits.h2 != currentDigits.h2) {
+            val text = currentDigits.h2.toString()
+            views.setTextViewText(R.id.fold_h2_from, text)
+            views.setTextViewText(R.id.fold_h2_to, text)
+        }
+        if (previousDigits.m1 != currentDigits.m1) {
+            val text = currentDigits.m1.toString()
+            views.setTextViewText(R.id.fold_m1_from, text)
+            views.setTextViewText(R.id.fold_m1_to, text)
+        }
+        if (previousDigits.m2 != currentDigits.m2) {
+            val text = currentDigits.m2.toString()
+            views.setTextViewText(R.id.fold_m2_from, text)
+            views.setTextViewText(R.id.fold_m2_to, text)
+        }
+    }
+
     fun bindAtomicClockViews(
         views: RemoteViews,
         hour: Int,
@@ -78,10 +132,6 @@ object WidgetDataBinder {
         views.setTextViewText(toViewId, to.toString())
         views.setDisplayedChild(flipperId, 0)
         views.showNext(flipperId)
-        // Reliability fallback: some launchers occasionally skip ViewFlipper animation
-        // state transitions on partial updates. Force final child to "to" so the
-        // rendered digit is still correct even if showNext() is dropped.
-        views.setDisplayedChild(flipperId, 1)
     }
 
     @Suppress("DEPRECATION")

@@ -6,8 +6,11 @@ import com.clockweather.app.ClockWeatherApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.verify
+import io.mockk.Runs
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -42,6 +45,9 @@ class TimeTickReceiverTest {
         val app = mockk<ClockWeatherApplication>(relaxed = true)
         val context = mockk<Context>(relaxed = true)
         every { context.applicationContext } returns app
+        coEvery { app.resolveHighPrecision() } returns true
+        mockkObject(ClockAlarmReceiver.Companion)
+        every { ClockAlarmReceiver.scheduleNextTick(context, true) } just Runs
 
         receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
 
@@ -52,6 +58,7 @@ class TimeTickReceiverTest {
                 allowAnimation = true
             )
         }
+        verify(timeout = 3000) { ClockAlarmReceiver.scheduleNextTick(context, true) }
     }
 
     @Test

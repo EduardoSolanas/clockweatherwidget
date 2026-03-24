@@ -353,8 +353,9 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             // Transition-safe path (weather->home / lock->home):
             // avoid full widget rebuild to prevent visible old/new layout blending.
             pushClockInstant(
-                forceAllDigits = true,
-                suppressAnimationWindow = true
+                forceAllDigits = false,
+                suppressAnimationWindow = true,
+                quietRender = true
             )
             val isHighPrecision = resolveHighPrecision()
             ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
@@ -362,23 +363,25 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                 // Re-assert once more to handle launchers that defer host redraw
                 // during activity/screen transitions.
                 pushClockInstant(
-                    forceAllDigits = true,
-                    suppressAnimationWindow = true
+                    forceAllDigits = false,
+                    suppressAnimationWindow = true,
+                    quietRender = true
                 )
             }
             return
         }
 
         // Push correct digits immediately before the potentially slow full refresh.
-        pushClockInstant(forceAllDigits = true)
+        pushClockInstant(forceAllDigits = false, quietRender = true)
         refreshAllWidgets(context, isClockTick = false)
         val isHighPrecision = resolveHighPrecision()
         ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
         // Push again after full refresh to eliminate minute-boundary races
         // that can happen while weather/date binding is executing.
         pushClockInstant(
-            forceAllDigits = true,
-            suppressAnimationWindow = suppressAnimation
+            forceAllDigits = false,
+            suppressAnimationWindow = suppressAnimation,
+            quietRender = true
         )
     }
 

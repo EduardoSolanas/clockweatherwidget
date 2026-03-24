@@ -54,7 +54,7 @@ class ClockWeatherApplicationTest {
     }
 
     @Test
-    fun `syncClockNow force-pushes, refreshes, reschedules alarm, and force-pushes again`() {
+    fun `syncClockNow performs quiet delta pushes around refresh and reschedules alarm`() {
         val ids = intArrayOf(1)
         every { appWidgetManager.getAppWidgetIds(any()) } returns ids
 
@@ -71,22 +71,22 @@ class ClockWeatherApplicationTest {
             spyApp.syncClockNow(context)
         }
 
-        // First force push happens before the full refresh.
+        // First quiet delta push happens before the full refresh.
         verifyOrder {
             spyApp.pushClockInstant(
-                forceAllDigits = true,
+                forceAllDigits = false,
                 suppressAnimationWindow = false,
-                quietRender = false
+                quietRender = true
             )
             appWidgetManager.getAppWidgetIds(any()) // part of refreshAllWidgets
         }
 
-        // And a second force push is applied after refresh to avoid minute-boundary race.
+        // And a second quiet delta push is applied after refresh.
         verify(exactly = 2) {
             spyApp.pushClockInstant(
-                forceAllDigits = true,
+                forceAllDigits = false,
                 suppressAnimationWindow = false,
-                quietRender = false
+                quietRender = true
             )
         }
 
@@ -95,7 +95,7 @@ class ClockWeatherApplicationTest {
     }
 
     @Test
-    fun `syncClockNow suppress mode without reassert performs one quiet push only`() {
+    fun `syncClockNow suppress mode without reassert performs one quiet delta push only`() {
         val ids = intArrayOf(1)
         every { appWidgetManager.getAppWidgetIds(any()) } returns ids
 
@@ -118,9 +118,9 @@ class ClockWeatherApplicationTest {
 
         verify(exactly = 1) {
             spyApp.pushClockInstant(
-                forceAllDigits = true,
+                forceAllDigits = false,
                 suppressAnimationWindow = true,
-                quietRender = false
+                quietRender = true
             )
         }
         coVerify(exactly = 0) { spyApp.refreshAllWidgets(any(), any(), any()) }
@@ -128,7 +128,7 @@ class ClockWeatherApplicationTest {
     }
 
     @Test
-    fun `syncClockNow suppress mode with reassert performs two quiet force pushes`() {
+    fun `syncClockNow suppress mode with reassert performs two quiet delta pushes`() {
         val ids = intArrayOf(1)
         every { appWidgetManager.getAppWidgetIds(any()) } returns ids
 
@@ -151,9 +151,9 @@ class ClockWeatherApplicationTest {
 
         verify(exactly = 2) {
             spyApp.pushClockInstant(
-                forceAllDigits = true,
+                forceAllDigits = false,
                 suppressAnimationWindow = true,
-                quietRender = false
+                quietRender = true
             )
         }
         coVerify(exactly = 0) { spyApp.refreshAllWidgets(any(), any(), any()) }
