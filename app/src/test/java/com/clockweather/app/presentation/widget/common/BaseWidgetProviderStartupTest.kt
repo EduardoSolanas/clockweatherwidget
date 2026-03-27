@@ -6,8 +6,10 @@ import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
 import com.clockweather.app.receiver.ClockAlarmReceiver
 import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.Runs
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
@@ -28,9 +30,11 @@ class BaseWidgetProviderStartupTest {
     @Test
     fun `onEnabled registers receivers and schedules next tick`() {
         val provider = CompactWidgetProvider()
-        val context = mockk<Context>(relaxed = true)
-        val app = mockk<ClockWeatherApplication>(relaxed = true)
+        val context = mockk<Context>()
+        val app = mockk<ClockWeatherApplication>()
         every { context.applicationContext } returns app
+        every { app.registerScreenStateReceiver() } just Runs
+        every { app.registerTimeTickReceiver() } just Runs
         coEvery { app.resolveHighPrecision() } returns true
 
         mockkObject(ClockAlarmReceiver.Companion)

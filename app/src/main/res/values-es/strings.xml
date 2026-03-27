@@ -60,7 +60,6 @@
     <string name="label_just_now">ahora mismo</string>
     <string name="label_feels_like_format">Sensación %s</string>
     <string name="label_feels_like_range_format">Sensación %1$s/%2$s</string>
-    <string name="label_high_low_format">M:%1$s  m:%2$s</string>
     <string name="label_high_format">↑ %s</string>
     <string name="label_low_format">↓ %s</string>
 
@@ -74,8 +73,9 @@
     <string name="label_weather_fallback_title">Tiempo</string>
 
     <!-- CurrentWeatherCard -->
-    <string name="label_next_24_weather_forecast">PRONÓSTICO PRÓXIMAS 24H</string>
     <string name="label_7day_forecast">PRONÓSTICO 7 DÍAS</string>
+    <string name="label_14day_forecast">PRONÓSTICO 14 DÍAS</string>
+    <string name="label_nday_forecast">PRONÓSTICO %d DÍAS</string>
     <string name="label_today">Hoy</string>
     <string name="label_conditions">CONDICIONES</string>
     <string name="label_air_quality">CALIDAD DEL AIRE</string>
@@ -110,12 +110,14 @@
     <string name="label_metric_pressure_short">P: %d hPa</string>
     <string name="label_precip_percent">💧 %d%%</string>
     <string name="label_wind_speed_kmh">💨 %1$d km/h %2$s</string>
-    <string name="label_wind_speed_mph">💨 %1$d mph %2$s</string>
 
     <!-- Settings -->
     <string name="settings_title">Ajustes</string>
     <string name="settings_temperature_unit">Unidad de temperatura</string>
     <string name="settings_wind_speed_unit">Unidad de viento</string>
+    <string name="settings_weather_refresh_interval_label">Intervalo de actualización del clima</string>
+    <string name="settings_weather_refresh_interval_desc">Con qué frecuencia actualizar los datos de clima en minutos (5–1440)</string>
+    <string name="settings_weather_refresh_minutes">Minutos (5–1440)</string>
     <string name="settings_update_frequency">Frecuencia de actualización</string>
     <string name="settings_manage_locations">Gestionar ubicaciones</string>
     <string name="settings_section_clock">Reloj</string>
@@ -148,6 +150,11 @@
     <string name="settings_exact_alarm_permission_desc">El modo de alta precisión requiere el permiso de \'Alarmas y recordatorios\' en Android 12+. Sin esto, las actualizaciones pueden retrasarse unos minutos en modo ahorro de batería.</string>
     <string name="settings_exact_alarm_permission_button">Conceder permiso</string>
     <string name="settings_exact_alarm_permission_granted">Permiso concedido</string>
+
+    <!-- Forecast days setting -->
+    <string name="settings_forecast_days_label">Rango del pronóstico</string>
+    <string name="settings_forecast_days_7">7 días</string>
+    <string name="settings_forecast_days_14">14 días</string>
 
     <!-- Language Settings -->
     <string name="settings_language">Idioma</string>
@@ -213,9 +220,4 @@
     <string name="size_medium">Mediano</string>
     <string name="size_large">Grande</string>
     <string name="size_xl">XL</string>
-    <string name="unit_duration_format">%1$dh %2$dm</string>
-    <string name="label_1_min_ago">hace 1 minuto</string>
-    <string name="label_mins_ago">hace %d minutos</string>
-    <string name="label_1_hour_ago">hace 1 hora</string>
-    <string name="label_hours_ago">hace %d horas</string>
 </resources>

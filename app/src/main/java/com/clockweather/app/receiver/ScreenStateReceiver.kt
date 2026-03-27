@@ -20,6 +20,7 @@ import kotlinx.coroutines.withTimeout
  * AlarmManager minute ticks remain as backup for process restarts and screen-off periods.
  */
 class ScreenStateReceiver : BroadcastReceiver() {
+    @Suppress("DEPRECATION")
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext as? ClockWeatherApplication ?: return
 
@@ -81,10 +82,7 @@ class ScreenStateReceiver : BroadcastReceiver() {
                     // All unlock/screen transitions are quiet no-animation sync paths.
                     app.syncClockNow(
                         context,
-                        suppressAnimation = true,
-                        reassertAfterReschedule =
-                            sourceAction == Intent.ACTION_SCREEN_ON ||
-                            sourceAction == Intent.ACTION_DREAMING_STOPPED
+                        suppressAnimation = true
                     )
                 }
             } finally {
@@ -100,6 +98,7 @@ class ScreenStateReceiver : BroadcastReceiver() {
         internal fun resetUnlockConvergenceThrottleForTests() {
             lastUnlockConvergenceMs = 0L
         }
+        @Suppress("DEPRECATION")
         fun buildIntentFilter(): IntentFilter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_SCREEN_OFF)

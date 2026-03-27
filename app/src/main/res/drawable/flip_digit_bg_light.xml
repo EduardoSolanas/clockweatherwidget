@@ -1,112 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Overall base shape -->
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#F5F5F5" />
-            <corners android:radius="8dp" />
-            <stroke android:width="1dp" android:color="#33000000" />
-        </shape>
-    </item>
+	<item>
+		<shape android:shape="rectangle">
+			<solid android:color="#F7F7F7" />
+			<corners android:radius="8dp" />
+		</shape>
+	</item>
 
-    <!-- Top half brighter / bottom half slightly shaded — split-flap depth -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#CCFFFFFF"
-                android:centerColor="#00FFFFFF"
-                android:centerY="0.48"
-                android:endColor="#26000000" />
-            <corners android:radius="8dp" />
-        </shape>
-    </item>
+	<item>
+		<shape android:shape="rectangle">
+			<gradient
+				android:angle="270"
+				android:startColor="#30FFFFFF"
+				android:centerColor="#14FFFFFF"
+				android:centerY="0.46"
+				android:endColor="#16000000" />
+			<corners android:radius="8dp" />
+		</shape>
+	</item>
 
-    <!-- Stronger top-half shade -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#3F000000"
-                android:centerColor="#1B000000"
-                android:centerY="0.50"
-                android:endColor="#00000000" />
-            <corners android:radius="8dp" />
-        </shape>
-    </item>
+	<item>
+		<shape android:shape="rectangle">
+			<gradient
+				android:angle="0"
+				android:startColor="#12000000"
+				android:centerColor="#00000000"
+				android:centerX="0.50"
+				android:endColor="#12000000" />
+			<corners android:radius="8dp" />
+		</shape>
+	</item>
 
-    <!-- Top surface contour highlight (curved look) -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#30FFFFFF"
-                android:centerColor="#10FFFFFF"
-                android:centerY="0.34"
-                android:endColor="#00000000" />
-            <corners android:radius="8dp" />
-        </shape>
-    </item>
-
-    <!-- Side-edge vignette for depth -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="0"
-                android:startColor="#1E000000"
-                android:centerColor="#00000000"
-                android:centerX="0.50"
-                android:endColor="#1E000000" />
-            <corners android:radius="8dp" />
-        </shape>
-    </item>
-
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#12000000"
-                android:centerColor="#07000000"
-                android:centerY="0.50"
-                android:endColor="#00000000" />
-            <corners android:radius="8dp" />
-        </shape>
-    </item>
-
-    <!-- Bottom-half shadow vignette -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#00000000"
-                android:centerColor="#00000000"
-                android:centerY="0.55"
-                android:endColor="#18000000" />
-            <corners android:radius="8dp" />
-        </shape>
-    </item>
-
-    <!-- Centered fold line shadow -->
-    <item android:top="0dp" android:bottom="0dp">
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#00000000"
-                android:centerColor="#44000000"
-                android:centerY="0.5"
-                android:endColor="#00000000" />
-        </shape>
-    </item>
-
-    <!-- Hairline highlight just above center -->
-    <item android:top="0dp" android:bottom="0dp">
-        <shape>
-            <gradient
-                android:angle="270"
-                android:startColor="#00000000"
-                android:centerColor="#99FFFFFF"
-                android:centerY="0.49"
-                android:endColor="#00000000" />
-        </shape>
-    </item>
+	<item>
+		<shape android:shape="rectangle">
+			<stroke
+				android:width="1dp"
+				android:color="#16000000" />
+			<corners android:radius="8dp" />
+		</shape>
+	</item>
 </layer-list>
+

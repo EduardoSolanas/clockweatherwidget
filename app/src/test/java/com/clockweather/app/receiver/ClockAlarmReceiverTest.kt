@@ -1,5 +1,6 @@
 package com.clockweather.app.receiver
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -28,6 +29,7 @@ import org.robolectric.annotation.Config
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
+@SuppressLint("UnspecifiedRegisterReceiverFlag")
 class ClockAlarmReceiverTest {
 
     private lateinit var receiver: ClockAlarmReceiver
@@ -41,12 +43,12 @@ class ClockAlarmReceiverTest {
     @Before
     fun setup() {
         receiver = ClockAlarmReceiver()
-        app = mockk(relaxed = true)
-        context = mockk(relaxed = true)
-        powerManager = mockk(relaxed = true)
-        appWidgetManager = mockk(relaxed = true)
-        alarmManager = mockk(relaxed = true)
-        sharedPreferences = mockk(relaxed = true)
+        app = mockk()
+        context = mockk()
+        powerManager = mockk()
+        appWidgetManager = mockk()
+        alarmManager = mockk()
+        sharedPreferences = mockk()
 
         every { context.applicationContext } returns app
         every { context.getSystemService(Context.POWER_SERVICE) } returns powerManager
@@ -57,7 +59,7 @@ class ClockAlarmReceiverTest {
         every { sharedPreferences.getLong(any(), any()) } returns -1L
 
         // Mock battery check — return healthy battery
-        val batteryIntent = mockk<Intent>(relaxed = true)
+        val batteryIntent = mockk<Intent>()
         every { batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) } returns 80
         every { batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, 100) } returns 100
         every { context.registerReceiver(isNull(), any()) } returns batteryIntent
@@ -68,8 +70,16 @@ class ClockAlarmReceiverTest {
         // Default: has active widgets
         every { appWidgetManager.getAppWidgetIds(any<ComponentName>()) } returns intArrayOf(1)
         every { app.getLastObservedTimeTickEpochMinute() } returns -1L
-
+        every { app.isTimeTickReceiverRegistered() } returns false
+        coEvery { app.refreshAllWidgets(any(), any(), any()) } just Runs
+        every { app.pushClockInstant(any(), any(), any(), any()) } just Runs
         coEvery { app.resolveHighPrecision() } returns true
+
+        every { powerManager.isInteractive } returns true
+        every { alarmManager.setExactAndAllowWhileIdle(any(), any(), any()) } just Runs
+        every { alarmManager.setAndAllowWhileIdle(any(), any(), any()) } just Runs
+        every { alarmManager.cancel(any<android.app.PendingIntent>()) } just Runs
+        every { alarmManager.canScheduleExactAlarms() } returns true
     }
 
     @After
@@ -238,7 +248,7 @@ class ClockAlarmReceiverTest {
     @Test
     fun `scheduleKeepalive skips when battery critical`() {
         // Battery at 3%
-        val batteryIntent = mockk<Intent>(relaxed = true)
+        val batteryIntent = mockk<Intent>()
         every { batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) } returns 3
         every { batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, 100) } returns 100
         every { context.registerReceiver(isNull(), any()) } returns batteryIntent

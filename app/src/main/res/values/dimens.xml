@@ -5,22 +5,18 @@
     <dimen name="flip_ampm_text_size">12sp</dimen>
 
     <!-- Small -->
-    <dimen name="flip_digit_width_small">44dp</dimen>
     <dimen name="flip_digit_height_small">60dp</dimen>
     <dimen name="flip_text_size_small">38sp</dimen>
 
     <!-- Medium -->
-    <dimen name="flip_digit_width_medium">56dp</dimen>
     <dimen name="flip_digit_height_medium">72dp</dimen>
     <dimen name="flip_text_size_medium">48sp</dimen>
 
     <!-- Large -->
-    <dimen name="flip_digit_width_large">72dp</dimen>
     <dimen name="flip_digit_height_large">90dp</dimen>
     <dimen name="flip_text_size_large">52sp</dimen>
 
     <!-- XL -->
-    <dimen name="flip_digit_width_xl">92dp</dimen>
     <dimen name="flip_digit_height_xl">92dp</dimen>
     <dimen name="flip_text_size_xl">58sp</dimen>
 </resources>

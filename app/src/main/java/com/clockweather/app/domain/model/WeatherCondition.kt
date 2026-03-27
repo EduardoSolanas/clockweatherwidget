@@ -3,42 +3,42 @@ import com.clockweather.app.R
 
 enum class WeatherCondition(
     val description: String,
-    val iconResName: String,
+    @androidx.annotation.DrawableRes val iconResId: Int,
     val isNightVariant: Boolean = false,
     @androidx.annotation.StringRes val labelResId: Int
 ) {
-    CLEAR_DAY("Clear sky", "ic_weather_clear_day", labelResId = R.string.condition_clear_sky),
-    CLEAR_NIGHT("Clear sky", "ic_weather_clear_night", true, labelResId = R.string.condition_clear_sky),
-    MAINLY_CLEAR_DAY("Mainly clear", "ic_weather_partly_cloudy_day", labelResId = R.string.condition_mainly_clear),
-    MAINLY_CLEAR_NIGHT("Mainly clear", "ic_weather_partly_cloudy_night", true, labelResId = R.string.condition_mainly_clear),
-    PARTLY_CLOUDY_DAY("Partly cloudy", "ic_weather_partly_cloudy_day", labelResId = R.string.condition_partly_cloudy),
-    PARTLY_CLOUDY_NIGHT("Partly cloudy", "ic_weather_partly_cloudy_night", true, labelResId = R.string.condition_partly_cloudy),
-    OVERCAST("Overcast", "ic_weather_cloudy", labelResId = R.string.condition_overcast),
-    FOG("Fog", "ic_weather_fog", labelResId = R.string.condition_fog),
-    DEPOSITING_RIME_FOG("Depositing rime fog", "ic_weather_fog", labelResId = R.string.condition_rime_fog),
-    DRIZZLE_LIGHT("Light drizzle", "ic_weather_drizzle_light", labelResId = R.string.condition_drizzle_light),
-    DRIZZLE_MODERATE("Moderate drizzle", "ic_weather_drizzle", labelResId = R.string.condition_drizzle_moderate),
-    DRIZZLE_DENSE("Dense drizzle", "ic_weather_drizzle_heavy", labelResId = R.string.condition_drizzle_dense),
-    FREEZING_DRIZZLE_LIGHT("Light freezing drizzle", "ic_weather_freezing_drizzle", labelResId = R.string.condition_freezing_drizzle_light),
-    FREEZING_DRIZZLE_HEAVY("Heavy freezing drizzle", "ic_weather_freezing_drizzle", labelResId = R.string.condition_freezing_drizzle_dense),
-    RAIN_SLIGHT("Slight rain", "ic_weather_rain_light", labelResId = R.string.condition_rain_slight),
-    RAIN_MODERATE("Moderate rain", "ic_weather_rain", labelResId = R.string.condition_rain_moderate),
-    RAIN_HEAVY("Heavy rain", "ic_weather_rain_heavy", labelResId = R.string.condition_rain_heavy),
-    FREEZING_RAIN_LIGHT("Light freezing rain", "ic_weather_freezing_rain", labelResId = R.string.condition_freezing_rain_light),
-    FREEZING_RAIN_HEAVY("Heavy freezing rain", "ic_weather_freezing_rain", labelResId = R.string.condition_freezing_rain_heavy),
-    SNOW_SLIGHT("Slight snowfall", "ic_weather_snow_light", labelResId = R.string.condition_snow_slight),
-    SNOW_MODERATE("Moderate snowfall", "ic_weather_snow", labelResId = R.string.condition_snow_moderate),
-    SNOW_HEAVY("Heavy snowfall", "ic_weather_snow_heavy", labelResId = R.string.condition_snow_heavy),
-    SNOW_GRAINS("Snow grains", "ic_weather_snow_grains", labelResId = R.string.condition_snow_grains),
-    RAIN_SHOWER_SLIGHT("Slight rain shower", "ic_weather_rain_shower_light", labelResId = R.string.condition_rain_showers_slight),
-    RAIN_SHOWER_MODERATE("Moderate rain shower", "ic_weather_rain_shower", labelResId = R.string.condition_rain_showers_moderate),
-    RAIN_SHOWER_VIOLENT("Violent rain shower", "ic_weather_rain_shower_heavy", labelResId = R.string.condition_rain_showers_violent),
-    SNOW_SHOWER_SLIGHT("Slight snow shower", "ic_weather_snow_shower_light", labelResId = R.string.condition_snow_showers_slight),
-    SNOW_SHOWER_HEAVY("Heavy snow shower", "ic_weather_snow_shower", labelResId = R.string.condition_snow_showers_heavy),
-    THUNDERSTORM("Thunderstorm", "ic_weather_thunderstorm", labelResId = R.string.condition_thunderstorm),
-    THUNDERSTORM_SLIGHT_HAIL("Thunderstorm with slight hail", "ic_weather_thunderstorm_hail", labelResId = R.string.condition_thunderstorm_hail),
-    THUNDERSTORM_HEAVY_HAIL("Thunderstorm with heavy hail", "ic_weather_thunderstorm_hail", labelResId = R.string.condition_thunderstorm_hail_heavy),
-    UNKNOWN("Unknown", "ic_weather_clear_day", labelResId = R.string.condition_clear_sky);
+    CLEAR_DAY("Clear sky", R.drawable.ic_weather_clear_day, labelResId = R.string.condition_clear_sky),
+    CLEAR_NIGHT("Clear sky", R.drawable.ic_weather_clear_night, true, labelResId = R.string.condition_clear_sky),
+    MAINLY_CLEAR_DAY("Mainly clear", R.drawable.ic_weather_partly_cloudy_day, labelResId = R.string.condition_mainly_clear),
+    MAINLY_CLEAR_NIGHT("Mainly clear", R.drawable.ic_weather_partly_cloudy_night, true, labelResId = R.string.condition_mainly_clear),
+    PARTLY_CLOUDY_DAY("Partly cloudy", R.drawable.ic_weather_partly_cloudy_day, labelResId = R.string.condition_partly_cloudy),
+    PARTLY_CLOUDY_NIGHT("Partly cloudy", R.drawable.ic_weather_partly_cloudy_night, true, labelResId = R.string.condition_partly_cloudy),
+    OVERCAST("Overcast", R.drawable.ic_weather_cloudy, labelResId = R.string.condition_overcast),
+    FOG("Fog", R.drawable.ic_weather_fog, labelResId = R.string.condition_fog),
+    DEPOSITING_RIME_FOG("Depositing rime fog", R.drawable.ic_weather_fog, labelResId = R.string.condition_rime_fog),
+    DRIZZLE_LIGHT("Light drizzle", R.drawable.ic_weather_drizzle_light, labelResId = R.string.condition_drizzle_light),
+    DRIZZLE_MODERATE("Moderate drizzle", R.drawable.ic_weather_drizzle, labelResId = R.string.condition_drizzle_moderate),
+    DRIZZLE_DENSE("Dense drizzle", R.drawable.ic_weather_drizzle_heavy, labelResId = R.string.condition_drizzle_dense),
+    FREEZING_DRIZZLE_LIGHT("Light freezing drizzle", R.drawable.ic_weather_freezing_drizzle, labelResId = R.string.condition_freezing_drizzle_light),
+    FREEZING_DRIZZLE_HEAVY("Heavy freezing drizzle", R.drawable.ic_weather_freezing_drizzle, labelResId = R.string.condition_freezing_drizzle_dense),
+    RAIN_SLIGHT("Slight rain", R.drawable.ic_weather_rain_light, labelResId = R.string.condition_rain_slight),
+    RAIN_MODERATE("Moderate rain", R.drawable.ic_weather_rain, labelResId = R.string.condition_rain_moderate),
+    RAIN_HEAVY("Heavy rain", R.drawable.ic_weather_rain_heavy, labelResId = R.string.condition_rain_heavy),
+    FREEZING_RAIN_LIGHT("Light freezing rain", R.drawable.ic_weather_freezing_rain, labelResId = R.string.condition_freezing_rain_light),
+    FREEZING_RAIN_HEAVY("Heavy freezing rain", R.drawable.ic_weather_freezing_rain, labelResId = R.string.condition_freezing_rain_heavy),
+    SNOW_SLIGHT("Slight snowfall", R.drawable.ic_weather_snow_light, labelResId = R.string.condition_snow_slight),
+    SNOW_MODERATE("Moderate snowfall", R.drawable.ic_weather_snow, labelResId = R.string.condition_snow_moderate),
+    SNOW_HEAVY("Heavy snowfall", R.drawable.ic_weather_snow_heavy, labelResId = R.string.condition_snow_heavy),
+    SNOW_GRAINS("Snow grains", R.drawable.ic_weather_snow_grains, labelResId = R.string.condition_snow_grains),
+    RAIN_SHOWER_SLIGHT("Slight rain shower", R.drawable.ic_weather_rain_shower_light, labelResId = R.string.condition_rain_showers_slight),
+    RAIN_SHOWER_MODERATE("Moderate rain shower", R.drawable.ic_weather_rain_shower, labelResId = R.string.condition_rain_showers_moderate),
+    RAIN_SHOWER_VIOLENT("Violent rain shower", R.drawable.ic_weather_rain_shower_heavy, labelResId = R.string.condition_rain_showers_violent),
+    SNOW_SHOWER_SLIGHT("Slight snow shower", R.drawable.ic_weather_snow_shower_light, labelResId = R.string.condition_snow_showers_slight),
+    SNOW_SHOWER_HEAVY("Heavy snow shower", R.drawable.ic_weather_snow_shower, labelResId = R.string.condition_snow_showers_heavy),
+    THUNDERSTORM("Thunderstorm", R.drawable.ic_weather_thunderstorm, labelResId = R.string.condition_thunderstorm),
+    THUNDERSTORM_SLIGHT_HAIL("Thunderstorm with slight hail", R.drawable.ic_weather_thunderstorm_hail, labelResId = R.string.condition_thunderstorm_hail),
+    THUNDERSTORM_HEAVY_HAIL("Thunderstorm with heavy hail", R.drawable.ic_weather_thunderstorm_hail, labelResId = R.string.condition_thunderstorm_hail_heavy),
+    UNKNOWN("Unknown", R.drawable.ic_weather_clear_day, labelResId = R.string.condition_clear_sky);
 
     /** Convert back to WMO weather code for database storage */
     fun toCode(): Int = when (this) {
@@ -104,6 +104,41 @@ enum class WeatherCondition(
             96 -> THUNDERSTORM_SLIGHT_HAIL
             99 -> THUNDERSTORM_HEAVY_HAIL
             else -> UNKNOWN
+        }
+
+        /** Map Google Weather API condition type strings → domain WeatherCondition */
+        fun fromGoogleWeatherType(type: String, isDay: Boolean = true): WeatherCondition = when (type) {
+            "CLEAR"                                              -> if (isDay) CLEAR_DAY else CLEAR_NIGHT
+            "MOSTLY_CLEAR"                                       -> if (isDay) MAINLY_CLEAR_DAY else MAINLY_CLEAR_NIGHT
+            "PARTLY_CLOUDY"                                      -> if (isDay) PARTLY_CLOUDY_DAY else PARTLY_CLOUDY_NIGHT
+            "MOSTLY_CLOUDY", "CLOUDY"                            -> OVERCAST
+            "WINDY"                                              -> if (isDay) MAINLY_CLEAR_DAY else MAINLY_CLEAR_NIGHT
+            "WIND_AND_RAIN"                                      -> RAIN_MODERATE
+            "LIGHT_RAIN"                                         -> RAIN_SLIGHT
+            "RAIN"                                               -> RAIN_MODERATE
+            "HEAVY_RAIN"                                         -> RAIN_HEAVY
+            "LIGHT_RAIN_SHOWERS", "RAIN_SHOWERS"                 -> RAIN_SHOWER_SLIGHT
+            "HEAVY_RAIN_SHOWERS"                                 -> RAIN_SHOWER_VIOLENT
+            "LIGHT_DRIZZLE", "DRIZZLE"                           -> DRIZZLE_LIGHT
+            "HEAVY_DRIZZLE"                                      -> DRIZZLE_DENSE
+            "LIGHT_FREEZING_DRIZZLE", "FREEZING_DRIZZLE"         -> FREEZING_DRIZZLE_LIGHT
+            "LIGHT_FREEZING_RAIN"                                -> FREEZING_DRIZZLE_HEAVY
+            "FREEZING_RAIN"                                      -> FREEZING_RAIN_LIGHT
+            "LIGHT_SNOW", "SNOW_FLURRIES", "FLURRIES"            -> SNOW_SLIGHT
+            "SNOW"                                               -> SNOW_MODERATE
+            "HEAVY_SNOW", "BLOWING_SNOW", "BLIZZARD"             -> SNOW_HEAVY
+            "WINTRY_MIX", "MIXED_PRECIPITATION",
+            "ICE_PELLETS", "LIGHT_ICE_PELLETS",
+            "HEAVY_ICE_PELLETS", "HAIL", "ICE_CRYSTALS"         -> SNOW_GRAINS
+            "LIGHT_SNOW_SHOWERS"                                 -> SNOW_SHOWER_SLIGHT
+            "SNOW_SHOWERS", "HEAVY_SNOW_SHOWERS"                 -> SNOW_SHOWER_HEAVY
+            "THUNDERSTORM", "LIGHT_THUNDERSTORM",
+            "HEAVY_THUNDERSTORM"                                 -> THUNDERSTORM
+            "THUNDERSTORM_WITH_HAIL", "HAIL_THUNDERSTORM"        -> THUNDERSTORM_HEAVY_HAIL
+            "FOG", "LIGHT_FOG", "ICE_FOG"                        -> FOG
+            "HAZE", "SMOKE", "DUST", "SAND_STORM"               -> DEPOSITING_RIME_FOG
+            "TROPICAL_STORM", "HURRICANE", "TORNADO"             -> THUNDERSTORM_HEAVY_HAIL
+            else                                                 -> if (isDay) MAINLY_CLEAR_DAY else MAINLY_CLEAR_NIGHT
         }
 
         /** Map WeatherAPI.com condition codes → domain WeatherCondition */

@@ -28,11 +28,31 @@ import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
+import java.time.LocalDate
+import java.util.Locale
 import kotlin.math.ceil
+import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlin.math.sin
+
+internal fun scopedHourlyForecasts(
+    hourlyForecasts: List<HourlyForecast>,
+    selectedDate: LocalDate?
+): List<HourlyForecast> {
+    if (hourlyForecasts.isEmpty()) return emptyList()
+
+    val orderedForecasts = hourlyForecasts.sortedBy { it.dateTime }
+    if (selectedDate == null) {
+        return orderedForecasts.take(24)
+    }
+
+    return orderedForecasts
+        .filter { it.dateTime.toLocalDate() == selectedDate }
+        .ifEmpty { orderedForecasts.take(24) }
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -64,10 +84,24 @@ private fun niceGridValues(min: Double, max: Double, targetCount: Int = 4): List
 fun HourlyWeatherGraph(
     hourlyForecasts: List<HourlyForecast>,
     temperatureUnit: TemperatureUnit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selectedDate: LocalDate? = null
 ) {
-    val next24Hours = hourlyForecasts.take(24)
+    val next24Hours = remember(hourlyForecasts, selectedDate) {
+        scopedHourlyForecasts(hourlyForecasts, selectedDate)
+    }
     if (next24Hours.size < 2) return
+
+    val resolvedSelectedDate = selectedDate ?: next24Hours.first().dateTime.toLocalDate()
+    val isTodaySelection = resolvedSelectedDate == LocalDate.now()
+    val hourlyTitle = stringResource(R.string.label_hourly_forecast).uppercase(Locale.getDefault())
+    val todayLabel = stringResource(R.string.label_today).uppercase(Locale.getDefault())
+    val dayLabel = if (isTodaySelection) {
+        todayLabel
+    } else {
+        DateFormatter.formatDate(resolvedSelectedDate).uppercase(Locale.getDefault())
+    }
+    val titleText = "$hourlyTitle · $dayLabel"
 
     // G1: pre-compute converted temperatures so canvas Y-positions match label values
     val convertedTemps = remember(next24Hours, temperatureUnit) {
@@ -85,15 +119,20 @@ fun HourlyWeatherGraph(
 
     // G8: auto-scroll so the current hour is visible on first render
     val scrollState = rememberScrollState()
-    val currentHourIndex = remember(next24Hours) {
-        val nowHour = java.time.LocalTime.now().hour
-        next24Hours.indexOfFirst { it.dateTime.hour == nowHour }.coerceAtLeast(0)
+    val currentHourIndex = remember(next24Hours, resolvedSelectedDate, isTodaySelection) {
+        if (!isTodaySelection) {
+            0
+        } else {
+            val nowHour = java.time.LocalTime.now().hour
+            next24Hours.indexOfFirst { it.dateTime.hour == nowHour }.coerceAtLeast(0)
+        }
     }
     val density = LocalDensity.current
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentHourIndex, next24Hours.size, isTodaySelection) {
         val colPx = with(density) { 60.dp.roundToPx() }
         // Show one hour before current so context is visible
-        scrollState.scrollTo(((currentHourIndex - 1) * colPx).coerceAtLeast(0))
+        val targetIndex = if (isTodaySelection) currentHourIndex - 1 else 0
+        scrollState.scrollTo((targetIndex * colPx).coerceAtLeast(0))
     }
 
     // G9: accessibility description
@@ -113,7 +152,7 @@ fun HourlyWeatherGraph(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = stringResource(R.string.label_next_24_weather_forecast),
+                text = titleText,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.2.sp,
@@ -313,27 +352,60 @@ private fun HourlyGraphCanvas(
             drawCircle(color = onSurfaceColor, radius = 1.5.dp.toPx(), center = center)
         }
 
-        // G6: rounded precipitation bars
+        // G6: rounded precipitation bars with rain streaks / snowflake icons inside
         forecasts.forEachIndexed { index, forecast ->
             val x          = index * pointSpacing + pointSpacing / 2f
             val barWidth   = pointSpacing * 0.38f
             val probFactor = forecast.precipitationProbability / 100f
-            val barHeight  = (30.dp.toPx() * probFactor).coerceAtLeast(if (probFactor > 0) 2.dp.toPx() else 0f)
+            val barHeight  = (36.dp.toPx() * probFactor).coerceAtLeast(if (probFactor > 0) 2.dp.toPx() else 0f)
             if (probFactor <= 0f) return@forEachIndexed
 
             val isSnow   = forecast.weatherCondition.name.contains("SNOW", ignoreCase = true)
             val barColor = if (isSnow) snowColor else rainColor
             val top      = height - bottomPadding - barHeight
 
+            // Bar with stronger top gradient for visibility
             drawRoundRect(
                 brush = Brush.verticalGradient(
-                    listOf(barColor.copy(alpha = 0.72f), barColor.copy(alpha = 0.18f)),
+                    listOf(barColor.copy(alpha = 0.85f), barColor.copy(alpha = 0.22f)),
                     startY = top, endY = height - bottomPadding
                 ),
                 topLeft = Offset(x - barWidth / 2f, top),
                 size = Size(barWidth, barHeight),
-                cornerRadius = CornerRadius(3.dp.toPx())
+                cornerRadius = CornerRadius(4.dp.toPx())
             )
+
+            if (barHeight >= 12.dp.toPx()) {
+                val iconColor = Color.White.copy(alpha = 0.80f)
+                val cx = x
+                val cy = top + barHeight * 0.55f
+                val stroke = 1.5.dp.toPx()
+
+                if (isSnow) {
+                    // 6-arm snowflake: 3 lines crossing at centre
+                    val armLen = minOf(barWidth * 0.30f, 4.dp.toPx())
+                    for (i in 0..2) {
+                        val rad = Math.toRadians(i * 60.0)
+                        val dx = (armLen * cos(rad)).toFloat()
+                        val dy = (armLen * sin(rad)).toFloat()
+                        drawLine(iconColor, Offset(cx - dx, cy - dy), Offset(cx + dx, cy + dy),
+                            strokeWidth = stroke, cap = StrokeCap.Round)
+                    }
+                } else {
+                    // 3 diagonal rain streaks (angled 20° from vertical)
+                    val streakLen = minOf(barWidth * 0.38f, 5.dp.toPx())
+                    val rad = Math.toRadians(20.0)
+                    val sdx = (streakLen * sin(rad)).toFloat()
+                    val sdy = (streakLen * cos(rad)).toFloat()
+                    val offsets = listOf(-barWidth * 0.22f, 0f, barWidth * 0.22f)
+                    offsets.forEach { ox ->
+                        drawLine(iconColor,
+                            start = Offset(cx + ox - sdx / 2f, cy - sdy / 2f),
+                            end   = Offset(cx + ox + sdx / 2f, cy + sdy / 2f),
+                            strokeWidth = stroke, cap = StrokeCap.Round)
+                    }
+                }
+            }
         }
 
         // Temperature labels above each dot
@@ -347,12 +419,13 @@ private fun HourlyGraphCanvas(
             if (y >= 0) drawText(label, topLeft = Offset(x, y))
         }
 
-        // Precipitation % labels
+        // Precipitation % labels with rain/snow prefix
         forecasts.forEachIndexed { index, forecast ->
             if (forecast.precipitationProbability <= 0) return@forEachIndexed
             val isSnow = forecast.weatherCondition.name.contains("SNOW", ignoreCase = true)
+            val prefix = if (isSnow) "❄ " else "💧 "
             val label = textMeasurer.measure(
-                "${forecast.precipitationProbability}%",
+                "$prefix${forecast.precipitationProbability}%",
                 style = if (isSnow) snowLabelStyle else precipLabelStyle
             )
             val probFactor = forecast.precipitationProbability / 100f

@@ -40,6 +40,7 @@ class SettingsViewModel @Inject constructor(
         val KEY_TEMP_UNIT = stringPreferencesKey("temperature_unit")
         val KEY_SPEED_UNIT = stringPreferencesKey("speed_unit")
         val KEY_UPDATE_INTERVAL = intPreferencesKey("update_interval_minutes")
+        val KEY_WEATHER_REFRESH_INTERVAL = intPreferencesKey("weather_refresh_interval_minutes")
         val KEY_USE_24H = booleanPreferencesKey("use_24h_clock")
         val KEY_SHOW_DATE = booleanPreferencesKey("show_date_in_widget")
         val KEY_SHOW_TODAY_COMPACT = booleanPreferencesKey("show_today_compact")
@@ -50,7 +51,9 @@ class SettingsViewModel @Inject constructor(
         val KEY_LANGUAGE = stringPreferencesKey("language")
         val KEY_HIGH_PRECISION = booleanPreferencesKey("high_precision_clock")
         val KEY_FLIP_ANIMATION = booleanPreferencesKey("flip_animation_enabled")
+        val KEY_FORECAST_DAYS = intPreferencesKey("forecast_days")
         const val DEFAULT_DATE_FONT_SP = 15f
+        const val DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES = 30
         const val CLOCK_THEME_DARK = "dark"
         const val CLOCK_THEME_LIGHT = "light"
     }
@@ -97,8 +100,8 @@ class SettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_DATE_FONT_SP)
 
     val clockTheme: StateFlow<String> = dataStore.data
-        .map { prefs -> prefs[KEY_CLOCK_THEME] ?: CLOCK_THEME_DARK }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CLOCK_THEME_DARK)
+        .map { prefs -> prefs[KEY_CLOCK_THEME] ?: CLOCK_THEME_LIGHT }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CLOCK_THEME_LIGHT)
 
     val clockTileSize: StateFlow<ClockTileSize> = dataStore.data
         .map { prefs ->
@@ -119,6 +122,14 @@ class SettingsViewModel @Inject constructor(
     val flipAnimationEnabled: StateFlow<Boolean> = dataStore.data
         .map { prefs -> prefs[KEY_FLIP_ANIMATION] ?: true }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    val weatherRefreshIntervalMinutes: StateFlow<Int> = dataStore.data
+        .map { prefs -> prefs[KEY_WEATHER_REFRESH_INTERVAL] ?: DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES)
+
+    val forecastDays: StateFlow<Int> = dataStore.data
+        .map { prefs -> prefs[KEY_FORECAST_DAYS] ?: 7 }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)
 
     private val _isExactAlarmPermissionGranted = MutableStateFlow(checkExactAlarmPermission())
     val isExactAlarmPermissionGranted = _isExactAlarmPermissionGranted.asStateFlow()
@@ -229,6 +240,20 @@ class SettingsViewModel @Inject constructor(
             dataStore.edit { it[KEY_FLIP_ANIMATION] = enabled }
             // Clear baseline state so widgets do a full rebuild with the new mode
             resetClockStateForActiveWidgets()
+            triggerWidgetUpdate()
+        }
+    }
+
+    fun setWeatherRefreshInterval(minutes: Int) {
+        viewModelScope.launch {
+            val validMinutes = minutes.coerceIn(5, 1440)  // 5 min to 24 hours
+            dataStore.edit { it[KEY_WEATHER_REFRESH_INTERVAL] = validMinutes }
+        }
+    }
+
+    fun setForecastDays(days: Int) {
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_FORECAST_DAYS] = days }
             triggerWidgetUpdate()
         }
     }

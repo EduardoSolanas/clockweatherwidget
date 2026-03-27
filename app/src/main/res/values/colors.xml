@@ -2,13 +2,12 @@
 <resources>
     <!-- Primary Theme Colors (used by theme/manifest) -->
     <color name="primary">#1565C0</color>
-    <color name="primary_dark">#0D47A1</color>
 
     <!-- Widget Colors (used in widget XML layouts) -->
     <color name="widget_text_primary">#FFFFFF</color>
     <color name="widget_text_secondary">#B0BEC5</color>
-    <!-- Light mode: dark card so white text is readable on bright wallpapers -->
-    <color name="weather_card_bg_color">#CC111111</color>
+    <!-- Weather card background — fully opaque so it looks black on any wallpaper or picker background -->
+    <color name="weather_card_bg_color">#FF111111</color>
 
     <!-- Flip Clock Colors (used in widget layouts) -->
     <color name="flip_digit_text">#FFFFFF</color>

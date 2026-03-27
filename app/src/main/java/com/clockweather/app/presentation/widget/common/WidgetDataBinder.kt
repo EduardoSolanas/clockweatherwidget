@@ -14,6 +14,25 @@ import java.time.LocalDate
 
 object WidgetDataBinder {
 
+    internal val digitChildIdsByPrefix = mapOf(
+        "digit_h1" to intArrayOf(
+            R.id.digit_h1_0, R.id.digit_h1_1, R.id.digit_h1_2, R.id.digit_h1_3, R.id.digit_h1_4,
+            R.id.digit_h1_5, R.id.digit_h1_6, R.id.digit_h1_7, R.id.digit_h1_8, R.id.digit_h1_9
+        ),
+        "digit_h2" to intArrayOf(
+            R.id.digit_h2_0, R.id.digit_h2_1, R.id.digit_h2_2, R.id.digit_h2_3, R.id.digit_h2_4,
+            R.id.digit_h2_5, R.id.digit_h2_6, R.id.digit_h2_7, R.id.digit_h2_8, R.id.digit_h2_9
+        ),
+        "digit_m1" to intArrayOf(
+            R.id.digit_m1_0, R.id.digit_m1_1, R.id.digit_m1_2, R.id.digit_m1_3, R.id.digit_m1_4,
+            R.id.digit_m1_5, R.id.digit_m1_6, R.id.digit_m1_7, R.id.digit_m1_8, R.id.digit_m1_9
+        ),
+        "digit_m2" to intArrayOf(
+            R.id.digit_m2_0, R.id.digit_m2_1, R.id.digit_m2_2, R.id.digit_m2_3, R.id.digit_m2_4,
+            R.id.digit_m2_5, R.id.digit_m2_6, R.id.digit_m2_7, R.id.digit_m2_8, R.id.digit_m2_9
+        )
+    )
+
     fun bindAtomicClockTextOnly(
         views: RemoteViews,
         hour: Int,
@@ -90,6 +109,12 @@ object WidgetDataBinder {
             views.setTextViewText(R.id.fold_m2_to, text)
         }
     }
+
+    fun syncFoldOverlaysChangedOnly(
+        views: RemoteViews,
+        previousDigits: DigitState,
+        currentDigits: DigitState
+    ) = bindAtomicFoldOverlayChangedDigitsOnly(views, previousDigits, currentDigits)
 
     fun bindAtomicClockViews(
         views: RemoteViews,
@@ -333,13 +358,8 @@ object WidgetDataBinder {
         prefix: String,
         value: Int
     ) {
-        val packageName = context.packageName
-        val resources = context.resources
-        for (i in 0..9) {
-            val childId = resources.getIdentifier("${prefix}_$i", "id", packageName)
-            if (childId != 0) {
-                views.setViewVisibility(childId, if (i == value) android.view.View.VISIBLE else android.view.View.GONE)
-            }
+        digitChildIdsByPrefix[prefix]?.forEachIndexed { index, childId ->
+            views.setViewVisibility(childId, if (index == value) android.view.View.VISIBLE else android.view.View.GONE)
         }
     }
 
@@ -348,13 +368,8 @@ object WidgetDataBinder {
         views: RemoteViews,
         prefix: String
     ) {
-        val packageName = context.packageName
-        val resources = context.resources
-        for (i in 0..9) {
-            val childId = resources.getIdentifier("${prefix}_$i", "id", packageName)
-            if (childId != 0) {
-                views.setViewVisibility(childId, android.view.View.VISIBLE)
-            }
+        digitChildIdsByPrefix[prefix]?.forEach { childId ->
+            views.setViewVisibility(childId, android.view.View.VISIBLE)
         }
     }
 

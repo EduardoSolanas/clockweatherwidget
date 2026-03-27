@@ -35,6 +35,8 @@ fun SettingsScreen(
     val isHighPrecisionEnabled by viewModel.isHighPrecisionEnabled.collectAsStateWithLifecycle()
     val isExactAlarmGranted by viewModel.isExactAlarmPermissionGranted.collectAsStateWithLifecycle()
     val flipAnimationEnabled by viewModel.flipAnimationEnabled.collectAsStateWithLifecycle()
+    val weatherRefreshIntervalMinutes by viewModel.weatherRefreshIntervalMinutes.collectAsStateWithLifecycle()
+    val forecastDays by viewModel.forecastDays.collectAsStateWithLifecycle()
 
     val context = androidx.compose.ui.platform.LocalContext.current
     
@@ -231,6 +233,58 @@ fun SettingsScreen(
                         label    = { Text(label) }
                     )
                 }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            // Weather refresh interval
+            var weatherRefreshInput by remember { mutableStateOf(weatherRefreshIntervalMinutes.toString()) }
+            SettingsLabel(
+                label       = stringResource(R.string.settings_weather_refresh_interval_label),
+                description = stringResource(R.string.settings_weather_refresh_interval_desc)
+            )
+            OutlinedTextField(
+                value = weatherRefreshInput,
+                onValueChange = { input ->
+                    weatherRefreshInput = input.filter { it.isDigit() }
+                    if (weatherRefreshInput.isNotEmpty()) {
+                        val minutes = weatherRefreshInput.toIntOrNull() ?: weatherRefreshIntervalMinutes
+                        viewModel.setWeatherRefreshInterval(minutes)
+                    }
+                },
+                label = { Text(stringResource(R.string.settings_weather_refresh_minutes)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                ),
+                singleLine = true
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            // Forecast range
+            SettingsLabel(
+                label       = stringResource(R.string.settings_forecast_days_label),
+                description = stringResource(R.string.settings_forecast_days_label)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                FilterChip(
+                    selected = forecastDays == 7,
+                    onClick  = { viewModel.setForecastDays(7) },
+                    label    = { Text(stringResource(R.string.settings_forecast_days_7)) }
+                )
+                FilterChip(
+                    selected = forecastDays == 14,
+                    onClick  = { viewModel.setForecastDays(14) },
+                    label    = { Text(stringResource(R.string.settings_forecast_days_14)) }
+                )
             }
 
             Spacer(Modifier.height(16.dp))

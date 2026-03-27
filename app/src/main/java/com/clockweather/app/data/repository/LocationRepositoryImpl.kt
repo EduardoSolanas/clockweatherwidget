@@ -3,6 +3,7 @@ import com.clockweather.app.R
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.location.Geocoder
 import com.clockweather.app.data.local.dao.LocationDao
 import com.clockweather.app.data.mapper.WeatherDtoMapper
 import com.clockweather.app.data.mapper.WeatherEntityMapper
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -88,6 +90,16 @@ class LocationRepositoryImpl @Inject constructor(
     }
 
     private suspend fun mapToLocation(androidLocation: android.location.Location): Location {
+        reverseGeocode(androidLocation.latitude, androidLocation.longitude)?.let { reverse ->
+            return Location(
+                name = reverse.first,
+                country = reverse.second,
+                latitude = androidLocation.latitude,
+                longitude = androidLocation.longitude,
+                isCurrentLocation = true
+            )
+        }
+
         return try {
             val results = geocodingApi.searchLocations(
                 name = "${androidLocation.latitude},${androidLocation.longitude}",
@@ -109,6 +121,25 @@ class LocationRepositoryImpl @Inject constructor(
             longitude = androidLocation.longitude,
             isCurrentLocation = true
         )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun reverseGeocode(latitude: Double, longitude: Double): Pair<String, String>? {
+        return runCatching {
+            if (!Geocoder.isPresent()) return null
+            val geocoder = Geocoder(context, Locale.getDefault())
+            val address = geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull() ?: return null
+            val fallbackLabel = context.getString(R.string.label_current_location)
+            val resolvedName = resolveCurrentLocationName(
+                locality = address.locality,
+                subAdminArea = address.subAdminArea,
+                adminArea = address.adminArea,
+                fallbackLabel = fallbackLabel
+            )
+            val country = address.countryCode?.takeIf { it.isNotBlank() }
+                ?: address.countryName.orEmpty()
+            resolvedName to country
+        }.getOrNull()
     }
 
     override fun getFallbackLocation(): Location {

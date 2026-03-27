@@ -37,7 +37,11 @@
       "Bash(./gradlew testDebugUnitTest --tests \"com.clockweather.app.receiver.ScreenStateReceiverTest\")",
       "Bash(./gradlew testDebugUnitTest --tests \"com.clockweather.app.receiver.ScreenStateReceiverTest.screen off unregisters TIME_TICK and cancels alarm\" --info)",
       "Bash(find /c/projects/clockweatherwidget/app/src/androidTest -type f \\\\\\(-name *.kt -o -name *.java \\\\\\))",
-      "Bash(tree /c/projects/clockweatherwidget/app/src/test -I *.class)"
+      "Bash(tree /c/projects/clockweatherwidget/app/src/test -I *.class)",
+      "Bash(where python:*)",
+      "Bash(where node:*)",
+      "Bash(where java:*)",
+      "Read(//c/Users/eduar/AppData/Local/Programs/Python/**)"
     ]
   }
 }

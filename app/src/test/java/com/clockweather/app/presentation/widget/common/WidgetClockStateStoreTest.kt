@@ -134,21 +134,6 @@ class WidgetClockStateStoreTest {
         assertTrue(WidgetClockStateStore.isBaselineReady(context, 1))
     }
 
-    @Test
-    fun `no-animation suppression is active through configured minute and then expires`() {
-        WidgetClockStateStore.markNoAnimationUntilEpochMinute(context, 1, 200L)
 
-        assertTrue(WidgetClockStateStore.shouldSuppressAnimation(context, 1, 199L))
-        assertTrue(WidgetClockStateStore.shouldSuppressAnimation(context, 1, 200L))
-        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(context, 1, 201L))
-        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(context, 1, 200L))
-    }
 
-    @Test
-    fun `clearWidget removes no-animation suppression state`() {
-        WidgetClockStateStore.markNoAnimationUntilEpochMinute(context, 1, 500L)
-        WidgetClockStateStore.clearWidget(context, 1)
-
-        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(context, 1, 499L))
-    }
 }

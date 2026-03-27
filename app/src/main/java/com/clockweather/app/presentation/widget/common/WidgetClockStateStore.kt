@@ -24,6 +24,7 @@ object WidgetClockStateStore {
     private const val KEY_PREFIX = "last_rendered_epoch_minute_"
     private const val KEY_BASELINE_PREFIX = "baseline_ready_"
     private const val KEY_NO_ANIM_UNTIL_PREFIX = "no_anim_until_"
+    private const val KEY_WEATHER_REFRESH_PREFIX = "last_weather_refresh_"
     private const val DIGITS_PREFIX = "digits_"
 
     fun getLastRenderedEpochMinute(context: Context, appWidgetId: Int): Long? {
@@ -108,10 +109,21 @@ object WidgetClockStateStore {
         return false
     }
 
+    fun getLastWeatherRefreshEpochMinute(context: Context, appWidgetId: Int): Long? {
+        val prefs = prefs(context)
+        val key = weatherRefreshKey(appWidgetId)
+        return if (prefs.contains(key)) prefs.getLong(key, 0L) else null
+    }
+
+    fun markWeatherRefreshed(context: Context, appWidgetId: Int, epochMinute: Long) {
+        prefs(context).edit().putLong(weatherRefreshKey(appWidgetId), epochMinute).apply()
+    }
+
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private fun key(appWidgetId: Int) = "$KEY_PREFIX$appWidgetId"
     private fun baselineKey(appWidgetId: Int) = "$KEY_BASELINE_PREFIX$appWidgetId"
     private fun noAnimUntilKey(appWidgetId: Int) = "$KEY_NO_ANIM_UNTIL_PREFIX$appWidgetId"
+    private fun weatherRefreshKey(appWidgetId: Int) = "$KEY_WEATHER_REFRESH_PREFIX$appWidgetId"
 }

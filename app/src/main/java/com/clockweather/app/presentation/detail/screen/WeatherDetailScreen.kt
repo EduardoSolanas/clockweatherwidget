@@ -15,10 +15,28 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clockweather.app.R
 import com.clockweather.app.presentation.common.UiState
 import com.clockweather.app.presentation.detail.WeatherDetailViewModel
-import com.clockweather.app.util.DateFormatter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+
+internal fun normalizeSelectedDayIndex(selectedDayIndex: Int, forecastCount: Int): Int {
+    if (forecastCount <= 0) return 0
+    return selectedDayIndex.takeIf { it in 0 until forecastCount } ?: 0
+}
+
+internal fun buildWeatherTopBarTitle(
+    locationName: String,
+    selectedDayIndex: Int,
+    forecasts: List<com.clockweather.app.domain.model.DailyForecast>,
+    locale: Locale = Locale.getDefault()
+): String {
+    val normalizedIndex = normalizeSelectedDayIndex(selectedDayIndex, forecasts.size)
+    if (normalizedIndex == 0 || forecasts.isEmpty()) return locationName
+
+    val date = forecasts.getOrNull(normalizedIndex)?.date ?: return locationName
+    val dateStr = date.format(DateTimeFormatter.ofPattern("EEE, d MMM", locale))
+    return "$locationName  ·  $dateStr"
+}
 
 @OptIn(ExperimentalMaterial3Api::class, com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
 @Composable
@@ -56,15 +74,10 @@ fun WeatherDetailScreen(
     // Lift selected day index here so TopAppBar can react to it
     var selectedDayIndex by remember { mutableIntStateOf(0) }
     val forecasts = (uiState as? UiState.Success)?.data?.dailyForecasts?.take(7) ?: emptyList()
+    selectedDayIndex = normalizeSelectedDayIndex(selectedDayIndex, forecasts.size)
 
     // Build title: "London" for today, "London · Sat, 8 Mar" for other days
-    val topBarTitle = if (selectedDayIndex == 0 || forecasts.isEmpty()) {
-        locationName
-    } else {
-        val date = forecasts.getOrNull(selectedDayIndex)?.date
-        val dateStr = date?.format(DateTimeFormatter.ofPattern("EEE, d MMM", Locale.getDefault())) ?: ""
-        "$locationName  ·  $dateStr"
-    }
+    val topBarTitle = buildWeatherTopBarTitle(locationName, selectedDayIndex, forecasts)
 
     Scaffold(
         topBar = {

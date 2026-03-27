@@ -18,40 +18,40 @@ import kotlinx.coroutines.withTimeout
  * were not registered at unlock time.
  */
 class UnlockSyncReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Intent.ACTION_USER_PRESENT &&
-            intent.action != Intent.ACTION_SCREEN_ON
-        ) {
-            return
-        }
+	override fun onReceive(context: Context, intent: Intent) {
+		if (intent.action != Intent.ACTION_USER_PRESENT &&
+			intent.action != Intent.ACTION_SCREEN_ON
+		) {
+			return
+		}
 
-        val pendingResult = goAsync()
-        CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
-            try {
-                withTimeout(10_000) {
-                    if (!ClockAlarmReceiver.hasAnyActiveWidgets(context)) return@withTimeout
+		val pendingResult = goAsync()
+		CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+			try {
+				withTimeout(10_000) {
+					if (!ClockAlarmReceiver.hasAnyActiveWidgets(context)) return@withTimeout
 
-                    val app = context.applicationContext as? ClockWeatherApplication ?: return@withTimeout
-                    Log.d(TAG, "Unlock fallback sync for action=${intent.action}")
+					val app = context.applicationContext as? ClockWeatherApplication ?: return@withTimeout
+					Log.d(TAG, "Unlock fallback sync for action=${intent.action}")
 
-                    app.registerScreenStateReceiver()
-                    app.registerTimeTickReceiver()
-                    app.syncClockNow(
-                        context,
-                        suppressAnimation = true,
-                        reassertAfterReschedule = intent.action != Intent.ACTION_USER_PRESENT
-                    )
+					app.registerScreenStateReceiver()
+					app.registerTimeTickReceiver()
+					app.syncClockNow(
+						context,
+						suppressAnimation = true,
+						reassertAfterReschedule = intent.action != Intent.ACTION_USER_PRESENT
+					)
 
-                    val isHighPrecision = app.resolveHighPrecision()
-                    ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
-                }
-            } finally {
-                pendingResult.finish()
-            }
-        }
-    }
+					val isHighPrecision = app.resolveHighPrecision()
+					ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
+				}
+			} finally {
+				pendingResult.finish()
+			}
+		}
+	}
 
-    companion object {
-        private const val TAG = "UnlockSyncReceiver"
-    }
+	companion object {
+		private const val TAG = "UnlockSyncReceiver"
+	}
 }

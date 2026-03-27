@@ -5,7 +5,7 @@ import org.junit.Test
 
 /**
  * Tests for [DigitState.from] — the digit computation that drives both
- * [ClockWeatherApplication.pushClockInstant] and [WidgetDataBinder.bindClockViews].
+ * [ClockWeatherApplication.pushClockInstant] and [WidgetDataBinder.bindSimpleClockViews].
  *
  * A regression here means wrong digits on every clock update path.
  */

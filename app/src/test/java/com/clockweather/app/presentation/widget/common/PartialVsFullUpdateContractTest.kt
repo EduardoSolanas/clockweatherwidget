@@ -89,7 +89,10 @@ class PartialVsFullUpdateContractTest {
         every { Log.w(any(), any<String>()) } returns 0
         every { Log.w(any(), any<String>(), any()) } returns 0
 
-        appWidgetManager = mockk(relaxed = true)
+        appWidgetManager = mockk()
+        every { appWidgetManager.updateAppWidget(any<Int>(), any()) } just Runs
+        every { appWidgetManager.partiallyUpdateAppWidget(any<Int>(), any()) } just Runs
+
         entryPoint = mockk(relaxed = true)
 
         val dataStore: DataStore<Preferences> = mockk()
@@ -120,7 +123,6 @@ class PartialVsFullUpdateContractTest {
         every { anyConstructed<RemoteViews>().setTextColor(any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setInt(any(), any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setOnClickPendingIntent(any(), any()) } just Runs
-        every { anyConstructed<RemoteViews>().showNext(any()) } just Runs
         every { anyConstructed<RemoteViews>().setViewLayoutHeight(any(), any(), any()) } just Runs
 
         mockkStatic(android.app.PendingIntent::class)
@@ -141,6 +143,7 @@ class PartialVsFullUpdateContractTest {
 
         verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -151,6 +154,7 @@ class PartialVsFullUpdateContractTest {
 
         verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -162,6 +166,7 @@ class PartialVsFullUpdateContractTest {
 
         verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -173,6 +178,7 @@ class PartialVsFullUpdateContractTest {
 
         verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -183,6 +189,7 @@ class PartialVsFullUpdateContractTest {
 
         verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -190,6 +197,7 @@ class PartialVsFullUpdateContractTest {
         // 1. Widget placed → full
         updater.updateWidget(widgetId)
         verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
 
         clearMocks(appWidgetManager, answers = false)
 
@@ -197,6 +205,7 @@ class PartialVsFullUpdateContractTest {
         updater.updateWidget(widgetId)
         verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
 
         clearMocks(appWidgetManager, answers = false)
 
@@ -204,6 +213,7 @@ class PartialVsFullUpdateContractTest {
         WidgetClockStateStore.clearDigits(realContext, widgetId)
         updater.updateWidget(widgetId)
         verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
 
         clearMocks(appWidgetManager, answers = false)
 
@@ -211,6 +221,7 @@ class PartialVsFullUpdateContractTest {
         updater.updateWidget(widgetId)
         verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -219,6 +230,7 @@ class PartialVsFullUpdateContractTest {
         updater.updateWidget(widgetId)
         verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
 
         clearMocks(appWidgetManager, answers = false)
 
@@ -226,5 +238,6 @@ class PartialVsFullUpdateContractTest {
         updater.updateWidget(widgetId)
         verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
     }
 }

@@ -40,8 +40,7 @@ class WeatherDetailActivity : AppCompatActivity() {
             // Use the exact same lockscreen -> home convergence path.
             app.syncClockNow(
                 applicationContext,
-                suppressAnimation = true,
-                reassertAfterReschedule = false
+                suppressAnimation = true
             )
         }
     }

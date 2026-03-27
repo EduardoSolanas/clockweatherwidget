@@ -175,12 +175,9 @@ abstract class BaseWidgetUpdater(
                     } else {
                         // Layout has ViewFlippers — style each child TextView
                         val entryName = context.resources.getResourceEntryName(id)
-                        for (i in 0..9) {
-                            val childId = context.resources.getIdentifier("${entryName}_$i", "id", context.packageName)
-                            if (childId != 0) {
-                                views.setTextColor(childId, digitColor)
-                                views.setTextViewTextSize(childId, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
-                            }
+                        WidgetDataBinder.digitChildIdsByPrefix[entryName]?.forEach { childId ->
+                            views.setTextColor(childId, digitColor)
+                            views.setTextViewTextSize(childId, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
                         }
                     }
                 }
@@ -520,10 +517,7 @@ abstract class BaseWidgetUpdater(
                     )
                 )
                 listOf("digit_h1", "digit_h2", "digit_m1", "digit_m2").forEach { prefix ->
-                    for (i in 0..9) {
-                        val childId = context.resources.getIdentifier("${prefix}_$i", "id", context.packageName)
-                        if (childId != 0) add(childId)
-                    }
+                    WidgetDataBinder.digitChildIdsByPrefix[prefix]?.forEach { add(it) }
                 }
             }
 

@@ -1,6 +1,7 @@
 package com.clockweather.app.di
 
 import com.clockweather.app.BuildConfig
+import com.clockweather.app.data.remote.api.GoogleWeatherApi
 import com.clockweather.app.data.remote.api.OpenMeteoGeocodingApi
 import com.clockweather.app.data.remote.api.OpenMeteoWeatherApi
 import com.clockweather.app.data.remote.api.WeatherApi
@@ -92,5 +93,25 @@ object NetworkModule {
     @Singleton
     @Named("weatherApiKey")
     fun provideWeatherApiKey(): String = BuildConfig.WEATHER_API_KEY
+
+    @Provides
+    @Singleton
+    @Named("googleweather")
+    fun provideGoogleWeatherRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(GoogleWeatherApi.BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideGoogleWeatherApi(@Named("googleweather") retrofit: Retrofit): GoogleWeatherApi =
+        retrofit.create(GoogleWeatherApi::class.java)
+
+    @Provides
+    @Singleton
+    @Named("googleWeatherApiKey")
+    fun provideGoogleWeatherApiKey(): String = BuildConfig.GOOGLE_WEATHER_API_KEY
 }
 

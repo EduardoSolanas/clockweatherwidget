@@ -4,10 +4,14 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,6 +39,9 @@ import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlinx.coroutines.launch
 
 // ─── Debug: all conditions in cycle order ─────────────────────────────────────
 private val DEBUG_CONDITIONS = WeatherCondition.entries.toList()
@@ -46,9 +53,11 @@ fun WeatherDetailContent(
     weatherData: WeatherData,
     temperatureUnit: TemperatureUnit,
     selectedDayIndex: Int = 0,
-    onDaySelected: (Int) -> Unit = {}
+    onDaySelected: (Int) -> Unit = {},
+    forecastDays: Int = 7
 ) {
-    val forecasts = weatherData.dailyForecasts.take(7)
+    val forecasts = weatherData.dailyForecasts.take(forecastDays)
+    val selectedForecast = forecasts.getOrNull(selectedDayIndex) ?: forecasts.firstOrNull()
 
     Column(
         modifier = Modifier
@@ -68,7 +77,8 @@ fun WeatherDetailContent(
         // ── Hourly Forecast Graph ──────────────────────────────────────────
         HourlyWeatherGraph(
             hourlyForecasts = weatherData.hourlyForecasts,
-            temperatureUnit = temperatureUnit
+            temperatureUnit = temperatureUnit,
+            selectedDate = selectedForecast?.date
         )
 
         // ── 7-Day Forecast ─────────────────────────────────────────────────
@@ -83,7 +93,7 @@ fun WeatherDetailContent(
         MetricsGrid(weatherData = weatherData, temperatureUnit = temperatureUnit, selectedDayIndex = selectedDayIndex)
 
         // ── Sunrise / Sunset ────────────────────────────────────────────────
-        val shownForecast = forecasts.getOrNull(selectedDayIndex) ?: forecasts.firstOrNull()
+        val shownForecast = selectedForecast
         shownForecast?.let { SunCard(forecast = it) }
 
         // ── Air Quality (today only) ────────────────────────────────────────
@@ -96,7 +106,11 @@ fun WeatherDetailContent(
         val minutes = DateFormatter.minutesAgo(lastUpdated)
         val timeString = when {
             minutes < 1 -> stringResource(R.string.label_just_now)
-            else -> pluralStringResource(R.plurals.label_minutes_ago, minutes, minutes)
+            minutes < 60 -> pluralStringResource(R.plurals.label_minutes_ago, minutes, minutes)
+            else -> {
+                val hours = minutes / 60
+                pluralStringResource(R.plurals.label_hours_ago, hours, hours)
+            }
         }
         Text(
             text = stringResource(R.string.label_updated_format, timeString),
@@ -336,7 +350,7 @@ private fun HeroStat(emoji: String, value: String) {
     }
 }
 
-// ─── 7-Day forecast card ──────────────────────────────────────────────────────
+// ─── 7-Day / 14-Day forecast card ─────────────────────────────────────────────
 
 @Composable
 private fun SevenDayForecastCard(
@@ -345,34 +359,185 @@ private fun SevenDayForecastCard(
     selectedDayIndex: Int,
     onDaySelected: (Int) -> Unit
 ) {
-    Card(
+    // Title reflects actual days returned — WeatherAPI free plan caps at 3; paid plans give 7/14
+    val rawTitleText = when {
+        forecasts.size >= 14 -> stringResource(R.string.label_14day_forecast)
+        forecasts.size >= 7  -> stringResource(R.string.label_7day_forecast)
+        else                 -> stringResource(R.string.label_nday_forecast, forecasts.size)
+    }
+    val titleText = remember(rawTitleText) {
+        rawTitleText
+            .lowercase(Locale.getDefault())
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+    }
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val scrollStepPx = remember(density) { with(density) { 212.dp.roundToPx() } }
+    val canScrollBackward by remember { derivedStateOf { scrollState.value > 0 } }
+    val canScrollForward by remember { derivedStateOf { scrollState.value < scrollState.maxValue } }
+
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = stringResource(R.string.label_7day_forecast),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 1.2.sp,
-                modifier = Modifier.padding(bottom = 8.dp)
+                text = titleText,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.weight(1f)
             )
+
+            ForecastScrollButton(
+                icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                enabled = canScrollBackward,
+                onClick = {
+                    coroutineScope.launch {
+                        scrollState.animateScrollTo((scrollState.value - scrollStepPx).coerceAtLeast(0))
+                    }
+                }
+            )
+            Spacer(Modifier.width(8.dp))
+            ForecastScrollButton(
+                icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                enabled = canScrollForward,
+                onClick = {
+                    coroutineScope.launch {
+                        scrollState.animateScrollTo((scrollState.value + scrollStepPx).coerceAtMost(scrollState.maxValue))
+                    }
+                }
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(scrollState),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             forecasts.forEachIndexed { index, forecast ->
-                ForecastDayRow(
+                ForecastDayColumn(
                     forecast = forecast,
                     temperatureUnit = temperatureUnit,
                     isToday = index == 0,
                     isSelected = index == selectedDayIndex,
                     onClick = { onDaySelected(index) }
                 )
-                if (index < forecasts.lastIndex) {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                        modifier = Modifier.padding(vertical = 2.dp)
-                    )
-                }
             }
+        }
+    }
+}
+
+@Composable
+private fun ForecastScrollButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    FilledIconButton(
+        onClick = onClick,
+        enabled = enabled,
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (enabled) 0.95f else 0.55f),
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        ),
+        modifier = Modifier.size(44.dp)
+    ) {
+        Icon(icon, contentDescription = null)
+    }
+}
+
+@Composable
+private fun ForecastDayColumn(
+    forecast: DailyForecast,
+    temperatureUnit: TemperatureUnit,
+    isToday: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val capsuleColor = if (isSelected) Color(0xFF141723) else Color(0xFF10131D)
+    val outlineColor = if (isSelected) Color.White.copy(alpha = 0.92f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+    val primaryTextColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+    val secondaryTextColor = if (isSelected) Color.White.copy(alpha = 0.72f) else MaterialTheme.colorScheme.onSurfaceVariant
+    val precipitationColor = if (forecast.precipitationProbability > 0) Color(0xFF64B5F6) else secondaryTextColor
+    val dateLabel = remember(forecast.date) {
+        forecast.date.format(DateTimeFormatter.ofPattern("dd/MM", Locale.getDefault()))
+    }
+    val highLabel = TemperatureFormatter.format(forecast.temperatureMax, temperatureUnit) + "°"
+    val lowLabel = TemperatureFormatter.format(forecast.temperatureMin, temperatureUnit) + "°"
+
+    Surface(
+        modifier = Modifier
+            .width(92.dp)
+            .height(208.dp)
+            .clickable(onClick = onClick)
+            .border(2.dp, outlineColor, RoundedCornerShape(46.dp)),
+        shape = RoundedCornerShape(46.dp),
+        color = capsuleColor,
+        tonalElevation = if (isSelected) 6.dp else 0.dp,
+        shadowElevation = if (isSelected) 10.dp else 0.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp, vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = highLabel,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = primaryTextColor,
+                maxLines = 1
+            )
+            Text(
+                text = lowLabel,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+                color = secondaryTextColor,
+                maxLines = 1
+            )
+
+            Spacer(Modifier.height(10.dp))
+
+            Box(
+                modifier = Modifier.size(36.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                WeatherAnimatedIcon(condition = forecast.weatherCondition, modifier = Modifier.fillMaxSize())
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            Text(
+                text = stringResource(R.string.unit_percent, forecast.precipitationProbability),
+                style = MaterialTheme.typography.titleMedium,
+                color = precipitationColor,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            Text(
+                text = if (isToday) stringResource(R.string.label_today) else DateFormatter.formatDayName(forecast.date),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                color = primaryTextColor,
+                maxLines = 1
+            )
+            Text(
+                text = dateLabel,
+                style = MaterialTheme.typography.titleMedium,
+                color = secondaryTextColor,
+                maxLines = 1
+            )
         }
     }
 }

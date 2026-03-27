@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark mode: slightly lighter dark card for contrast on dark wallpapers -->
-    <color name="weather_card_bg_color">#CC1A1A1A</color>
+    <!-- Primary Theme Colors (used by theme/manifest) - same for night mode -->
+    <color name="primary">#1565C0</color>
+
+    <!-- Widget Colors (used in widget XML layouts) -->
+    <color name="widget_text_primary">#FFFFFF</color>
+    <color name="widget_text_secondary">#B0BEC5</color>
+
+    <!-- Flip Clock Colors (used in widget layouts) -->
+    <color name="flip_digit_text">#FFFFFF</color>
 </resources>

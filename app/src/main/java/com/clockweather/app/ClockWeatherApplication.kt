@@ -5,6 +5,7 @@ import android.content.IntentFilter
 import android.os.Build
 import android.widget.RemoteViews
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.hilt.work.HiltWorkerFactory
@@ -80,11 +81,12 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
     fun registerScreenStateReceiver() {
         if (screenStateReceiver != null) return // already registered
         val receiver = ScreenStateReceiver()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(receiver, ScreenStateReceiver.buildIntentFilter(), Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(receiver, ScreenStateReceiver.buildIntentFilter())
-        }
+        ContextCompat.registerReceiver(
+            this,
+            receiver,
+            ScreenStateReceiver.buildIntentFilter(),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         screenStateReceiver = receiver
         android.util.Log.d("ClockWeatherApp", "ScreenStateReceiver registered")
     }
@@ -108,11 +110,12 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
     fun registerTimeTickReceiver() {
         if (timeTickReceiver != null) return // already registered
         val receiver = TimeTickReceiver()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(receiver, TimeTickReceiver.buildIntentFilter(), Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(receiver, TimeTickReceiver.buildIntentFilter())
-        }
+        ContextCompat.registerReceiver(
+            this,
+            receiver,
+            TimeTickReceiver.buildIntentFilter(),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         timeTickReceiver = receiver
         android.util.Log.d("ClockWeatherApp", "TimeTickReceiver registered")
     }

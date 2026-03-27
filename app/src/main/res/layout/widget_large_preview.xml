@@ -1,10 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/transparent"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="12dp"
+    tools:ignore="HardcodedText,SmallSp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,11 +18,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/flip_digit_bg"
+            android:background="@drawable/flip_digit_bg_light"
             android:gravity="center"
             android:padding="8dp"
             android:text="0"
-            android:textColor="@color/flip_digit_text"
+            android:textColor="#000000"
             android:textSize="46sp"
             android:textStyle="bold" />
 
@@ -29,11 +31,11 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/flip_digit_bg"
+            android:background="@drawable/flip_digit_bg_light"
             android:gravity="center"
             android:padding="8dp"
             android:text="0"
-            android:textColor="@color/flip_digit_text"
+            android:textColor="#000000"
             android:textSize="46sp"
             android:textStyle="bold" />
 
@@ -42,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="6dp"
             android:text=":"
-            android:textColor="#80FFFFFF"
+            android:textColor="#80000000"
             android:textSize="40sp"
             android:textStyle="bold" />
 
@@ -50,11 +52,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/flip_digit_bg"
+            android:background="@drawable/flip_digit_bg_light"
             android:gravity="center"
             android:padding="8dp"
             android:text="0"
-            android:textColor="@color/flip_digit_text"
+            android:textColor="#000000"
             android:textSize="46sp"
             android:textStyle="bold" />
 
@@ -63,11 +65,11 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/flip_digit_bg"
+            android:background="@drawable/flip_digit_bg_light"
             android:gravity="center"
             android:padding="8dp"
             android:text="0"
-            android:textColor="@color/flip_digit_text"
+            android:textColor="#000000"
             android:textSize="46sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -86,7 +88,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:background="@drawable/widget_glass_bg"
+        android:background="@drawable/weather_card_bg"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="12dp"
@@ -132,7 +134,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="17Â°C"
+                android:text="17°C"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -140,11 +142,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="20Â° / 11Â°"
+                android:text="20° / 11°"
                 android:textColor="@color/widget_text_secondary"
                 android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>
-

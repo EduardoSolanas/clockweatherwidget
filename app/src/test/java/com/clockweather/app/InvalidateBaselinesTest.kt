@@ -36,16 +36,15 @@ class InvalidateBaselinesTest {
 
     @Before
     fun setup() {
-        appWidgetManager = mockk(relaxed = true)
+        appWidgetManager = mockk()
+        every { appWidgetManager.getAppWidgetIds(any<ComponentName>()) } returns intArrayOf()
+
         mockkStatic(AppWidgetManager::class)
         every { AppWidgetManager.getInstance(any()) } returns appWidgetManager
 
         app = spyk(ClockWeatherApplication())
         every { app.packageName } returns realContext.packageName
         every { app.applicationContext } returns realContext
-
-        // Default: no widgets
-        every { appWidgetManager.getAppWidgetIds(any<ComponentName>()) } returns intArrayOf()
 
         // Clean state
         for (id in listOf(10, 11, 20)) {
@@ -78,6 +77,8 @@ class InvalidateBaselinesTest {
         // Both should be null now — forcing full updateAppWidget on next render
         assertNull(WidgetClockStateStore.getLastDigits(realContext, 10))
         assertNull(WidgetClockStateStore.getLastDigits(realContext, 11))
+        verify(atLeast = 1) { appWidgetManager.getAppWidgetIds(any()) }
+        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -91,6 +92,8 @@ class InvalidateBaselinesTest {
 
         assertNull(WidgetClockStateStore.getLastDigits(realContext, 10))
         assertNull(WidgetClockStateStore.getLastDigits(realContext, 20))
+        verify(atLeast = 1) { appWidgetManager.getAppWidgetIds(any()) }
+        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -98,6 +101,9 @@ class InvalidateBaselinesTest {
         // All providers return empty IDs (default mock)
         // Should not throw
         app.invalidateAllWidgetBaselines()
+
+        verify(atLeast = 1) { appWidgetManager.getAppWidgetIds(any()) }
+        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -111,6 +117,8 @@ class InvalidateBaselinesTest {
         // Digits cleared, but epoch minute is preserved
         assertNull(WidgetClockStateStore.getLastDigits(realContext, 10))
         assertEquals(5555L, WidgetClockStateStore.getLastRenderedEpochMinute(realContext, 10))
+        verify(atLeast = 1) { appWidgetManager.getAppWidgetIds(any()) }
+        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -121,5 +129,6 @@ class InvalidateBaselinesTest {
         verify { appWidgetManager.getAppWidgetIds(match<ComponentName> { it.className == ExtendedWidgetProvider::class.java.name }) }
         verify { appWidgetManager.getAppWidgetIds(match<ComponentName> { it.className == ForecastWidgetProvider::class.java.name }) }
         verify { appWidgetManager.getAppWidgetIds(match<ComponentName> { it.className == LargeWidgetProvider::class.java.name }) }
+        confirmVerified(appWidgetManager)
     }
 }

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/transparent"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="12dp"
+    tools:ignore="HardcodedText,SmallSp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,12 +22,12 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/flip_digit_bg"
+                android:background="@drawable/flip_digit_bg_light"
                 android:fontFamily="monospace"
                 android:gravity="center"
                 android:padding="8dp"
                 android:text="0"
-                android:textColor="@color/flip_digit_text"
+                android:textColor="#000000"
                 android:textSize="42sp"
                 android:textStyle="bold" />
 
@@ -45,12 +47,12 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/flip_digit_bg"
+                android:background="@drawable/flip_digit_bg_light"
                 android:fontFamily="monospace"
                 android:gravity="center"
                 android:padding="8dp"
                 android:text="9"
-                android:textColor="@color/flip_digit_text"
+                android:textColor="#000000"
                 android:textSize="42sp"
                 android:textStyle="bold" />
 
@@ -66,7 +68,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="6dp"
             android:text=":"
-            android:textColor="#80FFFFFF"
+            android:textColor="#80000000"
             android:textSize="38sp"
             android:textStyle="bold" />
 
@@ -78,12 +80,12 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/flip_digit_bg"
+                android:background="@drawable/flip_digit_bg_light"
                 android:fontFamily="monospace"
                 android:gravity="center"
                 android:padding="8dp"
                 android:text="4"
-                android:textColor="@color/flip_digit_text"
+                android:textColor="#000000"
                 android:textSize="42sp"
                 android:textStyle="bold" />
 
@@ -103,12 +105,12 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/flip_digit_bg"
+                android:background="@drawable/flip_digit_bg_light"
                 android:fontFamily="monospace"
                 android:gravity="center"
                 android:padding="8dp"
                 android:text="1"
-                android:textColor="@color/flip_digit_text"
+                android:textColor="#000000"
                 android:textSize="42sp"
                 android:textStyle="bold" />
 

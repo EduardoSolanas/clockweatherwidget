@@ -3,6 +3,12 @@
     <!-- Plurals -->
     <plurals name="label_minutes_ago">
         <item quantity="one">hace %d minuto</item>
+        <item quantity="many">hace %d minutos</item>
         <item quantity="other">hace %d minutos</item>
+    </plurals>
+    <plurals name="label_hours_ago">
+        <item quantity="one">hace %d hora</item>
+        <item quantity="many">hace %d horas</item>
+        <item quantity="other">hace %d horas</item>
     </plurals>
 </resources>

@@ -233,17 +233,11 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                     } else {
                         alarmManager.setAndAllowWhileIdle(alarmType, calendar.timeInMillis, pendingIntent)
                     }
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setExactAndAllowWhileIdle(alarmType, calendar.timeInMillis, pendingIntent)
                 } else {
-                    alarmManager.setExact(alarmType, calendar.timeInMillis, pendingIntent)
+                    alarmManager.setExactAndAllowWhileIdle(alarmType, calendar.timeInMillis, pendingIntent)
                 }
             } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setAndAllowWhileIdle(alarmType, calendar.timeInMillis, pendingIntent)
-                } else {
-                    alarmManager.set(alarmType, calendar.timeInMillis, pendingIntent)
-                }
+                alarmManager.setAndAllowWhileIdle(alarmType, calendar.timeInMillis, pendingIntent)
             }
             Log.d(TAG, "Scheduled next tick for ${calendar.time} (precision=$isHighPrecision)")
         }
@@ -262,11 +256,7 @@ class ClockAlarmReceiver : BroadcastReceiver() {
             val pendingIntent = keepalivePendingIntent(context)
 
             val triggerAt = System.currentTimeMillis() + KEEPALIVE_INTERVAL_MS
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
-            } else {
-                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
-            }
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
             Log.d(TAG, "Keepalive alarm scheduled for ${KEEPALIVE_INTERVAL_MS / 1000}s from now")
         }
 
