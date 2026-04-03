@@ -2,6 +2,7 @@ package com.clockweather.app.presentation.detail.screen
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,18 +10,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clockweather.app.R
@@ -29,14 +34,9 @@ import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
 import java.time.LocalDate
-import java.util.Locale
-import kotlin.math.ceil
-import kotlin.math.cos
-import kotlin.math.floor
-import kotlin.math.log10
-import kotlin.math.pow
 import kotlin.math.roundToInt
-import kotlin.math.sin
+
+// ── Data helper (kept internal for tests) ────────────────────────────────────
 
 internal fun scopedHourlyForecasts(
     hourlyForecasts: List<HourlyForecast>,
@@ -49,34 +49,18 @@ internal fun scopedHourlyForecasts(
         return orderedForecasts.take(24)
     }
 
-    return orderedForecasts
-        .filter { it.dateTime.toLocalDate() == selectedDate }
-        .ifEmpty { orderedForecasts.take(24) }
+    val filtered = orderedForecasts.filter { it.dateTime.toLocalDate() == selectedDate }
+    // If fewer than 2 data points remain for the selected date (e.g. late evening at 23:00),
+    // fall back to the next 24 hours so the graph is never hidden.
+    return if (filtered.size >= 2) filtered else orderedForecasts.take(24)
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Curve colour (warm amber — matches reference) ─────────────────────────────
 
-/**
- * Computes "nice" round grid values for a temperature axis.
- * E.g. for 12–22 °C with targetCount=4 → [10, 15, 20, 25].
- */
-private fun niceGridValues(min: Double, max: Double, targetCount: Int = 4): List<Double> {
-    val range = max - min
-    if (range < 0.001) return listOf(min - 2.0, min, min + 2.0)
-    val rawStep = range / targetCount
-    val mag = 10.0.pow(floor(log10(rawStep)))
-    val niceStep = when {
-        rawStep / mag <= 1.0 -> mag
-        rawStep / mag <= 2.0 -> 2.0 * mag
-        rawStep / mag <= 5.0 -> 5.0 * mag
-        else -> 10.0 * mag
-    }
-    val niceMin = floor(min / niceStep) * niceStep
-    val niceMax = ceil(max / niceStep) * niceStep
-    return generateSequence(niceMin) { it + niceStep }
-        .takeWhile { it <= niceMax + 0.001 }
-        .toList()
-}
+private val CurveColor  = Color(0xFFFFA040)
+private val PrecipColor = Color(0xFF64B5F6)
+private val CurrentHourHighlight = Color.White.copy(alpha = 0.18f)
+private val CurrentHourOutline = Color.White.copy(alpha = 0.30f)
 
 // ── Public composable ─────────────────────────────────────────────────────────
 
@@ -87,361 +71,287 @@ fun HourlyWeatherGraph(
     modifier: Modifier = Modifier,
     selectedDate: LocalDate? = null
 ) {
-    val next24Hours = remember(hourlyForecasts, selectedDate) {
+    val hours = remember(hourlyForecasts, selectedDate) {
         scopedHourlyForecasts(hourlyForecasts, selectedDate)
     }
-    if (next24Hours.size < 2) return
+    if (hours.size < 2) return
 
-    val resolvedSelectedDate = selectedDate ?: next24Hours.first().dateTime.toLocalDate()
-    val isTodaySelection = resolvedSelectedDate == LocalDate.now()
-    val hourlyTitle = stringResource(R.string.label_hourly_forecast).uppercase(Locale.getDefault())
-    val todayLabel = stringResource(R.string.label_today).uppercase(Locale.getDefault())
-    val dayLabel = if (isTodaySelection) {
-        todayLabel
-    } else {
-        DateFormatter.formatDate(resolvedSelectedDate).uppercase(Locale.getDefault())
-    }
-    val titleText = "$hourlyTitle · $dayLabel"
-
-    // G1: pre-compute converted temperatures so canvas Y-positions match label values
-    val convertedTemps = remember(next24Hours, temperatureUnit) {
-        next24Hours.map { TemperatureFormatter.convert(it.temperature, temperatureUnit) }
-    }
-    val rawMax = convertedTemps.max()
-    val rawMin = convertedTemps.min()
-    // G7: pad flat lines so a horizontal line doesn't sit at the very edge
-    val paddedMin = if (rawMax - rawMin < 1.0) rawMin - 2.0 else rawMin
-    val paddedMax = if (rawMax - rawMin < 1.0) rawMax + 2.0 else rawMax
-
-    val gridValues = remember(paddedMin, paddedMax) {
-        niceGridValues(paddedMin, paddedMax, targetCount = 4)
+    val convertedTemps = remember(hours, temperatureUnit) {
+        hours.map { TemperatureFormatter.convert(it.temperature, temperatureUnit) }
     }
 
-    // G8: auto-scroll so the current hour is visible on first render
+    val rawMin  = convertedTemps.min()
+    val rawMax  = convertedTemps.max()
+    val spread  = (rawMax - rawMin).coerceAtLeast(4.0)
+    // Extra headroom above peak so temp labels don't clip; less below.
+    val padMin  = rawMin - spread * 0.10
+    val padMax  = rawMax + spread * 0.30
+
+    val resolvedDate   = selectedDate ?: hours.first().dateTime.toLocalDate()
+    val isTodayView    = resolvedDate == LocalDate.now()
+
     val scrollState = rememberScrollState()
-    val currentHourIndex = remember(next24Hours, resolvedSelectedDate, isTodaySelection) {
-        if (!isTodaySelection) {
-            0
-        } else {
+    val density     = LocalDensity.current
+
+    // Auto-scroll: bring current hour into view (today only)
+    val currentIdx = remember(hours, isTodayView) {
+        if (!isTodayView) 0
+        else {
             val nowHour = java.time.LocalTime.now().hour
-            next24Hours.indexOfFirst { it.dateTime.hour == nowHour }.coerceAtLeast(0)
+            hours.indexOfFirst { it.dateTime.hour == nowHour }.coerceAtLeast(0)
         }
     }
-    val density = LocalDensity.current
-    LaunchedEffect(currentHourIndex, next24Hours.size, isTodaySelection) {
-        val colPx = with(density) { 60.dp.roundToPx() }
-        // Show one hour before current so context is visible
-        val targetIndex = if (isTodaySelection) currentHourIndex - 1 else 0
-        scrollState.scrollTo((targetIndex * colPx).coerceAtLeast(0))
+    LaunchedEffect(currentIdx, hours.size, isTodayView) {
+        val colPx    = with(density) { ColW.roundToPx() }
+        val targetPx = ((currentIdx - 1).coerceAtLeast(0) * colPx)
+        scrollState.scrollTo(targetPx)
     }
 
-    // G9: accessibility description
-    val highIdx = convertedTemps.indexOf(convertedTemps.max())
-    val lowIdx  = convertedTemps.indexOf(convertedTemps.min())
-    val a11yDesc = "24-hour forecast: high ${convertedTemps.max().roundToInt()}° at " +
-        DateFormatter.formatTime(next24Hours[highIdx].dateTime.toLocalTime(), is24Hour = true) +
-        ", low ${convertedTemps.min().roundToInt()}° at " +
-        DateFormatter.formatTime(next24Hours[lowIdx].dateTime.toLocalTime(), is24Hour = true)
+    // Capture colours before entering canvas scope
+    val onSurface        = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val textMeasurer     = rememberTextMeasurer()
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
+        shape    = RoundedCornerShape(24.dp),
+        colors   = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = titleText,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 1.2.sp,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
 
+            // ── Header ────────────────────────────────────────────────────────
             Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text  = stringResource(R.string.label_hourly_forecast).uppercase(),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = onSurface
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text  = "(${hours.size}h)  →",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = onSurfaceVariant
+                )
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // ── Scrollable body ───────────────────────────────────────────────
+            val totalWidth = ColW * hours.size
+
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(210.dp)
+                    .horizontalScroll(scrollState)
             ) {
-                // Fixed Y-axis temperature labels (non-scrolling)
-                YAxisLabels(
-                    gridValues = gridValues,
-                    minTemp = paddedMin,
-                    maxTemp = paddedMax,
-                    modifier = Modifier
-                        .width(34.dp)
-                        .fillMaxHeight()
-                )
+                Column(modifier = Modifier.width(totalWidth)) {
 
-                // Scrollable graph
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .horizontalScroll(scrollState)
-                ) {
-                    HourlyGraphCanvas(
-                        forecasts = next24Hours,
-                        convertedTemps = convertedTemps,
-                        minTemp = paddedMin,
-                        maxTemp = paddedMax,
-                        gridValues = gridValues,
-                        temperatureUnit = temperatureUnit,
-                        modifier = Modifier
-                            .width((next24Hours.size * 60).dp)
-                            .fillMaxHeight()
-                    )
-                }
-            }
-        }
-    }
-}
+                    // Time labels
+                    Box(modifier = Modifier.width(totalWidth)) {
+                        if (isTodayView && currentIdx in hours.indices) {
+                            Canvas(modifier = Modifier.matchParentSize()) {
+                                val colPx = ColW.toPx()
+                                val sideInset = 2.dp.toPx()
+                                val left = currentIdx * colPx + sideInset
+                                val width = (colPx - sideInset * 2f).coerceAtLeast(0f)
+                                drawRoundRect(
+                                    color = CurrentHourHighlight,
+                                    topLeft = Offset(left, 0f),
+                                    size = Size(width, size.height),
+                                    cornerRadius = CornerRadius(12.dp.toPx(), 12.dp.toPx())
+                                )
+                                drawRoundRect(
+                                    color = CurrentHourOutline,
+                                    topLeft = Offset(left, 0f),
+                                    size = Size(width, size.height),
+                                    cornerRadius = CornerRadius(12.dp.toPx(), 12.dp.toPx()),
+                                    style = Stroke(width = 1.dp.toPx())
+                                )
+                            }
+                        }
 
-// ── Y-axis labels (fixed, non-scrolling) ─────────────────────────────────────
+                        Column(modifier = Modifier.width(totalWidth)) {
+                            Row(modifier = Modifier.width(totalWidth)) {
+                                hours.forEachIndexed { i, hour ->
+                                    val isCurrent = isTodayView && i == currentIdx
+                                    Text(
+                                        text      = DateFormatter.formatTime(hour.dateTime.toLocalTime(), is24Hour = true),
+                                        style     = MaterialTheme.typography.labelSmall,
+                                        fontSize  = 12.sp,
+                                        color     = if (isCurrent) onSurface else onSurfaceVariant,
+                                        textAlign = TextAlign.Center,
+                                        modifier  = Modifier
+                                            .width(ColW)
+                                            .padding(vertical = 6.dp)
+                                    )
+                                }
+                            }
 
-@Composable
-private fun YAxisLabels(
-    gridValues: List<Double>,
-    minTemp: Double,
-    maxTemp: Double,
-    modifier: Modifier = Modifier
-) {
-    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val textMeasurer = rememberTextMeasurer()
+                            Spacer(Modifier.height(2.dp))
 
-    Canvas(modifier = modifier) {
-        val topPadding    = 44.dp.toPx()
-        val bottomPadding = 40.dp.toPx()
-        val graphHeight   = size.height - topPadding - bottomPadding
-        val tempRange     = (maxTemp - minTemp).coerceAtLeast(0.001)
+                            Canvas(
+                                modifier = Modifier
+                                    .width(totalWidth)
+                                    .height(GraphH)
+                            ) {
+                                val w         = size.width
+                                val h         = size.height
+                                val colPx     = w / hours.size
+                                val tempRange = (padMax - padMin).coerceAtLeast(0.001)
+                                val topPad    = 22.dp.toPx()
+                                val botPad    = 6.dp.toPx()
+                                val graphH    = h - topPad - botPad
 
-        gridValues.forEach { temp ->
-            val y = size.height - bottomPadding - ((temp - minTemp) / tempRange * graphHeight).toFloat()
-            if (y < topPadding - 6.dp.toPx() || y > size.height - bottomPadding + 6.dp.toPx()) return@forEach
+                                val pts = convertedTemps.mapIndexed { i, temp ->
+                                    val x = i * colPx + colPx / 2f
+                                    val y = h - botPad - ((temp - padMin) / tempRange * graphH).toFloat()
+                                    Offset(x, y)
+                                }
 
-            val measured = textMeasurer.measure(
-                "${temp.roundToInt()}°",
-                style = TextStyle(fontSize = 9.sp, color = labelColor)
-            )
-            drawText(
-                measured,
-                topLeft = Offset(
-                    x = size.width - measured.size.width - 2.dp.toPx(),
-                    y = y - measured.size.height / 2f
-                )
-            )
-        }
-    }
-}
+                                for (i in 1 until hours.size) {
+                                    drawLine(
+                                        color       = Color.White.copy(alpha = 0.10f),
+                                        start       = Offset(i * colPx, topPad),
+                                        end         = Offset(i * colPx, h - botPad),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
 
-// ── Scrollable graph canvas ───────────────────────────────────────────────────
+                                val fillPath = Path().apply {
+                                    moveTo(pts[0].x, pts[0].y)
+                                    for (i in 1 until pts.size) {
+                                        val cp = pts[i - 1].x + (pts[i].x - pts[i - 1].x) / 2f
+                                        cubicTo(cp, pts[i - 1].y, cp, pts[i].y, pts[i].x, pts[i].y)
+                                    }
+                                    lineTo(pts.last().x, h - botPad)
+                                    lineTo(pts.first().x, h - botPad)
+                                    close()
+                                }
+                                val minY = pts.minOf { it.y }
+                                drawPath(
+                                    path  = fillPath,
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(CurveColor.copy(alpha = 0.28f), Color.Transparent),
+                                        startY = minY,
+                                        endY   = h - botPad
+                                    )
+                                )
 
-@Composable
-private fun HourlyGraphCanvas(
-    forecasts: List<HourlyForecast>,
-    convertedTemps: List<Double>,
-    minTemp: Double,
-    maxTemp: Double,
-    gridValues: List<Double>,
-    temperatureUnit: TemperatureUnit,
-    modifier: Modifier = Modifier
-) {
-    val primaryColor         = MaterialTheme.colorScheme.primary
-    val onSurfaceColor       = MaterialTheme.colorScheme.onSurface
-    val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val rainColor  = Color(0xFF64B5F6)
-    val snowColor  = Color(0xFFBBDEFB)
-    val gridColor  = onSurfaceVariantColor.copy(alpha = 0.18f)
-    val tempRange  = (maxTemp - minTemp).coerceAtLeast(0.001)
+                                val strokePath = Path().apply {
+                                    moveTo(pts[0].x, pts[0].y)
+                                    for (i in 1 until pts.size) {
+                                        val cp = pts[i - 1].x + (pts[i].x - pts[i - 1].x) / 2f
+                                        cubicTo(cp, pts[i - 1].y, cp, pts[i].y, pts[i].x, pts[i].y)
+                                    }
+                                }
+                                drawPath(
+                                    path  = strokePath,
+                                    color = CurveColor,
+                                    style = Stroke(
+                                        width = 2.5.dp.toPx(),
+                                        cap   = StrokeCap.Round,
+                                        join  = StrokeJoin.Round
+                                    )
+                                )
 
-    val textMeasurer = rememberTextMeasurer()
-    val labelStyle = TextStyle(
-        fontSize = 10.sp,
-        color = onSurfaceVariantColor
-    )
-    val tempLabelStyle = TextStyle(
-        fontSize = 11.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = primaryColor
-    )
-    val precipLabelStyle = TextStyle(fontSize = 9.sp, color = rainColor)
-    val snowLabelStyle   = TextStyle(fontSize = 9.sp, color = snowColor)
+                                pts.forEachIndexed { i, pt ->
+                                    val isCurrent = isTodayView && i == currentIdx
+                                    drawCircle(CurveColor, radius = if (isCurrent) 5.dp.toPx() else 3.5.dp.toPx(), center = pt)
+                                    drawCircle(Color.White.copy(alpha = 0.9f), radius = if (isCurrent) 2.5.dp.toPx() else 1.5.dp.toPx(), center = pt)
+                                }
 
-    Canvas(modifier = modifier) {
-        val width          = size.width
-        val height         = size.height
-        val pointSpacing   = width / forecasts.size
-        val topPadding     = 44.dp.toPx()
-        val bottomPadding  = 40.dp.toPx()
-        val graphHeight    = height - topPadding - bottomPadding
+                                convertedTemps.forEachIndexed { i, temp ->
+                                    val isCurrent = isTodayView && i == currentIdx
+                                    val label = textMeasurer.measure(
+                                        "${temp.roundToInt()}°",
+                                        style = TextStyle(
+                                            fontSize   = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color      = if (isCurrent) CurveColor else Color.White
+                                        )
+                                    )
+                                    val lx = pts[i].x - label.size.width / 2f
+                                    val ly = pts[i].y - label.size.height - 4.dp.toPx()
+                                    if (ly >= 0f) drawText(label, topLeft = Offset(lx, ly))
+                                }
+                            }
 
-        // G3: dashed horizontal grid lines
-        gridValues.forEach { temp ->
-            val y = height - bottomPadding - ((temp - minTemp) / tempRange * graphHeight).toFloat()
-            if (y < topPadding - 4.dp.toPx() || y > height - bottomPadding + 4.dp.toPx()) return@forEach
-            drawLine(
-                color = gridColor,
-                start = Offset(0f, y),
-                end = Offset(width, y),
-                strokeWidth = 1.dp.toPx(),
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 5f))
-            )
-        }
+                            HorizontalDivider(
+                                modifier = Modifier.width(totalWidth),
+                                color    = onSurface.copy(alpha = 0.12f)
+                            )
 
-        // G5: day/night background shading
-        forecasts.forEachIndexed { index, forecast ->
-            if (!forecast.isDay) {
-                drawRect(
-                    color = Color(0x0A000000),
-                    topLeft = Offset(index * pointSpacing, topPadding),
-                    size = Size(pointSpacing, graphHeight)
-                )
-            }
-        }
+                            Row(modifier = Modifier.width(totalWidth)) {
+                                hours.forEachIndexed { i, hour ->
+                                    val isCurrent   = isTodayView && i == currentIdx
+                                    val labelColor  = if (isCurrent) CurveColor else onSurface
 
-        // Temperature dot positions (G1: use converted temps for Y)
-        val points = forecasts.mapIndexed { index, _ ->
-            val x = index * pointSpacing + pointSpacing / 2f
-            val factor = (convertedTemps[index] - minTemp) / tempRange
-            val y = height - bottomPadding - (factor * graphHeight).toFloat()
-            Offset(x, y)
-        }
+                                    Column(
+                                        modifier            = Modifier
+                                            .width(ColW)
+                                            .height(96.dp)
+                                            .padding(vertical = 6.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Box(
+                                            modifier         = Modifier.size(28.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(hour.weatherCondition.iconResId),
+                                                contentDescription = stringResource(hour.weatherCondition.labelResId),
+                                                tint = Color.Unspecified,
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                        }
 
-        // G4: gradient fill under the temperature curve
-        val fillPath = Path().apply {
-            if (points.isNotEmpty()) {
-                moveTo(points[0].x, points[0].y)
-                for (i in 1 until points.size) {
-                    val cp = points[i - 1].x + (points[i].x - points[i - 1].x) / 2f
-                    cubicTo(cp, points[i - 1].y, cp, points[i].y, points[i].x, points[i].y)
-                }
-                lineTo(points.last().x, height - bottomPadding)
-                lineTo(points.first().x, height - bottomPadding)
-                close()
-            }
-        }
-        drawPath(
-            path = fillPath,
-            brush = Brush.verticalGradient(
-                colors = listOf(primaryColor.copy(alpha = 0.22f), Color.Transparent),
-                startY = points.minOfOrNull { it.y } ?: topPadding,
-                endY = height - bottomPadding
-            )
-        )
+                                        Spacer(Modifier.height(2.dp))
 
-        // Temperature curve (stroke)
-        val strokePath = Path().apply {
-            if (points.isNotEmpty()) {
-                moveTo(points[0].x, points[0].y)
-                for (i in 1 until points.size) {
-                    val cp = points[i - 1].x + (points[i].x - points[i - 1].x) / 2f
-                    cubicTo(cp, points[i - 1].y, cp, points[i].y, points[i].x, points[i].y)
-                }
-            }
-        }
-        drawPath(
-            path = strokePath,
-            color = primaryColor,
-            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
+                                        Box(
+                                            modifier         = Modifier
+                                                .height(32.dp)
+                                                .fillMaxWidth(),
+                                            contentAlignment = Alignment.TopCenter
+                                        ) {
+                                            Text(
+                                                text      = stringResource(hour.weatherCondition.labelResId),
+                                                style     = MaterialTheme.typography.labelSmall,
+                                                fontSize  = 9.sp,
+                                                color     = labelColor,
+                                                textAlign = TextAlign.Center,
+                                                maxLines  = 2,
+                                                overflow  = TextOverflow.Ellipsis
+                                            )
+                                        }
 
-        // Data-point dots
-        points.forEach { center ->
-            drawCircle(color = primaryColor,   radius = 3.5.dp.toPx(), center = center)
-            drawCircle(color = onSurfaceColor, radius = 1.5.dp.toPx(), center = center)
-        }
+                                        Spacer(Modifier.weight(1f))
 
-        // G6: rounded precipitation bars with rain streaks / snowflake icons inside
-        forecasts.forEachIndexed { index, forecast ->
-            val x          = index * pointSpacing + pointSpacing / 2f
-            val barWidth   = pointSpacing * 0.38f
-            val probFactor = forecast.precipitationProbability / 100f
-            val barHeight  = (36.dp.toPx() * probFactor).coerceAtLeast(if (probFactor > 0) 2.dp.toPx() else 0f)
-            if (probFactor <= 0f) return@forEachIndexed
-
-            val isSnow   = forecast.weatherCondition.name.contains("SNOW", ignoreCase = true)
-            val barColor = if (isSnow) snowColor else rainColor
-            val top      = height - bottomPadding - barHeight
-
-            // Bar with stronger top gradient for visibility
-            drawRoundRect(
-                brush = Brush.verticalGradient(
-                    listOf(barColor.copy(alpha = 0.85f), barColor.copy(alpha = 0.22f)),
-                    startY = top, endY = height - bottomPadding
-                ),
-                topLeft = Offset(x - barWidth / 2f, top),
-                size = Size(barWidth, barHeight),
-                cornerRadius = CornerRadius(4.dp.toPx())
-            )
-
-            if (barHeight >= 12.dp.toPx()) {
-                val iconColor = Color.White.copy(alpha = 0.80f)
-                val cx = x
-                val cy = top + barHeight * 0.55f
-                val stroke = 1.5.dp.toPx()
-
-                if (isSnow) {
-                    // 6-arm snowflake: 3 lines crossing at centre
-                    val armLen = minOf(barWidth * 0.30f, 4.dp.toPx())
-                    for (i in 0..2) {
-                        val rad = Math.toRadians(i * 60.0)
-                        val dx = (armLen * cos(rad)).toFloat()
-                        val dy = (armLen * sin(rad)).toFloat()
-                        drawLine(iconColor, Offset(cx - dx, cy - dy), Offset(cx + dx, cy + dy),
-                            strokeWidth = stroke, cap = StrokeCap.Round)
-                    }
-                } else {
-                    // 3 diagonal rain streaks (angled 20° from vertical)
-                    val streakLen = minOf(barWidth * 0.38f, 5.dp.toPx())
-                    val rad = Math.toRadians(20.0)
-                    val sdx = (streakLen * sin(rad)).toFloat()
-                    val sdy = (streakLen * cos(rad)).toFloat()
-                    val offsets = listOf(-barWidth * 0.22f, 0f, barWidth * 0.22f)
-                    offsets.forEach { ox ->
-                        drawLine(iconColor,
-                            start = Offset(cx + ox - sdx / 2f, cy - sdy / 2f),
-                            end   = Offset(cx + ox + sdx / 2f, cy + sdy / 2f),
-                            strokeWidth = stroke, cap = StrokeCap.Round)
+                                        Text(
+                                            text       = "${hour.precipitationProbability}%",
+                                            style      = MaterialTheme.typography.labelSmall,
+                                            fontSize   = 9.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color      = if (hour.precipitationProbability > 0) PrecipColor
+                                                         else onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-
-        // Temperature labels above each dot
-        forecasts.forEachIndexed { index, _ ->
-            val label = textMeasurer.measure(
-                "${convertedTemps[index].roundToInt()}°",
-                style = tempLabelStyle
-            )
-            val x = points[index].x - label.size.width / 2f
-            val y = points[index].y - label.size.height - 4.dp.toPx()
-            if (y >= 0) drawText(label, topLeft = Offset(x, y))
-        }
-
-        // Precipitation % labels with rain/snow prefix
-        forecasts.forEachIndexed { index, forecast ->
-            if (forecast.precipitationProbability <= 0) return@forEachIndexed
-            val isSnow = forecast.weatherCondition.name.contains("SNOW", ignoreCase = true)
-            val prefix = if (isSnow) "❄ " else "💧 "
-            val label = textMeasurer.measure(
-                "$prefix${forecast.precipitationProbability}%",
-                style = if (isSnow) snowLabelStyle else precipLabelStyle
-            )
-            val probFactor = forecast.precipitationProbability / 100f
-            val barHeight  = 30.dp.toPx() * probFactor
-            val x = points[index].x - label.size.width / 2f
-            val y = height - bottomPadding - barHeight - label.size.height - 2.dp.toPx()
-            if (y >= topPadding) drawText(label, topLeft = Offset(x, y))
-        }
-
-        // Time labels at the bottom
-        forecasts.forEachIndexed { index, forecast ->
-            val timeStr = DateFormatter.formatTime(forecast.dateTime.toLocalTime(), is24Hour = true)
-            val label = textMeasurer.measure(timeStr, style = labelStyle)
-            val x = points[index].x - label.size.width / 2f
-            val y = height - label.size.height - 2.dp.toPx()
-            drawText(label, topLeft = Offset(x, y))
-        }
     }
 }
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+private val ColW   = 46.dp   // column width — ~7 visible at once on a 360dp screen
+private val GraphH = 128.dp  // temperature graph canvas height

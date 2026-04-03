@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -359,7 +360,9 @@ private fun SevenDayForecastCard(
     selectedDayIndex: Int,
     onDaySelected: (Int) -> Unit
 ) {
-    // Title reflects actual days returned — WeatherAPI free plan caps at 3; paid plans give 7/14
+    val isScrollable = forecasts.size > 7
+
+    // Title reflects actual days returned
     val rawTitleText = when {
         forecasts.size >= 14 -> stringResource(R.string.label_14day_forecast)
         forecasts.size >= 7  -> stringResource(R.string.label_7day_forecast)
@@ -381,52 +384,79 @@ private fun SevenDayForecastCard(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        if (isScrollable) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = titleText,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f)
+                )
+                ForecastScrollButton(
+                    icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    enabled = canScrollBackward,
+                    onClick = {
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo((scrollState.value - scrollStepPx).coerceAtLeast(0))
+                        }
+                    }
+                )
+                Spacer(Modifier.width(8.dp))
+                ForecastScrollButton(
+                    icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    enabled = canScrollForward,
+                    onClick = {
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo((scrollState.value + scrollStepPx).coerceAtMost(scrollState.maxValue))
+                        }
+                    }
+                )
+            }
+        } else {
             Text(
                 text = titleText,
                 style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.weight(1f)
-            )
-
-            ForecastScrollButton(
-                icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                enabled = canScrollBackward,
-                onClick = {
-                    coroutineScope.launch {
-                        scrollState.animateScrollTo((scrollState.value - scrollStepPx).coerceAtLeast(0))
-                    }
-                }
-            )
-            Spacer(Modifier.width(8.dp))
-            ForecastScrollButton(
-                icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                enabled = canScrollForward,
-                onClick = {
-                    coroutineScope.launch {
-                        scrollState.animateScrollTo((scrollState.value + scrollStepPx).coerceAtMost(scrollState.maxValue))
-                    }
-                }
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(scrollState),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            forecasts.forEachIndexed { index, forecast ->
-                ForecastDayColumn(
-                    forecast = forecast,
-                    temperatureUnit = temperatureUnit,
-                    isToday = index == 0,
-                    isSelected = index == selectedDayIndex,
-                    onClick = { onDaySelected(index) }
-                )
+        if (isScrollable) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(scrollState),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                forecasts.forEachIndexed { index, forecast ->
+                    ForecastDayColumn(
+                        forecast = forecast,
+                        temperatureUnit = temperatureUnit,
+                        isToday = index == 0,
+                        isSelected = index == selectedDayIndex,
+                        onClick = { onDaySelected(index) },
+                        modifier = Modifier.width(92.dp)
+                    )
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                forecasts.forEachIndexed { index, forecast ->
+                    ForecastDayColumn(
+                        forecast = forecast,
+                        temperatureUnit = temperatureUnit,
+                        isToday = index == 0,
+                        isSelected = index == selectedDayIndex,
+                        onClick = { onDaySelected(index) },
+                        modifier = Modifier.weight(1f),
+                        isCompact = true
+                    )
+                }
             }
         }
     }
@@ -459,7 +489,9 @@ private fun ForecastDayColumn(
     temperatureUnit: TemperatureUnit,
     isToday: Boolean,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isCompact: Boolean = false
 ) {
     val capsuleColor = if (isSelected) Color(0xFF141723) else Color(0xFF10131D)
     val outlineColor = if (isSelected) Color.White.copy(alpha = 0.92f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
@@ -471,14 +503,14 @@ private fun ForecastDayColumn(
     }
     val highLabel = TemperatureFormatter.format(forecast.temperatureMax, temperatureUnit) + "°"
     val lowLabel = TemperatureFormatter.format(forecast.temperatureMin, temperatureUnit) + "°"
+    val cornerRadius = 12.dp
 
     Surface(
-        modifier = Modifier
-            .width(92.dp)
-            .height(208.dp)
+        modifier = modifier
+            .height(if (isCompact) 172.dp else 208.dp)
             .clickable(onClick = onClick)
-            .border(2.dp, outlineColor, RoundedCornerShape(46.dp)),
-        shape = RoundedCornerShape(46.dp),
+            .border(2.dp, outlineColor, RoundedCornerShape(cornerRadius)),
+        shape = RoundedCornerShape(cornerRadius),
         color = capsuleColor,
         tonalElevation = if (isSelected) 6.dp else 0.dp,
         shadowElevation = if (isSelected) 10.dp else 0.dp
@@ -486,38 +518,43 @@ private fun ForecastDayColumn(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 10.dp, vertical = 14.dp),
+                .padding(horizontal = if (isCompact) 4.dp else 10.dp, vertical = if (isCompact) 8.dp else 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = highLabel,
-                style = MaterialTheme.typography.titleLarge,
+                style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = primaryTextColor,
                 maxLines = 1
             )
             Text(
                 text = lowLabel,
-                style = MaterialTheme.typography.titleMedium,
+                style = if (isCompact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
                 color = secondaryTextColor,
                 maxLines = 1
             )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(if (isCompact) 6.dp else 10.dp))
 
             Box(
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(if (isCompact) 28.dp else 36.dp),
                 contentAlignment = Alignment.Center
             ) {
-                WeatherAnimatedIcon(condition = forecast.weatherCondition, modifier = Modifier.fillMaxSize())
+                Icon(
+                    painter = painterResource(forecast.weatherCondition.iconResId),
+                    contentDescription = stringResource(forecast.weatherCondition.labelResId),
+                    tint = Color.Unspecified,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(if (isCompact) 6.dp else 10.dp))
 
             Text(
                 text = stringResource(R.string.unit_percent, forecast.precipitationProbability),
-                style = MaterialTheme.typography.titleMedium,
+                style = if (isCompact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.titleMedium,
                 color = precipitationColor,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1
@@ -527,14 +564,14 @@ private fun ForecastDayColumn(
 
             Text(
                 text = if (isToday) stringResource(R.string.label_today) else DateFormatter.formatDayName(forecast.date),
-                style = MaterialTheme.typography.titleMedium,
+                style = if (isCompact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleMedium,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                 color = primaryTextColor,
                 maxLines = 1
             )
             Text(
                 text = dateLabel,
-                style = MaterialTheme.typography.titleMedium,
+                style = if (isCompact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.titleMedium,
                 color = secondaryTextColor,
                 maxLines = 1
             )

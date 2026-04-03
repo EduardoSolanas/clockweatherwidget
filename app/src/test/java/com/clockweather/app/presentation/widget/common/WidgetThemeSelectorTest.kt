@@ -8,15 +8,15 @@ import org.junit.Test
 class WidgetThemeSelectorTest {
 
     @Test
-    fun `dark theme key uses light tile style`() {
-        val theme = WidgetThemeSelector.getTheme("dark")
+    fun `light theme key uses light tile style`() {
+        val theme = WidgetThemeSelector.getTheme("light")
         assertEquals(R.drawable.flip_digit_bg_light, theme.backgroundResId)
         assertEquals(Color.BLACK, theme.textColor)
     }
 
     @Test
-    fun `light theme key falls back to dark tile style`() {
-        val theme = WidgetThemeSelector.getTheme("light")
+    fun `dark theme key uses dark tile style`() {
+        val theme = WidgetThemeSelector.getTheme("dark")
         assertEquals(R.drawable.flip_digit_bg, theme.backgroundResId)
         assertEquals(Color.WHITE, theme.textColor)
     }

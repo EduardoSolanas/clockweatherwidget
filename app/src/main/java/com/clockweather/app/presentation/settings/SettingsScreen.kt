@@ -34,7 +34,6 @@ fun SettingsScreen(
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
     val isHighPrecisionEnabled by viewModel.isHighPrecisionEnabled.collectAsStateWithLifecycle()
     val isExactAlarmGranted by viewModel.isExactAlarmPermissionGranted.collectAsStateWithLifecycle()
-    val flipAnimationEnabled by viewModel.flipAnimationEnabled.collectAsStateWithLifecycle()
     val weatherRefreshIntervalMinutes by viewModel.weatherRefreshIntervalMinutes.collectAsStateWithLifecycle()
     val forecastDays by viewModel.forecastDays.collectAsStateWithLifecycle()
 
@@ -125,14 +124,6 @@ fun SettingsScreen(
                 onCheckedChange = { viewModel.set24hClock(it) }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-            SettingsToggleRow(
-                label       = stringResource(R.string.settings_flip_animation_label),
-                description = stringResource(R.string.settings_flip_animation_desc),
-                checked     = flipAnimationEnabled,
-                onCheckedChange = { viewModel.setFlipAnimationEnabled(it) }
-            )
 
             Spacer(Modifier.height(16.dp))
 

@@ -11,7 +11,7 @@ object WidgetThemeSelector {
     )
 
     fun getTheme(themeName: String?): ThemeColors {
-        return if (themeName == "dark") {
+        return if (themeName == "light") {
             ThemeColors(
                 backgroundResId = R.drawable.flip_digit_bg_light,
                 textColor = Color.BLACK,

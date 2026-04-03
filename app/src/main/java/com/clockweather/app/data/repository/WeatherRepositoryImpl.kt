@@ -5,9 +5,9 @@ import com.clockweather.app.data.local.dao.DailyForecastDao
 import com.clockweather.app.data.local.dao.HourlyForecastDao
 import com.clockweather.app.data.local.dao.LocationDao
 import com.clockweather.app.data.local.db.WeatherDatabase
-import com.clockweather.app.data.mapper.WeatherApiMapper
+import com.clockweather.app.data.mapper.WeatherDtoMapper
 import com.clockweather.app.data.mapper.WeatherEntityMapper
-import com.clockweather.app.data.remote.api.WeatherApi
+import com.clockweather.app.data.remote.api.OpenMeteoWeatherApi
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.repository.WeatherRepository
@@ -18,19 +18,17 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
 class WeatherRepositoryImpl @Inject constructor(
-    private val weatherApi: WeatherApi,
-    @Named("weatherApiKey") private val apiKey: String,
+    private val openMeteoApi: OpenMeteoWeatherApi,
     private val database: WeatherDatabase,
     private val currentWeatherDao: CurrentWeatherDao,
     private val hourlyForecastDao: HourlyForecastDao,
     private val dailyForecastDao: DailyForecastDao,
     private val locationDao: LocationDao,
-    private val apiMapper: WeatherApiMapper,
+    private val dtoMapper: WeatherDtoMapper,
     private val entityMapper: WeatherEntityMapper
 ) : WeatherRepository {
 
@@ -56,13 +54,12 @@ class WeatherRepositoryImpl @Inject constructor(
 
     override suspend fun refreshWeatherData(location: Location) {
         refreshMutex.withLock {
-            val query = "${location.latitude},${location.longitude}"
-            val response = weatherApi.getForecast(
-                apiKey = apiKey,
-                query = query,
-                days = 7
+            val response = openMeteoApi.getWeatherForecast(
+                latitude = location.latitude,
+                longitude = location.longitude,
+                forecastDays = 7
             )
-            val weatherData = apiMapper.mapToWeatherData(response, location)
+            val weatherData = dtoMapper.mapToWeatherData(response, location)
             persistWeatherData(weatherData, location.id)
         }
     }

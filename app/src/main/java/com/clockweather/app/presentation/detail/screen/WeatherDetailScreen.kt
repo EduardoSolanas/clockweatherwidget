@@ -68,12 +68,13 @@ fun WeatherDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val temperatureUnit by viewModel.temperatureUnit.collectAsStateWithLifecycle()
+    val forecastDays by viewModel.forecastDays.collectAsStateWithLifecycle()
 
     val locationName = (uiState as? UiState.Success)?.data?.location?.name ?: stringResource(R.string.label_weather_fallback_title)
 
     // Lift selected day index here so TopAppBar can react to it
     var selectedDayIndex by remember { mutableIntStateOf(0) }
-    val forecasts = (uiState as? UiState.Success)?.data?.dailyForecasts?.take(7) ?: emptyList()
+    val forecasts = (uiState as? UiState.Success)?.data?.dailyForecasts?.take(forecastDays) ?: emptyList()
     selectedDayIndex = normalizeSelectedDayIndex(selectedDayIndex, forecasts.size)
 
     // Build title: "London" for today, "London · Sat, 8 Mar" for other days
@@ -157,7 +158,8 @@ fun WeatherDetailScreen(
                             weatherData = state.data,
                             temperatureUnit = temperatureUnit,
                             selectedDayIndex = selectedDayIndex,
-                            onDaySelected = { selectedDayIndex = it }
+                            onDaySelected = { selectedDayIndex = it },
+                            forecastDays = forecastDays
                         )
                     }
                 }

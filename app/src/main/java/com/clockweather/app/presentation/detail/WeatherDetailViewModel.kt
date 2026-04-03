@@ -52,6 +52,10 @@ class WeatherDetailViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TemperatureUnit.CELSIUS)
 
+    val forecastDays: StateFlow<Int> = dataStore.data
+        .map { prefs -> prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_FORECAST_DAYS] ?: 7 }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)
+
     init {
         loadWeather()
     }

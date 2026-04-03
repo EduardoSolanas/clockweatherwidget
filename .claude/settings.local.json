@@ -41,7 +41,14 @@
       "Bash(where python:*)",
       "Bash(where node:*)",
       "Bash(where java:*)",
-      "Read(//c/Users/eduar/AppData/Local/Programs/Python/**)"
+      "Read(//c/Users/eduar/AppData/Local/Programs/Python/**)",
+      "Bash(adb devices:*)",
+      "Bash(adb -s 45231FDAP003A9 shell pm list packages)",
+      "Bash(adb -s 45231FDAP003A9 shell pm path com.droid27.sensev2flipclockweather)",
+      "Bash(adb -s 45231FDAP003A9 pull \"/data/app/~~awv73WDkBDiQdCErtv7Prg==/com.droid27.sensev2flipclockweather-Me6CdRBUQJzQ-QF3AjGEPQ==/base.apk\" /tmp/sense_widget.apk)",
+      "Bash(python -c \":*)",
+      "Bash(./gradlew installDebug)",
+      "Bash(gemini --yolo \"/icon ''cloudy weather sprite, cartoon style, white and light gray fluffy clouds with soft shadows, pixel art friendly, transparent background, clean vector look, no text''\")"
     ]
   }
 }

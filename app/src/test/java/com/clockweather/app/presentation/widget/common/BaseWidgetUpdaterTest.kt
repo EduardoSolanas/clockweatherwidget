@@ -217,6 +217,32 @@ class BaseWidgetUpdaterTest {
         confirmVerified(appWidgetManager)
     }
 
+    @Test
+    fun `missing clock theme preference falls back to light widget styling`() = runBlocking {
+        val prefsWithoutTheme: Preferences = preferencesOf(
+            booleanPreferencesKey("use_24h_clock") to true,
+            booleanPreferencesKey("show_date_in_widget") to false,
+            booleanPreferencesKey("flip_animation_enabled") to true,
+            stringPreferencesKey("temperature_unit") to "CELSIUS",
+            stringPreferencesKey("clock_tile_size") to "MEDIUM"
+        )
+
+        val dataStore: DataStore<Preferences> = mockk()
+        every { entryPoint.dataStore() } returns dataStore
+        every { dataStore.data } returns flowOf(prefsWithoutTheme)
+
+        val updaterWithoutTheme = TestWidgetUpdater(mockContext, appWidgetManager, entryPoint)
+
+        updaterWithoutTheme.updateWidget(widgetId)
+
+        verify(exactly = 4) {
+            anyConstructed<RemoteViews>().setInt(any(), "setBackgroundResource", R.drawable.flip_digit_bg_light)
+        }
+        verify(atLeast = 6) {
+            anyConstructed<RemoteViews>().setTextColor(any(), android.graphics.Color.BLACK)
+        }
+    }
+
     // ── clearDigits forces full re-render ──────────────────────
 
     @Test

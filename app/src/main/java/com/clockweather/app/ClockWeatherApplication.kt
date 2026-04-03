@@ -7,7 +7,9 @@ import android.widget.RemoteViews
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import android.appwidget.AppWidgetManager
@@ -59,6 +61,10 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         super.onCreate()
         restoreLanguageSetting()
 
+        val migratedLegacyClockTheme = runBlocking {
+            recoverClockThemeAfterBrokenMigration()
+        }
+
         // Initialise the in-memory preference cache so minute ticks skip disk I/O
         WidgetPrefsCache.init(dataStore, appScope)
 
@@ -70,10 +76,39 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             registerTimeTickReceiver()
 
             appScope.launch {
+                if (migratedLegacyClockTheme) {
+                    invalidateAllWidgetBaselines()
+                }
                 // Instant sync + alarm backup
                 syncClockNow(this@ClockWeatherApplication)
             }
         }
+    }
+
+    private suspend fun recoverClockThemeAfterBrokenMigration(): Boolean {
+        val brokenMigrationKey = booleanPreferencesKey("clock_theme_mapping_migrated_v1")
+        val recoveryMigrationKey = booleanPreferencesKey("clock_theme_mapping_migrated_v2")
+        val clockThemeKey = stringPreferencesKey("clock_theme")
+        var migrated = false
+
+        dataStore.edit { prefs ->
+            if (prefs[recoveryMigrationKey] == true) return@edit
+
+            val currentTheme = prefs[clockThemeKey]
+            if (prefs[brokenMigrationKey] == true && currentTheme == SettingsViewModel.CLOCK_THEME_DARK) {
+                prefs[clockThemeKey] = SettingsViewModel.CLOCK_THEME_LIGHT
+                migrated = true
+            } else if (prefs[brokenMigrationKey] != true && currentTheme == SettingsViewModel.CLOCK_THEME_DARK) {
+                // Pre-fix installs often persisted "dark" while visually showing the light style.
+                // Normalize that legacy value to the intended light theme once.
+                prefs[clockThemeKey] = SettingsViewModel.CLOCK_THEME_LIGHT
+                migrated = true
+            }
+
+            prefs[recoveryMigrationKey] = true
+        }
+
+        return migrated
     }
 
     // ── Screen state receiver management ────────────────────────────
@@ -174,10 +209,15 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             ForecastWidgetProvider::class.java to R.layout.widget_forecast,
             LargeWidgetProvider::class.java to R.layout.widget_large
         )
-        val atomicClockProviders = setOf(CompactWidgetProvider::class.java)
+        val simpleTextClockProviders = setOf(
+            CompactWidgetProvider::class.java,
+            ExtendedWidgetProvider::class.java,
+            ForecastWidgetProvider::class.java,
+            LargeWidgetProvider::class.java
+        )
 
         providerLayouts.forEach { (providerClass, layoutId) ->
-            val usesAtomicClockText = providerClass in atomicClockProviders
+            val usesSimpleClockText = providerClass in simpleTextClockProviders
             val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
             ids.forEach { id ->
                 if (suppressAnimationWindow) {
@@ -194,104 +234,31 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                     listOf(prev.h1 != h1, prev.h2 != h2, prev.m1 != m1, prev.m2 != m2).count { it }
                 }
                 val renderPath = when {
-                    usesAtomicClockText && forceAllDigits -> "atomic_force_text"
-                    usesAtomicClockText && prev == null -> "atomic_baseline_text"
-                    usesAtomicClockText -> "atomic_delta_text"
-                    forceAllDigits && alignDisplayedChildrenOnly -> "force_align_displayed_children"
-                    forceAllDigits && useQuietRender -> "force_full_visibility_no_animation"
-                    forceAllDigits -> "force_full_with_displayed_child_alignment"
-                    prev == null -> "baseline_full_visibility"
-                    else -> "delta_visibility_only"
+                    usesSimpleClockText && forceAllDigits -> "simple_text_full"
+                    usesSimpleClockText && prev == null -> "simple_text_baseline"
+                    usesSimpleClockText -> "simple_text_delta"
+                    forceAllDigits || prev == null -> "static_visibility_full"
+                    else -> "static_visibility_delta"
                 }
 
                 val ampm = if (is24h) "" else if (now.hour < 12) "AM" else "PM"
                 var hasChanges = false
 
                 if (forceAllDigits || prev == null) {
-                    if (usesAtomicClockText) {
-                        views.setTextViewText(R.id.digit_h1, h1.toString())
-                        views.setTextViewText(R.id.digit_h2, h2.toString())
-                        views.setTextViewText(R.id.digit_m1, m1.toString())
-                        views.setTextViewText(R.id.digit_m2, m2.toString())
-                        views.setTextViewText(R.id.ampm, ampm)
-                        com.clockweather.app.presentation.widget.common.WidgetDataBinder.clearAtomicFoldOverlays(
-                            views,
-                            com.clockweather.app.presentation.widget.common.DigitState(h1, h2, m1, m2),
-                            resetFoldOverlaysToFront = !useQuietRender
-                        )
-                        hasChanges = true
-                    } else if (alignDisplayedChildrenOnly) {
-                        // Launcher-host reassert path: align flipper indices only,
-                        // avoid visibility fan-out that can look like a full-tile refresh.
-                        views.setDisplayedChild(R.id.digit_h1, h1)
-                        views.setDisplayedChild(R.id.digit_h2, h2)
-                        views.setDisplayedChild(R.id.digit_m1, m1)
-                        views.setDisplayedChild(R.id.digit_m2, m2)
-                        views.setTextViewText(R.id.ampm, ampm)
-                        hasChanges = true
-                    } else {
-                        // When suppression is requested (weather->home / unlock convergence),
-                        // avoid setDisplayedChild to prevent visible flip transitions.
-                        if (!useQuietRender) {
-                            // Align ViewFlipper internal state so next incremental showNext()
-                            // animates correctly after a forced sync.
-                            views.setDisplayedChild(R.id.digit_h1, h1)
-                            views.setDisplayedChild(R.id.digit_h2, h2)
-                            views.setDisplayedChild(R.id.digit_m1, m1)
-                            views.setDisplayedChild(R.id.digit_m2, m2)
-                        }
-                        applyDigitVisibility(views, H1_DIGIT_IDS, h1)
-                        applyDigitVisibility(views, H2_DIGIT_IDS, h2)
-                        applyDigitVisibility(views, M1_DIGIT_IDS, m1)
-                        applyDigitVisibility(views, M2_DIGIT_IDS, m2)
-                        views.setTextViewText(R.id.ampm, ampm)
-                        hasChanges = true
-                    }
+                    views.setTextViewText(R.id.digit_h1, h1.toString())
+                    views.setTextViewText(R.id.digit_h2, h2.toString())
+                    views.setTextViewText(R.id.digit_m1, m1.toString())
+                    views.setTextViewText(R.id.digit_m2, m2.toString())
+                    views.setTextViewText(R.id.ampm, ampm)
+                    hasChanges = true
                 } else {
-                    if (usesAtomicClockText) {
-                        val anyDigitChanged = prev.h1 != h1 || prev.h2 != h2 || prev.m1 != m1 || prev.m2 != m2
-                        if (anyDigitChanged) {
-                            com.clockweather.app.presentation.widget.common.WidgetDataBinder.clearAtomicFoldOverlays(
-                                views,
-                                com.clockweather.app.presentation.widget.common.DigitState(h1, h2, m1, m2),
-                                resetFoldOverlaysToFront = !useQuietRender
-                            )
-                        }
-                        if (prev.h1 != h1) {
-                            views.setTextViewText(R.id.digit_h1, h1.toString())
-                            hasChanges = true
-                        }
-                        if (prev.h2 != h2) {
-                            views.setTextViewText(R.id.digit_h2, h2.toString())
-                            hasChanges = true
-                        }
-                        if (prev.m1 != m1) {
-                            views.setTextViewText(R.id.digit_m1, m1.toString())
-                            hasChanges = true
-                        }
-                        if (prev.m2 != m2) {
-                            views.setTextViewText(R.id.digit_m2, m2.toString())
-                            hasChanges = true
-                        }
-                        val previousDisplayHour = prev.h1 * 10 + prev.h2
-                        val previousAmpm = if (is24h) "" else if (previousDisplayHour < 12) "AM" else "PM"
-                        if (ampm != previousAmpm) {
-                            views.setTextViewText(R.id.ampm, ampm)
-                            hasChanges = true
-                        }
-                    } else {
-                        hasChanges = applyDigitDelta(views, H1_DIGIT_IDS, prev.h1, h1) || hasChanges
-                        hasChanges = applyDigitDelta(views, H2_DIGIT_IDS, prev.h2, h2) || hasChanges
-                        hasChanges = applyDigitDelta(views, M1_DIGIT_IDS, prev.m1, m1) || hasChanges
-                        hasChanges = applyDigitDelta(views, M2_DIGIT_IDS, prev.m2, m2) || hasChanges
-
-                        val previousDisplayHour = prev.h1 * 10 + prev.h2
-                        val previousAmpm = if (is24h) "" else if (previousDisplayHour < 12) "AM" else "PM"
-                        if (ampm != previousAmpm) {
-                            views.setTextViewText(R.id.ampm, ampm)
-                            hasChanges = true
-                        }
-                    }
+                    if (prev.h1 != h1) { views.setTextViewText(R.id.digit_h1, h1.toString()); hasChanges = true }
+                    if (prev.h2 != h2) { views.setTextViewText(R.id.digit_h2, h2.toString()); hasChanges = true }
+                    if (prev.m1 != m1) { views.setTextViewText(R.id.digit_m1, m1.toString()); hasChanges = true }
+                    if (prev.m2 != m2) { views.setTextViewText(R.id.digit_m2, m2.toString()); hasChanges = true }
+                    val previousDisplayHour = prev.h1 * 10 + prev.h2
+                    val previousAmpm = if (is24h) "" else if (previousDisplayHour < 12) "AM" else "PM"
+                    if (ampm != previousAmpm) { views.setTextViewText(R.id.ampm, ampm); hasChanges = true }
                 }
 
                 if (hasChanges) {
@@ -316,24 +283,6 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                 }
             }
         }
-    }
-
-    private fun applyDigitVisibility(views: RemoteViews, digitIds: IntArray, value: Int) {
-        digitIds.forEachIndexed { index, childId ->
-            views.setViewVisibility(childId, if (index == value) android.view.View.VISIBLE else android.view.View.GONE)
-        }
-    }
-
-    private fun applyDigitDelta(
-        views: RemoteViews,
-        digitIds: IntArray,
-        previousValue: Int,
-        newValue: Int
-    ): Boolean {
-        if (previousValue == newValue) return false
-        views.setViewVisibility(digitIds[previousValue], android.view.View.GONE)
-        views.setViewVisibility(digitIds[newValue], android.view.View.VISIBLE)
-        return true
     }
 
     /**
@@ -508,22 +457,4 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             .setWorkerFactory(workerFactory)
             .build()
 
-    companion object {
-        private val H1_DIGIT_IDS = intArrayOf(
-            R.id.digit_h1_0, R.id.digit_h1_1, R.id.digit_h1_2, R.id.digit_h1_3, R.id.digit_h1_4,
-            R.id.digit_h1_5, R.id.digit_h1_6, R.id.digit_h1_7, R.id.digit_h1_8, R.id.digit_h1_9
-        )
-        private val H2_DIGIT_IDS = intArrayOf(
-            R.id.digit_h2_0, R.id.digit_h2_1, R.id.digit_h2_2, R.id.digit_h2_3, R.id.digit_h2_4,
-            R.id.digit_h2_5, R.id.digit_h2_6, R.id.digit_h2_7, R.id.digit_h2_8, R.id.digit_h2_9
-        )
-        private val M1_DIGIT_IDS = intArrayOf(
-            R.id.digit_m1_0, R.id.digit_m1_1, R.id.digit_m1_2, R.id.digit_m1_3, R.id.digit_m1_4,
-            R.id.digit_m1_5, R.id.digit_m1_6, R.id.digit_m1_7, R.id.digit_m1_8, R.id.digit_m1_9
-        )
-        private val M2_DIGIT_IDS = intArrayOf(
-            R.id.digit_m2_0, R.id.digit_m2_1, R.id.digit_m2_2, R.id.digit_m2_3, R.id.digit_m2_4,
-            R.id.digit_m2_5, R.id.digit_m2_6, R.id.digit_m2_7, R.id.digit_m2_8, R.id.digit_m2_9
-        )
-    }
 }
