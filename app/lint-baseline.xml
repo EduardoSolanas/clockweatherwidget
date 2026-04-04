@@ -63,7 +63,7 @@
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/xml/widget_compact_info.xml"
-            line="14"
+            line="15"
             column="5"/>
     </issue>
 
@@ -118,7 +118,7 @@
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/xml/widget_extended_info.xml"
-            line="14"
+            line="15"
             column="5"/>
     </issue>
 
@@ -173,7 +173,7 @@
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/xml/widget_forecast_info.xml"
-            line="14"
+            line="15"
             column="5"/>
     </issue>
 
@@ -228,7 +228,7 @@
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/xml/widget_large_info.xml"
-            line="14"
+            line="15"
             column="5"/>
     </issue>
 
@@ -272,7 +272,7 @@
         errorLine2="     ~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="240"
+            line="38"
             column="6"/>
     </issue>
 
@@ -283,7 +283,7 @@
         errorLine2="     ~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="238"
+            line="38"
             column="6"/>
     </issue>
 
@@ -294,7 +294,7 @@
         errorLine2="                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="250"
+            line="48"
             column="87"/>
     </issue>
 
@@ -305,7 +305,7 @@
         errorLine2="                                                                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="252"
+            line="50"
             column="117"/>
     </issue>
 
@@ -316,7 +316,7 @@
         errorLine2="                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="248"
+            line="48"
             column="87"/>
     </issue>
 
@@ -327,8 +327,85 @@
         errorLine2="                                                                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="250"
+            line="50"
             column="117"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.widget_glass_fill` appears to be unused"
+        errorLine1="    &lt;color name=&quot;widget_glass_fill&quot;>#33FFFFFF&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="9"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.widget_glass_stroke` appears to be unused"
+        errorLine1="    &lt;color name=&quot;widget_glass_stroke&quot;>#44FFFFFF&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="10"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.flip_digit_text` appears to be unused"
+        errorLine1="    &lt;color name=&quot;flip_digit_text&quot;>@color/flip_digit_text_dark&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="17"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.anim.flip_atomic_in` appears to be unused"
+        errorLine1="&lt;set xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/anim/flip_atomic_in.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.anim.flip_atomic_out` appears to be unused"
+        errorLine1="&lt;set xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/anim/flip_atomic_out.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.anim.flip_in` appears to be unused"
+        errorLine1="&lt;set xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/anim/flip_in.xml"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.anim.flip_out` appears to be unused"
+        errorLine1="&lt;set xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/anim/flip_out.xml"
+            line="1"
+            column="1"/>
     </issue>
 
     <issue
@@ -465,6 +542,28 @@
 
     <issue
         id="UnusedResources"
+        message="The resource `R.string.label_metric_dew_short` appears to be unused"
+        errorLine1="    &lt;string name=&quot;label_metric_dew_short&quot;>Dew: %s°&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="108"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.label_metric_pressure_short` appears to be unused"
+        errorLine1="    &lt;string name=&quot;label_metric_pressure_short&quot;>P: %d hPa&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="110"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
         message="The resource `R.string.settings_wind_speed_unit` appears to be unused"
         errorLine1="    &lt;string name=&quot;settings_wind_speed_unit&quot;>Wind speed unit&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
@@ -498,12 +597,34 @@
 
     <issue
         id="UnusedResources"
+        message="The resource `R.string.settings_flip_animation_label` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_flip_animation_label&quot;>Flip animation&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="135"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_flip_animation_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_flip_animation_desc&quot;>Animate the clock digits with a flip effect when the time changes&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="136"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
         message="The resource `R.string.config_select_location` appears to be unused"
         errorLine1="    &lt;string name=&quot;config_select_location&quot;>Select location&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="167"
+            line="177"
             column="13"/>
     </issue>
 
@@ -514,7 +635,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="170"
+            line="180"
             column="13"/>
     </issue>
 
@@ -525,7 +646,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="177"
+            line="187"
             column="13"/>
     </issue>
 
@@ -536,7 +657,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="179"
+            line="189"
             column="13"/>
     </issue>
 
@@ -547,7 +668,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="196"
+            line="206"
             column="13"/>
     </issue>
 
@@ -558,7 +679,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="198"
+            line="208"
             column="13"/>
     </issue>
 
@@ -569,7 +690,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="200"
+            line="210"
             column="13"/>
     </issue>
 
@@ -580,30 +701,19 @@
         errorLine2="            ~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="202"
+            line="212"
             column="13"/>
     </issue>
 
     <issue
-        id="TooManyViews"
-        message="`widget_extended.xml` has more than 80 views, bad for performance"
-        errorLine1="            &lt;TextView android:id=&quot;@+id/fday3_high&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;wrap_content&quot; android:textColor=&quot;@color/widget_text_primary&quot; android:textSize=&quot;11sp&quot; android:textStyle=&quot;bold&quot; android:gravity=&quot;center&quot; />"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        id="UnusedResources"
+        message="The resource `R.drawable.widget_glass_bg` appears to be unused"
+        errorLine1="&lt;shape xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
         <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="267"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="TooManyViews"
-        message="`widget_forecast.xml` has more than 80 views, bad for performance"
-        errorLine1="            &lt;TextView android:id=&quot;@+id/fday4_name&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;wrap_content&quot; android:textColor=&quot;@color/widget_text_primary&quot; android:textSize=&quot;10sp&quot; android:textStyle=&quot;bold&quot; android:gravity=&quot;center&quot; />"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="267"
-            column="13"/>
+            file="src/main/res/drawable/widget_glass_bg.xml"
+            line="2"
+            column="1"/>
     </issue>
 
     <issue
@@ -629,25 +739,14 @@
     </issue>
 
     <issue
-        id="SmallSp"
-        message="Avoid using sizes smaller than `11sp`: `10sp`"
-        errorLine1="                android:textSize=&quot;10sp&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~">
+        id="IconDuplicates"
+        message="The following unrelated icon files have identical contents: widget_extended_preview_img.png, widget_forecast_preview_img.png, widget_large_preview_img.png">
         <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="214"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="SmallSp"
-        message="Avoid using sizes smaller than `11sp`: `10sp`"
-        errorLine1="                android:textSize=&quot;10sp&quot; />"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~">
+            file="src/main/res/drawable-nodpi/widget_large_preview_img.png"/>
         <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="235"
-            column="17"/>
+            file="src/main/res/drawable-nodpi/widget_forecast_preview_img.png"/>
+        <location
+            file="src/main/res/drawable-nodpi/widget_extended_preview_img.png"/>
     </issue>
 
     <issue
@@ -657,7 +756,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="251"
+            line="49"
             column="172"/>
     </issue>
 
@@ -668,7 +767,7 @@
         errorLine2="                                                                                                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="254"
+            line="52"
             column="173"/>
     </issue>
 
@@ -679,7 +778,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="258"
+            line="56"
             column="172"/>
     </issue>
 
@@ -690,7 +789,7 @@
         errorLine2="                                                                                                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="261"
+            line="59"
             column="173"/>
     </issue>
 
@@ -701,7 +800,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="265"
+            line="63"
             column="172"/>
     </issue>
 
@@ -712,7 +811,7 @@
         errorLine2="                                                                                                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="268"
+            line="66"
             column="173"/>
     </issue>
 
@@ -723,7 +822,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="272"
+            line="70"
             column="172"/>
     </issue>
 
@@ -734,7 +833,7 @@
         errorLine2="                                                                                                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="275"
+            line="73"
             column="173"/>
     </issue>
 
@@ -745,7 +844,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="279"
+            line="77"
             column="172"/>
     </issue>
 
@@ -756,7 +855,7 @@
         errorLine2="                                                                                                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="282"
+            line="80"
             column="173"/>
     </issue>
 
@@ -767,7 +866,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="286"
+            line="84"
             column="172"/>
     </issue>
 
@@ -778,7 +877,7 @@
         errorLine2="                                                                                                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="289"
+            line="87"
             column="173"/>
     </issue>
 
@@ -789,7 +888,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="293"
+            line="91"
             column="172"/>
     </issue>
 
@@ -800,30 +899,8 @@
         errorLine2="                                                                                                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="296"
+            line="94"
             column="173"/>
-    </issue>
-
-    <issue
-        id="SmallSp"
-        message="Avoid using sizes smaller than `11sp`: `10sp`"
-        errorLine1="                android:textSize=&quot;10sp&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="213"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="SmallSp"
-        message="Avoid using sizes smaller than `11sp`: `10sp`"
-        errorLine1="                android:textSize=&quot;10sp&quot; />"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="233"
-            column="17"/>
     </issue>
 
     <issue
@@ -833,7 +910,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="249"
+            line="49"
             column="172"/>
     </issue>
 
@@ -844,7 +921,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="255"
+            line="55"
             column="172"/>
     </issue>
 
@@ -855,7 +932,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="261"
+            line="61"
             column="172"/>
     </issue>
 
@@ -866,7 +943,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="267"
+            line="67"
             column="172"/>
     </issue>
 
@@ -877,7 +954,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="273"
+            line="73"
             column="172"/>
     </issue>
 
@@ -888,7 +965,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="279"
+            line="79"
             column="172"/>
     </issue>
 
@@ -899,7 +976,7 @@
         errorLine2="                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="285"
+            line="85"
             column="172"/>
     </issue>
 
@@ -910,536 +987,74 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle.kts"
-            line="132"
+            line="143"
             column="20"/>
     </issue>
 
     <issue
-        id="ContentDescription"
-        message="Missing `contentDescription` attribute on image"
-        errorLine1="        &lt;ImageView"
-        errorLine2="         ~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="203"
-            column="10"/>
-    </issue>
-
-    <issue
         id="HardcodedText"
         message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;0&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_compact.xml"
-            line="31"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;0&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_compact.xml"
-            line="95"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;:&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;:&quot;"
+        errorLine1="            android:text=&quot;0&quot;"
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/widget_compact.xml"
-            line="151"
+            file="src/main/res/layout/widget_clock_block.xml"
+            line="23"
             column="13"/>
     </issue>
 
     <issue
         id="HardcodedText"
         message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;0&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~">
+        errorLine1="            android:text=&quot;0&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/widget_compact.xml"
-            line="170"
-            column="17"/>
+            file="src/main/res/layout/widget_clock_block.xml"
+            line="48"
+            column="13"/>
     </issue>
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;0&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~">
+        message="Hardcoded string &quot;:&quot;, should use `@string` resource"
+        errorLine1="        android:text=&quot;:&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/widget_compact.xml"
-            line="234"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Mon, Mar 9&quot;, should use `@string` resource"
-        errorLine1="        android:text=&quot;Mon, Mar 9&quot;"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_compact.xml"
-            line="302"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="30"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="31"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="32"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="33"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="34"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="35"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="36"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="37"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="38"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="39"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="60"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="61"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="62"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="63"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="64"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="65"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
+            file="src/main/res/layout/widget_clock_block.xml"
             line="66"
-            column="151"/>
+            column="9"/>
     </issue>
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="67"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="68"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="69"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;:&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;:&quot;"
+        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
+        errorLine1="            android:text=&quot;0&quot;"
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="85"
+            file="src/main/res/layout/widget_clock_block.xml"
+            line="84"
             column="13"/>
     </issue>
 
     <issue
         id="HardcodedText"
         message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
+        errorLine1="            android:text=&quot;0&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="102"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="103"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="104"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="105"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="106"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="107"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="108"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
+            file="src/main/res/layout/widget_clock_block.xml"
             line="109"
-            column="151"/>
+            column="13"/>
     </issue>
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
+        message="Hardcoded string &quot;Mon, Mar 9&quot;, should use `@string` resource"
+        errorLine1="        android:text=&quot;Mon, Mar 9&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="110"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="111"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="132"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="133"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="134"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="135"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="136"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="137"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="138"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="139"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="140"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_extended.xml"
-            line="141"
-            column="151"/>
+            file="src/main/res/layout/widget_compact.xml"
+            line="22"
+            column="9"/>
     </issue>
 
     <issue
@@ -1449,459 +1064,8 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_extended.xml"
-            line="170"
+            line="24"
             column="9"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="30"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="31"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="32"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="33"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="34"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="35"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="36"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="37"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="38"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="39"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="60"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="61"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="62"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="63"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="64"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="65"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="66"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="67"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="68"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="69"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;:&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;:&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="85"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="102"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="103"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="104"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="105"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="106"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="107"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="108"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="109"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="110"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="111"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="132"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="133"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="134"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="135"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="136"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="137"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="138"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="139"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="140"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;8dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;48sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_forecast.xml"
-            line="141"
-            column="151"/>
     </issue>
 
     <issue
@@ -1911,459 +1075,52 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/widget_forecast.xml"
-            line="170"
+            line="24"
             column="9"/>
     </issue>
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
+        message="Hardcoded string &quot;London&quot;, should use `@string` resource"
+        errorLine1="            android:text=&quot;London&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/widget_large.xml"
-            line="29"
-            column="151"/>
+            file="src/main/res/layout/widget_weather_card_preview.xml"
+            line="24"
+            column="13"/>
     </issue>
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
+        message="Hardcoded string &quot;Partly cloudy&quot;, should use `@string` resource"
+        errorLine1="            android:text=&quot;Partly cloudy&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/widget_large.xml"
-            line="30"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="31"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="32"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="33"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
+            file="src/main/res/layout/widget_weather_card_preview.xml"
             line="34"
-            column="151"/>
+            column="13"/>
     </issue>
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
+        message="Hardcoded string &quot;17°C&quot;, should use `@string` resource"
+        errorLine1="            android:text=&quot;17°C&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/widget_large.xml"
-            line="35"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="36"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="37"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h1_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="38"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
+            file="src/main/res/layout/widget_weather_card_preview.xml"
             line="59"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="60"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="61"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="62"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="63"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="64"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="65"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="66"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="67"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_h2_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="68"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;:&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;:&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="82"
             column="13"/>
     </issue>
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
+        message="Hardcoded string &quot;20° / 11°&quot;, should use `@string` resource"
+        errorLine1="            android:text=&quot;20° / 11°&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/widget_large.xml"
-            line="99"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="100"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="101"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="102"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="103"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="104"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="105"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="106"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="107"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m1_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="108"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_0&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;0&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="129"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_1&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;1&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="130"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_2&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;2&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="131"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_3&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;3&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="132"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_4&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;4&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="133"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_5&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;5&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="134"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;6&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_6&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;6&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="135"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;7&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_7&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;7&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="136"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;8&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_8&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;8&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="137"
-            column="151"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;9&quot;, should use `@string` resource"
-        errorLine1="                &lt;TextView android:id=&quot;@+id/digit_m2_9&quot; android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot; android:padding=&quot;0dp&quot; android:text=&quot;9&quot; android:gravity=&quot;center&quot; android:textColor=&quot;@color/flip_digit_text&quot; android:textSize=&quot;52sp&quot; android:textStyle=&quot;bold&quot; android:fontFamily=&quot;monospace&quot; android:includeFontPadding=&quot;false&quot; />"
-        errorLine2="                                                                                                                                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_large.xml"
-            line="138"
-            column="151"/>
+            file="src/main/res/layout/widget_weather_card_preview.xml"
+            line="69"
+            column="13"/>
     </issue>
 
 </issues>

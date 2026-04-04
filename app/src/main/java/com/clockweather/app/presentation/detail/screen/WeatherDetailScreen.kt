@@ -258,20 +258,20 @@ private const val FORECAST_VISIBLE_COLUMNS   = 7
  * Returns the per-column width (in dp) for the forecast grid so that the
  * scrollable 14-day row uses exactly the same column size as the 7-day grid.
  *
- * Formula: (availableWidth - spacing * (visibleColumns - 1)) / visibleColumns
+ * Formula: (availableWidth - spacing * (itemsVisible - 1)) / itemsVisible
  */
 internal fun forecastColumnWidth(
     availableWidthDp: Float,
-    spacing: Float = FORECAST_COLUMN_SPACING_DP,
-    visibleColumns: Int = FORECAST_VISIBLE_COLUMNS
-): Float = (availableWidthDp - spacing * (visibleColumns - 1)) / visibleColumns
+    spacingDp: Float = FORECAST_COLUMN_SPACING_DP,
+    itemsVisibleCount: Int = FORECAST_VISIBLE_COLUMNS
+): Float = (availableWidthDp - spacingDp * (itemsVisibleCount - 1)) / itemsVisibleCount
 
 /**
- * Scroll step that advances exactly [visibleColumns] columns so the
+ * Scroll step that advances exactly [itemsVisibleCount] columns so the
  * scrollable row pages through without partial columns showing at the edge.
  */
 internal fun forecastScrollStep(
     columnWidthDp: Float,
-    spacing: Float = FORECAST_COLUMN_SPACING_DP,
-    visibleColumns: Int = FORECAST_VISIBLE_COLUMNS
-): Float = (columnWidthDp + spacing) * visibleColumns
+    spacingDp: Float = FORECAST_COLUMN_SPACING_DP,
+    itemsPerPage: Int = FORECAST_VISIBLE_COLUMNS
+): Float = (columnWidthDp + spacingDp) * itemsPerPage

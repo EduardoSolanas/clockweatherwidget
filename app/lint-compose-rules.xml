@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Custom lint rules for Compose best practices -->
+<lint>
+    <!-- Enable detection of mutable state without remember -->
+    <issue id="UnrememberedMutableState" severity="error" />
+
+    <!-- Enable detection of mutable state parameters without @Stable -->
+    <issue id="MutableCollectionMutableState" severity="warning" />
+
+    <!-- Enable detection of composables that are not called from composable context -->
+    <issue id="ComposableNaming" severity="warning" />
+
+    <!-- Check for proper use of @Composable annotation -->
+    <issue id="ComposableLambdaParameterNaming" severity="warning" />
+</lint>
+

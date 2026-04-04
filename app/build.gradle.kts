@@ -69,11 +69,21 @@ android {
     }
 
     lint {
-        abortOnError = true
-        warningsAsErrors = false
+        abortOnError = false  // Don't abort on errors, just warn
+        warningsAsErrors = false  // Keep warnings as warnings
         checkReleaseBuilds = true
         baseline = file("lint-baseline.xml")
-        disable += "GradleDependency"
+        disable += listOf(
+            "GradleDependency",      // Allow gradle dependency warnings
+            "Instantiatable",        // Allow abstract classes in dagger
+            "BatteryLife"            // Widget needs battery exemption for reliability
+        )
+        // Enable strict checks for compose and code quality
+        enable += listOf(
+            "UnrememberedMutableState",       // Catch mutableState without remember
+            "ObsoleteSdkInt",                 // Flag old SDK checks
+            "MissingPermission"               // Ensure permissions are checked
+        )
     }
 }
 

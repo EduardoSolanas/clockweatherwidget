@@ -380,6 +380,7 @@ private fun SevenDayForecastCard(
 
     // Use BoxWithConstraints so the scrollable row uses exactly the same per-column
     // width as the 7-day grid — preventing any size/spacing jump when toggling modes.
+    @Suppress("UnusedBoxWithConstraintsScopeModifier")
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val availableWidthDp = maxWidth.value
         val columnWidthDp    = forecastColumnWidth(availableWidthDp)
