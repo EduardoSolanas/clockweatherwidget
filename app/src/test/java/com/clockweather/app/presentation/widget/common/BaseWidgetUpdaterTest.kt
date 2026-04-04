@@ -144,6 +144,8 @@ class BaseWidgetUpdaterTest {
 
     @Test
     fun `subsequent render uses partiallyUpdateAppWidget`() = runBlocking {
+        // Simulate a prior completed render: baseline ready AND digits saved.
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
         WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState(1, 4, 3, 7))
 
         updater.updateWidget(widgetId)
@@ -198,6 +200,8 @@ class BaseWidgetUpdaterTest {
             epochMinute = currentMinute,
         )
 
+        // Simulate completed prior render so the same-minute preservation logic can engage.
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
         WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState.from(10, 26, true))
         WidgetClockStateStore.markRendered(realContext, widgetId, currentMinute)
 
@@ -257,21 +261,30 @@ class BaseWidgetUpdaterTest {
         confirmVerified(appWidgetManager)
     }
 
+    /**
+     * Regression guard: clearDigits (settings change) must NOT trigger a full
+     * [AppWidgetManager.updateAppWidget] when the baseline is already established.
+     * A full replace would flash the layout XML defaults ("0000") for one frame.
+     */
     @Test
-    fun `clearDigits causes next updateWidget to use full update`() = runBlocking {
+    fun `clearDigits with active baseline keeps next updateWidget as partial - no 0000 flash`() = runBlocking {
+        // Step 1: Establish a baseline (first full render has happened).
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
         WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState(1, 4, 3, 7))
 
         updater.updateWidget(widgetId)
         verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
         confirmVerified(appWidgetManager)
 
+        // Step 2: Settings change — clearDigits must NOT reset the baseline.
         WidgetClockStateStore.clearDigits(realContext, widgetId)
         clearMocks(appWidgetManager, answers = false)
 
         updater.updateWidget(widgetId)
 
-        verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
-        verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        // Must stay partial — baseline is still set, so no full layout flash.
+        verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
+        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
         confirmVerified(appWidgetManager)
     }
 }
