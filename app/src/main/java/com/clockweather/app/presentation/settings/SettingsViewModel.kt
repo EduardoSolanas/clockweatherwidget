@@ -134,6 +134,9 @@ class SettingsViewModel @Inject constructor(
     private val _isExactAlarmPermissionGranted = MutableStateFlow(checkExactAlarmPermission())
     val isExactAlarmPermissionGranted = _isExactAlarmPermissionGranted.asStateFlow()
 
+    private val _isBatteryOptimizationExempt = MutableStateFlow(checkBatteryOptimizationExempt())
+    val isBatteryOptimizationExempt = _isBatteryOptimizationExempt.asStateFlow()
+
     // ── Setters (all trigger a widget redraw) ──────────────────────────────────
 
     fun setLanguage(languageCode: String) {
@@ -276,6 +279,7 @@ class SettingsViewModel @Inject constructor(
 
     fun refreshPermissionStatus() {
         _isExactAlarmPermissionGranted.value = checkExactAlarmPermission()
+        _isBatteryOptimizationExempt.value = checkBatteryOptimizationExempt()
     }
 
     private fun checkExactAlarmPermission(): Boolean {
@@ -284,6 +288,17 @@ class SettingsViewModel @Inject constructor(
             return alarmManager.canScheduleExactAlarms()
         }
         return true // Pre-Android 12 doesn't have this restriction
+    }
+
+    /**
+     * Returns true if this app is excluded from battery optimizations (i.e. set to
+     * "Unrestricted" in Battery > App battery usage). When optimized, the OS may kill
+     * the process while the screen is on, causing the widget clock to freeze until the
+     * next AlarmManager wake-up or screen-off/on cycle.
+     */
+    private fun checkBatteryOptimizationExempt(): Boolean {
+        val pm = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        return pm.isIgnoringBatteryOptimizations(context.packageName)
     }
 
     // ── Private ────────────────────────────────────────────────────────────────

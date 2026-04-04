@@ -11,6 +11,7 @@
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/widget_extended"
+    android:previewImage="@drawable/widget_extended_preview_img"
     android:previewLayout="@layout/widget_extended_preview"
     android:description="@string/widget_extended_description"
     android:widgetCategory="home_screen" />

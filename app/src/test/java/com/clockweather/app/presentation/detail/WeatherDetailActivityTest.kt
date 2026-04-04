@@ -6,8 +6,9 @@ import org.junit.Test
 /**
  * Structural contract tests for [WeatherDetailActivity].
  *
- * These prevent regressions where onStop() is changed from the fast
- * [pushClockInstant] path back to the slow [syncClockNow] path.
+ * Clock sync on activity → home transitions is handled globally by
+ * [ClockWeatherApplication.ActivityLifecycleCallbacks] + [ProcessLifecycleOwner].
+ * The activity itself must NOT contain any async onStop() logic.
  *
  * The original bug: onStop() called syncClockNow() which triggered a full
  * widget rebuild (updateAppWidget) — causing 1-second delay + 4-digit flicker
@@ -16,10 +17,16 @@ import org.junit.Test
 class WeatherDetailActivityTest {
 
     @Test
-    fun `WeatherDetailActivity has onStop method`() {
-        // Verify the override exists (prevents accidental deletion)
-        val method = WeatherDetailActivity::class.java.getDeclaredMethod("onStop")
-        assertNotNull(method)
+    fun `WeatherDetailActivity does not override onStop`() {
+        // Clock sync is now handled globally in ClockWeatherApplication via
+        // ActivityLifecycleCallbacks. No per-activity onStop() override needed.
+        val methods = WeatherDetailActivity::class.java.declaredMethods
+        val hasOnStop = methods.any { it.name == "onStop" }
+        assertFalse(
+            "WeatherDetailActivity should not override onStop() — " +
+                "clock sync is handled globally by ActivityLifecycleCallbacks",
+            hasOnStop
+        )
     }
 
     @Test
@@ -35,7 +42,7 @@ class WeatherDetailActivityTest {
         }
         assertTrue(
             "WeatherDetailActivity should not hold coroutine fields — " +
-                "onStop must be synchronous (pushClockInstant). Found: ${coroutineFields.map { it.name }}",
+                "clock sync must be synchronous (pushClockInstant). Found: ${coroutineFields.map { it.name }}",
             coroutineFields.isEmpty()
         )
     }

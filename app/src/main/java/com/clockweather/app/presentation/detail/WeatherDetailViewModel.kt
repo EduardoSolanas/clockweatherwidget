@@ -24,6 +24,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import android.content.Context
+import android.os.Build
 import com.clockweather.app.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -55,6 +56,33 @@ class WeatherDetailViewModel @Inject constructor(
     val forecastDays: StateFlow<Int> = dataStore.data
         .map { prefs -> prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_FORECAST_DAYS] ?: 7 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)
+
+    // ── Widget reliability setup prompts ─────────────────────────────────────
+    // Exposed so the UI can show a setup banner until both are granted.
+    private val _needsBatteryExemption = MutableStateFlow(!checkBatteryOptimizationExempt())
+    val needsBatteryExemption: StateFlow<Boolean> = _needsBatteryExemption.asStateFlow()
+
+    private val _needsExactAlarmPermission = MutableStateFlow(!checkExactAlarmPermission())
+    val needsExactAlarmPermission: StateFlow<Boolean> = _needsExactAlarmPermission.asStateFlow()
+
+    /** Call from ON_RESUME after the user returns from system settings. */
+    fun refreshPermissions() {
+        _needsBatteryExemption.value = !checkBatteryOptimizationExempt()
+        _needsExactAlarmPermission.value = !checkExactAlarmPermission()
+    }
+
+    private fun checkBatteryOptimizationExempt(): Boolean {
+        val pm = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        return pm.isIgnoringBatteryOptimizations(context.packageName)
+    }
+
+    private fun checkExactAlarmPermission(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val am = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+            return am.canScheduleExactAlarms()
+        }
+        return true // not required pre-Android 12
+    }
 
     init {
         loadWeather()

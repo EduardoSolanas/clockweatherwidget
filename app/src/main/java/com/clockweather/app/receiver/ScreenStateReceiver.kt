@@ -49,13 +49,10 @@ class ScreenStateReceiver : BroadcastReceiver() {
                 app.registerTimeTickReceiver()
                 launchUnlockConvergence(app, context, Intent.ACTION_DREAMING_STOPPED)
             }
-            Intent.ACTION_CLOSE_SYSTEM_DIALOGS -> {
-                val reason = intent.getStringExtra("reason")
-                if (reason == "homekey") {
-                    Log.d(TAG, "Home key detected - quiet home convergence")
-                    launchUnlockConvergence(app, context, Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
-                }
-            }
+            // NOTE: ACTION_CLOSE_SYSTEM_DIALOGS ("homekey") was removed — it is
+            // restricted since Android 12 and no longer delivered to third-party apps.
+            // Activity → home clock sync is now handled by
+            // ClockWeatherApplication.ActivityLifecycleCallbacks + ProcessLifecycleOwner.
         }
     }
 
@@ -105,7 +102,6 @@ class ScreenStateReceiver : BroadcastReceiver() {
             addAction(Intent.ACTION_USER_PRESENT)
             addAction(Intent.ACTION_DREAMING_STARTED)
             addAction(Intent.ACTION_DREAMING_STOPPED)
-            addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
         }
     }
 }

@@ -49,9 +49,16 @@ object WidgetClockStateStore {
             .apply()
     }
 
-    /** Clears only the stored digit state for a widget, forcing the next
-     *  [updateWidget] call to treat it as a first render (full [updateAppWidget]).
-     *  Used when settings change (theme, tile size) requires a full layout rebuild. */
+    /**
+     * Clears only the stored digit state for a widget.
+     *
+     * Does **not** touch [isBaselineReady], so the next [updateWidget] call will use
+     * [AppWidgetManager.partiallyUpdateAppWidget] rather than a full [AppWidgetManager.updateAppWidget].
+     * This is intentional: a settings change (theme / tile size) needs fresh digit values
+     * but must not flash the layout XML defaults ("0000") that a full replace would show.
+     *
+     * Use [clearWidget] to wipe everything (process restart, widget removed+re-added).
+     */
     fun clearDigits(context: Context, appWidgetId: Int) {
         val key = "${DIGITS_PREFIX}${appWidgetId}"
         prefs(context).edit()

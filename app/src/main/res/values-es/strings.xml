@@ -150,6 +150,16 @@
     <string name="settings_exact_alarm_permission_desc">El modo de alta precisión requiere el permiso de \'Alarmas y recordatorios\' en Android 12+. Sin esto, las actualizaciones pueden retrasarse unos minutos en modo ahorro de batería.</string>
     <string name="settings_exact_alarm_permission_button">Conceder permiso</string>
     <string name="settings_exact_alarm_permission_granted">Permiso concedido</string>
+    <string name="settings_battery_optimization_title">Optimización de batería</string>
+    <string name="settings_battery_optimization_desc">Configura como Sin restricciones para que el reloj del widget se actualice siempre mientras la pantalla está encendida. Mantiene el proceso activo para recibir ticks de tiempo al instante. El impacto en la batería es insignificante.</string>
+    <string name="settings_battery_optimization_button">Sin restricciones</string>
+    <string name="settings_battery_optimization_granted">Sin restricciones ✓</string>
+
+    <!-- Widget setup banner -->
+    <string name="setup_banner_title">El reloj del widget necesita configuración</string>
+    <string name="setup_banner_bullet_battery">Batería: Sin restricciones</string>
+    <string name="setup_banner_bullet_alarm">Permiso de alarmas</string>
+    <string name="setup_banner_action">Configurar</string>
 
     <!-- Forecast days setting -->
     <string name="settings_forecast_days_label">Rango del pronóstico</string>

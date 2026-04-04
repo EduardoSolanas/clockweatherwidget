@@ -1,9 +1,12 @@
 package com.clockweather.app
 
+import android.app.Activity
 import android.app.Application
 import android.content.IntentFilter
 import android.os.Build
+import android.os.Bundle
 import android.widget.RemoteViews
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
@@ -11,6 +14,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.hilt.work.HiltWorkerFactory
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -67,6 +73,43 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
 
         // Initialise the in-memory preference cache so minute ticks skip disk I/O
         WidgetPrefsCache.init(dataStore, appScope)
+
+        // ── Universal activity → home clock convergence ──────────────
+        // Replaces per-activity onStop() overrides. Runs synchronously on the
+        // main thread (<10 ms) so it is never cancelled by activity destruction.
+        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            override fun onActivityStopped(activity: Activity) {
+                // Skip configuration changes (rotation) — widget push is unnecessary.
+                if ((activity as? AppCompatActivity)?.isChangingConfigurations == true) return
+                if (!ClockAlarmReceiver.hasAnyActiveWidgets(activity)) return
+                pushClockInstant(
+                    forceAllDigits = true,
+                    suppressAnimationWindow = true
+                )
+            }
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+            override fun onActivityStarted(activity: Activity) {}
+            override fun onActivityResumed(activity: Activity) {}
+            override fun onActivityPaused(activity: Activity) {}
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+            override fun onActivityDestroyed(activity: Activity) {}
+        })
+
+        // ── Process foreground → background backup ───────────────────
+        // Belt-and-suspenders: fires once when the ENTIRE app moves to background
+        // (all activities stopped). Launches from appScope (survives activity death)
+        // for the full syncClockNow path (reschedule alarm + reassert digits).
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStop(owner: LifecycleOwner) {
+                if (!ClockAlarmReceiver.hasAnyActiveWidgets(this@ClockWeatherApplication)) return
+                appScope.launch {
+                    syncClockNow(
+                        this@ClockWeatherApplication,
+                        suppressAnimation = true
+                    )
+                }
+            }
+        })
 
         if (ClockAlarmReceiver.hasAnyActiveWidgets(this)) {
             registerScreenStateReceiver()
@@ -304,6 +347,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         if (suppressAnimation) {
             // Transition-safe path (weather->home / lock->home):
             // avoid full widget rebuild to prevent visible old/new layout blending.
+            val minuteBeforeSync = System.currentTimeMillis() / 60000L
             pushClockInstant(
                 forceAllDigits = false,
                 suppressAnimationWindow = true,
@@ -320,10 +364,18 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                     quietRender = true
                 )
             }
+            // If a minute boundary fell between the first push and now, the alarm
+            // was scheduled for the old minute's next-tick which already passed.
+            // Re-anchor to avoid a ~60 s alarm gap.
+            val minuteAfterSync = System.currentTimeMillis() / 60000L
+            if (minuteAfterSync > minuteBeforeSync) {
+                ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
+            }
             return
         }
 
         // Push correct digits immediately before the potentially slow full refresh.
+        val minuteBeforeSync = System.currentTimeMillis() / 60000L
         pushClockInstant(forceAllDigits = false, quietRender = true)
         refreshAllWidgets(context, isClockTick = false)
         val isHighPrecision = resolveHighPrecision()
@@ -335,6 +387,11 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             suppressAnimationWindow = suppressAnimation,
             quietRender = true
         )
+        // Re-anchor alarm if minute advanced during the full refresh.
+        val minuteAfterSync = System.currentTimeMillis() / 60000L
+        if (minuteAfterSync > minuteBeforeSync) {
+            ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
+        }
     }
 
     // ── Helpers ─────────────────────────────────────────────────────

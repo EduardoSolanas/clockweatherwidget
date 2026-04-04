@@ -86,8 +86,12 @@ abstract class BaseWidgetUpdater(
                     ClockTileSize.EXTRA_LARGE -> com.clockweather.app.R.dimen.flip_text_size_xl
                 }
 
-                val prevDigits = WidgetClockStateStore.getLastDigits(context, appWidgetId)
-                val isFirstRender = prevDigits == null
+                // isBaselineReady persists across settings changes (only clearWidget() resets it).
+                // Use it — not prevDigits==null — to decide full vs partial update.
+                // clearDigits() clears prevDigits so we always rebind digits after a settings
+                // change, but it must NOT trigger a full updateAppWidget() (which flashes "0000").
+                val isBaselineReady = WidgetClockStateStore.isBaselineReady(context, appWidgetId)
+                val isFirstRender = !isBaselineReady
                 val lastRenderedEpochMinute = WidgetClockStateStore.getLastRenderedEpochMinute(context, appWidgetId)
                 val preserveClockForSameMinuteNonTick =
                     !isFirstRender &&

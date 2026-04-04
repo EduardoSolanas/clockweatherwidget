@@ -46,10 +46,30 @@ class WidgetClockUpdateModeResolverTest {
     }
 
     @Test
-    fun `gap of 4 minutes falls back to full update`() {
+    fun `gap of 4 minutes uses incremental update`() {
         val mode = WidgetClockUpdateModeResolver.resolve(
             lastRenderedEpochMinute = 100L,
             currentEpochMinute = 104L
+        )
+
+        assertEquals(WidgetClockUpdateMode.INCREMENTAL, mode)
+    }
+
+    @Test
+    fun `gap of 15 minutes uses incremental update`() {
+        val mode = WidgetClockUpdateModeResolver.resolve(
+            lastRenderedEpochMinute = 100L,
+            currentEpochMinute = 115L
+        )
+
+        assertEquals(WidgetClockUpdateMode.INCREMENTAL, mode)
+    }
+
+    @Test
+    fun `gap of 16 minutes falls back to full update`() {
+        val mode = WidgetClockUpdateModeResolver.resolve(
+            lastRenderedEpochMinute = 100L,
+            currentEpochMinute = 116L
         )
 
         assertEquals(WidgetClockUpdateMode.FULL, mode)

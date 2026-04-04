@@ -148,6 +148,8 @@ class PartialVsFullUpdateContractTest {
 
     @Test
     fun `scenario - unlock after prior render uses partiallyUpdateAppWidget`() = runBlocking {
+        // Simulate a completed prior render: baseline flag AND digit state both set.
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
         WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState.from(14, 37, true))
 
         updater.updateWidget(widgetId)
@@ -159,6 +161,8 @@ class PartialVsFullUpdateContractTest {
 
     @Test
     fun `scenario - weather refresh with same digits uses partial`() = runBlocking {
+        // Simulate a completed prior render.
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
         val now = java.time.LocalTime.now()
         WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState.from(now.hour, now.minute, true))
 
@@ -169,10 +173,42 @@ class PartialVsFullUpdateContractTest {
         confirmVerified(appWidgetManager)
     }
 
+    /**
+     * Regression guard for the "0000 flash" bug.
+     *
+     * When settings change (theme / tile size), [ClockWeatherApplication.invalidateAllWidgetBaselines]
+     * calls [WidgetClockStateStore.clearDigits] — NOT [WidgetClockStateStore.clearWidget].
+     * clearDigits preserves [WidgetClockStateStore.isBaselineReady], so the next updateWidget
+     * must use [partiallyUpdateAppWidget], never [updateAppWidget] (which resets the layout
+     * to XML defaults and briefly shows "0000").
+     */
     @Test
-    fun `scenario - settings change clears digits then uses full updateAppWidget`() = runBlocking {
+    fun `scenario - settings change with active baseline uses partiallyUpdateAppWidget - no 0000 flash`() = runBlocking {
+        // Establish baseline (widget has been fully rendered before).
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
+        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState(1, 4, 3, 7))
+
+        // Settings change: clearDigits — does NOT touch baseline.
+        WidgetClockStateStore.clearDigits(realContext, widgetId)
+
+        updater.updateWidget(widgetId)
+
+        // MUST be partial — calling updateAppWidget here would flash "0000".
+        verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
+        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
+    }
+
+    /**
+     * Edge case: widget was never fully rendered (no baseline) but digit state existed and
+     * was then cleared (e.g., data migration). Full update is correct here.
+     */
+    @Test
+    fun `scenario - no baseline plus cleared digits uses full updateAppWidget`() = runBlocking {
+        // Digits written (e.g., by a pushClockInstant) but baseline never set.
         WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState(1, 4, 3, 7))
         WidgetClockStateStore.clearDigits(realContext, widgetId)
+        // isBaselineReady = false (never called markBaselineReady)
 
         updater.updateWidget(widgetId)
 
@@ -183,6 +219,21 @@ class PartialVsFullUpdateContractTest {
 
     @Test
     fun `scenario - process restart clears all state then uses full updateAppWidget`() = runBlocking {
+        WidgetClockStateStore.clearWidget(realContext, widgetId)
+
+        updater.updateWidget(widgetId)
+
+        verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
+        verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        confirmVerified(appWidgetManager)
+    }
+
+    @Test
+    fun `scenario - clearWidget after active baseline resets to full update`() = runBlocking {
+        // Establish baseline first.
+        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
+
+        // Full state wipe (widget removed + re-added, or process restart).
         WidgetClockStateStore.clearWidget(realContext, widgetId)
 
         updater.updateWidget(widgetId)
@@ -209,10 +260,11 @@ class PartialVsFullUpdateContractTest {
 
         clearMocks(appWidgetManager, answers = false)
 
-        // 3. Settings change → clear digits → full
+        // 3. Settings change: clearDigits preserves baseline → PARTIAL (no 0000 flash).
         WidgetClockStateStore.clearDigits(realContext, widgetId)
         updater.updateWidget(widgetId)
-        verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
+        verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
+        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
         confirmVerified(appWidgetManager)
 
         clearMocks(appWidgetManager, answers = false)

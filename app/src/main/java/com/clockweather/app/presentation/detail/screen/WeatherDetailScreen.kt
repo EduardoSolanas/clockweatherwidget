@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -11,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clockweather.app.R
 import com.clockweather.app.presentation.common.UiState
@@ -69,6 +72,14 @@ fun WeatherDetailScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val temperatureUnit by viewModel.temperatureUnit.collectAsStateWithLifecycle()
     val forecastDays by viewModel.forecastDays.collectAsStateWithLifecycle()
+    val needsBattery by viewModel.needsBatteryExemption.collectAsStateWithLifecycle()
+    val needsAlarm by viewModel.needsExactAlarmPermission.collectAsStateWithLifecycle()
+    val showSetupBanner = needsBattery || needsAlarm
+
+    // Re-check permissions whenever the user returns from the system settings screen.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refreshPermissions()
+    }
 
     val locationName = (uiState as? UiState.Success)?.data?.location?.name ?: stringResource(R.string.label_weather_fallback_title)
 
@@ -100,11 +111,23 @@ fun WeatherDetailScreen(
             )
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // ── Widget reliability setup banner ───────────────────────────
+            // Shown until the user grants both battery exemption + exact alarm.
+            // Dismisses automatically once both are granted (ON_RESUME check).
+            if (showSetupBanner) {
+                WidgetSetupBanner(
+                    needsBattery = needsBattery,
+                    needsAlarm = needsAlarm,
+                    onSetupClick = onNavigateToSettings
+                )
+            }
+
+            Box(modifier = Modifier.weight(1f)) {
             when (val state = uiState) {
                 is UiState.Loading -> {
                     Column(
@@ -168,6 +191,58 @@ fun WeatherDetailScreen(
             if (isRefreshing && uiState !is UiState.Success) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter)
+                )
+            }
+            } // end inner Box
+        } // end Column
+    }
+}
+
+@Composable
+private fun WidgetSetupBanner(
+    needsBattery: Boolean,
+    needsAlarm: Boolean,
+    onSetupClick: () -> Unit
+) {
+    val bulletBattery = stringResource(R.string.setup_banner_bullet_battery)
+    val bulletAlarm   = stringResource(R.string.setup_banner_bullet_alarm)
+    val missing = buildList {
+        if (needsBattery) add(bulletBattery)
+        if (needsAlarm)   add(bulletAlarm)
+    }.joinToString(" · ")
+
+    Surface(
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.setup_banner_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+                Text(
+                    text = missing,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            TextButton(onClick = onSetupClick) {
+                Text(
+                    text = stringResource(R.string.setup_banner_action),
+                    color = MaterialTheme.colorScheme.onErrorContainer
                 )
             }
         }

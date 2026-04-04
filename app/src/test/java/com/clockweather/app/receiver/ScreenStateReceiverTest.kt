@@ -48,14 +48,17 @@ class ScreenStateReceiverTest {
     }
 
     @Test
-    fun `intent filter contains ACTION_CLOSE_SYSTEM_DIALOGS`() {
+    fun `intent filter does not contain deprecated ACTION_CLOSE_SYSTEM_DIALOGS`() {
         val filter = ScreenStateReceiver.buildIntentFilter()
-        assertTrue(filter.hasAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
+        // ACTION_CLOSE_SYSTEM_DIALOGS is restricted since Android 12 and was removed.
+        // Activity → home sync is now handled by ActivityLifecycleCallbacks + ProcessLifecycleOwner.
+        // Use the raw action string to avoid referencing the deprecated constant.
+        assertTrue(!filter.hasAction("android.intent.action.CLOSE_SYSTEM_DIALOGS"))
     }
 
     @Test
-    fun `intent filter has exactly 6 actions`() {
+    fun `intent filter has exactly 5 actions`() {
         val filter = ScreenStateReceiver.buildIntentFilter()
-        assertTrue("Expected 6 actions", filter.countActions() == 6)
+        assertTrue("Expected 5 actions", filter.countActions() == 5)
     }
 }

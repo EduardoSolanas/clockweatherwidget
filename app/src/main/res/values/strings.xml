@@ -150,6 +150,16 @@
     <string name="settings_exact_alarm_permission_desc">High Precision mode requires the \'Alarms &amp; reminders\' permission on Android 12+. Without this, updates may be delayed by a few minutes in battery saver mode.</string>
     <string name="settings_exact_alarm_permission_button">Grant Permission</string>
     <string name="settings_exact_alarm_permission_granted">Permission Granted</string>
+    <string name="settings_battery_optimization_title">Battery Optimization</string>
+    <string name="settings_battery_optimization_desc">Set to Unrestricted so the widget clock always updates while the screen is on. Keeps the app process alive for instant time ticks. Battery impact is negligible.</string>
+    <string name="settings_battery_optimization_button">Set Unrestricted</string>
+    <string name="settings_battery_optimization_granted">Unrestricted ✓</string>
+
+    <!-- Widget setup banner (shown in WeatherDetailScreen until both are granted) -->
+    <string name="setup_banner_title">Widget clock needs setup</string>
+    <string name="setup_banner_bullet_battery">Battery: Unrestricted</string>
+    <string name="setup_banner_bullet_alarm">Alarms permission</string>
+    <string name="setup_banner_action">Fix</string>
 
     <!-- Forecast days setting -->
     <string name="settings_forecast_days_label">Forecast range</string>
