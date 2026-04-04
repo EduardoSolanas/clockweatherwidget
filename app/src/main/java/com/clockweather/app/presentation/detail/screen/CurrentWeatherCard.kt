@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalDensity
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.AirQuality
 import com.clockweather.app.domain.model.DailyForecast
@@ -362,7 +363,6 @@ private fun SevenDayForecastCard(
 ) {
     val isScrollable = forecasts.size > 7
 
-    // Title reflects actual days returned
     val rawTitleText = when {
         forecasts.size >= 14 -> stringResource(R.string.label_14day_forecast)
         forecasts.size >= 7  -> stringResource(R.string.label_7day_forecast)
@@ -375,75 +375,72 @@ private fun SevenDayForecastCard(
     }
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    val scrollStepPx = remember(density) { with(density) { 212.dp.roundToPx() } }
     val canScrollBackward by remember { derivedStateOf { scrollState.value > 0 } }
-    val canScrollForward by remember { derivedStateOf { scrollState.value < scrollState.maxValue } }
+    val canScrollForward  by remember { derivedStateOf { scrollState.value < scrollState.maxValue } }
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        if (isScrollable) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+    // Use BoxWithConstraints so the scrollable row uses exactly the same per-column
+    // width as the 7-day grid — preventing any size/spacing jump when toggling modes.
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val availableWidthDp = maxWidth.value
+        val columnWidthDp    = forecastColumnWidth(availableWidthDp)
+        val columnWidth      = columnWidthDp.dp
+        val density          = LocalDensity.current
+        val scrollStepPx     = remember(columnWidthDp, density) {
+            with(density) { forecastScrollStep(columnWidthDp).dp.roundToPx() }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // ── Header row ─────────────────────────────────────────────────
+            if (isScrollable) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = titleText,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.weight(1f)
+                    )
+                    ForecastScrollButton(
+                        icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        enabled = canScrollBackward,
+                        onClick = {
+                            coroutineScope.launch {
+                                scrollState.animateScrollTo((scrollState.value - scrollStepPx).coerceAtLeast(0))
+                            }
+                        }
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    ForecastScrollButton(
+                        icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        enabled = canScrollForward,
+                        onClick = {
+                            coroutineScope.launch {
+                                scrollState.animateScrollTo((scrollState.value + scrollStepPx).coerceAtMost(scrollState.maxValue))
+                            }
+                        }
+                    )
+                }
+            } else {
                 Text(
                     text = titleText,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.weight(1f)
-                )
-                ForecastScrollButton(
-                    icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    enabled = canScrollBackward,
-                    onClick = {
-                        coroutineScope.launch {
-                            scrollState.animateScrollTo((scrollState.value - scrollStepPx).coerceAtLeast(0))
-                        }
-                    }
-                )
-                Spacer(Modifier.width(8.dp))
-                ForecastScrollButton(
-                    icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    enabled = canScrollForward,
-                    onClick = {
-                        coroutineScope.launch {
-                            scrollState.animateScrollTo((scrollState.value + scrollStepPx).coerceAtMost(scrollState.maxValue))
-                        }
-                    }
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
-        } else {
-            Text(
-                text = titleText,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-        }
 
-        if (isScrollable) {
+            // ── Forecast columns ───────────────────────────────────────────
+            // Both modes use the same spacing and isCompact so columns look
+            // identical regardless of how many days are shown.
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(scrollState),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                forecasts.forEachIndexed { index, forecast ->
-                    ForecastDayColumn(
-                        forecast = forecast,
-                        temperatureUnit = temperatureUnit,
-                        isToday = index == 0,
-                        isSelected = index == selectedDayIndex,
-                        onClick = { onDaySelected(index) },
-                        modifier = Modifier.width(92.dp)
-                    )
-                }
-            }
-        } else {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = if (isScrollable)
+                    Modifier.fillMaxWidth().horizontalScroll(scrollState)
+                else
+                    Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 forecasts.forEachIndexed { index, forecast ->
@@ -453,8 +450,13 @@ private fun SevenDayForecastCard(
                         isToday = index == 0,
                         isSelected = index == selectedDayIndex,
                         onClick = { onDaySelected(index) },
-                        modifier = Modifier.weight(1f),
-                        isCompact = true
+                        // scrollable → fixed width matching 7-day proportions
+                        // non-scrollable → weight fills width equally (same visual result)
+                        modifier = if (isScrollable)
+                            Modifier.width(columnWidth)
+                        else
+                            Modifier.weight(1f),
+                        isCompact = true   // always compact — consistent height + font sizes
                     )
                 }
             }

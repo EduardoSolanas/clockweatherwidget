@@ -52,12 +52,12 @@ class WeatherRepositoryImpl @Inject constructor(
         }.filterNotNull()
     }
 
-    override suspend fun refreshWeatherData(location: Location) {
+    override suspend fun refreshWeatherData(location: Location, forecastDays: Int) {
         refreshMutex.withLock {
             val response = openMeteoApi.getWeatherForecast(
                 latitude = location.latitude,
                 longitude = location.longitude,
-                forecastDays = 7
+                forecastDays = forecastDays
             )
             val weatherData = dtoMapper.mapToWeatherData(response, location)
             persistWeatherData(weatherData, location.id)

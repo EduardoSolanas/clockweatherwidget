@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -86,6 +87,23 @@ class WeatherDetailViewModel @Inject constructor(
 
     init {
         loadWeather()
+        observeForecastDaysChanges()
+    }
+
+    /**
+     * Re-fetches weather from the network whenever the user changes the forecast-days
+     * setting. drop(1) skips the initial emission so loadWeather() isn't called twice.
+     */
+    private fun observeForecastDaysChanges() {
+        viewModelScope.launch {
+            forecastDays
+                .drop(1) // first emission already handled by loadWeather()
+                .collect { days ->
+                    val location = (uiState.value as? UiState.Success)?.data?.location
+                        ?: return@collect
+                    runCatching { refreshWeatherUseCase(location, forecastDays = days) }
+                }
+        }
     }
 
     private fun loadWeather() {
@@ -107,7 +125,7 @@ class WeatherDetailViewModel @Inject constructor(
                 val location = locations.first()
 
                 try {
-                    refreshWeatherUseCase(location)
+                    refreshWeatherUseCase(location, forecastDays = forecastDays.value)
                 } catch (e: Exception) {
                     // Network failed — continue with cache
                 }
@@ -168,7 +186,7 @@ class WeatherDetailViewModel @Inject constructor(
                     // Location context changed (or we had no active context): restart the load stream.
                     loadWeather()
                 } else {
-                    refreshWeatherUseCase(resolvedLocation)
+                    refreshWeatherUseCase(resolvedLocation, forecastDays = forecastDays.value)
                 }
             } catch (e: Exception) {
                 // ignore

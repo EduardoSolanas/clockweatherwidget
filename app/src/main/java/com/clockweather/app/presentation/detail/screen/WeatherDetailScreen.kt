@@ -249,3 +249,29 @@ private fun WidgetSetupBanner(
     }
 }
 
+// ── Forecast layout helpers (internal so unit tests can reach them) ───────────
+
+private const val FORECAST_COLUMN_SPACING_DP = 4f
+private const val FORECAST_VISIBLE_COLUMNS   = 7
+
+/**
+ * Returns the per-column width (in dp) for the forecast grid so that the
+ * scrollable 14-day row uses exactly the same column size as the 7-day grid.
+ *
+ * Formula: (availableWidth - spacing * (visibleColumns - 1)) / visibleColumns
+ */
+internal fun forecastColumnWidth(
+    availableWidthDp: Float,
+    spacing: Float = FORECAST_COLUMN_SPACING_DP,
+    visibleColumns: Int = FORECAST_VISIBLE_COLUMNS
+): Float = (availableWidthDp - spacing * (visibleColumns - 1)) / visibleColumns
+
+/**
+ * Scroll step that advances exactly [visibleColumns] columns so the
+ * scrollable row pages through without partial columns showing at the edge.
+ */
+internal fun forecastScrollStep(
+    columnWidthDp: Float,
+    spacing: Float = FORECAST_COLUMN_SPACING_DP,
+    visibleColumns: Int = FORECAST_VISIBLE_COLUMNS
+): Float = (columnWidthDp + spacing) * visibleColumns

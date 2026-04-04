@@ -7,7 +7,7 @@ import javax.inject.Inject
 class RefreshWeatherUseCase @Inject constructor(
     private val weatherRepository: WeatherRepository
 ) {
-    suspend operator fun invoke(location: Location) =
-        weatherRepository.refreshWeatherData(location)
+    suspend operator fun invoke(location: Location, forecastDays: Int = 7) =
+        weatherRepository.refreshWeatherData(location, forecastDays)
 }
 

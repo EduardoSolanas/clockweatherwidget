@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -56,6 +57,24 @@ class SettingsViewModel @Inject constructor(
         const val DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES = 30
         const val CLOCK_THEME_DARK = "dark"
         const val CLOCK_THEME_LIGHT = "light"
+
+        /**
+         * Returns 14 for screens >=600dp wide (tablets / foldables in landscape),
+         * 7 for phones. Used as the first-run default when no preference is stored.
+         */
+        fun smartDefaultForecastDays(screenWidthDp: Int): Int = if (screenWidthDp >= 600) 14 else 7
+    }
+
+    init {
+        // On first launch (no stored preference) pick a smart default based on
+        // screen width: tablets / foldables in landscape get 14 days, phones get 7.
+        viewModelScope.launch {
+            val prefs = dataStore.data.first()
+            if (prefs[KEY_FORECAST_DAYS] == null) {
+                val widthDp = context.resources.configuration.screenWidthDp
+                dataStore.edit { it[KEY_FORECAST_DAYS] = smartDefaultForecastDays(widthDp) }
+            }
+        }
     }
 
     val savedLocations: StateFlow<List<Location>> = locationRepository.getSavedLocations()

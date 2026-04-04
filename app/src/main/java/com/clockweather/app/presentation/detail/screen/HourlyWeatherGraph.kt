@@ -61,8 +61,9 @@ internal fun scopedHourlyForecasts(
 
 private val CurveColor  = Color(0xFFFFA040)
 private val PrecipColor = Color(0xFF64B5F6)
-private val CurrentHourHighlight = Color.White.copy(alpha = 0.18f)
-private val CurrentHourOutline = Color.White.copy(alpha = 0.30f)
+// Current-hour selection: border-only, matching the 14-day selected column style.
+private val CurrentHourBorderColor  = Color.White.copy(alpha = 0.92f)
+private val CurrentHourBorderWidth  = 2.dp
 
 // ── Public composable ─────────────────────────────────────────────────────────
 
@@ -219,11 +220,9 @@ fun HourlyWeatherGraph(
                                     .offset { IntOffset(selectionOverlayMetrics.offsetXPx, 0) }
                                     .width(with(density) { selectionOverlayMetrics.widthPx.toDp() })
                                     .fillMaxHeight()
-                                    .clip(RoundedCornerShape(CurrentHourSelectionCornerRadius))
-                                    .background(CurrentHourHighlight)
                                     .border(
-                                        width = 1.dp,
-                                        color = CurrentHourOutline,
+                                        width = CurrentHourBorderWidth,
+                                        color = CurrentHourBorderColor,
                                         shape = RoundedCornerShape(CurrentHourSelectionCornerRadius)
                                     )
                             )

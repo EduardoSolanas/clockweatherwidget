@@ -179,7 +179,8 @@ abstract class BaseWidgetUpdater(
                 var weather = weatherRepo.getCachedWeatherData(location.id).first()
                 if (weather == null && allowWeatherRefresh) {
                     try {
-                        weatherRepo.refreshWeatherData(location)
+                        val forecastDays = prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_FORECAST_DAYS] ?: 7
+                        weatherRepo.refreshWeatherData(location, forecastDays)
                         weather = weatherRepo.getCachedWeatherData(location.id).first()
                     } catch (e: Exception) { }
                 }
