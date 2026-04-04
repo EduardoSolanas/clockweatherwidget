@@ -6,9 +6,36 @@
     <!-- Widget Colors (used in widget XML layouts) -->
     <color name="widget_text_primary">#FFFFFF</color>
     <color name="widget_text_secondary">#B0BEC5</color>
+    <color name="widget_glass_fill">#33FFFFFF</color>
+    <color name="widget_glass_stroke">#44FFFFFF</color>
     <!-- Weather card background — fully opaque so it looks black on any wallpaper or picker background -->
     <color name="weather_card_bg_color">#FF111111</color>
 
-    <!-- Flip Clock Colors (used in widget layouts) -->
-    <color name="flip_digit_text">#FFFFFF</color>
+    <!-- Flip Clock Colors (used in widget layouts and drawables) -->
+    <color name="flip_digit_text_light">#000000</color>
+    <color name="flip_digit_text_dark">#FFFFFF</color>
+    <color name="flip_digit_text">@color/flip_digit_text_dark</color>
+    <color name="flip_tile_dark_base">#1A1A1A</color>
+    <color name="flip_tile_dark_surface_top">#353535</color>
+    <color name="flip_tile_dark_surface_bottom">#0F0F0F</color>
+    <color name="flip_tile_dark_top_shade_start">#6F000000</color>
+    <color name="flip_tile_dark_top_shade_center">#27000000</color>
+    <color name="flip_tile_dark_highlight_start">#52FFFFFF</color>
+    <color name="flip_tile_dark_highlight_center">#12FFFFFF</color>
+    <color name="flip_tile_dark_side_vignette">#36000000</color>
+    <color name="flip_tile_dark_mid_shadow_start">#24000000</color>
+    <color name="flip_tile_dark_mid_shadow_center">#10000000</color>
+    <color name="flip_tile_dark_top_edge_highlight">#28FFFFFF</color>
+    <color name="flip_tile_dark_bottom_shadow">#40000000</color>
+    <color name="flip_tile_dark_crease">#F0000000</color>
+    <color name="flip_tile_dark_crease_highlight">#45FFFFFF</color>
+    <color name="flip_tile_dark_border">#22FFFFFF</color>
+    <color name="flip_tile_light_base">#F7F7F7</color>
+    <color name="flip_tile_light_highlight_start">#30FFFFFF</color>
+    <color name="flip_tile_light_highlight_center">#14FFFFFF</color>
+    <color name="flip_tile_light_highlight_end">#16000000</color>
+    <color name="flip_tile_light_side_shade">#12000000</color>
+    <color name="flip_tile_light_border">#16000000</color>
+    <color name="flip_hinge_shadow">#CC000000</color>
+    <color name="flip_hinge_highlight">#28FFFFFF</color>
 </resources>

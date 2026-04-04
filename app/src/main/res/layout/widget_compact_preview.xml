@@ -19,75 +19,14 @@
         android:layout_marginTop="4dp"
         android:gravity="center"
         android:text="Mon, Mar 23"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/widget_text_primary"
         android:textSize="14sp"
         android:textStyle="bold" />
 
-    <LinearLayout
+    <include
+        layout="@layout/widget_weather_card_preview"
         android:layout_width="match_parent"
-        android:layout_height="76dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/weather_card_bg"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:visibility="visible">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="London"
-                android:textColor="@color/widget_text_primary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="Partly cloudy"
-                android:textColor="@color/widget_text_secondary"
-                android:textSize="11sp" />
-        </LinearLayout>
-
-        <ImageView
-            android:layout_width="104dp"
-            android:layout_height="72dp"
-            android:contentDescription="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_widget_weather_partly_cloudy_day" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="end"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:text="12C"
-                android:textColor="@color/widget_text_primary"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:text="15C / 8C"
-                android:textColor="@color/widget_text_secondary"
-                android:textSize="11sp" />
-        </LinearLayout>
-    </LinearLayout>
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" />
 
 </LinearLayout>

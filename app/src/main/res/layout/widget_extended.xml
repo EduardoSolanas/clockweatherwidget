@@ -22,73 +22,17 @@
         android:layout_marginTop="4dp"
         android:layout_marginBottom="4dp"
         android:text="Mon, Mar 9"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/widget_text_primary"
         android:textSize="13sp"
         android:textStyle="bold"
         android:letterSpacing="0.05" />
 
     <!-- CURRENT WEATHER ROW (optional, hidden by default) -->
-    <LinearLayout
-        android:id="@+id/weather_card"
+    <include
+        layout="@layout/widget_weather_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
-        android:background="@drawable/weather_card_bg"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone"
-        android:padding="8dp">
-
-        <ImageView
-            android:id="@+id/weather_icon"
-            android:layout_width="70dp"
-            android:layout_height="52dp"
-            android:contentDescription="@null"
-            android:scaleType="fitCenter" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/city_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/widget_text_primary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:maxLines="1" />
-            <TextView
-                android:id="@+id/condition_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/widget_text_secondary"
-                android:textSize="10sp"
-                android:maxLines="1" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="end|center_vertical"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/current_temp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/widget_text_primary"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-            <TextView
-                android:id="@+id/high_low"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/widget_text_secondary"
-                android:textSize="10sp" />
-        </LinearLayout>
-    </LinearLayout>
+        android:layout_marginBottom="4dp" />
 
     <!-- 7-DAY FORECAST horizontal columns -->
     <LinearLayout

@@ -1,27 +1,23 @@
 package com.clockweather.app.presentation.widget.common
 
-import android.graphics.Color
 import com.clockweather.app.R
 
 object WidgetThemeSelector {
     data class ThemeColors(
         val backgroundResId: Int,
-        val textColor: Int,
-        val colonColor: Int
+        val textColorResId: Int
     )
 
     fun getTheme(themeName: String?): ThemeColors {
         return if (themeName == "light") {
             ThemeColors(
                 backgroundResId = R.drawable.flip_digit_bg_light,
-                textColor = Color.BLACK,
-                colonColor = 0xCC000000.toInt()
+                textColorResId = R.color.flip_digit_text_light
             )
         } else {
             ThemeColors(
                 backgroundResId = R.drawable.flip_digit_bg,
-                textColor = Color.WHITE,
-                colonColor = 0x80FFFFFF.toInt()
+                textColorResId = R.color.flip_digit_text_dark
             )
         }
     }

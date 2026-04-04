@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
+import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
@@ -68,7 +69,7 @@ abstract class BaseWidgetUpdater(
                 val clockThemeName = prefs[stringPreferencesKey("clock_theme")] ?: "light"
                 val theme = WidgetThemeSelector.getTheme(clockThemeName)
                 val tileBgRes = theme.backgroundResId
-                val digitColor = theme.textColor
+                val digitColor = ContextCompat.getColor(context, theme.textColorResId)
 
                 val tileSizeName = prefs[stringPreferencesKey("clock_tile_size")] ?: "MEDIUM"
                 val tileSize = runCatching { ClockTileSize.valueOf(tileSizeName) }.getOrDefault(ClockTileSize.MEDIUM)

@@ -4,13 +4,13 @@
     <!-- Dark shadow line (the gap/slot) -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#CC000000" />
+            <solid android:color="@color/flip_hinge_shadow" />
         </shape>
     </item>
     <!-- Thin highlight at the bottom edge — light catching the lower tile lip -->
     <item android:top="1dp">
         <shape android:shape="rectangle">
-            <solid android:color="#28FFFFFF" />
+            <solid android:color="@color/flip_hinge_highlight" />
         </shape>
     </item>
 </layer-list>

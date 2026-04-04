@@ -45,6 +45,39 @@ class HourlyWeatherGraphTest {
         assertEquals(forecasts.sortedBy { it.dateTime }.take(24), scoped)
     }
 
+    @Test
+    fun `selection overlay metrics keep middle column full width and centered`() {
+        val metrics = currentHourSelectionOverlayMetrics(
+            currentIdx = 3,
+            hoursCount = 8,
+            columnWidthPx = 58
+        )
+
+        assertEquals(CurrentHourSelectionOverlayMetrics(offsetXPx = 174, widthPx = 58), metrics)
+    }
+
+    @Test
+    fun `selection overlay metrics keep first column full width`() {
+        val metrics = currentHourSelectionOverlayMetrics(
+            currentIdx = 0,
+            hoursCount = 8,
+            columnWidthPx = 58
+        )
+
+        assertEquals(CurrentHourSelectionOverlayMetrics(offsetXPx = 0, widthPx = 58), metrics)
+    }
+
+    @Test
+    fun `selection overlay metrics keep last column full width`() {
+        val metrics = currentHourSelectionOverlayMetrics(
+            currentIdx = 7,
+            hoursCount = 8,
+            columnWidthPx = 58
+        )
+
+        assertEquals(CurrentHourSelectionOverlayMetrics(offsetXPx = 406, widthPx = 58), metrics)
+    }
+
     private fun buildForecasts(date: LocalDate, count: Int): List<HourlyForecast> =
         (0 until count).map { hour ->
             HourlyForecast(
@@ -65,6 +98,7 @@ class HourlyWeatherGraphTest {
             )
         }
 }
+
 
 
 

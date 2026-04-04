@@ -1,30 +1,40 @@
 package com.clockweather.app.presentation.widget.common
 
 import android.content.Context
-import android.content.res.Resources
 import android.util.Log
+import android.view.View
 import android.widget.RemoteViews
 import com.clockweather.app.R
-import io.mockk.confirmVerified
+import com.clockweather.app.domain.model.CurrentWeather
+import com.clockweather.app.domain.model.DailyForecast
+import com.clockweather.app.domain.model.Location
+import com.clockweather.app.domain.model.TemperatureUnit
+import com.clockweather.app.domain.model.WeatherCondition
+import com.clockweather.app.domain.model.WeatherData
+import com.clockweather.app.domain.model.WindDirection
+import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.Runs
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
+@RunWith(RobolectricTestRunner::class)
 class WidgetDataBinderTest {
 
     private lateinit var context: Context
-    private lateinit var resources: Resources
     private lateinit var views: RemoteViews
 
     @Before
-    @Suppress("DEPRECATION")
     fun setup() {
         mockkStatic(Log::class)
         every { Log.d(any<String>(), any<String>()) } returns 0
@@ -32,23 +42,22 @@ class WidgetDataBinderTest {
         every { Log.w(any<String>(), any<String>()) } returns 0
 
         context = mockk()
-        resources = mockk()
-        views = mockk()
+        views = mockk(relaxed = true)
 
-        every { context.resources } returns resources
-        every { context.packageName } returns "com.clockweather.app"
+        every { context.getString(WeatherCondition.PARTLY_CLOUDY_DAY.labelResId) } returns "Partly cloudy"
+        every { context.getString(R.string.label_today) } returns "Today"
+        every { context.getString(R.string.unit_celsius, 11.0) } returns "11°"
+        every { context.getString(R.string.unit_celsius, 20.0) } returns "20°"
+        every { context.getString(R.string.unit_celsius, 21.0) } returns "21°"
+        every { context.getString(R.string.unit_celsius, 22.0) } returns "22°"
+        every { context.getString(R.string.unit_celsius, 23.0) } returns "23°"
+        every { context.getString(R.string.unit_celsius, 24.0) } returns "24°"
+        every { context.getString(R.string.unit_celsius, 25.0) } returns "25°"
+        every { context.getString(R.string.unit_celsius, 26.0) } returns "26°"
 
-        every {
-            resources.getIdentifier(any(), eq("id"), eq("com.clockweather.app"))
-        } answers {
-            val name = firstArg<String>()
-            name.hashCode()
-        }
-
-        every { views.setViewVisibility(any(), any()) } just Runs
         every { views.setTextViewText(any(), any()) } just Runs
-        every { views.setDisplayedChild(any(), any()) } just Runs
-        every { views.showNext(any()) } just Runs
+        every { views.setImageViewResource(any(), any()) } just Runs
+        every { views.setViewVisibility(any(), any()) } just Runs
     }
 
     @After
@@ -57,114 +66,128 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindClockViews non-incremental sets visibility for all digits`() {
-        WidgetDataBinder.bindClockViews(
-            context = context,
-            views = views,
-            appWidgetId = 1,
-            hour = 10,
-            minute = 25,
-            is24h = true,
-            isIncremental = false
-        )
+    fun `bindSimpleClockViews sets four digits and clears ampm in 24h mode`() {
+        WidgetDataBinder.bindSimpleClockViews(views, hour = 10, minute = 26, is24h = true)
 
-        // Non-incremental should not trigger ViewFlipper index animations.
-        verify(exactly = 0) { views.setDisplayedChild(any(), any()) }
-
-        // digit_h1 -> 1: child 1 VISIBLE
-        verify { views.setViewVisibility(R.id.digit_h1_1, android.view.View.VISIBLE) }
-        verify { views.setViewVisibility(R.id.digit_h1_0, android.view.View.GONE) }
-
-        // Cover all 40 setViewVisibility calls (4 digits × 10 children each)
-        verify(atLeast = 1) { views.setViewVisibility(any(), any()) }
-        // Cover ampm text update
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h1, "1") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h2, "0") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m1, "2") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m2, "6") }
         verify(exactly = 1) { views.setTextViewText(R.id.ampm, "") }
     }
 
     @Test
-    fun `bindAtomicClockViews clears fold overlays with parity`() {
-        WidgetDataBinder.bindAtomicClockViews(
-            views = views,
-            hour = 10,
-            minute = 26,
-            is24h = true
-        )
+    fun `bindSimpleClockViews converts midnight for 12h mode`() {
+        WidgetDataBinder.bindSimpleClockViews(views, hour = 0, minute = 5, is24h = false)
 
-        // Current implementation resets all fold overlays to the front child (0)
-        verify(exactly = 1) { views.setDisplayedChild(R.id.fold_h1, 0) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.fold_h2, 0) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.fold_m1, 0) }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.fold_m2, 0) }
-        // Cover base digit TextViews (h1/h2/m1/m2/ampm) + 8 overlay TextViews (from+to per digit)
-        verify(atLeast = 1) { views.setTextViewText(any(), any()) }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h1, "1") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h2, "2") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m1, "0") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m2, "5") }
+        verify(exactly = 1) { views.setTextViewText(R.id.ampm, "AM") }
     }
 
     @Test
-    @Suppress("DEPRECATION")
-    fun `animateAtomicFoldOverlays uses parity to decide flipped digit index`() {
-        // 10:25 -> 10:26: only m2 changed (5 -> 6)
-        // 6 is Even -> Index 0.
-        WidgetDataBinder.animateAtomicFoldOverlays(
-            views = views,
-            previousDigits = DigitState(1, 0, 2, 5),
-            currentDigits = DigitState(1, 0, 2, 6)
-        )
+    fun `bindWeatherViews populates weather card and makes it visible`() {
+        val weatherData = sampleWeatherData()
 
-        verify(exactly = 1) { views.setTextViewText(R.id.fold_m2_from, "5") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fold_m2_to, "6") }
-        verify(exactly = 1) { views.setDisplayedChild(R.id.fold_m2, 0) }
-        verify(exactly = 1) { views.showNext(R.id.fold_m2) }
+        WidgetDataBinder.bindWeatherViews(context, views, weatherData, TemperatureUnit.CELSIUS)
+
+        verify(exactly = 1) { views.setTextViewText(R.id.city_name, "London") }
+        verify(exactly = 1) { views.setTextViewText(R.id.condition_text, "Partly cloudy") }
+        verify(exactly = 1) { views.setImageViewResource(R.id.weather_icon, R.drawable.ic_widget_weather_partly_cloudy_day) }
+        verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "17°C") }
+        verify(exactly = 1) { views.setTextViewText(R.id.high_low, "20°/11°") }
+        verify(exactly = 1) { views.setViewVisibility(R.id.weather_card, View.VISIBLE) }
     }
 
     @Test
-    @Suppress("DEPRECATION")
-    fun `bindClockViews incremental animates only changed digits`() {
-        WidgetDataBinder.bindClockViews(
-            context = context,
-            views = views,
-            appWidgetId = 1,
-            hour = 10,
-            minute = 26,
-            is24h = true,
-            isIncremental = true,
-            prevDigits = DigitState(1, 0, 2, 5)
+    fun `bindWeeklyForecastRows binds first seven days and shows forecast container`() {
+        val weatherData = sampleWeatherData(
+            dailyForecasts = (0..6).map { offset ->
+                DailyForecast(
+                    date = LocalDate.of(2026, 4, 3).plusDays(offset.toLong()),
+                    weatherCondition = WeatherCondition.CLEAR_DAY,
+                    temperatureMax = 20.0 + offset,
+                    temperatureMin = 10.0 + offset,
+                    feelsLikeMax = 20.0 + offset,
+                    feelsLikeMin = 10.0 + offset,
+                    sunrise = LocalTime.of(6, 0),
+                    sunset = LocalTime.of(19, 0),
+                    daylightDurationSeconds = 36000.0,
+                    precipitationSum = 0.0,
+                    precipitationProbability = 0,
+                    windSpeedMax = 10.0,
+                    windDirectionDominant = WindDirection.N,
+                    windDirectionDegrees = 0,
+                    uvIndexMax = 5.0,
+                    averageHumidity = 60,
+                    averagePressure = 1012.0,
+                )
+            },
         )
 
-        verify(exactly = 1) { views.setDisplayedChild(R.id.digit_m2, 5) }
-        verify(exactly = 1) { views.showNext(R.id.digit_m2) }
-        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h1, any()) }
-        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_h2, any()) }
-        verify(exactly = 0) { views.setDisplayedChild(R.id.digit_m1, any()) }
+        WidgetDataBinder.bindWeeklyForecastRows(context, views, weatherData, TemperatureUnit.CELSIUS)
 
-        // m2 children are made visible before the animation step.
-        verify(atLeast = 1) { views.setViewVisibility(any(), any()) }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Today") }
+        verify(exactly = 1) { views.setImageViewResource(R.id.fday1_icon, R.drawable.ic_widget_weather_clear_day) }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, "20°") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday7_high, "26°") }
+        verify(exactly = 1) { views.setViewVisibility(R.id.forecast_container, View.VISIBLE) }
     }
 
-    @Test
-    fun `syncFoldOverlaysChangedOnly updates text but NOT index`() {
-        // 10:25 -> 10:26: only m2 changed (6 even)
-        WidgetDataBinder.syncFoldOverlaysChangedOnly(
-            views = views,
-            previousDigits = DigitState(1, 0, 2, 5),
-            currentDigits = DigitState(1, 0, 2, 6)
+    private fun sampleWeatherData(
+        dailyForecasts: List<DailyForecast> = listOf(
+            DailyForecast(
+                date = LocalDate.of(2026, 4, 3),
+                weatherCondition = WeatherCondition.PARTLY_CLOUDY_DAY,
+                temperatureMax = 20.0,
+                temperatureMin = 11.0,
+                feelsLikeMax = 20.0,
+                feelsLikeMin = 11.0,
+                sunrise = LocalTime.of(6, 0),
+                sunset = LocalTime.of(19, 0),
+                daylightDurationSeconds = 36000.0,
+                precipitationSum = 0.0,
+                precipitationProbability = 0,
+                windSpeedMax = 10.0,
+                windDirectionDominant = WindDirection.N,
+                windDirectionDegrees = 0,
+                uvIndexMax = 5.0,
+                averageHumidity = 60,
+                averagePressure = 1012.0,
+            ),
+        ),
+    ): WeatherData {
+        return WeatherData(
+            location = Location(
+                id = 1L,
+                name = "London",
+                country = "UK",
+                latitude = 51.5072,
+                longitude = -0.1276,
+            ),
+            currentWeather = CurrentWeather(
+                temperature = 17.0,
+                feelsLikeTemperature = 17.0,
+                humidity = 60,
+                dewPoint = 9.0,
+                precipitation = 0.0,
+                precipitationProbability = 0,
+                weatherCondition = WeatherCondition.PARTLY_CLOUDY_DAY,
+                isDay = true,
+                pressure = 1012.0,
+                windSpeed = 10.0,
+                windDirection = WindDirection.N,
+                windDirectionDegrees = 0,
+                windGusts = 12.0,
+                visibility = 10.0,
+                uvIndex = 5.0,
+                cloudCover = 30,
+                lastUpdated = LocalDateTime.of(2026, 4, 3, 10, 15),
+            ),
+            hourlyForecasts = emptyList(),
+            dailyForecasts = dailyForecasts,
         )
-
-        verify(exactly = 1) { views.setTextViewText(R.id.fold_m2_from, "6") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fold_m2_to, "6") }
-
-        // Quiet path MUST NOT flip the index (nowhere else rule)
-        verify(exactly = 0) { views.setDisplayedChild(R.id.fold_m2, any()) }
-    }
-
-    @Test
-    fun `syncFoldOverlaysChangedOnly is a no-op when digits are identical`() {
-        WidgetDataBinder.syncFoldOverlaysChangedOnly(
-            views = views,
-            previousDigits = DigitState(1, 0, 2, 6),
-            currentDigits = DigitState(1, 0, 2, 6)
-        )
-
-        verify(exactly = 0) { views.setTextViewText(any(), any()) }
-        verify(exactly = 0) { views.setDisplayedChild(any(), any()) }
     }
 }

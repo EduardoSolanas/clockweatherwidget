@@ -3,7 +3,7 @@
     <!-- Base dark tile -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#1A1A1A" />
+            <solid android:color="@color/flip_tile_dark_base" />
             <corners android:radius="6dp" />
         </shape>
     </item>
@@ -13,10 +13,10 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#353535"
-                android:centerColor="#353535"
+                android:startColor="@color/flip_tile_dark_surface_top"
+                android:centerColor="@color/flip_tile_dark_surface_top"
                 android:centerY="0.48"
-                android:endColor="#0F0F0F" />
+                android:endColor="@color/flip_tile_dark_surface_bottom" />
             <corners android:radius="6dp" />
         </shape>
     </item>
@@ -26,10 +26,10 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#6F000000"
-                android:centerColor="#27000000"
+                android:startColor="@color/flip_tile_dark_top_shade_start"
+                android:centerColor="@color/flip_tile_dark_top_shade_center"
                 android:centerY="0.50"
-                android:endColor="#00000000" />
+                android:endColor="@android:color/transparent" />
             <corners android:radius="6dp" />
         </shape>
     </item>
@@ -39,10 +39,10 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#52FFFFFF"
-                android:centerColor="#12FFFFFF"
+                android:startColor="@color/flip_tile_dark_highlight_start"
+                android:centerColor="@color/flip_tile_dark_highlight_center"
                 android:centerY="0.34"
-                android:endColor="#00000000" />
+                android:endColor="@android:color/transparent" />
             <corners android:radius="6dp" />
         </shape>
     </item>
@@ -52,10 +52,10 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="0"
-                android:startColor="#36000000"
-                android:centerColor="#00000000"
+                android:startColor="@color/flip_tile_dark_side_vignette"
+                android:centerColor="@android:color/transparent"
                 android:centerX="0.50"
-                android:endColor="#36000000" />
+                android:endColor="@color/flip_tile_dark_side_vignette" />
             <corners android:radius="6dp" />
         </shape>
     </item>
@@ -64,10 +64,10 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#24000000"
-                android:centerColor="#10000000"
+                android:startColor="@color/flip_tile_dark_mid_shadow_start"
+                android:centerColor="@color/flip_tile_dark_mid_shadow_center"
                 android:centerY="0.50"
-                android:endColor="#00000000" />
+                android:endColor="@android:color/transparent" />
             <corners android:radius="6dp" />
         </shape>
     </item>
@@ -77,10 +77,10 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#28FFFFFF"
-                android:centerColor="#00000000"
+                android:startColor="@color/flip_tile_dark_top_edge_highlight"
+                android:centerColor="@android:color/transparent"
                 android:centerY="0.20"
-                android:endColor="#00000000" />
+                android:endColor="@android:color/transparent" />
             <corners android:radius="6dp" />
         </shape>
     </item>
@@ -90,10 +90,10 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#00000000"
-                android:centerColor="#00000000"
+                android:startColor="@android:color/transparent"
+                android:centerColor="@android:color/transparent"
                 android:centerY="0.55"
-                android:endColor="#40000000" />
+                android:endColor="@color/flip_tile_dark_bottom_shadow" />
             <corners android:radius="6dp" />
         </shape>
     </item>
@@ -103,10 +103,10 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#00000000"
-                android:centerColor="#F0000000"
+                android:startColor="@android:color/transparent"
+                android:centerColor="@color/flip_tile_dark_crease"
                 android:centerY="0.50"
-                android:endColor="#00000000" />
+                android:endColor="@android:color/transparent" />
         </shape>
     </item>
 
@@ -115,17 +115,17 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#00000000"
-                android:centerColor="#45FFFFFF"
+                android:startColor="@android:color/transparent"
+                android:centerColor="@color/flip_tile_dark_crease_highlight"
                 android:centerY="0.485"
-                android:endColor="#00000000" />
+                android:endColor="@android:color/transparent" />
         </shape>
     </item>
 
     <!-- Subtle outer border -->
     <item>
         <shape android:shape="rectangle">
-            <stroke android:width="0.5dp" android:color="#22FFFFFF" />
+            <stroke android:width="0.5dp" android:color="@color/flip_tile_dark_border" />
             <corners android:radius="6dp" />
         </shape>
     </item>
