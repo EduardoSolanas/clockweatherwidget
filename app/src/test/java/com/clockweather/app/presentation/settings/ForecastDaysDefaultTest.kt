@@ -1,5 +1,6 @@
 package com.clockweather.app.presentation.settings
 
+import com.clockweather.app.domain.model.WeatherProviderType
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -43,6 +44,30 @@ class ForecastDaysDefaultTest {
     @Test
     fun `boundary 599dp is narrow - returns 7`() {
         assertEquals(7, SettingsViewModel.smartDefaultForecastDays(599))
+    }
+
+    @Test
+    fun `weather api normalizes forecast days to 3`() {
+        assertEquals(
+            3,
+            SettingsViewModel.normalizeForecastDaysForProvider(7, WeatherProviderType.WEATHER_API)
+        )
+    }
+
+    @Test
+    fun `google normalizes 14 forecast days down to 10`() {
+        assertEquals(
+            10,
+            SettingsViewModel.normalizeForecastDaysForProvider(14, WeatherProviderType.GOOGLE)
+        )
+    }
+
+    @Test
+    fun `open meteo keeps 14 day selection`() {
+        assertEquals(
+            14,
+            SettingsViewModel.normalizeForecastDaysForProvider(14, WeatherProviderType.OPEN_METEO)
+        )
     }
 }
 

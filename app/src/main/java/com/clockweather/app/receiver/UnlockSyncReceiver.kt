@@ -1,5 +1,6 @@
 package com.clockweather.app.receiver
 
+import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -32,10 +33,18 @@ class UnlockSyncReceiver : BroadcastReceiver() {
 					if (!ClockAlarmReceiver.hasAnyActiveWidgets(context)) return@withTimeout
 
 					val app = context.applicationContext as? ClockWeatherApplication ?: return@withTimeout
+					if (app.isScreenStateReceiverRegistered()) {
+						Log.d(TAG, "Skipping manifest unlock fallback for action=${intent.action} because dynamic receiver is active")
+						return@withTimeout
+					}
 					Log.d(TAG, "Unlock fallback sync for action=${intent.action}")
 
 					app.registerScreenStateReceiver()
 					app.registerTimeTickReceiver()
+					if (intent.action == Intent.ACTION_SCREEN_ON && isKeyguardLocked(context)) {
+						Log.d(TAG, "Skipping SCREEN_ON fallback sync while keyguard is locked")
+						return@withTimeout
+					}
 					app.syncClockNow(
 						context,
 						suppressAnimation = true,
@@ -49,6 +58,11 @@ class UnlockSyncReceiver : BroadcastReceiver() {
 				pendingResult.finish()
 			}
 		}
+	}
+
+	private fun isKeyguardLocked(context: Context): Boolean {
+		val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+		return keyguardManager?.isKeyguardLocked == true
 	}
 
 	companion object {

@@ -27,7 +27,7 @@ class TimeTickReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_TIME_TICK) return
         val currentEpochMinute = System.currentTimeMillis() / 60000L
-        Log.d(TAG, "TIME_TICK received — incremental clock update minute=$currentEpochMinute")
+        Log.d(TAG, "TIME_TICK received minute=$currentEpochMinute")
 
         val app = context.applicationContext as? ClockWeatherApplication ?: return
         app.markTimeTickObserved(currentEpochMinute)
@@ -35,11 +35,21 @@ class TimeTickReceiver : BroadcastReceiver() {
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
             try {
                 withTimeout(10_000) {
-                    app.refreshAllWidgets(
-                        context,
-                        isClockTick = true,
-                        allowAnimation = true
-                    )
+                    if (app.areAllActiveWidgetBaselinesReady()) {
+                        Log.d(TAG, "TIME_TICK using quiet instant clock push minute=$currentEpochMinute")
+                        app.pushClockInstant(
+                            forceAllDigits = false,
+                            suppressAnimationWindow = true,
+                            quietRender = true
+                        )
+                    } else {
+                        Log.d(TAG, "TIME_TICK baselines missing — falling back to clock-only widget refresh minute=$currentEpochMinute")
+                        app.refreshAllWidgets(
+                            context,
+                            isClockTick = true,
+                            allowAnimation = false
+                        )
+                    }
                     // Re-anchor backup alarm cadence to the system minute tick.
                     // This keeps AlarmManager fallback aligned to minute boundaries
                     // and reduces chance of pre-tick backup overlap.
@@ -53,7 +63,8 @@ class TimeTickReceiver : BroadcastReceiver() {
                 runCatching {
                     app.pushClockInstant(
                         forceAllDigits = true,
-                        suppressAnimationWindow = true
+                        suppressAnimationWindow = true,
+                        quietRender = true
                     )
                 }.onFailure { pushError ->
                     Log.w(TAG, "TIME_TICK fallback instant push failed", pushError)
