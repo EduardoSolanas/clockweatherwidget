@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#00000000" />
+        </shape>
+    </item>
+
+    <item
+        android:left="16dp"
+        android:top="12dp"
+        android:right="16dp"
+        android:bottom="88dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/weather_card_bg_color" />
+            <corners android:radius="20dp" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/widget_glass_stroke" />
+        </shape>
+    </item>
+
+    <item
+        android:left="32dp"
+        android:top="28dp"
+        android:right="32dp"
+        android:bottom="106dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/widget_text_primary" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+
+    <item
+        android:left="16dp"
+        android:top="124dp"
+        android:right="16dp"
+        android:bottom="16dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/weather_card_bg_color" />
+            <corners android:radius="20dp" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/widget_glass_stroke" />
+        </shape>
+    </item>
+
+    <item
+        android:left="36dp"
+        android:top="146dp"
+        android:right="120dp"
+        android:bottom="38dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/widget_text_primary" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+
+    <item
+        android:left="132dp"
+        android:top="138dp"
+        android:right="36dp"
+        android:bottom="30dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/widget_glass_fill" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/widget_glass_stroke" />
+        </shape>
+    </item>
+</layer-list>
+
