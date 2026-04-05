@@ -3,6 +3,7 @@ package com.clockweather.app
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import com.clockweather.app.di.WidgetEntryPoint
+import com.clockweather.app.presentation.widget.common.WidgetClockStateStore
 import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
 import com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider
 import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
@@ -12,6 +13,8 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -60,6 +63,79 @@ class ClockWeatherApplicationTest {
         verify { appWidgetManager.getAppWidgetIds(match { it.className == ExtendedWidgetProvider::class.java.name }) }
         verify { appWidgetManager.getAppWidgetIds(match { it.className == ForecastWidgetProvider::class.java.name }) }
         verify { appWidgetManager.getAppWidgetIds(match { it.className == LargeWidgetProvider::class.java.name }) }
+    }
+
+    @Test
+    fun `areAllActiveWidgetBaselinesReady returns true when every active widget is ready`() {
+        val baselineApp = spyk(app)
+        every { baselineApp.packageName } returns "com.clockweather.app"
+        every { appWidgetManager.getAppWidgetIds(any()) } returnsMany listOf(
+            intArrayOf(1),
+            intArrayOf(),
+            intArrayOf(2),
+            intArrayOf()
+        )
+        mockkObject(WidgetClockStateStore)
+        every { WidgetClockStateStore.isBaselineReady(baselineApp, any()) } returns true
+
+        val result = baselineApp.areAllActiveWidgetBaselinesReady()
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `areAllActiveWidgetBaselinesReady returns false when any active widget lacks a baseline`() {
+        val baselineApp = spyk(app)
+        every { baselineApp.packageName } returns "com.clockweather.app"
+        every { appWidgetManager.getAppWidgetIds(any()) } returnsMany listOf(
+            intArrayOf(1),
+            intArrayOf(),
+            intArrayOf(2),
+            intArrayOf()
+        )
+        mockkObject(WidgetClockStateStore)
+        every { WidgetClockStateStore.isBaselineReady(baselineApp, 1) } returns true
+        every { WidgetClockStateStore.isBaselineReady(baselineApp, 2) } returns false
+
+        val result = baselineApp.areAllActiveWidgetBaselinesReady()
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `syncClockOnActivityStop uses quiet delta push when widgets are active`() {
+        val ids = intArrayOf(1)
+        every { appWidgetManager.getAppWidgetIds(any()) } returns ids
+
+        mockkObject(ClockAlarmReceiver.Companion)
+        every { ClockAlarmReceiver.hasAnyActiveWidgets(context) } returns true
+
+        val spyApp = spyk(app)
+        every { spyApp.pushClockInstant(any(), any(), any(), any()) } just Runs
+
+        spyApp.syncClockOnActivityStop(context)
+
+        verify(exactly = 1) {
+            spyApp.pushClockInstant(
+                forceAllDigits = false,
+                suppressAnimationWindow = true,
+                quietRender = true,
+                alignDisplayedChildrenOnly = false
+            )
+        }
+    }
+
+    @Test
+    fun `syncClockOnActivityStop skips push when no widgets are active`() {
+        mockkObject(ClockAlarmReceiver.Companion)
+        every { ClockAlarmReceiver.hasAnyActiveWidgets(context) } returns false
+
+        val spyApp = spyk(app)
+        every { spyApp.pushClockInstant(any(), any(), any(), any()) } just Runs
+
+        spyApp.syncClockOnActivityStop(context)
+
+        verify(exactly = 0) { spyApp.pushClockInstant(any(), any(), any(), any()) }
     }
 
     @Test

@@ -114,6 +114,8 @@
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings_temperature_unit">Temperature unit</string>
+    <string name="settings_weather_provider_label">Weather provider</string>
+    <string name="settings_weather_provider_desc">Choose the backend used by the weather screen, workers, and widgets</string>
     <string name="settings_wind_speed_unit">Wind speed unit</string>
     <string name="settings_weather_refresh_interval_label">Weather refresh interval</string>
     <string name="settings_weather_refresh_interval_desc">How often to refresh weather data in minutes (5–1440)</string>
@@ -124,6 +126,7 @@
     <string name="settings_section_date">Date</string>
     <string name="settings_section_weather">Weather</string>
     <string name="settings_section_widget">Widget</string>
+    <string name="settings_section_provider">Provider</string>
     <string name="settings_clock_tile_style_label">Digit tile style</string>
     <string name="settings_clock_tile_style_desc">Background colour of the flip-clock tiles</string>
     <string name="settings_clock_tile_style_dark">◼  Dark  (black/white)</string>
@@ -163,6 +166,10 @@
 
     <!-- Forecast days setting -->
     <string name="settings_forecast_days_label">Forecast range</string>
+    <plurals name="settings_forecast_days_format">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
     <string name="settings_forecast_days_7">7 days</string>
     <string name="settings_forecast_days_14">14 days</string>
 
@@ -171,6 +178,11 @@
     <string name="settings_language_system">System Default</string>
     <string name="settings_language_en">English</string>
     <string name="settings_language_es">Spanish</string>
+
+    <!-- Weather Providers -->
+    <string name="weather_provider_open_meteo">Open-Meteo</string>
+    <string name="weather_provider_google">Google Weather</string>
+    <string name="weather_provider_weather_api">WeatherAPI.com</string>
 
     <!-- Widget Config -->
     <string name="config_title">Configure Widget</string>

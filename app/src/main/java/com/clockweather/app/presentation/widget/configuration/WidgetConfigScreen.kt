@@ -65,23 +65,34 @@ fun WidgetConfigScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Search Results
-        when (val state = searchResults) {
-            is UiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-            is UiState.Success -> {
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(state.data) { location ->
-                        LocationItem(
-                            location = location,
-                            isSelected = location == selectedLocation,
-                            onClick = { viewModel.selectLocation(location) }
-                        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = true)
+        ) {
+            when (val state = searchResults) {
+                is UiState.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                is UiState.Success -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(state.data) { location ->
+                            LocationItem(
+                                location = location,
+                                isSelected = location == selectedLocation,
+                                onClick = { viewModel.selectLocation(location) }
+                            )
+                        }
                     }
                 }
+                is UiState.Error -> {
+                    Text(
+                        text = state.message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
             }
-            is UiState.Error -> Text(
-                text = state.message,
-                color = MaterialTheme.colorScheme.error
-            )
         }
 
         // Selected Location Display

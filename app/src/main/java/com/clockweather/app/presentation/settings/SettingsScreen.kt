@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,6 +26,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit
 ) {
     val temperatureUnit  by viewModel.temperatureUnit.collectAsStateWithLifecycle()
+    val weatherProvider by viewModel.weatherProvider.collectAsStateWithLifecycle()
     val use24hClock      by viewModel.use24hClock.collectAsStateWithLifecycle()
     val showDateInWidget by viewModel.showDateInWidget.collectAsStateWithLifecycle()
     val showTodayCompact by viewModel.showTodayCompact.collectAsStateWithLifecycle()
@@ -37,6 +39,7 @@ fun SettingsScreen(
     val isBatteryOptimizationExempt by viewModel.isBatteryOptimizationExempt.collectAsStateWithLifecycle()
     val weatherRefreshIntervalMinutes by viewModel.weatherRefreshIntervalMinutes.collectAsStateWithLifecycle()
     val forecastDays by viewModel.forecastDays.collectAsStateWithLifecycle()
+    val forecastDayOptions by viewModel.availableForecastDayOptions.collectAsStateWithLifecycle()
 
     val context = androidx.compose.ui.platform.LocalContext.current
     
@@ -267,16 +270,13 @@ fun SettingsScreen(
                     .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                FilterChip(
-                    selected = forecastDays == 7,
-                    onClick  = { viewModel.setForecastDays(7) },
-                    label    = { Text(stringResource(R.string.settings_forecast_days_7)) }
-                )
-                FilterChip(
-                    selected = forecastDays == 14,
-                    onClick  = { viewModel.setForecastDays(14) },
-                    label    = { Text(stringResource(R.string.settings_forecast_days_14)) }
-                )
+                forecastDayOptions.forEach { days ->
+                    FilterChip(
+                        selected = forecastDays == days,
+                        onClick  = { viewModel.setForecastDays(days) },
+                        label    = { Text(forecastDaysLabel(days)) }
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -411,7 +411,29 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            
+
+            SettingsSectionHeader(stringResource(R.string.settings_section_provider))
+            SettingsLabel(
+                label = stringResource(R.string.settings_weather_provider_label),
+                description = stringResource(R.string.settings_weather_provider_desc)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                viewModel.availableWeatherProviders.forEach { provider ->
+                    FilterChip(
+                        selected = provider == weatherProvider,
+                        onClick = { viewModel.setWeatherProvider(provider) },
+                        label = { Text(stringResource(provider.labelResId)) }
+                    )
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
             // Build Info
             Box(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
@@ -427,6 +449,13 @@ fun SettingsScreen(
             Spacer(Modifier.height(16.dp))
         }
     }
+}
+
+@Composable
+private fun forecastDaysLabel(days: Int): String = when (days) {
+    7 -> stringResource(R.string.settings_forecast_days_7)
+    14 -> stringResource(R.string.settings_forecast_days_14)
+    else -> pluralStringResource(R.plurals.settings_forecast_days_format, days, days)
 }
 
 // ── Shared composables ────────────────────────────────────────────────────────

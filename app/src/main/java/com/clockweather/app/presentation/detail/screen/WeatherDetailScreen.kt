@@ -127,7 +127,11 @@ fun WeatherDetailScreen(
                 )
             }
 
-            Box(modifier = Modifier.weight(1f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
             when (val state = uiState) {
                 is UiState.Loading -> {
                     Column(

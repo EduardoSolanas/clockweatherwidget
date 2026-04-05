@@ -2,8 +2,7 @@ package com.clockweather.app
 
 import android.app.Activity
 import android.app.Application
-import android.content.IntentFilter
-import android.os.Build
+import android.content.Intent
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.appcompat.app.AppCompatActivity
@@ -81,11 +80,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             override fun onActivityStopped(activity: Activity) {
                 // Skip configuration changes (rotation) — widget push is unnecessary.
                 if ((activity as? AppCompatActivity)?.isChangingConfigurations == true) return
-                if (!ClockAlarmReceiver.hasAnyActiveWidgets(activity)) return
-                pushClockInstant(
-                    forceAllDigits = true,
-                    suppressAnimationWindow = true
-                )
+                syncClockOnActivityStop(activity)
             }
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
             override fun onActivityStarted(activity: Activity) {}
@@ -178,6 +173,8 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         unregisterTimeTickReceiver()
     }
 
+    fun isScreenStateReceiverRegistered(): Boolean = screenStateReceiver != null
+
     // ── TIME_TICK receiver management ────────────────────────────────
 
     /**
@@ -213,6 +210,44 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
     }
 
     fun getLastObservedTimeTickEpochMinute(): Long = lastObservedTimeTickEpochMinute
+
+    fun areAllActiveWidgetBaselinesReady(): Boolean {
+        val mgr = AppWidgetManager.getInstance(this)
+        val providerClasses = listOf(
+            CompactWidgetProvider::class.java,
+            ExtendedWidgetProvider::class.java,
+            ForecastWidgetProvider::class.java,
+            LargeWidgetProvider::class.java
+        )
+        var hasAnyWidget = false
+
+        providerClasses.forEach { providerClass ->
+            val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
+            ids.forEach { id ->
+                hasAnyWidget = true
+                if (!WidgetClockStateStore.isBaselineReady(this, id)) {
+                    return false
+                }
+            }
+        }
+
+        return hasAnyWidget
+    }
+
+    /**
+     * Activity -> background/home convergence path.
+     *
+     * This must stay delta-only: forcing all four digits can create a deferred
+     * launcher-host repaint when the widget becomes visible again after an app switch.
+     */
+    fun syncClockOnActivityStop(context: Context) {
+        if (!ClockAlarmReceiver.hasAnyActiveWidgets(context)) return
+        pushClockInstant(
+            forceAllDigits = false,
+            suppressAnimationWindow = true,
+            quietRender = true
+        )
+    }
 
     // ── Instant clock sync ────────────────────────────────────────
 

@@ -114,6 +114,8 @@
     <!-- Settings -->
     <string name="settings_title">Ajustes</string>
     <string name="settings_temperature_unit">Unidad de temperatura</string>
+    <string name="settings_weather_provider_label">Proveedor del clima</string>
+    <string name="settings_weather_provider_desc">Elige el servicio usado por la pantalla del clima, los workers y los widgets</string>
     <string name="settings_wind_speed_unit">Unidad de viento</string>
     <string name="settings_weather_refresh_interval_label">Intervalo de actualización del clima</string>
     <string name="settings_weather_refresh_interval_desc">Con qué frecuencia actualizar los datos de clima en minutos (5–1440)</string>
@@ -124,6 +126,7 @@
     <string name="settings_section_date">Fecha</string>
     <string name="settings_section_weather">Clima</string>
     <string name="settings_section_widget">Widget</string>
+    <string name="settings_section_provider">Proveedor</string>
     <string name="settings_clock_tile_style_label">Estilo de dígitos</string>
     <string name="settings_clock_tile_style_desc">Color de fondo de las paletas del reloj</string>
     <string name="settings_clock_tile_style_dark">◼  Oscuro  (negro/blanco)</string>
@@ -163,6 +166,11 @@
 
     <!-- Forecast days setting -->
     <string name="settings_forecast_days_label">Rango del pronóstico</string>
+    <plurals name="settings_forecast_days_format">
+        <item quantity="one">%d día</item>
+        <item quantity="many">%d días</item>
+        <item quantity="other">%d días</item>
+    </plurals>
     <string name="settings_forecast_days_7">7 días</string>
     <string name="settings_forecast_days_14">14 días</string>
 
@@ -171,6 +179,11 @@
     <string name="settings_language_system">Sistema (Predeterminado)</string>
     <string name="settings_language_en">Inglés</string>
     <string name="settings_language_es">Español</string>
+
+    <!-- Weather Providers -->
+    <string name="weather_provider_open_meteo">Open-Meteo</string>
+    <string name="weather_provider_google">Google Weather</string>
+    <string name="weather_provider_weather_api">WeatherAPI.com</string>
 
     <!-- Widget Config -->
     <string name="config_title">Configurar Widget</string>
