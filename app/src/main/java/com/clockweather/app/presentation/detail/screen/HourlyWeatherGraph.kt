@@ -36,6 +36,7 @@ import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
 // ── Data helper (kept internal for tests) ────────────────────────────────────
@@ -43,6 +44,16 @@ import kotlin.math.roundToInt
 internal fun scopedHourlyForecasts(
     hourlyForecasts: List<HourlyForecast>,
     selectedDate: LocalDate?
+): List<HourlyForecast> = scopedHourlyForecasts(
+    hourlyForecasts = hourlyForecasts,
+    selectedDate = selectedDate,
+    referenceDateTime = LocalDateTime.now()
+)
+
+internal fun scopedHourlyForecasts(
+    hourlyForecasts: List<HourlyForecast>,
+    selectedDate: LocalDate?,
+    referenceDateTime: LocalDateTime
 ): List<HourlyForecast> {
     if (hourlyForecasts.isEmpty()) return emptyList()
 
@@ -51,10 +62,37 @@ internal fun scopedHourlyForecasts(
         return orderedForecasts.take(24)
     }
 
+    // Today behaves as a rolling 24-hour window from the current hour so late-evening
+    // views still show a full next-24h forecast across midnight.
+    val referenceHour = referenceDateTime.withMinute(0).withSecond(0).withNano(0)
+    if (selectedDate == referenceHour.toLocalDate()) {
+        val rollingStartIndex = orderedForecasts.indexOfFirst { !it.dateTime.isBefore(referenceHour) }
+        if (rollingStartIndex >= 0) {
+            return orderedForecasts.drop(rollingStartIndex).take(24)
+        }
+    }
+
     val filtered = orderedForecasts.filter { it.dateTime.toLocalDate() == selectedDate }
-    // If fewer than 2 data points remain for the selected date (e.g. late evening at 23:00),
-    // fall back to the next 24 hours so the graph is never hidden.
-    return if (filtered.size >= 2) filtered else orderedForecasts.take(24)
+    // For non-today dates, keep the selected calendar day when possible. If fewer than 2
+    // points remain (e.g. sparse backend data or a late single-hour carry-over), fall
+    // forward to the next 24 hours so the graph is never hidden.
+    if (filtered.size >= 2) {
+        return filtered
+    }
+
+    if (filtered.isEmpty()) {
+        return orderedForecasts.take(24)
+    }
+
+    val selectedStartIndex = orderedForecasts.indexOfFirst {
+        it.dateTime.toLocalDate() == selectedDate
+    }
+
+    return if (selectedStartIndex >= 0) {
+        orderedForecasts.drop(selectedStartIndex).take(24)
+    } else {
+        orderedForecasts.take(24)
+    }
 }
 
 // ── Curve colour (warm amber — matches reference) ─────────────────────────────
@@ -126,11 +164,13 @@ fun HourlyWeatherGraph(
     val onSurface        = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
     val textMeasurer     = rememberTextMeasurer()
-    val selectionOverlayMetrics = remember(hours.size, currentIdx, isTodayView, layoutMetrics) {
+    val selectionHorizontalInsetPx = with(density) { CurrentHourSelectionHorizontalInset.roundToPx() }
+    val selectionOverlayMetrics = remember(hours.size, currentIdx, isTodayView, layoutMetrics, selectionHorizontalInsetPx) {
         currentHourSelectionOverlayMetrics(
             currentIdx = currentIdx,
             hoursCount = hours.size,
-            columnWidthPx = layoutMetrics.columnWidthPx
+            columnWidthPx = layoutMetrics.columnWidthPx,
+            horizontalInsetPx = selectionHorizontalInsetPx
         )
     }
 
@@ -177,44 +217,179 @@ fun HourlyWeatherGraph(
                     modifier = Modifier
                         .width(totalWidth)
                         .height(HourlyGraphPanelHeight)
-                        .clip(RoundedCornerShape(GraphPanelCornerRadius))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.32f))
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(GraphPanelCornerRadius)
-                        )
                 ) {
-                    Canvas(modifier = Modifier.matchParentSize()) {
-                        val colPx = layoutMetrics.columnWidthPx.toFloat()
-                        val fullHeight = size.height
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(RoundedCornerShape(GraphPanelCornerRadius))
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.32f))
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(GraphPanelCornerRadius)
+                            )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(RoundedCornerShape(GraphPanelCornerRadius))
+                    ) {
+                        Canvas(modifier = Modifier.matchParentSize()) {
+                            val colPx = layoutMetrics.columnWidthPx.toFloat()
+                            val fullHeight = size.height
 
-                        hours.indices.forEach { index ->
-                            if (index % 2 == 0) {
-                                drawRect(
-                                    color = Color.White.copy(alpha = 0.025f),
-                                    topLeft = Offset(layoutMetrics.leftPx(index), 0f),
-                                    size = Size(colPx, fullHeight)
+                            hours.indices.forEach { index ->
+                                if (index % 2 == 0) {
+                                    drawRect(
+                                        color = Color.White.copy(alpha = 0.025f),
+                                        topLeft = Offset(layoutMetrics.leftPx(index), 0f),
+                                        size = Size(colPx, fullHeight)
+                                    )
+                                }
+                            }
+
+                            for (index in 1 until hours.size) {
+                                if (isTodayView && currentIdx in hours.indices && (index == currentIdx || index == currentIdx + 1)) {
+                                    continue
+                                }
+                                val x = layoutMetrics.leftPx(index)
+                                drawLine(
+                                    color = Color.White.copy(alpha = 0.08f),
+                                    start = Offset(x, 10.dp.toPx()),
+                                    end = Offset(x, fullHeight - 10.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
                                 )
                             }
                         }
 
-                        for (index in 1 until hours.size) {
-                            if (isTodayView && currentIdx in hours.indices && (index == currentIdx || index == currentIdx + 1)) {
-                                continue
+                        Column(modifier = Modifier.width(totalWidth)) {
+                            Row(
+                                modifier = Modifier
+                                    .width(totalWidth)
+                                    .height(TimeRowH)
+                            ) {
+                                hours.forEachIndexed { index, hour ->
+                                    HourlyTimeSlice(
+                                        hour = hour,
+                                        columnWidth = layoutMetrics.columnWidthDp,
+                                        showDayMarker = index == 0 || hour.dateTime.toLocalDate() != hours[index - 1].dateTime.toLocalDate(),
+                                        isCurrent = isTodayView && index == currentIdx,
+                                        onSurface = onSurface,
+                                        onSurfaceVariant = onSurfaceVariant
+                                    )
+                                }
                             }
-                            val x = layoutMetrics.leftPx(index)
-                            drawLine(
-                                color = Color.White.copy(alpha = 0.08f),
-                                start = Offset(x, 10.dp.toPx()),
-                                end = Offset(x, fullHeight - 10.dp.toPx()),
-                                strokeWidth = 1.dp.toPx()
-                            )
+
+                            Canvas(
+                                modifier = Modifier
+                                    .width(totalWidth)
+                                    .height(GraphH)
+                            ) {
+                                val h         = size.height
+                                val tempRange = (padMax - padMin).coerceAtLeast(0.001)
+                                val topPad    = 28.dp.toPx()
+                                val botPad    = 12.dp.toPx()
+                                val graphH    = h - topPad - botPad
+
+                                val pts = convertedTemps.mapIndexed { i, temp ->
+                                    val x = layoutMetrics.centerPx(i)
+                                    val y = h - botPad - ((temp - padMin) / tempRange * graphH).toFloat()
+                                    Offset(x, y)
+                                }
+
+                                val baselineY = h - botPad
+
+                                val fillPath = Path().apply {
+                                    moveTo(pts[0].x, pts[0].y)
+                                    for (i in 1 until pts.size) {
+                                        val cp = pts[i - 1].x + (pts[i].x - pts[i - 1].x) / 2f
+                                        cubicTo(cp, pts[i - 1].y, cp, pts[i].y, pts[i].x, pts[i].y)
+                                    }
+                                    lineTo(pts.last().x, baselineY)
+                                    lineTo(pts.first().x, baselineY)
+                                    close()
+                                }
+                                val minY = pts.minOf { it.y }
+                                drawPath(
+                                    path = fillPath,
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(CurveColor.copy(alpha = 0.24f), Color.Transparent),
+                                        startY = minY,
+                                        endY = baselineY
+                                    )
+                                )
+
+                                val strokePath = Path().apply {
+                                    moveTo(pts[0].x, pts[0].y)
+                                    for (i in 1 until pts.size) {
+                                        val cp = pts[i - 1].x + (pts[i].x - pts[i - 1].x) / 2f
+                                        cubicTo(cp, pts[i - 1].y, cp, pts[i].y, pts[i].x, pts[i].y)
+                                    }
+                                }
+                                drawPath(
+                                    path = strokePath,
+                                    color = CurveColor,
+                                    style = Stroke(
+                                        width = 2.5.dp.toPx(),
+                                        cap = StrokeCap.Round,
+                                        join = StrokeJoin.Round
+                                    )
+                                )
+
+                                pts.forEachIndexed { index, pt ->
+                                    val isCurrent = isTodayView && index == currentIdx
+                                    drawCircle(
+                                        color = CurveColor,
+                                        radius = if (isCurrent) 5.dp.toPx() else 3.5.dp.toPx(),
+                                        center = pt
+                                    )
+                                    drawCircle(
+                                        color = Color.White.copy(alpha = 0.92f),
+                                        radius = if (isCurrent) 2.6.dp.toPx() else 1.6.dp.toPx(),
+                                        center = pt
+                                    )
+                                }
+
+                                convertedTemps.forEachIndexed { index, temp ->
+                                    val isCurrent = isTodayView && index == currentIdx
+                                    val label = textMeasurer.measure(
+                                        text = "${temp.roundToInt()}°",
+                                        style = TextStyle(
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (isCurrent) CurveColor else Color.White
+                                        )
+                                    )
+                                    val lx = pts[index].x - label.size.width / 2f
+                                    val ly = (pts[index].y - label.size.height - 6.dp.toPx()).coerceAtLeast(4.dp.toPx())
+                                    drawText(label, topLeft = Offset(lx, ly))
+                                }
+                            }
+
+                            Row(
+                                modifier = Modifier
+                                    .width(totalWidth)
+                                    .height(BottomSliceH)
+                            ) {
+                                hours.forEachIndexed { index, hour ->
+                                    HourlyMetaSlice(
+                                        hour = hour,
+                                        columnWidth = layoutMetrics.columnWidthDp,
+                                        isCurrent = isTodayView && index == currentIdx,
+                                        onSurface = onSurface,
+                                        onSurfaceVariant = onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                     }
 
                     if (isTodayView && selectionOverlayMetrics != null) {
-                        Box(modifier = Modifier.matchParentSize()) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .padding(vertical = CurrentHourSelectionVerticalInset)
+                        ) {
                             Box(
                                 modifier = Modifier
                                     .offset { IntOffset(selectionOverlayMetrics.offsetXPx, 0) }
@@ -226,127 +401,6 @@ fun HourlyWeatherGraph(
                                         shape = RoundedCornerShape(CurrentHourSelectionCornerRadius)
                                     )
                             )
-                        }
-                    }
-
-                    Column(modifier = Modifier.width(totalWidth)) {
-                        Row(
-                            modifier = Modifier
-                                .width(totalWidth)
-                                .height(TimeRowH)
-                        ) {
-                            hours.forEachIndexed { index, hour ->
-                                HourlyTimeSlice(
-                                    hour = hour,
-                                    columnWidth = layoutMetrics.columnWidthDp,
-                                    showDayMarker = index == 0 || hour.dateTime.toLocalDate() != hours[index - 1].dateTime.toLocalDate(),
-                                    isCurrent = isTodayView && index == currentIdx,
-                                    onSurface = onSurface,
-                                    onSurfaceVariant = onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Canvas(
-                            modifier = Modifier
-                                .width(totalWidth)
-                                .height(GraphH)
-                        ) {
-                            val h         = size.height
-                            val tempRange = (padMax - padMin).coerceAtLeast(0.001)
-                            val topPad    = 28.dp.toPx()
-                            val botPad    = 12.dp.toPx()
-                            val graphH    = h - topPad - botPad
-
-                            val pts = convertedTemps.mapIndexed { i, temp ->
-                                val x = layoutMetrics.centerPx(i)
-                                val y = h - botPad - ((temp - padMin) / tempRange * graphH).toFloat()
-                                Offset(x, y)
-                            }
-
-                            val baselineY = h - botPad
-
-                            val fillPath = Path().apply {
-                                moveTo(pts[0].x, pts[0].y)
-                                for (i in 1 until pts.size) {
-                                    val cp = pts[i - 1].x + (pts[i].x - pts[i - 1].x) / 2f
-                                    cubicTo(cp, pts[i - 1].y, cp, pts[i].y, pts[i].x, pts[i].y)
-                                }
-                                lineTo(pts.last().x, baselineY)
-                                lineTo(pts.first().x, baselineY)
-                                close()
-                            }
-                            val minY = pts.minOf { it.y }
-                            drawPath(
-                                path = fillPath,
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(CurveColor.copy(alpha = 0.24f), Color.Transparent),
-                                    startY = minY,
-                                    endY = baselineY
-                                )
-                            )
-
-                            val strokePath = Path().apply {
-                                moveTo(pts[0].x, pts[0].y)
-                                for (i in 1 until pts.size) {
-                                    val cp = pts[i - 1].x + (pts[i].x - pts[i - 1].x) / 2f
-                                    cubicTo(cp, pts[i - 1].y, cp, pts[i].y, pts[i].x, pts[i].y)
-                                }
-                            }
-                            drawPath(
-                                path = strokePath,
-                                color = CurveColor,
-                                style = Stroke(
-                                    width = 2.5.dp.toPx(),
-                                    cap = StrokeCap.Round,
-                                    join = StrokeJoin.Round
-                                )
-                            )
-
-                            pts.forEachIndexed { index, pt ->
-                                val isCurrent = isTodayView && index == currentIdx
-                                drawCircle(
-                                    color = CurveColor,
-                                    radius = if (isCurrent) 5.dp.toPx() else 3.5.dp.toPx(),
-                                    center = pt
-                                )
-                                drawCircle(
-                                    color = Color.White.copy(alpha = 0.92f),
-                                    radius = if (isCurrent) 2.6.dp.toPx() else 1.6.dp.toPx(),
-                                    center = pt
-                                )
-                            }
-
-                            convertedTemps.forEachIndexed { index, temp ->
-                                val isCurrent = isTodayView && index == currentIdx
-                                val label = textMeasurer.measure(
-                                    text = "${temp.roundToInt()}°",
-                                    style = TextStyle(
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (isCurrent) CurveColor else Color.White
-                                    )
-                                )
-                                val lx = pts[index].x - label.size.width / 2f
-                                val ly = (pts[index].y - label.size.height - 6.dp.toPx()).coerceAtLeast(4.dp.toPx())
-                                drawText(label, topLeft = Offset(lx, ly))
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .width(totalWidth)
-                                .height(BottomSliceH)
-                        ) {
-                            hours.forEachIndexed { index, hour ->
-                                HourlyMetaSlice(
-                                    hour = hour,
-                                    columnWidth = layoutMetrics.columnWidthDp,
-                                    isCurrent = isTodayView && index == currentIdx,
-                                    onSurface = onSurface,
-                                    onSurfaceVariant = onSurfaceVariant
-                                )
-                            }
                         }
                     }
                 }
@@ -473,13 +527,24 @@ internal data class CurrentHourSelectionOverlayMetrics(
 internal fun currentHourSelectionOverlayMetrics(
     currentIdx: Int,
     hoursCount: Int,
-    columnWidthPx: Int
+    columnWidthPx: Int,
+    horizontalInsetPx: Int = 0
 ): CurrentHourSelectionOverlayMetrics? {
     if (currentIdx !in 0 until hoursCount) return null
 
+    val safeInsetPx = horizontalInsetPx.coerceAtLeast(0)
+    val isFirst = currentIdx == 0
+    val isLast = currentIdx == hoursCount - 1
+    val adjustedOffset = if (isFirst) safeInsetPx else currentIdx * columnWidthPx
+    val adjustedWidth = when {
+        isFirst && isLast -> (columnWidthPx - safeInsetPx * 2).coerceAtLeast(0)
+        isFirst || isLast -> (columnWidthPx - safeInsetPx).coerceAtLeast(0)
+        else -> columnWidthPx
+    }
+
     return CurrentHourSelectionOverlayMetrics(
-        offsetXPx = currentIdx * columnWidthPx,
-        widthPx = columnWidthPx
+        offsetXPx = adjustedOffset,
+        widthPx = adjustedWidth
     )
 }
 
@@ -498,6 +563,8 @@ private data class HourlyGraphLayoutMetrics(
 private val ColW = 58.dp
 private val GraphPanelCornerRadius = 22.dp
 private val CurrentHourSelectionCornerRadius = 12.dp
+private val CurrentHourSelectionHorizontalInset = 2.dp
+private val CurrentHourSelectionVerticalInset = 2.dp
 private val TimeRowH = 52.dp
 private val GraphH = 148.dp
 private val BottomSliceH = 112.dp

@@ -17,14 +17,38 @@ class CurrentLocationNameResolverTest {
     }
 
     @Test
-    fun `falls back to sub admin area when locality missing`() {
+    fun `uses city district when available`() {
         val resolved = resolveCurrentLocationName(
             locality = null,
-            subAdminArea = "Greater London",
-            adminArea = "England",
+            cityDistrict = "東京都新宿区",
+            subAdminArea = "東京都",
+            adminArea = "関東地方",
             fallbackLabel = "Current Location"
         )
-        assertEquals("Greater London", resolved)
+        assertEquals("東京都新宿区", resolved)
+    }
+
+    @Test
+    fun `uses sub locality when available`() {
+        val resolved = resolveCurrentLocationName(
+            locality = "Ciudad de México",
+            subLocality = "Centro",
+            subAdminArea = "Ciudad de México",
+            adminArea = "México",
+            fallbackLabel = "Current Location"
+        )
+        assertEquals("Centro", resolved)
+    }
+
+    @Test
+    fun `falls back to sub admin area when no specific fields are available`() {
+        val resolved = resolveCurrentLocationName(
+            locality = null,
+            subAdminArea = "Île-de-France",
+            adminArea = "France",
+            fallbackLabel = "Current Location"
+        )
+        assertEquals("Île-de-France", resolved)
     }
 
     @Test

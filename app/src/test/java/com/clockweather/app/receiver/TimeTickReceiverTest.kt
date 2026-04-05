@@ -20,9 +20,10 @@ import org.robolectric.annotation.Config
  * 1. Intent filter contains exactly ACTION_TIME_TICK.
  * 2. Non-TIME_TICK intents are silently ignored (no widget refresh).
  * 3. TIME_TICK records the observed epoch minute SYNCHRONOUSLY (before the coroutine).
- * 4. TIME_TICK triggers a full widget refresh with isClockTick=true, allowAnimation=true.
- * 5. TIME_TICK re-anchors the backup alarm to the system minute boundary.
- * 6. Refresh failure falls back to pushClockInstant (forceAllDigits=true).
+ * 4. TIME_TICK prefers a quiet instant digit push once widget baselines are ready.
+ * 5. TIME_TICK falls back to the clock-only widget refresh path while baselines are missing.
+ * 6. TIME_TICK re-anchors the backup alarm to the system minute boundary.
+ * 7. Failure falls back to pushClockInstant (forceAllDigits=true, quietRender=true).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -39,6 +40,7 @@ class TimeTickReceiverTest {
         context = mockk(relaxed = true)
 
         every { context.applicationContext } returns app
+        every { app.areAllActiveWidgetBaselinesReady() } returns true
         coEvery { app.refreshAllWidgets(any(), any(), any()) } just Runs
         coEvery { app.resolveHighPrecision() } returns true
 
@@ -106,7 +108,25 @@ class TimeTickReceiverTest {
     // ── Async refresh ─────────────────────────────────────────────
 
     @Test
-    fun `onReceive TIME_TICK calls refreshAllWidgets with isClockTick true and allowAnimation true`() {
+    fun `onReceive TIME_TICK uses quiet instant push when baselines are ready`() {
+        receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
+
+        Thread.sleep(1500)
+
+        verify(timeout = 1500) {
+            app.pushClockInstant(
+                forceAllDigits = false,
+                suppressAnimationWindow = true,
+                quietRender = true
+            )
+        }
+        coVerify(exactly = 0) { app.refreshAllWidgets(any(), any(), any()) }
+    }
+
+    @Test
+    fun `onReceive TIME_TICK falls back to clock-only refresh when baselines are missing`() {
+        every { app.areAllActiveWidgetBaselinesReady() } returns false
+
         receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
 
         Thread.sleep(3500)
@@ -115,7 +135,14 @@ class TimeTickReceiverTest {
             app.refreshAllWidgets(
                 context,
                 isClockTick = true,
-                allowAnimation = true
+                allowAnimation = false
+            )
+        }
+        verify(exactly = 0) {
+            app.pushClockInstant(
+                forceAllDigits = false,
+                suppressAnimationWindow = true,
+                quietRender = true
             )
         }
     }
@@ -132,9 +159,13 @@ class TimeTickReceiverTest {
     // ── Failure path ──────────────────────────────────────────────
 
     @Test
-    fun `onReceive TIME_TICK refresh failure falls back to pushClockInstant with forceAllDigits`() {
-        coEvery {
-            app.refreshAllWidgets(context, isClockTick = true, allowAnimation = true)
+    fun `onReceive TIME_TICK quiet path failure falls back to pushClockInstant with forceAllDigits`() {
+        every {
+            app.pushClockInstant(
+                forceAllDigits = false,
+                suppressAnimationWindow = true,
+                quietRender = true
+            )
         } throws RuntimeException("simulated refresh failure")
 
         receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
@@ -144,7 +175,8 @@ class TimeTickReceiverTest {
         verify(timeout = 1500) {
             app.pushClockInstant(
                 forceAllDigits = true,
-                suppressAnimationWindow = true
+                suppressAnimationWindow = true,
+                quietRender = true
             )
         }
     }

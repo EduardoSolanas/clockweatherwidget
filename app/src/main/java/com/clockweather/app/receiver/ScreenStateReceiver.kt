@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.app.KeyguardManager
 import android.os.SystemClock
 import android.util.Log
 import com.clockweather.app.ClockWeatherApplication
@@ -33,7 +34,11 @@ class ScreenStateReceiver : BroadcastReceiver() {
             Intent.ACTION_SCREEN_ON -> {
                 Log.d(TAG, "Screen ON - register TIME_TICK + unlock convergence")
                 app.registerTimeTickReceiver()
-                launchUnlockConvergence(app, context, Intent.ACTION_SCREEN_ON)
+                if (isKeyguardLocked(context)) {
+                    Log.d(TAG, "Screen ON while keyguard locked - waiting for USER_PRESENT before convergence")
+                } else {
+                    launchUnlockConvergence(app, context, Intent.ACTION_SCREEN_ON)
+                }
             }
             Intent.ACTION_USER_PRESENT -> {
                 Log.d(TAG, "User present - unlock convergence")
@@ -47,7 +52,11 @@ class ScreenStateReceiver : BroadcastReceiver() {
             Intent.ACTION_DREAMING_STOPPED -> {
                 Log.d(TAG, "Dreaming stopped - register TIME_TICK + unlock convergence")
                 app.registerTimeTickReceiver()
-                launchUnlockConvergence(app, context, Intent.ACTION_DREAMING_STOPPED)
+                if (isKeyguardLocked(context)) {
+                    Log.d(TAG, "Dreaming stopped while keyguard locked - waiting for USER_PRESENT before convergence")
+                } else {
+                    launchUnlockConvergence(app, context, Intent.ACTION_DREAMING_STOPPED)
+                }
             }
             // NOTE: ACTION_CLOSE_SYSTEM_DIALOGS ("homekey") was removed — it is
             // restricted since Android 12 and no longer delivered to third-party apps.
@@ -86,6 +95,11 @@ class ScreenStateReceiver : BroadcastReceiver() {
                 pendingResult.finish()
             }
         }
+    }
+
+    private fun isKeyguardLocked(context: Context): Boolean {
+        val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+        return keyguardManager?.isKeyguardLocked == true
     }
 
     companion object {

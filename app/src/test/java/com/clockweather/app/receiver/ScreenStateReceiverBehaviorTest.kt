@@ -1,5 +1,6 @@
 package com.clockweather.app.receiver
 
+import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -17,10 +18,10 @@ import org.robolectric.annotation.Config
  *
  * Invariants protected:
  * 1. SCREEN_OFF unregisters TIME_TICK and schedules a keepalive alarm.
- * 2. SCREEN_ON registers TIME_TICK and triggers unlock convergence (syncClockNow).
+ * 2. SCREEN_ON registers TIME_TICK and triggers unlock convergence only when not keyguard-locked.
  * 3. USER_PRESENT triggers unlock convergence (not throttled by prior SCREEN_ON).
  * 4. DREAMING_STARTED unregisters TIME_TICK and schedules a keepalive alarm.
- * 5. DREAMING_STOPPED registers TIME_TICK and triggers unlock convergence.
+ * 5. DREAMING_STOPPED registers TIME_TICK and triggers unlock convergence only when not keyguard-locked.
  * 6. Rapid SCREEN_ON events within 2500 ms are throttled (only first fires).
  * 7. USER_PRESENT bypasses throttle even when called immediately after SCREEN_ON.
  * 8. All unlock convergences use suppressAnimation=true (no visible layout flash).
@@ -32,14 +33,18 @@ class ScreenStateReceiverBehaviorTest {
     private lateinit var receiver: ScreenStateReceiver
     private lateinit var app: ClockWeatherApplication
     private lateinit var context: Context
+    private lateinit var keyguardManager: KeyguardManager
 
     @Before
     fun setup() {
         receiver = ScreenStateReceiver()
         app = mockk(relaxed = true)
         context = mockk(relaxed = true)
+        keyguardManager = mockk(relaxed = true)
 
         every { context.applicationContext } returns app
+        every { context.getSystemService(Context.KEYGUARD_SERVICE) } returns keyguardManager
+        every { keyguardManager.isKeyguardLocked } returns false
 
         mockkObject(ClockAlarmReceiver.Companion)
         every { ClockAlarmReceiver.scheduleKeepalive(any()) } just Runs
@@ -105,6 +110,18 @@ class ScreenStateReceiverBehaviorTest {
         }
     }
 
+    @Test
+    fun `SCREEN_ON while keyguard locked defers unlock convergence`() {
+        every { keyguardManager.isKeyguardLocked } returns true
+
+        receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_ON))
+
+        Thread.sleep(500)
+
+        verify(exactly = 1) { app.registerTimeTickReceiver() }
+        coVerify(exactly = 0) { app.syncClockNow(any(), any(), any()) }
+    }
+
     // ── USER_PRESENT ──────────────────────────────────────────────
 
     @Test
@@ -161,6 +178,18 @@ class ScreenStateReceiverBehaviorTest {
         coVerify(timeout = 1500) {
             app.syncClockNow(any(), suppressAnimation = true, reassertAfterReschedule = any())
         }
+    }
+
+    @Test
+    fun `DREAMING_STOPPED while keyguard locked defers unlock convergence`() {
+        every { keyguardManager.isKeyguardLocked } returns true
+
+        receiver.onReceive(context, Intent(Intent.ACTION_DREAMING_STOPPED))
+
+        Thread.sleep(500)
+
+        verify(exactly = 1) { app.registerTimeTickReceiver() }
+        coVerify(exactly = 0) { app.syncClockNow(any(), any(), any()) }
     }
 
     // ── Unlock convergence throttle ───────────────────────────────

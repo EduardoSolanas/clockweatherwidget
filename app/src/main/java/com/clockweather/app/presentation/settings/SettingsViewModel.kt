@@ -13,10 +13,12 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clockweather.app.ClockWeatherApplication
+import com.clockweather.app.data.provider.WeatherProviderPreferences
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.ClockTileSize
+import com.clockweather.app.domain.model.WeatherProviderType
 import com.clockweather.app.domain.repository.LocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -39,6 +41,7 @@ class SettingsViewModel @Inject constructor(
 
     companion object {
         val KEY_TEMP_UNIT = stringPreferencesKey("temperature_unit")
+        val KEY_WEATHER_PROVIDER = WeatherProviderPreferences.KEY_WEATHER_PROVIDER
         val KEY_SPEED_UNIT = stringPreferencesKey("speed_unit")
         val KEY_UPDATE_INTERVAL = intPreferencesKey("update_interval_minutes")
         val KEY_WEATHER_REFRESH_INTERVAL = intPreferencesKey("weather_refresh_interval_minutes")
@@ -63,16 +66,26 @@ class SettingsViewModel @Inject constructor(
          * 7 for phones. Used as the first-run default when no preference is stored.
          */
         fun smartDefaultForecastDays(screenWidthDp: Int): Int = if (screenWidthDp >= 600) 14 else 7
+
+        fun normalizeForecastDaysForProvider(
+            requestedDays: Int,
+            provider: WeatherProviderType
+        ): Int = provider.supportedForecastDays
+            .filter { it <= requestedDays }
+            .maxOrNull()
+            ?: provider.supportedForecastDays.first()
     }
 
     init {
-        // On first launch (no stored preference) pick a smart default based on
-        // screen width: tablets / foldables in landscape get 14 days, phones get 7.
+        // Ensure the stored forecast range always matches the currently selected provider.
         viewModelScope.launch {
             val prefs = dataStore.data.first()
-            if (prefs[KEY_FORECAST_DAYS] == null) {
-                val widthDp = context.resources.configuration.screenWidthDp
-                dataStore.edit { it[KEY_FORECAST_DAYS] = smartDefaultForecastDays(widthDp) }
+            val provider = WeatherProviderPreferences.resolve(prefs[KEY_WEATHER_PROVIDER])
+            val widthDp = context.resources.configuration.screenWidthDp
+            val requestedDays = prefs[KEY_FORECAST_DAYS] ?: smartDefaultForecastDays(widthDp)
+            val normalizedDays = normalizeForecastDaysForProvider(requestedDays, provider)
+            if (prefs[KEY_FORECAST_DAYS] != normalizedDays) {
+                dataStore.edit { it[KEY_FORECAST_DAYS] = normalizedDays }
             }
         }
     }
@@ -86,6 +99,20 @@ class SettingsViewModel @Inject constructor(
             runCatching { TemperatureUnit.valueOf(name) }.getOrDefault(TemperatureUnit.CELSIUS)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TemperatureUnit.CELSIUS)
+
+    val weatherProvider: StateFlow<WeatherProviderType> = dataStore.data
+        .map { prefs -> WeatherProviderPreferences.resolve(prefs[KEY_WEATHER_PROVIDER]) }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            WeatherProviderPreferences.defaultProvider()
+        )
+
+    val availableWeatherProviders: List<WeatherProviderType> = WeatherProviderPreferences.availableProviders()
+
+    val availableForecastDayOptions: StateFlow<List<Int>> = weatherProvider
+        .map { it.supportedForecastDays }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), weatherProvider.value.supportedForecastDays)
 
     val speedUnit: StateFlow<SpeedUnit> = dataStore.data
         .map { prefs ->
@@ -147,7 +174,12 @@ class SettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES)
 
     val forecastDays: StateFlow<Int> = dataStore.data
-        .map { prefs -> prefs[KEY_FORECAST_DAYS] ?: 7 }
+        .map { prefs ->
+            val provider = WeatherProviderPreferences.resolve(prefs[KEY_WEATHER_PROVIDER])
+            val requestedDays = prefs[KEY_FORECAST_DAYS]
+                ?: smartDefaultForecastDays(context.resources.configuration.screenWidthDp)
+            normalizeForecastDaysForProvider(requestedDays, provider)
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)
 
     private val _isExactAlarmPermissionGranted = MutableStateFlow(checkExactAlarmPermission())
@@ -176,6 +208,20 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             dataStore.edit { it[KEY_TEMP_UNIT] = unit.name }
             triggerWidgetUpdate()
+        }
+    }
+
+    fun setWeatherProvider(provider: WeatherProviderType) {
+        if (!WeatherProviderPreferences.isConfigured(provider)) return
+
+        viewModelScope.launch {
+            dataStore.edit {
+                val currentForecastDays = it[KEY_FORECAST_DAYS]
+                    ?: smartDefaultForecastDays(context.resources.configuration.screenWidthDp)
+                it[KEY_WEATHER_PROVIDER] = provider.storageValue
+                it[KEY_FORECAST_DAYS] = normalizeForecastDaysForProvider(currentForecastDays, provider)
+            }
+            com.clockweather.app.worker.WeatherUpdateScheduler.scheduleImmediateRefresh(context)
         }
     }
 
@@ -275,7 +321,8 @@ class SettingsViewModel @Inject constructor(
 
     fun setForecastDays(days: Int) {
         viewModelScope.launch {
-            dataStore.edit { it[KEY_FORECAST_DAYS] = days }
+            val normalizedDays = normalizeForecastDaysForProvider(days, weatherProvider.value)
+            dataStore.edit { it[KEY_FORECAST_DAYS] = normalizedDays }
             triggerWidgetUpdate()
         }
     }

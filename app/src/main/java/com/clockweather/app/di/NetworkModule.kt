@@ -2,6 +2,7 @@ package com.clockweather.app.di
 
 import com.clockweather.app.BuildConfig
 import com.clockweather.app.data.remote.api.GoogleWeatherApi
+import com.clockweather.app.data.remote.api.NominatimReverseGeocodingApi
 import com.clockweather.app.data.remote.api.OpenMeteoGeocodingApi
 import com.clockweather.app.data.remote.api.OpenMeteoWeatherApi
 import com.clockweather.app.data.remote.api.WeatherApi
@@ -66,6 +67,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @Named("reverseGeocoding")
+    fun provideReverseGeocodingRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(NominatimReverseGeocodingApi.BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+
+    @Provides
+    @Singleton
     @Named("weatherapi")
     fun provideWeatherApiRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit =
         Retrofit.Builder()
@@ -83,6 +94,11 @@ object NetworkModule {
     @Singleton
     fun provideGeocodingApi(@Named("geocoding") retrofit: Retrofit): OpenMeteoGeocodingApi =
         retrofit.create(OpenMeteoGeocodingApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideReverseGeocodingApi(@Named("reverseGeocoding") retrofit: Retrofit): NominatimReverseGeocodingApi =
+        retrofit.create(NominatimReverseGeocodingApi::class.java)
 
     @Provides
     @Singleton

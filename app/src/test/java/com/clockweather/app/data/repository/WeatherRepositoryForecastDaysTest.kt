@@ -1,53 +1,51 @@
 package com.clockweather.app.data.repository
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.preferencesOf
 import com.clockweather.app.data.local.dao.CurrentWeatherDao
 import com.clockweather.app.data.local.dao.DailyForecastDao
 import com.clockweather.app.data.local.dao.HourlyForecastDao
 import com.clockweather.app.data.local.dao.LocationDao
 import com.clockweather.app.data.local.db.WeatherDatabase
-import com.clockweather.app.data.mapper.WeatherDtoMapper
 import com.clockweather.app.data.mapper.WeatherEntityMapper
-import com.clockweather.app.data.remote.api.OpenMeteoWeatherApi
-import com.clockweather.app.data.remote.dto.WeatherResponseDto
-import com.clockweather.app.domain.model.CurrentWeather
+import com.clockweather.app.data.provider.WeatherDataProvider
+import com.clockweather.app.data.provider.WeatherDataProviderFactory
+import com.clockweather.app.data.provider.WeatherProviderPreferences
 import com.clockweather.app.domain.model.Location
-import com.clockweather.app.domain.model.WeatherCondition
-import com.clockweather.app.domain.model.WeatherData
-import com.clockweather.app.domain.model.WindDirection
+import com.clockweather.app.domain.model.WeatherProviderType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.slot
+import io.mockk.every
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
-import java.time.LocalDateTime
 
 /**
- * TDD: WeatherRepositoryImpl.refreshWeatherData must pass the given forecastDays
- * value to the API instead of always using a hardcoded 7.
- *
- * The test aborts the flow after the API call (by throwing from dtoMapper) so we never
- * need to mock Room's withTransaction extension, keeping the test simple and focused.
+ * WeatherRepositoryImpl must delegate all refreshes through WeatherDataProvider.
  */
 class WeatherRepositoryForecastDaysTest {
 
-    private val api: OpenMeteoWeatherApi = mockk()
+    private val dataStore: DataStore<Preferences> = mockk()
+    private val providerFactory: WeatherDataProviderFactory = mockk()
+    private val openMeteoProvider: WeatherDataProvider = mockk()
     private val database: WeatherDatabase = mockk()
     private val currentWeatherDao: CurrentWeatherDao = mockk()
     private val hourlyForecastDao: HourlyForecastDao = mockk()
     private val dailyForecastDao: DailyForecastDao = mockk()
     private val locationDao: LocationDao = mockk()
-    private val dtoMapper: WeatherDtoMapper = mockk()
     private val entityMapper: WeatherEntityMapper = mockk()
 
     private val repository = WeatherRepositoryImpl(
-        openMeteoApi = api,
+        dataStore = dataStore,
+        providerFactory = providerFactory,
         database = database,
         currentWeatherDao = currentWeatherDao,
         hourlyForecastDao = hourlyForecastDao,
         dailyForecastDao = dailyForecastDao,
         locationDao = locationDao,
-        dtoMapper = dtoMapper,
         entityMapper = entityMapper
     )
 
@@ -59,95 +57,48 @@ class WeatherRepositoryForecastDaysTest {
         longitude = 13.405
     )
 
-    private fun fakeResponseDto() = WeatherResponseDto(
-        latitude = 52.52,
-        longitude = 13.405,
-        elevation = 34.0,
-        generationTimeMs = 1.0,
-        utcOffsetSeconds = 3600,
-        timezone = "Europe/Berlin",
-        timezoneAbbreviation = "CET",
-        current = null,
-        currentUnits = null,
-        hourly = null,
-        hourlyUnits = null,
-        daily = null,
-        dailyUnits = null
-    )
+    private fun setupProviderSelection(provider: WeatherProviderType) {
+        every {
+            dataStore.data
+        } returns flowOf(
+            preferencesOf(WeatherProviderPreferences.KEY_WEATHER_PROVIDER to provider.storageValue)
+        )
+    }
 
-    /**
-     * Set up the API mock to capture forecastDays, then throw from dtoMapper so we
-     * never need to reach the Room transaction (keeping the test focused and simple).
-     */
-    private fun setupApiCapture(forecastDaysSlot: io.mockk.CapturingSlot<Int>) {
-        coEvery {
-            api.getWeatherForecast(
-                latitude = any(),
-                longitude = any(),
-                current = any(),
-                hourly = any(),
-                daily = any(),
-                timezone = any(),
-                forecastDays = capture(forecastDaysSlot),
-                windSpeedUnit = any(),
-                temperatureUnit = any()
-            )
-        } returns fakeResponseDto()
-
-        // Abort after the API call so we never touch the Room transaction
-        coEvery { dtoMapper.mapToWeatherData(any(), any()) } throws
-            RuntimeException("abort-after-api-call (intentional test sentinel)")
+    private fun setupMissingProviderPreference() {
+        every { dataStore.data } returns flowOf(emptyPreferences())
     }
 
     @Test
-    fun `refreshWeatherData calls API with forecastDays 14 when 14 passed`() = runTest {
-        val forecastDaysSlot = slot<Int>()
-        setupApiCapture(forecastDaysSlot)
+    fun `refreshWeatherData passes forecastDays 14 to selected provider`() = runTest {
+        setupProviderSelection(WeatherProviderType.OPEN_METEO)
+        every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
+        coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-provider-call")
 
         runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
 
-        assert(forecastDaysSlot.isCaptured) { "API was not called at all" }
-        assert(forecastDaysSlot.captured == 14) {
-            "Expected forecastDays=14 in API call but got ${forecastDaysSlot.captured}"
-        }
+        coVerify(exactly = 1) { openMeteoProvider.fetchWeatherData(location, 14) }
     }
 
     @Test
-    fun `refreshWeatherData calls API with forecastDays 7 when 7 passed`() = runTest {
-        val forecastDaysSlot = slot<Int>()
-        setupApiCapture(forecastDaysSlot)
+    fun `refreshWeatherData passes forecastDays 7 without hardcoding another value`() = runTest {
+        setupProviderSelection(WeatherProviderType.OPEN_METEO)
+        every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
+        coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-provider-call")
 
         runCatching { repository.refreshWeatherData(location, forecastDays = 7) }
 
-        assert(forecastDaysSlot.isCaptured) { "API was not called at all" }
-        assert(forecastDaysSlot.captured == 7) {
-            "Expected forecastDays=7 in API call but got ${forecastDaysSlot.captured}"
-        }
+        coVerify(exactly = 1) { openMeteoProvider.fetchWeatherData(location, 7) }
     }
 
     @Test
-    fun `refreshWeatherData never hardcodes 7 when 14 is requested`() = runTest {
-        val forecastDaysSlot = slot<Int>()
-        setupApiCapture(forecastDaysSlot)
+    fun `refreshWeatherData falls back to default provider when preference missing`() = runTest {
+        setupMissingProviderPreference()
+        every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
+        coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-provider-call")
 
         runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
 
-        assert(forecastDaysSlot.isCaptured) { "API was not called at all" }
-        assert(forecastDaysSlot.captured != 7) {
-            "forecastDays was hardcoded to 7 instead of using the requested 14"
-        }
-        coVerify(exactly = 1) {
-            api.getWeatherForecast(
-                latitude = location.latitude,
-                longitude = location.longitude,
-                forecastDays = 14,
-                current = any(),
-                hourly = any(),
-                daily = any(),
-                timezone = any(),
-                windSpeedUnit = any(),
-                temperatureUnit = any()
-            )
-        }
+        coVerify(exactly = 1) { openMeteoProvider.fetchWeatherData(location, 14) }
     }
 }

@@ -11,7 +11,7 @@ import javax.inject.Named
 
 /**
  * Google Weather API implementation of [WeatherDataProvider].
- * Makes 3 parallel requests (current conditions, 24-hour hourly, N-day daily)
+ * Makes 3 parallel requests (current conditions, horizon-sized hourly, N-day daily)
  * and merges them into a single [WeatherData] domain object.
  *
  * Google Weather API supports up to 10 forecast days; requests above that are capped.
@@ -25,6 +25,7 @@ class GoogleWeatherProvider @Inject constructor(
     override suspend fun fetchWeatherData(location: Location, forecastDays: Int): WeatherData =
         coroutineScope {
             val days = forecastDays.coerceIn(1, 10)
+            val hourlyPageSize = (days * 24).coerceIn(24, 240)
             val lat = location.latitude
             val lon = location.longitude
 
@@ -32,7 +33,7 @@ class GoogleWeatherProvider @Inject constructor(
                 googleWeatherApi.getCurrentConditions(apiKey, lat, lon)
             }
             val hourlyDeferred = async {
-                googleWeatherApi.getHourlyForecast(apiKey, lat, lon, pageSize = 24)
+                googleWeatherApi.getHourlyForecast(apiKey, lat, lon, pageSize = hourlyPageSize)
             }
             val dailyDeferred = async {
                 googleWeatherApi.getDailyForecast(apiKey, lat, lon, pageSize = days)

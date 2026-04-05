@@ -88,6 +88,7 @@ class WeatherDetailViewModel @Inject constructor(
     init {
         loadWeather()
         observeForecastDaysChanges()
+        observeWeatherProviderChanges()
     }
 
     /**
@@ -102,6 +103,26 @@ class WeatherDetailViewModel @Inject constructor(
                     val location = (uiState.value as? UiState.Success)?.data?.location
                         ?: return@collect
                     runCatching { refreshWeatherUseCase(location, forecastDays = days) }
+                }
+        }
+    }
+
+    /**
+     * Re-fetches weather whenever the backend provider changes so the detail screen
+     * does not keep showing stale cached data from the previously selected provider.
+     */
+    private fun observeWeatherProviderChanges() {
+        viewModelScope.launch {
+            dataStore.data
+                .map { prefs -> prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_WEATHER_PROVIDER] }
+                .drop(1)
+                .collect {
+                    val location = (uiState.value as? UiState.Success)?.data?.location
+                    if (location == null) {
+                        loadWeather()
+                    } else {
+                        runCatching { refreshWeatherUseCase(location, forecastDays = forecastDays.value) }
+                    }
                 }
         }
     }

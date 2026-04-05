@@ -127,9 +127,23 @@ class WeatherDtoMapper @Inject constructor() {
     }
 
     fun mapGeoLocation(dto: GeoLocationDto): Location {
+        val admin4 = dto.admin4?.trim()?.takeIf { it.isNotBlank() }
+        val admin3 = dto.admin3?.trim()?.takeIf { it.isNotBlank() }
+        val admin2 = dto.admin2?.trim()?.takeIf { it.isNotBlank() }
+        val admin1 = dto.admin1?.trim()?.takeIf { it.isNotBlank() }
+        val explicitName = dto.name.trim().takeIf { it.isNotBlank() }
+            ?.takeUnless { it == admin4 || it == admin3 || it == admin2 || it == admin1 }
+
+        val resolvedName = admin4
+            ?: admin3
+            ?: explicitName
+            ?: admin2
+            ?: admin1
+            ?: dto.name
+
         return Location(
             id = dto.id,
-            name = dto.name,
+            name = resolvedName,
             country = dto.country ?: dto.countryCode ?: "",
             latitude = dto.latitude,
             longitude = dto.longitude,
