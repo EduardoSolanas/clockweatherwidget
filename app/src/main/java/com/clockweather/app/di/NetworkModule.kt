@@ -39,7 +39,10 @@ object NetworkModule {
         .apply {
             if (BuildConfig.DEBUG) {
                 addInterceptor(HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
+                    // BODY logging floods Logcat with full weather payloads and can make
+                    // the debug console look like the app is crashing. Keep request/response
+                    // visibility in debug builds without dumping entire payloads.
+                    level = HttpLoggingInterceptor.Level.BASIC
                 })
             }
         }
