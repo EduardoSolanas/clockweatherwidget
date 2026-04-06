@@ -15,9 +15,15 @@ import androidx.datastore.preferences.core.preferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.clockweather.app.R
 import com.clockweather.app.di.WidgetEntryPoint
+import com.clockweather.app.domain.model.CurrentWeather
+import com.clockweather.app.domain.model.DailyForecast
+import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.TemperatureUnit
+import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
+import com.clockweather.app.domain.model.WindDirection
 import com.clockweather.app.domain.repository.LocationRepository
+import com.clockweather.app.domain.repository.WeatherRepository
 import io.mockk.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +39,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 @RunWith(RobolectricTestRunner::class)
@@ -44,6 +52,8 @@ class BaseWidgetUpdaterTest {
     private lateinit var mockResources: Resources
     private lateinit var appWidgetManager: AppWidgetManager
     private lateinit var entryPoint: WidgetEntryPoint
+    private lateinit var locationRepo: LocationRepository
+    private lateinit var weatherRepo: WeatherRepository
     private lateinit var updater: TestWidgetUpdater
 
     private val widgetId = 99
@@ -76,6 +86,25 @@ class BaseWidgetUpdaterTest {
         }
     }
 
+    private class ForecastLikeWidgetUpdater(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        entryPoint: WidgetEntryPoint,
+    ) : BaseWidgetUpdater(context, appWidgetManager, entryPoint) {
+        override val layoutResId = R.layout.widget_forecast
+        override val rootViewId = R.id.widget_root
+        override val dateViewId = R.id.widget_date
+        override val minimumFutureForecastDaysRequired = 7
+
+        override fun bindExtra(
+            views: RemoteViews,
+            weather: WeatherData,
+            tempUnit: TemperatureUnit,
+            prefs: Preferences,
+        ) {
+        }
+    }
+
     @Before
     fun setup() {
         mockkStatic(Log::class)
@@ -95,10 +124,14 @@ class BaseWidgetUpdaterTest {
         every { entryPoint.dataStore() } returns dataStore
         every { dataStore.data } returns flowOf(prefs)
 
-        val locationRepo: LocationRepository = mockk()
+        locationRepo = mockk()
         every { entryPoint.locationRepository() } returns locationRepo
         every { locationRepo.getSavedLocations() } returns flowOf(emptyList())
         coEvery { locationRepo.getCurrentLocation() } returns null
+
+        weatherRepo = mockk(relaxed = true)
+        every { entryPoint.weatherRepository() } returns weatherRepo
+        every { weatherRepo.getCachedWeatherData(any()) } returns flowOf(null)
 
         mockResources = mockk(relaxed = true)
         mockContext = mockk(relaxed = true)
@@ -261,6 +294,65 @@ class BaseWidgetUpdaterTest {
         confirmVerified(appWidgetManager)
     }
 
+    @Test
+    fun `updateWidget refreshes cached weather when cached data is from a previous day`() = runBlocking {
+        val location = Location(
+            id = 7L,
+            name = "London",
+            country = "UK",
+            latitude = 51.5072,
+            longitude = -0.1276,
+        )
+        val currentMinute = System.currentTimeMillis() / 60000L
+        mockkObject(ClockSnapshot.Companion)
+        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
+            localTime = LocalTime.of(10, 26),
+            epochMinute = currentMinute,
+        )
+        every { locationRepo.getSavedLocations() } returns flowOf(listOf(location))
+        every { weatherRepo.getCachedWeatherData(location.id) } returns flowOf(
+            sampleWeatherData(
+                location = location,
+                currentLastUpdated = LocalDateTime.of(2026, 4, 2, 23, 55),
+                startDate = LocalDate.of(2026, 4, 2),
+            ),
+        )
+
+        updater.updateWidget(widgetId)
+
+        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(location, 7) }
+    }
+
+    @Test
+    fun `forecast widget refreshes when cached data only contains six future days`() = runBlocking {
+        val location = Location(
+            id = 8L,
+            name = "London",
+            country = "UK",
+            latitude = 51.5072,
+            longitude = -0.1276,
+        )
+        val currentMinute = System.currentTimeMillis() / 60000L
+        mockkObject(ClockSnapshot.Companion)
+        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
+            localTime = LocalTime.of(10, 26),
+            epochMinute = currentMinute,
+        )
+        every { locationRepo.getSavedLocations() } returns flowOf(listOf(location))
+        every { weatherRepo.getCachedWeatherData(location.id) } returns flowOf(
+            sampleWeatherData(
+                location = location,
+                currentLastUpdated = LocalDateTime.of(2026, 4, 3, 9, 0),
+                startDate = LocalDate.of(2026, 4, 3),
+                dayCount = 7,
+            ),
+        )
+
+        ForecastLikeWidgetUpdater(mockContext, appWidgetManager, entryPoint).updateWidget(widgetId)
+
+        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(location, 8) }
+    }
+
     /**
      * Regression guard: clearDigits (settings change) must NOT trigger a full
      * [AppWidgetManager.updateAppWidget] when the baseline is already established.
@@ -286,5 +378,57 @@ class BaseWidgetUpdaterTest {
         verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
         verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
         confirmVerified(appWidgetManager)
+    }
+
+    private fun sampleWeatherData(
+        location: Location,
+        currentLastUpdated: LocalDateTime,
+        startDate: LocalDate,
+        dayCount: Int = 8,
+    ): WeatherData {
+        return WeatherData(
+            location = location,
+            currentWeather = CurrentWeather(
+                temperature = 17.0,
+                feelsLikeTemperature = 17.0,
+                humidity = 60,
+                dewPoint = 9.0,
+                precipitation = 0.0,
+                precipitationProbability = 0,
+                weatherCondition = WeatherCondition.PARTLY_CLOUDY_DAY,
+                isDay = true,
+                pressure = 1012.0,
+                windSpeed = 10.0,
+                windDirection = WindDirection.N,
+                windDirectionDegrees = 0,
+                windGusts = 12.0,
+                visibility = 10.0,
+                uvIndex = 5.0,
+                cloudCover = 30,
+                lastUpdated = currentLastUpdated,
+            ),
+            hourlyForecasts = emptyList(),
+            dailyForecasts = (0 until dayCount).map { offset ->
+                DailyForecast(
+                    date = startDate.plusDays(offset.toLong()),
+                    weatherCondition = WeatherCondition.CLEAR_DAY,
+                    temperatureMax = 20.0 + offset,
+                    temperatureMin = 10.0 + offset,
+                    feelsLikeMax = 20.0 + offset,
+                    feelsLikeMin = 10.0 + offset,
+                    sunrise = LocalTime.of(6, 0),
+                    sunset = LocalTime.of(19, 0),
+                    daylightDurationSeconds = 36000.0,
+                    precipitationSum = 0.0,
+                    precipitationProbability = 0,
+                    windSpeedMax = 10.0,
+                    windDirectionDominant = WindDirection.N,
+                    windDirectionDegrees = 0,
+                    uvIndexMax = 5.0,
+                    averageHumidity = 60,
+                    averagePressure = 1012.0,
+                )
+            },
+        )
     }
 }

@@ -22,6 +22,7 @@ class ForecastWidgetUpdater(
     override val dateViewId = R.id.widget_date
     override val usesSimpleClockDigits = true
     override val forceStaticClockRendering = true
+    override val minimumFutureForecastDaysRequired = 7
 
     override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
         WidgetDataBinder.bindWeeklyForecastRows(context, views, weather, tempUnit)

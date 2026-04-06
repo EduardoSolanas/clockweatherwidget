@@ -12,10 +12,12 @@ import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WindDirection
+import com.clockweather.app.util.DateFormatter
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
@@ -54,6 +56,7 @@ class WidgetDataBinderTest {
         every { context.getString(R.string.unit_celsius, 24.0) } returns "24°"
         every { context.getString(R.string.unit_celsius, 25.0) } returns "25°"
         every { context.getString(R.string.unit_celsius, 26.0) } returns "26°"
+        every { context.getString(R.string.unit_celsius, 27.0) } returns "27°"
 
         every { views.setTextViewText(any(), any()) } just Runs
         every { views.setImageViewResource(any(), any()) } just Runs
@@ -102,11 +105,16 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindWeeklyForecastRows binds first seven days and shows forecast container`() {
+    fun `bindWeeklyForecastRows skips current day and starts from tomorrow`() {
+        val today = LocalDate.of(2026, 4, 3)
+        mockkObject(DateFormatter)
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 10)) } returns "Fri"
+
         val weatherData = sampleWeatherData(
-            dailyForecasts = (0..6).map { offset ->
+            dailyForecasts = (0..7).map { offset ->
                 DailyForecast(
-                    date = LocalDate.of(2026, 4, 3).plusDays(offset.toLong()),
+                    date = today.plusDays(offset.toLong()),
                     weatherCondition = WeatherCondition.CLEAR_DAY,
                     temperatureMax = 20.0 + offset,
                     temperatureMin = 10.0 + offset,
@@ -127,12 +135,19 @@ class WidgetDataBinderTest {
             },
         )
 
-        WidgetDataBinder.bindWeeklyForecastRows(context, views, weatherData, TemperatureUnit.CELSIUS)
+        WidgetDataBinder.bindWeeklyForecastRows(
+            context = context,
+            views = views,
+            weatherData = weatherData,
+            temperatureUnit = TemperatureUnit.CELSIUS,
+            today = today,
+        )
 
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Today") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sat") }
         verify(exactly = 1) { views.setImageViewResource(R.id.fday1_icon, R.drawable.ic_widget_weather_clear_day) }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, "20°") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday7_high, "26°") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, "21°") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday7_name, "Fri") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday7_high, "27°") }
         verify(exactly = 1) { views.setViewVisibility(R.id.forecast_container, View.VISIBLE) }
     }
 

@@ -10,6 +10,7 @@ import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.presentation.detail.WeatherDetailActivity
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
+import java.time.LocalDate
 
 object WidgetDataBinder {
 
@@ -71,7 +72,8 @@ object WidgetDataBinder {
         context: Context,
         views: RemoteViews,
         weatherData: WeatherData,
-        temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS
+        temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
+        today: LocalDate = LocalDate.now(),
     ) {
         data class RowIds(val name: Int, val icon: Int, val high: Int)
         val rows = listOf(
@@ -83,10 +85,12 @@ object WidgetDataBinder {
             RowIds(R.id.fday6_name, R.id.fday6_icon, R.id.fday6_high),
             RowIds(R.id.fday7_name, R.id.fday7_icon, R.id.fday7_high),
         )
-        val futureDays = weatherData.dailyForecasts.take(7)
+        val futureDays = weatherData.dailyForecasts
+            .filter { it.date.isAfter(today) }
+            .take(7)
         futureDays.forEachIndexed { i, f ->
             val r = rows[i]
-            val dayLabel = if (i == 0) context.getString(R.string.label_today) else DateFormatter.formatDayName(f.date)
+            val dayLabel = DateFormatter.formatDayName(f.date)
             views.setTextViewText(r.name, dayLabel)
             views.setImageViewResource(r.icon, WeatherIconMapper.getDrawableResId(f.weatherCondition))
             val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit

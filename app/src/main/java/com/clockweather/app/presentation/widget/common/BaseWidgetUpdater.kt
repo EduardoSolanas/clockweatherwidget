@@ -39,6 +39,7 @@ abstract class BaseWidgetUpdater(
     abstract val dateViewId: Int
     open val usesSimpleClockDigits: Boolean = false
     open val forceStaticClockRendering: Boolean = false
+    open val minimumFutureForecastDaysRequired: Int = 0
 
     protected fun resolveUsesSimpleDigits(prefs: Preferences): Boolean {
         if (forceStaticClockRendering || usesSimpleClockDigits) return true
@@ -177,9 +178,12 @@ abstract class BaseWidgetUpdater(
                 }
 
                 var weather = weatherRepo.getCachedWeatherData(location.id).first()
-                if (weather == null && allowWeatherRefresh) {
+                if (allowWeatherRefresh && shouldRefreshWeather(weather, LocalDate.now(), minimumFutureForecastDaysRequired)) {
                     try {
-                        val forecastDays = prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_FORECAST_DAYS] ?: 7
+                        val forecastDays = requiredForecastDaysForRefresh(
+                            prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_FORECAST_DAYS] ?: 7,
+                            minimumFutureForecastDaysRequired,
+                        )
                         weatherRepo.refreshWeatherData(location, forecastDays)
                         weather = weatherRepo.getCachedWeatherData(location.id).first()
                     } catch (e: Exception) { }
@@ -308,3 +312,20 @@ internal fun shouldUseIncrementalClockBinding(
     isFirstRender: Boolean,
     isMinuteTick: Boolean
 ): Boolean = !isFirstRender && isMinuteTick
+
+internal fun shouldRefreshWeather(
+    weather: WeatherData?,
+    today: LocalDate,
+    minimumFutureForecastDaysRequired: Int = 0,
+): Boolean {
+    if (weather == null) return true
+    if (weather.currentWeather.lastUpdated.toLocalDate().isBefore(today)) return true
+    if (weather.dailyForecasts.firstOrNull()?.date?.isBefore(today) == true) return true
+    val futureDayCount = weather.dailyForecasts.count { it.date.isAfter(today) }
+    return futureDayCount < minimumFutureForecastDaysRequired
+}
+
+internal fun requiredForecastDaysForRefresh(
+    requestedForecastDays: Int,
+    minimumFutureForecastDaysRequired: Int,
+): Int = maxOf(requestedForecastDays, minimumFutureForecastDaysRequired + 1)
