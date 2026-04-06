@@ -102,7 +102,7 @@ class WeatherDetailViewModel @Inject constructor(
                 .collect { days ->
                     val location = (uiState.value as? UiState.Success)?.data?.location
                         ?: return@collect
-                    runCatching { refreshWeatherUseCase(location, forecastDays = days) }
+                    runCatching { refreshWeatherAndWidgets(location, days) }
                 }
         }
     }
@@ -121,7 +121,7 @@ class WeatherDetailViewModel @Inject constructor(
                     if (location == null) {
                         loadWeather()
                     } else {
-                        runCatching { refreshWeatherUseCase(location, forecastDays = forecastDays.value) }
+                        runCatching { refreshWeatherAndWidgets(location, forecastDays.value) }
                     }
                 }
         }
@@ -146,7 +146,7 @@ class WeatherDetailViewModel @Inject constructor(
                 val location = locations.first()
 
                 try {
-                    refreshWeatherUseCase(location, forecastDays = forecastDays.value)
+                    refreshWeatherAndWidgets(location, forecastDays.value)
                 } catch (e: Exception) {
                     // Network failed — continue with cache
                 }
@@ -207,7 +207,7 @@ class WeatherDetailViewModel @Inject constructor(
                     // Location context changed (or we had no active context): restart the load stream.
                     loadWeather()
                 } else {
-                    refreshWeatherUseCase(resolvedLocation, forecastDays = forecastDays.value)
+                    refreshWeatherAndWidgets(resolvedLocation, forecastDays.value)
                 }
             } catch (e: Exception) {
                 // ignore
@@ -215,5 +215,14 @@ class WeatherDetailViewModel @Inject constructor(
                 _isRefreshing.value = false
             }
         }
+    }
+
+    private suspend fun refreshWeatherAndWidgets(
+        location: com.clockweather.app.domain.model.Location,
+        forecastDays: Int
+    ) {
+        refreshWeatherUseCase(location, forecastDays = forecastDays)
+        val app = context.applicationContext as? com.clockweather.app.ClockWeatherApplication
+        app?.refreshAllWidgets(app, isClockTick = false)
     }
 }
