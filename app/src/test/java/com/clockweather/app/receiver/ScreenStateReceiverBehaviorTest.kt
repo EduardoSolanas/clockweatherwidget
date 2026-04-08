@@ -192,6 +192,54 @@ class ScreenStateReceiverBehaviorTest {
         coVerify(exactly = 0) { app.syncClockNow(any(), any(), any()) }
     }
 
+    // ── Immediate clock push on unlock ───────────────────────────
+
+    @Test
+    fun `SCREEN_ON pushes clock immediately regardless of keyguard state`() {
+        receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_ON))
+
+        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true) }
+    }
+
+    @Test
+    fun `SCREEN_ON while keyguard locked still pushes clock immediately`() {
+        every { keyguardManager.isKeyguardLocked } returns true
+
+        receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_ON))
+
+        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true) }
+    }
+
+    @Test
+    fun `USER_PRESENT pushes clock immediately before convergence`() {
+        receiver.onReceive(context, Intent(Intent.ACTION_USER_PRESENT))
+
+        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true) }
+    }
+
+    @Test
+    fun `DREAMING_STOPPED pushes clock immediately when not keyguard locked`() {
+        receiver.onReceive(context, Intent(Intent.ACTION_DREAMING_STOPPED))
+
+        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true) }
+    }
+
+    @Test
+    fun `DREAMING_STOPPED while keyguard locked still pushes clock immediately`() {
+        every { keyguardManager.isKeyguardLocked } returns true
+
+        receiver.onReceive(context, Intent(Intent.ACTION_DREAMING_STOPPED))
+
+        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true) }
+    }
+
+    @Test
+    fun `SCREEN_OFF does not push clock immediately`() {
+        receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_OFF))
+
+        verify(exactly = 0) { app.pushClockInstant(any(), any(), any(), any()) }
+    }
+
     // ── Unlock convergence throttle ───────────────────────────────
 
     @Test

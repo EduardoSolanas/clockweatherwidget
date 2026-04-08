@@ -227,12 +227,23 @@ class ClockAlarmReceiverTest {
     // ── scheduleKeepalive ─────────────────────────────────────
 
     @Test
-    fun `scheduleKeepalive sets an alarm when active widgets exist`() {
+    fun `scheduleKeepalive uses exact alarm when canScheduleExactAlarms is true`() {
+        every { alarmManager.canScheduleExactAlarms() } returns true
+
         ClockAlarmReceiver.scheduleKeepalive(context)
 
-        // Verify an alarm was set (not cancelled)
+        verify { alarmManager.setExactAndAllowWhileIdle(any(), any(), any()) }
+        verify(exactly = 0) { alarmManager.setAndAllowWhileIdle(any(), any(), any()) }
+    }
+
+    @Test
+    fun `scheduleKeepalive falls back to inexact alarm when canScheduleExactAlarms is false`() {
+        every { alarmManager.canScheduleExactAlarms() } returns false
+
+        ClockAlarmReceiver.scheduleKeepalive(context)
+
         verify { alarmManager.setAndAllowWhileIdle(any(), any(), any()) }
-        verify(exactly = 0) { alarmManager.cancel(any<android.app.PendingIntent>()) }
+        verify(exactly = 0) { alarmManager.setExactAndAllowWhileIdle(any(), any(), any()) }
     }
 
     @Test

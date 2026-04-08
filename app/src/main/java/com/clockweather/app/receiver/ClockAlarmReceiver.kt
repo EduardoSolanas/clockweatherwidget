@@ -256,7 +256,11 @@ class ClockAlarmReceiver : BroadcastReceiver() {
             val pendingIntent = keepalivePendingIntent(context)
 
             val triggerAt = System.currentTimeMillis() + KEEPALIVE_INTERVAL_MS
-            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            } else {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            }
             Log.d(TAG, "Keepalive alarm scheduled for ${KEEPALIVE_INTERVAL_MS / 1000}s from now")
         }
 

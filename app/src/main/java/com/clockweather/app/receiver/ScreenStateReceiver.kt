@@ -34,6 +34,9 @@ class ScreenStateReceiver : BroadcastReceiver() {
             Intent.ACTION_SCREEN_ON -> {
                 Log.d(TAG, "Screen ON - register TIME_TICK + unlock convergence")
                 app.registerTimeTickReceiver()
+                // Snap to correct time immediately so the user never sees a stale clock
+                // on wake, regardless of whether the keyguard is still showing.
+                app.pushClockInstant(forceAllDigits = true)
                 if (isKeyguardLocked(context)) {
                     Log.d(TAG, "Screen ON while keyguard locked - waiting for USER_PRESENT before convergence")
                 } else {
@@ -42,6 +45,9 @@ class ScreenStateReceiver : BroadcastReceiver() {
             }
             Intent.ACTION_USER_PRESENT -> {
                 Log.d(TAG, "User present - unlock convergence")
+                // Push again after unlock in case the keyguard was hiding the widget
+                // and the SCREEN_ON push was suppressed or the minute has since changed.
+                app.pushClockInstant(forceAllDigits = true)
                 launchUnlockConvergence(app, context, Intent.ACTION_USER_PRESENT)
             }
             Intent.ACTION_DREAMING_STARTED -> {
@@ -52,6 +58,7 @@ class ScreenStateReceiver : BroadcastReceiver() {
             Intent.ACTION_DREAMING_STOPPED -> {
                 Log.d(TAG, "Dreaming stopped - register TIME_TICK + unlock convergence")
                 app.registerTimeTickReceiver()
+                app.pushClockInstant(forceAllDigits = true)
                 if (isKeyguardLocked(context)) {
                     Log.d(TAG, "Dreaming stopped while keyguard locked - waiting for USER_PRESENT before convergence")
                 } else {
