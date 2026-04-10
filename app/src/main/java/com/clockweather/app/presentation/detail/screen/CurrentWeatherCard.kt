@@ -41,9 +41,15 @@ import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.launch
+
+// ─── Today resolution helper (kept internal for tests) ───────────────────────
+
+internal fun resolveForecastIsToday(forecastDate: LocalDate, today: LocalDate): Boolean =
+    forecastDate == today
 
 // ─── Debug: all conditions in cycle order ─────────────────────────────────────
 private val DEBUG_CONDITIONS = WeatherCondition.entries.toList()
@@ -448,7 +454,7 @@ private fun SevenDayForecastCard(
                     ForecastDayColumn(
                         forecast = forecast,
                         temperatureUnit = temperatureUnit,
-                        isToday = index == 0,
+                        isToday = resolveForecastIsToday(forecast.date, LocalDate.now()),
                         isSelected = index == selectedDayIndex,
                         onClick = { onDaySelected(index) },
                         // scrollable → fixed width matching 7-day proportions

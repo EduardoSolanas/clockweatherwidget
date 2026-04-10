@@ -141,9 +141,46 @@ class HourlyWeatherGraphTest {
         assertEquals(CurrentHourSelectionOverlayMetrics(offsetXPx = 406, widthPx = 56), metrics)
     }
 
-    private fun buildForecasts(date: LocalDate, count: Int): List<HourlyForecast> =
-        (0 until count).map { hour ->
-            buildForecast(date, hour)
+    // ── resolveCurrentHourIndex ───────────────────────────────────────────────
+
+    @Test
+    fun `resolveCurrentHourIndex returns index of first matching hour`() {
+        val today = LocalDate.of(2026, 4, 10)
+        val hours = buildForecasts(today, 6, startHour = 10)  // hours 10..15
+
+        assertEquals(2, resolveCurrentHourIndex(hours, nowHour = 12))
+    }
+
+    @Test
+    fun `resolveCurrentHourIndex returns 0 when no hour matches`() {
+        val today = LocalDate.of(2026, 4, 10)
+        val hours = buildForecasts(today, 4, startHour = 10)  // hours 10..13
+
+        assertEquals(0, resolveCurrentHourIndex(hours, nowHour = 5))
+    }
+
+    @Test
+    fun `resolveCurrentHourIndex returns 0 for first hour of the day`() {
+        val today = LocalDate.of(2026, 4, 10)
+        val hours = buildForecasts(today, 8, startHour = 0)  // hours 0..7
+
+        assertEquals(0, resolveCurrentHourIndex(hours, nowHour = 0))
+    }
+
+    @Test
+    fun `resolveCurrentHourIndex handles midnight rollover (hour 0 after 23)`() {
+        val today = LocalDate.of(2026, 4, 10)
+        val tomorrow = today.plusDays(1)
+        val hours = buildForecasts(today, 4, startHour = 21) +  // 21,22,23
+            buildForecasts(tomorrow, 4, startHour = 0)          // 0,1,2,3
+
+        // nowHour=0 belongs to tomorrow's first slot (index 3)
+        assertEquals(3, resolveCurrentHourIndex(hours, nowHour = 0))
+    }
+
+    private fun buildForecasts(date: LocalDate, count: Int, startHour: Int = 0): List<HourlyForecast> =
+        (0 until count).map { i ->
+            buildForecast(date, (startHour + i) % 24)
         }
 
     private fun buildForecast(date: LocalDate, hour: Int): HourlyForecast =

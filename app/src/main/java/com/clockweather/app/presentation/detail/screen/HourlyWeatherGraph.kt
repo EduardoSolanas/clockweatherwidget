@@ -103,6 +103,11 @@ private val PrecipColor = Color(0xFF64B5F6)
 private val CurrentHourBorderColor  = Color.White.copy(alpha = 0.92f)
 private val CurrentHourBorderWidth  = 2.dp
 
+// ── Current-hour index helper (kept internal for tests) ──────────────────────
+
+internal fun resolveCurrentHourIndex(hours: List<HourlyForecast>, nowHour: Int): Int =
+    hours.indexOfFirst { it.dateTime.hour == nowHour }.coerceAtLeast(0)
+
 // ── Public composable ─────────────────────────────────────────────────────────
 
 @Composable
@@ -112,8 +117,9 @@ fun HourlyWeatherGraph(
     modifier: Modifier = Modifier,
     selectedDate: LocalDate? = null
 ) {
-    val hours = remember(hourlyForecasts, selectedDate) {
-        scopedHourlyForecasts(hourlyForecasts, selectedDate)
+    val (hours, referenceDateTime) = remember(hourlyForecasts, selectedDate) {
+        val ref = LocalDateTime.now()
+        scopedHourlyForecasts(hourlyForecasts, selectedDate, ref) to ref
     }
     if (hours.size < 2) return
 
@@ -129,7 +135,7 @@ fun HourlyWeatherGraph(
     val padMax  = rawMax + spread * 0.30
 
     val resolvedDate   = selectedDate ?: hours.first().dateTime.toLocalDate()
-    val isTodayView    = resolvedDate == LocalDate.now()
+    val isTodayView    = resolvedDate == referenceDateTime.toLocalDate()
     val subtitleText = if (isTodayView) {
         "${stringResource(R.string.label_today)} · ${hours.size}h"
     } else {
@@ -150,10 +156,7 @@ fun HourlyWeatherGraph(
     // Auto-scroll: bring current hour into view (today only)
     val currentIdx = remember(hours, isTodayView) {
         if (!isTodayView) 0
-        else {
-            val nowHour = java.time.LocalTime.now().hour
-            hours.indexOfFirst { it.dateTime.hour == nowHour }.coerceAtLeast(0)
-        }
+        else resolveCurrentHourIndex(hours, referenceDateTime.toLocalTime().hour)
     }
     LaunchedEffect(currentIdx, hours.size, isTodayView) {
         val targetPx = ((currentIdx - 1).coerceAtLeast(0) * layoutMetrics.columnWidthPx)

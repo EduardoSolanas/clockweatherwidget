@@ -42,7 +42,7 @@ class GoogleWeatherMapper @Inject constructor() {
     private fun mapCurrent(dto: GoogleCurrentConditionsDto): CurrentWeather {
         val windDeg = dto.wind?.direction?.degrees?.toInt() ?: 0
         val lastUpdated = runCatching {
-            Instant.parse(dto.currentTime).atZone(ZoneOffset.UTC).toLocalDateTime()
+            Instant.parse(dto.currentTime).atZone(ZoneId.systemDefault()).toLocalDateTime()
         }.getOrElse { LocalDateTime.now() }
 
         return CurrentWeather(
