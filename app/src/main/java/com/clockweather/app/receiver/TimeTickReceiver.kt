@@ -30,15 +30,21 @@ class TimeTickReceiver : BroadcastReceiver() {
         Log.d(TAG, "TIME_TICK received minute=$currentEpochMinute")
 
         val app = context.applicationContext as? ClockWeatherApplication ?: return
+        // Read previous before marking so we can detect a gap (process was frozen).
+        val previousObservedMinute = app.getLastObservedTimeTickEpochMinute()
         app.markTimeTickObserved(currentEpochMinute)
+        // If the last observed minute is not exactly one behind, the process was
+        // frozen (or this is the first tick). Force all digits so the launcher
+        // cannot show stale hours that a delta push would leave untouched.
+        val hasGap = previousObservedMinute != currentEpochMinute - 1L
         val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
             try {
                 withTimeout(10_000) {
                     if (app.areAllActiveWidgetBaselinesReady()) {
-                        Log.d(TAG, "TIME_TICK using quiet instant clock push minute=$currentEpochMinute")
+                        Log.d(TAG, "TIME_TICK using quiet instant clock push minute=$currentEpochMinute hasGap=$hasGap")
                         app.pushClockInstant(
-                            forceAllDigits = false,
+                            forceAllDigits = hasGap,
                             suppressAnimationWindow = true,
                             quietRender = true
                         )

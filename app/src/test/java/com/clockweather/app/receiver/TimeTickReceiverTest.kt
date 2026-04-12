@@ -109,6 +109,9 @@ class TimeTickReceiverTest {
 
     @Test
     fun `onReceive TIME_TICK uses quiet instant push when baselines are ready`() {
+        // Simulate continuous delivery: previous tick was exactly one minute ago (no gap)
+        every { app.getLastObservedTimeTickEpochMinute() } returns System.currentTimeMillis() / 60000L - 1L
+
         receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
 
         Thread.sleep(1500)
@@ -121,6 +124,24 @@ class TimeTickReceiverTest {
             )
         }
         coVerify(exactly = 0) { app.refreshAllWidgets(any(), any(), any()) }
+    }
+
+    @Test
+    fun `onReceive TIME_TICK forces all digits when process was frozen (gap in observed minutes)`() {
+        // Previous observed minute is stale — process was frozen for multiple minutes
+        every { app.getLastObservedTimeTickEpochMinute() } returns System.currentTimeMillis() / 60000L - 5L
+
+        receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
+
+        Thread.sleep(1500)
+
+        verify(timeout = 1500) {
+            app.pushClockInstant(
+                forceAllDigits = true,
+                suppressAnimationWindow = true,
+                quietRender = true
+            )
+        }
     }
 
     @Test

@@ -63,6 +63,24 @@ class PackageReplacedReceiverTest {
     }
 
     @Test
+    fun `invalidateAllWidgetBaselines is called before syncClockNow on package replace`() {
+        val callOrder = mutableListOf<String>()
+        every { app.invalidateAllWidgetBaselines() } answers { callOrder += "invalidate" }
+        coEvery { app.syncClockNow(context, suppressAnimation = true, reassertAfterReschedule = true) } answers {
+            callOrder += "sync"
+        }
+
+        receiver.onReceive(context, Intent(Intent.ACTION_MY_PACKAGE_REPLACED))
+
+        Thread.sleep(1000)
+
+        verify(timeout = 1000) { app.invalidateAllWidgetBaselines() }
+        assert(callOrder == listOf("invalidate", "sync")) {
+            "Expected invalidate before sync, got: $callOrder"
+        }
+    }
+
+    @Test
     fun `my package replaced does nothing when no widgets are active`() {
         every { appWidgetManager.getAppWidgetIds(any<ComponentName>()) } returns intArrayOf()
 

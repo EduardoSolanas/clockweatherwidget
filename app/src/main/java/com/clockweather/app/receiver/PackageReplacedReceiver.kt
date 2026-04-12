@@ -34,6 +34,11 @@ class PackageReplacedReceiver : BroadcastReceiver() {
 
                     app.registerScreenStateReceiver()
                     app.registerTimeTickReceiver()
+                    // Clear stored digit state so the next pushClockInstant sees prev==null
+                    // and pushes all 4 digits. Without this, the launcher's post-update
+                    // layout reset to "0000" defaults causes hour digits to stay at "00"
+                    // because the delta push finds hours "unchanged" vs the stale stored state.
+                    app.invalidateAllWidgetBaselines()
                     app.syncClockNow(
                         context,
                         suppressAnimation = true,

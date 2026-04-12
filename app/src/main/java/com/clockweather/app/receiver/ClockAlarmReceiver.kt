@@ -124,9 +124,10 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                                     "Interactive backup tick: minute=$currentEpochMinute stale=true timeTickObserved=$timeTickObserved"
                                 )
                                 app.pushClockInstant(
-                                    // Backup should correct stale time with minimal visual churn.
-                                    // Delta mode updates only changed digits instead of repainting all 4.
-                                    forceAllDigits = false,
+                                    // Force all digits: the process may have been frozen while
+                                    // the screen was on, so the launcher could be showing stale
+                                    // digits that the stored prev state no longer matches.
+                                    forceAllDigits = true,
                                     suppressAnimationWindow = false,
                                     quietRender = true
                                 )
