@@ -45,21 +45,31 @@ class TimeTickReceiver : BroadcastReceiver() {
                         // Alarm backup already rendered this minute before TIME_TICK arrived.
                         // Skip the redundant push to avoid double-rendering and flicker.
                         Log.d(TAG, "TIME_TICK skipping push — minute=$currentEpochMinute already fully rendered")
-                    } else if (app.areAllActiveWidgetBaselinesReady()) {
-                        Log.d(TAG, "TIME_TICK using quiet instant clock push minute=$currentEpochMinute hasGap=$hasGap")
-                        app.pushClockInstant(
-                            forceAllDigits = hasGap,
-                            suppressAnimationWindow = true,
-                            quietRender = true,
-                            source = "TIME_TICK"
-                        )
                     } else {
-                        Log.d(TAG, "TIME_TICK baselines missing — falling back to clock-only widget refresh minute=$currentEpochMinute")
-                        app.refreshAllWidgets(
-                            context,
-                            isClockTick = true,
-                            allowAnimation = false
-                        )
+                        // Serialize the baseline-ready check with concurrent refreshAllWidgets
+                        // calls so TIME_TICK never reads a stale baseline mid-write.
+                        // refreshAllWidgets must be called OUTSIDE the mutex (it acquires it).
+                        var pushedInstant = false
+                        app.withClockMutex {
+                            if (app.areAllActiveWidgetBaselinesReady()) {
+                                Log.d(TAG, "TIME_TICK using quiet instant clock push minute=$currentEpochMinute hasGap=$hasGap")
+                                app.pushClockInstant(
+                                    forceAllDigits = hasGap,
+                                    suppressAnimationWindow = true,
+                                    quietRender = true,
+                                    source = "TIME_TICK"
+                                )
+                                pushedInstant = true
+                            }
+                        }
+                        if (!pushedInstant) {
+                            Log.d(TAG, "TIME_TICK baselines missing — falling back to clock-only widget refresh minute=$currentEpochMinute")
+                            app.refreshAllWidgets(
+                                context,
+                                isClockTick = true,
+                                allowAnimation = false
+                            )
+                        }
                     }
                     // Re-anchor backup alarm cadence to the system minute tick.
                     // This keeps AlarmManager fallback aligned to minute boundaries

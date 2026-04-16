@@ -26,3 +26,9 @@ build_output.txt
 node_modules/
 package.json
 package-lock.json
+.agents
+
+# Build/lint artefacts left in repo root
+lintRelease.log
+processReleaseResources.log
+ui_dump_now.xml

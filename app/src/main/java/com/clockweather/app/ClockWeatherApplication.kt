@@ -495,6 +495,15 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
 
     // ── Helpers ─────────────────────────────────────────────────────
 
+    /**
+     * Runs [block] under [widgetRefreshMutex] so callers outside this class can
+     * serialize a read-then-write pair against concurrent [refreshAllWidgets] calls.
+     * Do NOT call [refreshAllWidgets] from inside [block] — it acquires the same mutex.
+     */
+    suspend fun withClockMutex(block: suspend () -> Unit) {
+        widgetRefreshMutex.withLock { block() }
+    }
+
     /** Read the high-precision preference. Defaults to true. */
     suspend fun resolveHighPrecision(): Boolean {
         return try {

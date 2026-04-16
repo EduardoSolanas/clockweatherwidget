@@ -30,7 +30,7 @@ Priority legend: **P0** — observable user-facing risk · **P1** — robustness
   - Fix: replace the read-then-write pair with a single `AtomicLong.getAndSet(current)` and compute gap from the returned previous value.
   - Test first: failing concurrency test dispatching two TIME_TICK events on parallel dispatchers and asserting gap detection reports a single `+1` transition.
 
-- [ ] **Protect baseline check + instant push under the refresh mutex**
+- [x] **Protect baseline check + instant push under the refresh mutex**
   - Symptom: `areAllActiveWidgetBaselinesReady()` is read outside `widgetRefreshMutex`, then `pushClockInstant()` runs. A concurrent `refreshAllWidgets()` can be mid-write, so the TIME_TICK path may see stale baseline-ready state and take the slow path unnecessarily (or vice-versa).
   - File: [ClockWeatherApplication.kt:482-525](app/src/main/java/com/clockweather/app/ClockWeatherApplication.kt:482) and [TimeTickReceiver.kt:44](app/src/main/java/com/clockweather/app/receiver/TimeTickReceiver.kt:44)
   - Fix: expose a `withClockMutex { ... }` helper and run the check + push inside it. Keep the critical section tiny.

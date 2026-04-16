@@ -43,6 +43,10 @@ class TimeTickReceiverTest {
         every { app.isCurrentMinuteFullyRendered(any()) } returns false
         every { app.areAllActiveWidgetBaselinesReady() } returns true
         every { app.getAndMarkTimeTickObserved(any()) } returns -1L  // default: no prior tick (first tick → gap)
+        coEvery { app.withClockMutex(any()) } coAnswers {
+            @Suppress("UNCHECKED_CAST")
+            (args[0] as suspend () -> Unit)()
+        }
         coEvery { app.refreshAllWidgets(any(), any(), any()) } just Runs
         coEvery { app.resolveHighPrecision() } returns true
 
@@ -58,6 +62,17 @@ class TimeTickReceiverTest {
     @After
     fun teardown() {
         unmockkAll()
+    }
+
+    // ── Mutex guard ───────────────────────────────────────────────
+
+    @Test
+    fun `TIME_TICK baseline check and push run inside withClockMutex`() {
+        receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
+
+        Thread.sleep(1500)
+
+        coVerify(timeout = 1500) { app.withClockMutex(any()) }
     }
 
     // ── Intent filter ─────────────────────────────────────────────
