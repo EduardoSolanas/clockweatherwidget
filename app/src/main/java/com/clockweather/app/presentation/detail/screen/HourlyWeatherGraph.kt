@@ -511,9 +511,8 @@ private fun HourlyMetaSlice(
 
         Text(
             text = stringResource(R.string.unit_percent, hour.precipitationProbability),
-            style = MaterialTheme.typography.labelSmall,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
             color = if (hour.precipitationProbability > 0) PrecipColor else onSurfaceVariant,
             maxLines = 1,
             textAlign = TextAlign.Center,

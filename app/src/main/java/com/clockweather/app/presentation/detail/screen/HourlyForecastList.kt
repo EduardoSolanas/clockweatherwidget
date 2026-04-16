@@ -156,7 +156,8 @@ fun HourlyForecastItem(forecast: HourlyForecast, temperatureUnit: TemperatureUni
                     )
                     Text(
                         text = stringResource(R.string.label_precip_percent, forecast.precipitationProbability),
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
