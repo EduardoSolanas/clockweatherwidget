@@ -73,6 +73,10 @@ class ClockAlarmReceiverTest {
         every { app.isTimeTickReceiverRegistered() } returns false
         coEvery { app.refreshAllWidgets(any(), any(), any()) } just Runs
         every { app.pushClockInstant(any(), any(), any(), any(), any()) } just Runs
+        coEvery { app.withClockMutex(any()) } coAnswers {
+            @Suppress("UNCHECKED_CAST")
+            (args[0] as suspend () -> Unit)()
+        }
         coEvery { app.resolveHighPrecision() } returns true
 
         every { powerManager.isInteractive } returns true
@@ -104,6 +108,19 @@ class ClockAlarmReceiverTest {
             )
         }
         verify(exactly = 0) { app.pushClockInstant(any(), any(), any()) }
+    }
+
+    @Test
+    fun `onReceive with screen ON and TIME_TICK registered wraps stale-check and push inside withClockMutex`() {
+        every { powerManager.isInteractive } returns true
+        every { app.isTimeTickReceiverRegistered() } returns true
+        every { app.getLastObservedTimeTickEpochMinute() } returns -1L
+
+        receiver.onReceive(context, Intent(ClockAlarmReceiver.ACTION_ALARM_TICK))
+
+        Thread.sleep(3400)
+
+        coVerify(timeout = 3000) { app.withClockMutex(any()) }
     }
 
     @Test

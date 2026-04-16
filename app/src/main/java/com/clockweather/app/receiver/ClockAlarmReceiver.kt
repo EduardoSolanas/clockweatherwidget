@@ -109,7 +109,6 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                                 )
                             }
                             val timeTickObserved = app.getLastObservedTimeTickEpochMinute() == currentEpochMinute
-                            val staleForMinute = hasAnyWidgetStaleForMinute(context, currentEpochMinute)
                             if (timeTickObserved) {
                                 // TIME_TICK already drove this minute's render path.
                                 // Avoid running an overlapping backup push in the same
@@ -118,22 +117,30 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                                     TAG,
                                     "CLOCK_TRACE alarmDecision minute=$currentEpochMinute action=skip reason=time_tick_observed"
                                 )
-                            } else if (staleForMinute) {
-                                Log.d(
-                                    TAG,
-                                    "Interactive backup tick: minute=$currentEpochMinute stale=true timeTickObserved=$timeTickObserved"
-                                )
-                                app.pushClockInstant(
-                                    // Force all digits: the process may have been frozen while
-                                    // the screen was on, so the launcher could be showing stale
-                                    // digits that the stored prev state no longer matches.
-                                    forceAllDigits = true,
-                                    suppressAnimationWindow = false,
-                                    quietRender = true,
-                                    source = "ALARM_BACKUP"
-                                )
                             } else {
-                                Log.d(TAG, "CLOCK_TRACE alarmDecision minute=$currentEpochMinute action=skip reason=already_rendered_not_stale")
+                                // Serialize the stale-check and backup push against
+                                // concurrent refreshAllWidgets so the alarm never reads
+                                // stale rendered-minute state mid-write.
+                                app.withClockMutex {
+                                    val staleForMinute = hasAnyWidgetStaleForMinute(context, currentEpochMinute)
+                                    if (staleForMinute) {
+                                        Log.d(
+                                            TAG,
+                                            "Interactive backup tick: minute=$currentEpochMinute stale=true timeTickObserved=$timeTickObserved"
+                                        )
+                                        app.pushClockInstant(
+                                            // Force all digits: the process may have been frozen while
+                                            // the screen was on, so the launcher could be showing stale
+                                            // digits that the stored prev state no longer matches.
+                                            forceAllDigits = true,
+                                            suppressAnimationWindow = false,
+                                            quietRender = true,
+                                            source = "ALARM_BACKUP"
+                                        )
+                                    } else {
+                                        Log.d(TAG, "CLOCK_TRACE alarmDecision minute=$currentEpochMinute action=skip reason=already_rendered_not_stale")
+                                    }
+                                }
                             }
                         } else {
                             Log.d(TAG, "CLOCK_TRACE alarmDecision action=refreshAllWidgets reason=time_tick_receiver_not_registered")

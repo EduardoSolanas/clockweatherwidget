@@ -97,8 +97,7 @@ class TimeTickReceiverTest {
         verify(exactly = 1) {
             app.getAndMarkTimeTickObserved(match { it >= System.currentTimeMillis() / 60000L - 1 })
         }
-        // The old separate calls must NOT be used by TimeTickReceiver
-        verify(exactly = 0) { app.markTimeTickObserved(any()) }
+        // getLastObservedTimeTickEpochMinute must NOT be used directly by TimeTickReceiver
         verify(exactly = 0) { app.getLastObservedTimeTickEpochMinute() }
     }
 
@@ -111,7 +110,6 @@ class TimeTickReceiverTest {
         Thread.sleep(300)
 
         coVerify(exactly = 0) { app.refreshAllWidgets(any(), any(), any()) }
-        verify(exactly = 0) { app.markTimeTickObserved(any()) }
     }
 
     @Test

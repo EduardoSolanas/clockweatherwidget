@@ -208,10 +208,6 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
 
     fun isTimeTickReceiverRegistered(): Boolean = timeTickReceiver != null
 
-    fun markTimeTickObserved(epochMinute: Long) {
-        lastObservedTimeTickEpochMinute.set(epochMinute)
-    }
-
     fun getLastObservedTimeTickEpochMinute(): Long = lastObservedTimeTickEpochMinute.get()
 
     /**
