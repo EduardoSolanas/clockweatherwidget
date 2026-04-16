@@ -72,7 +72,7 @@ class ClockAlarmReceiverTest {
         every { app.getLastObservedTimeTickEpochMinute() } returns -1L
         every { app.isTimeTickReceiverRegistered() } returns false
         coEvery { app.refreshAllWidgets(any(), any(), any()) } just Runs
-        every { app.pushClockInstant(any(), any(), any(), any()) } just Runs
+        every { app.pushClockInstant(any(), any(), any(), any(), any()) } just Runs
         coEvery { app.resolveHighPrecision() } returns true
 
         every { powerManager.isInteractive } returns true
@@ -127,7 +127,8 @@ class ClockAlarmReceiverTest {
             app.pushClockInstant(
                 forceAllDigits = true,
                 suppressAnimationWindow = false,
-                quietRender = true
+                quietRender = true,
+                source = "ALARM_BACKUP"
             )
         }
     }
@@ -254,6 +255,29 @@ class ClockAlarmReceiverTest {
 
         verify(exactly = 0) { alarmManager.setAndAllowWhileIdle(any(), any(), any()) }
         verify(exactly = 0) { alarmManager.set(any(), any(), any<android.app.PendingIntent>()) }
+    }
+
+    @Test
+    fun `scheduleNextTick does not reschedule when widgets removed between initial check and finally block`() {
+        every { powerManager.isInteractive } returns true
+        every { app.isTimeTickReceiverRegistered() } returns false
+
+        // hasAnyActiveWidgets uses .any{} which short-circuits on the first non-empty result.
+        // callCount==1: first provider returns widgets (receiver enters refresh path).
+        // callCount>=2: all providers return empty (simulates widget removed mid-refresh).
+        var callCount = 0
+        every { appWidgetManager.getAppWidgetIds(any<ComponentName>()) } answers {
+            callCount++
+            if (callCount == 1) intArrayOf(1) else intArrayOf()
+        }
+
+        receiver.onReceive(context, Intent(ClockAlarmReceiver.ACTION_ALARM_TICK))
+
+        Thread.sleep(3500)
+
+        // scheduleNextTick guards with hasAnyActiveWidgets — must cancel, not schedule
+        verify(exactly = 0) { alarmManager.setExactAndAllowWhileIdle(any(), any(), any()) }
+        verify(exactly = 0) { alarmManager.setAndAllowWhileIdle(any(), any(), any()) }
     }
 
     @Test

@@ -57,5 +57,24 @@ object WidgetPrefsCache {
      * where blocking is unacceptable.
      */
     fun getCachedSnapshot(): Preferences? = snapshot
+
+    /**
+     * Synchronously seeds the cache if it hasn't been seeded yet.
+     * Safe to call from [com.clockweather.app.ClockWeatherApplication.onCreate] on the main thread
+     * because the DataStore file is small and this only blocks on first access.
+     * Eliminates the cold-start race where [getCachedSnapshot] returns null before the
+     * async flow emits its first value.
+     */
+    fun seedBlocking(dataStore: DataStore<Preferences>) {
+        if (snapshot == null) {
+            snapshot = runBlocking { dataStore.data.first() }
+        }
+    }
+
+    /** Only for use in tests to reset singleton state between test cases. */
+    fun resetForTesting() {
+        snapshot = null
+        initialized = false
+    }
 }
 

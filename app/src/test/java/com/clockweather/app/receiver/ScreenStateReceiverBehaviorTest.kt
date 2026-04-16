@@ -198,7 +198,7 @@ class ScreenStateReceiverBehaviorTest {
     fun `SCREEN_ON pushes clock immediately regardless of keyguard state`() {
         receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_ON))
 
-        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true) }
+        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true, source = "SCREEN_ON") }
     }
 
     @Test
@@ -207,21 +207,21 @@ class ScreenStateReceiverBehaviorTest {
 
         receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_ON))
 
-        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true) }
+        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true, source = "SCREEN_ON") }
     }
 
     @Test
     fun `USER_PRESENT pushes clock immediately before convergence`() {
         receiver.onReceive(context, Intent(Intent.ACTION_USER_PRESENT))
 
-        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true) }
+        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true, source = "USER_PRESENT") }
     }
 
     @Test
     fun `DREAMING_STOPPED pushes clock immediately when not keyguard locked`() {
         receiver.onReceive(context, Intent(Intent.ACTION_DREAMING_STOPPED))
 
-        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true) }
+        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true, source = "DREAMING_STOPPED") }
     }
 
     @Test
@@ -230,14 +230,14 @@ class ScreenStateReceiverBehaviorTest {
 
         receiver.onReceive(context, Intent(Intent.ACTION_DREAMING_STOPPED))
 
-        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true) }
+        verify(exactly = 1) { app.pushClockInstant(forceAllDigits = true, source = "DREAMING_STOPPED") }
     }
 
     @Test
     fun `SCREEN_OFF does not push clock immediately`() {
         receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_OFF))
 
-        verify(exactly = 0) { app.pushClockInstant(any(), any(), any(), any()) }
+        verify(exactly = 0) { app.pushClockInstant(any(), any(), any(), any(), any()) }
     }
 
     // ── Unlock convergence throttle ───────────────────────────────
@@ -266,6 +266,39 @@ class ScreenStateReceiverBehaviorTest {
         // Both events must fire their own convergence.
         coVerify(exactly = 2, timeout = 2000) {
             app.syncClockNow(any(), suppressAnimation = true, reassertAfterReschedule = any())
+        }
+    }
+
+    // ── Drift metric ──────────────────────────────────────────────
+
+    @Test
+    fun `SCREEN_ON logs drift between last rendered minute and current system minute`() {
+        val currentMinute = System.currentTimeMillis() / 60000L
+        // Simulate widget stale by 2 minutes
+        every { app.getLastRenderedEpochMinuteForDrift() } returns currentMinute - 2L
+
+        receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_ON))
+
+        verify {
+            Log.d(
+                any(),
+                match { it.contains("drift=2") }
+            )
+        }
+    }
+
+    @Test
+    fun `SCREEN_ON logs zero drift when widget is already current`() {
+        val currentMinute = System.currentTimeMillis() / 60000L
+        every { app.getLastRenderedEpochMinuteForDrift() } returns currentMinute
+
+        receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_ON))
+
+        verify {
+            Log.d(
+                any(),
+                match { it.contains("drift=0") }
+            )
         }
     }
 

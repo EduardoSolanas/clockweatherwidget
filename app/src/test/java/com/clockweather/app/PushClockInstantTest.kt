@@ -172,6 +172,34 @@ class PushClockInstantTest {
         verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
     }
 
+    // ── Structured source log ────────────────────────────────────
+
+    @Test
+    fun `pushClockInstant log includes source field when source is provided`() {
+        val logMessages = mutableListOf<String>()
+        every { Log.d("ClockWeatherApp", capture(logMessages)) } returns 0
+
+        app.pushClockInstant(forceAllDigits = true, source = "TIME_TICK")
+
+        assertTrue(
+            "CLOCK_TRACE log must contain source=TIME_TICK",
+            logMessages.any { it.contains("source=TIME_TICK") }
+        )
+    }
+
+    @Test
+    fun `pushClockInstant log includes source=unknown when source not provided`() {
+        val logMessages = mutableListOf<String>()
+        every { Log.d("ClockWeatherApp", capture(logMessages)) } returns 0
+
+        app.pushClockInstant(forceAllDigits = true)
+
+        assertTrue(
+            "CLOCK_TRACE log must contain source=unknown by default",
+            logMessages.any { it.contains("source=unknown") }
+        )
+    }
+
     // ── suppressAnimationWindow ──────────────────────────────────
 
     @Test

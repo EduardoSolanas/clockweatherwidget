@@ -134,6 +134,41 @@ class WidgetClockStateStoreTest {
         assertTrue(WidgetClockStateStore.isBaselineReady(context, 1))
     }
 
+    // ── Animation suppression window ──────────────────────────
 
+    @Test
+    fun `shouldSuppressAnimation returns true when within suppression window`() {
+        val currentMinute = 1000L
+        WidgetClockStateStore.markNoAnimationUntilEpochMinute(context, 1, currentMinute + 1L)
+        assertTrue(WidgetClockStateStore.shouldSuppressAnimation(context, 1, currentMinute))
+    }
 
+    @Test
+    fun `shouldSuppressAnimation returns false and clears key when window has expired`() {
+        val currentMinute = 1000L
+        WidgetClockStateStore.markNoAnimationUntilEpochMinute(context, 1, currentMinute - 1L)
+        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(context, 1, currentMinute))
+        // Key removed — second call must not suppress either
+        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(context, 1, currentMinute))
+    }
+
+    @Test
+    fun `shouldSuppressAnimation self-heals far-future orphaned window and returns false`() {
+        val currentMinute = System.currentTimeMillis() / 60000L
+        // Simulate a process-death orphan: window set 100 years into the future
+        val orphanedFuture = currentMinute + 100L * 365 * 24 * 60
+        WidgetClockStateStore.markNoAnimationUntilEpochMinute(context, 1, orphanedFuture)
+
+        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(context, 1, currentMinute))
+        // Key must be cleared so a second call also returns false
+        assertFalse(WidgetClockStateStore.shouldSuppressAnimation(context, 1, currentMinute))
+    }
+
+    @Test
+    fun `shouldSuppressAnimation does not clamp window that is exactly at max allowed distance`() {
+        val currentMinute = 1000L
+        // Exactly MAX_SUPPRESS_WINDOW_MINUTES ahead — still within allowed range
+        WidgetClockStateStore.markNoAnimationUntilEpochMinute(context, 1, currentMinute + 5L)
+        assertTrue(WidgetClockStateStore.shouldSuppressAnimation(context, 1, currentMinute))
+    }
 }

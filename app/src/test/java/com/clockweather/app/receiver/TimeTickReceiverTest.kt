@@ -40,7 +40,9 @@ class TimeTickReceiverTest {
         context = mockk(relaxed = true)
 
         every { context.applicationContext } returns app
+        every { app.isCurrentMinuteFullyRendered(any()) } returns false
         every { app.areAllActiveWidgetBaselinesReady() } returns true
+        every { app.getAndMarkTimeTickObserved(any()) } returns -1L  // default: no prior tick (first tick → gap)
         coEvery { app.refreshAllWidgets(any(), any(), any()) } just Runs
         coEvery { app.resolveHighPrecision() } returns true
 
@@ -70,6 +72,21 @@ class TimeTickReceiverTest {
         assertEquals(1, TimeTickReceiver.buildIntentFilter().countActions())
     }
 
+    // ── Atomic gap detection ──────────────────────────────────────
+
+    @Test
+    fun `onReceive TIME_TICK uses atomic getAndMarkTimeTickObserved instead of separate read-then-write`() {
+        receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
+
+        // getAndMarkTimeTickObserved must be called (atomic get+set)
+        verify(exactly = 1) {
+            app.getAndMarkTimeTickObserved(match { it >= System.currentTimeMillis() / 60000L - 1 })
+        }
+        // The old separate calls must NOT be used by TimeTickReceiver
+        verify(exactly = 0) { app.markTimeTickObserved(any()) }
+        verify(exactly = 0) { app.getLastObservedTimeTickEpochMinute() }
+    }
+
     // ── Action guard ──────────────────────────────────────────────
 
     @Test
@@ -94,14 +111,14 @@ class TimeTickReceiverTest {
     // ── Synchronous minute observation ────────────────────────────
 
     @Test
-    fun `onReceive TIME_TICK marks current epoch minute synchronously before coroutine`() {
+    fun `onReceive TIME_TICK records current epoch minute synchronously before coroutine`() {
         val expectedMinute = System.currentTimeMillis() / 60000L
 
         receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
 
-        // markTimeTickObserved is called synchronously — verify without any sleep.
+        // getAndMarkTimeTickObserved is called synchronously — verify without any sleep.
         verify(exactly = 1) {
-            app.markTimeTickObserved(match { it >= expectedMinute - 1 && it <= expectedMinute + 1 })
+            app.getAndMarkTimeTickObserved(match { it >= expectedMinute - 1 && it <= expectedMinute + 1 })
         }
     }
 
@@ -109,8 +126,9 @@ class TimeTickReceiverTest {
 
     @Test
     fun `onReceive TIME_TICK uses quiet instant push when baselines are ready`() {
-        // Simulate continuous delivery: previous tick was exactly one minute ago (no gap)
-        every { app.getLastObservedTimeTickEpochMinute() } returns System.currentTimeMillis() / 60000L - 1L
+        val currentMinute = System.currentTimeMillis() / 60000L
+        // Atomic getAndSet returns previous value; simulate no gap (prev = current - 1)
+        every { app.getAndMarkTimeTickObserved(currentMinute) } returns currentMinute - 1L
 
         receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
 
@@ -120,7 +138,8 @@ class TimeTickReceiverTest {
             app.pushClockInstant(
                 forceAllDigits = false,
                 suppressAnimationWindow = true,
-                quietRender = true
+                quietRender = true,
+                source = "TIME_TICK"
             )
         }
         coVerify(exactly = 0) { app.refreshAllWidgets(any(), any(), any()) }
@@ -128,8 +147,9 @@ class TimeTickReceiverTest {
 
     @Test
     fun `onReceive TIME_TICK forces all digits when process was frozen (gap in observed minutes)`() {
-        // Previous observed minute is stale — process was frozen for multiple minutes
-        every { app.getLastObservedTimeTickEpochMinute() } returns System.currentTimeMillis() / 60000L - 5L
+        val currentMinute = System.currentTimeMillis() / 60000L
+        // Atomic getAndSet returns previous value; simulate gap (process frozen 5 min)
+        every { app.getAndMarkTimeTickObserved(currentMinute) } returns currentMinute - 5L
 
         receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
 
@@ -139,7 +159,8 @@ class TimeTickReceiverTest {
             app.pushClockInstant(
                 forceAllDigits = true,
                 suppressAnimationWindow = true,
-                quietRender = true
+                quietRender = true,
+                source = "TIME_TICK"
             )
         }
     }
@@ -180,12 +201,51 @@ class TimeTickReceiverTest {
     // ── Failure path ──────────────────────────────────────────────
 
     @Test
+    fun `onReceive TIME_TICK skips push when current minute already fully rendered by alarm backup`() {
+        val currentMinute = System.currentTimeMillis() / 60000L
+        every { app.isCurrentMinuteFullyRendered(currentMinute) } returns true
+        every { app.getAndMarkTimeTickObserved(currentMinute) } returns currentMinute - 1L
+
+        receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
+
+        Thread.sleep(1500)
+
+        verify(exactly = 0) {
+            app.pushClockInstant(any(), any(), any())
+        }
+        coVerify(exactly = 0) { app.refreshAllWidgets(any(), any(), any()) }
+        // Alarm re-anchor still fires even when push is skipped
+        verify(timeout = 1500) { ClockAlarmReceiver.scheduleNextTick(any(), any()) }
+    }
+
+    @Test
+    fun `onReceive TIME_TICK pushes normally when current minute not yet rendered`() {
+        val currentMinute = System.currentTimeMillis() / 60000L
+        every { app.getAndMarkTimeTickObserved(currentMinute) } returns currentMinute - 1L
+        every { app.isCurrentMinuteFullyRendered(currentMinute) } returns false
+
+        receiver.onReceive(context, Intent(Intent.ACTION_TIME_TICK))
+
+        Thread.sleep(1500)
+
+        verify(timeout = 1500) {
+            app.pushClockInstant(
+                forceAllDigits = false,
+                suppressAnimationWindow = true,
+                quietRender = true,
+                source = "TIME_TICK"
+            )
+        }
+    }
+
+    @Test
     fun `onReceive TIME_TICK quiet path failure falls back to pushClockInstant with forceAllDigits`() {
         every {
             app.pushClockInstant(
                 forceAllDigits = false,
                 suppressAnimationWindow = true,
-                quietRender = true
+                quietRender = true,
+                source = "TIME_TICK"
             )
         } throws RuntimeException("simulated refresh failure")
 
@@ -197,7 +257,8 @@ class TimeTickReceiverTest {
             app.pushClockInstant(
                 forceAllDigits = true,
                 suppressAnimationWindow = true,
-                quietRender = true
+                quietRender = true,
+                source = any()
             )
         }
     }

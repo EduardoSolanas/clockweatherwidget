@@ -34,9 +34,12 @@ class ScreenStateReceiver : BroadcastReceiver() {
             Intent.ACTION_SCREEN_ON -> {
                 Log.d(TAG, "Screen ON - register TIME_TICK + unlock convergence")
                 app.registerTimeTickReceiver()
+                val currentMinute = System.currentTimeMillis() / 60000L
+                val drift = currentMinute - app.getLastRenderedEpochMinuteForDrift()
+                Log.d(TAG, "CLOCK_TRACE screen_on drift=$drift minute=$currentMinute")
                 // Snap to correct time immediately so the user never sees a stale clock
                 // on wake, regardless of whether the keyguard is still showing.
-                app.pushClockInstant(forceAllDigits = true)
+                app.pushClockInstant(forceAllDigits = true, source = "SCREEN_ON")
                 if (isKeyguardLocked(context)) {
                     Log.d(TAG, "Screen ON while keyguard locked - waiting for USER_PRESENT before convergence")
                 } else {
@@ -47,7 +50,7 @@ class ScreenStateReceiver : BroadcastReceiver() {
                 Log.d(TAG, "User present - unlock convergence")
                 // Push again after unlock in case the keyguard was hiding the widget
                 // and the SCREEN_ON push was suppressed or the minute has since changed.
-                app.pushClockInstant(forceAllDigits = true)
+                app.pushClockInstant(forceAllDigits = true, source = "USER_PRESENT")
                 launchUnlockConvergence(app, context, Intent.ACTION_USER_PRESENT)
             }
             Intent.ACTION_DREAMING_STARTED -> {
@@ -58,7 +61,7 @@ class ScreenStateReceiver : BroadcastReceiver() {
             Intent.ACTION_DREAMING_STOPPED -> {
                 Log.d(TAG, "Dreaming stopped - register TIME_TICK + unlock convergence")
                 app.registerTimeTickReceiver()
-                app.pushClockInstant(forceAllDigits = true)
+                app.pushClockInstant(forceAllDigits = true, source = "DREAMING_STOPPED")
                 if (isKeyguardLocked(context)) {
                     Log.d(TAG, "Dreaming stopped while keyguard locked - waiting for USER_PRESENT before convergence")
                 } else {
@@ -112,7 +115,7 @@ class ScreenStateReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "ScreenStateReceiver"
         @Volatile private var lastUnlockConvergenceMs: Long = 0L
-        private const val UNLOCK_CONVERGENCE_THROTTLE_MS = 2_500L
+        private val UNLOCK_CONVERGENCE_THROTTLE_MS get() = ClockTuning.UNLOCK_CONVERGENCE_THROTTLE_MS
         internal fun resetUnlockConvergenceThrottleForTests() {
             lastUnlockConvergenceMs = 0L
         }

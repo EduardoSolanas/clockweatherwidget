@@ -47,7 +47,7 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                     }
 
                     if (action == ACTION_ALARM_KEEPALIVE) {
-                        app.pushClockInstant(forceAllDigits = true)
+                        app.pushClockInstant(forceAllDigits = true, source = "ALARM_KEEPALIVE")
                         scheduleNextTick(context, app.resolveHighPrecision())
                         reschedule = false
                         return@withTimeout
@@ -129,7 +129,8 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                                     // digits that the stored prev state no longer matches.
                                     forceAllDigits = true,
                                     suppressAnimationWindow = false,
-                                    quietRender = true
+                                    quietRender = true,
+                                    source = "ALARM_BACKUP"
                                 )
                             } else {
                                 Log.d(TAG, "CLOCK_TRACE alarmDecision minute=$currentEpochMinute action=skip reason=already_rendered_not_stale")
@@ -148,7 +149,8 @@ class ClockAlarmReceiver : BroadcastReceiver() {
                         app.pushClockInstant(
                             forceAllDigits = true,
                             suppressAnimationWindow = false,
-                            quietRender = true
+                            quietRender = true,
+                            source = "ALARM_NON_INTERACTIVE"
                         )
                     }
                 }
@@ -178,13 +180,13 @@ class ClockAlarmReceiver : BroadcastReceiver() {
         private const val ACTION_ALARM_KEEPALIVE = "com.clockweather.app.ACTION_ALARM_KEEPALIVE"
         private const val REQUEST_CODE_TICK = 0
         private const val REQUEST_CODE_KEEPALIVE = 1
-        private const val KEEPALIVE_INTERVAL_MS = 60 * 1000L
-        private const val TIME_TICK_GRACE_MS = 1200L
-        private const val EARLY_ALARM_WINDOW_START_MS = 58_000L
-        private const val EARLY_ALARM_POLL_MS = 250L
-        private const val EARLY_ALARM_MAX_EXTRA_WAIT_MS = 2000L
-        private const val LATE_TIME_TICK_MAX_WAIT_MS = 2500L
-        private const val LATE_TIME_TICK_POLL_MS = 100L
+        private val KEEPALIVE_INTERVAL_MS get() = ClockTuning.KEEPALIVE_INTERVAL_MS
+        private val TIME_TICK_GRACE_MS get() = ClockTuning.TIME_TICK_GRACE_MS
+        private val EARLY_ALARM_WINDOW_START_MS get() = ClockTuning.EARLY_ALARM_WINDOW_START_MS
+        private val EARLY_ALARM_POLL_MS get() = ClockTuning.EARLY_ALARM_POLL_MS
+        private val EARLY_ALARM_MAX_EXTRA_WAIT_MS get() = ClockTuning.EARLY_ALARM_MAX_EXTRA_WAIT_MS
+        private val LATE_TIME_TICK_MAX_WAIT_MS get() = ClockTuning.LATE_TIME_TICK_MAX_WAIT_MS
+        private val LATE_TIME_TICK_POLL_MS get() = ClockTuning.LATE_TIME_TICK_POLL_MS
 
         private val widgetProviders = listOf(
             CompactWidgetProvider::class.java,

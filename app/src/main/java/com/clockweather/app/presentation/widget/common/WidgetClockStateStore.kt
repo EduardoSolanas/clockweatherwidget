@@ -111,6 +111,12 @@ object WidgetClockStateStore {
         val key = noAnimUntilKey(appWidgetId)
         if (!p.contains(key)) return false
         val untilEpochMinute = p.getLong(key, -1L)
+        // Self-heal orphaned windows left by process death. A legitimate suppression
+        // window is at most a few minutes; anything beyond MAX is a stale orphan.
+        if (untilEpochMinute - currentEpochMinute > MAX_SUPPRESS_WINDOW_MINUTES) {
+            p.edit().remove(key).apply()
+            return false
+        }
         if (currentEpochMinute <= untilEpochMinute) return true
         p.edit().remove(key).apply()
         return false
@@ -125,6 +131,8 @@ object WidgetClockStateStore {
     fun markWeatherRefreshed(context: Context, appWidgetId: Int, epochMinute: Long) {
         prefs(context).edit().putLong(weatherRefreshKey(appWidgetId), epochMinute).apply()
     }
+
+    private const val MAX_SUPPRESS_WINDOW_MINUTES = 5L
 
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

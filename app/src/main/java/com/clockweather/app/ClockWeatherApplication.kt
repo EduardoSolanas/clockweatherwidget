@@ -50,8 +50,7 @@ import javax.inject.Inject
 class ClockWeatherApplication : Application(), Configuration.Provider {
     private val appScope = CoroutineScope(Dispatchers.Default)
     private val widgetRefreshMutex = Mutex()
-    @Volatile
-    private var lastObservedTimeTickEpochMinute: Long = -1L
+    private val lastObservedTimeTickEpochMinute = java.util.concurrent.atomic.AtomicLong(-1L)
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
@@ -70,8 +69,12 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             recoverClockThemeAfterBrokenMigration()
         }
 
-        // Initialise the in-memory preference cache so minute ticks skip disk I/O
+        // Initialise the in-memory preference cache so minute ticks skip disk I/O.
+        // seedBlocking eliminates the cold-start race: if the async flow hasn't emitted
+        // its first value yet when the first pushClockInstant fires, getCachedSnapshot()
+        // would return null and fall back to DateFormat — potentially wrong for one tick.
         WidgetPrefsCache.init(dataStore, appScope)
+        WidgetPrefsCache.seedBlocking(dataStore)
 
         // ── Universal activity → home clock convergence ──────────────
         // Replaces per-activity onStop() overrides. Runs synchronously on the
@@ -206,10 +209,68 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
     fun isTimeTickReceiverRegistered(): Boolean = timeTickReceiver != null
 
     fun markTimeTickObserved(epochMinute: Long) {
-        lastObservedTimeTickEpochMinute = epochMinute
+        lastObservedTimeTickEpochMinute.set(epochMinute)
     }
 
-    fun getLastObservedTimeTickEpochMinute(): Long = lastObservedTimeTickEpochMinute
+    fun getLastObservedTimeTickEpochMinute(): Long = lastObservedTimeTickEpochMinute.get()
+
+    /**
+     * Atomically records [epochMinute] as observed and returns the previously observed value.
+     * Use this in [TimeTickReceiver] instead of the non-atomic get-then-set pair, so that
+     * concurrent delivery on some OEM ROMs cannot corrupt gap detection.
+     */
+    fun getAndMarkTimeTickObserved(epochMinute: Long): Long =
+        lastObservedTimeTickEpochMinute.getAndSet(epochMinute)
+
+    /**
+     * Returns true when all active widgets have already been rendered for [epochMinute].
+     * Used by [TimeTickReceiver] to skip a redundant push when the alarm backup already
+     * rendered the current minute before TIME_TICK arrived.
+     */
+    /**
+     * Returns the epoch minute last rendered on any active widget, or the current minute
+     * if no widgets have rendered yet. Used by [ScreenStateReceiver] to log the stale-clock
+     * drift metric on SCREEN_ON so bugs become visible in logcat immediately.
+     */
+    fun getLastRenderedEpochMinuteForDrift(): Long {
+        val mgr = AppWidgetManager.getInstance(this)
+        val providerClasses = listOf(
+            CompactWidgetProvider::class.java,
+            ExtendedWidgetProvider::class.java,
+            ForecastWidgetProvider::class.java,
+            LargeWidgetProvider::class.java
+        )
+        var minRendered: Long? = null
+        providerClasses.forEach { providerClass ->
+            val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
+            ids.forEach { id ->
+                val rendered = WidgetClockStateStore.getLastRenderedEpochMinute(this, id)
+                if (rendered != null && (minRendered == null || rendered < minRendered!!)) {
+                    minRendered = rendered
+                }
+            }
+        }
+        return minRendered ?: (System.currentTimeMillis() / 60000L)
+    }
+
+    fun isCurrentMinuteFullyRendered(epochMinute: Long): Boolean {
+        val mgr = AppWidgetManager.getInstance(this)
+        val providerClasses = listOf(
+            CompactWidgetProvider::class.java,
+            ExtendedWidgetProvider::class.java,
+            ForecastWidgetProvider::class.java,
+            LargeWidgetProvider::class.java
+        )
+        providerClasses.forEach { providerClass ->
+            val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
+            ids.forEach { id ->
+                if (WidgetClockStateStore.getLastRenderedEpochMinute(this, id) != epochMinute) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
 
     fun areAllActiveWidgetBaselinesReady(): Boolean {
         val mgr = AppWidgetManager.getInstance(this)
@@ -262,7 +323,8 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         forceAllDigits: Boolean = false,
         suppressAnimationWindow: Boolean = false,
         quietRender: Boolean = false,
-        alignDisplayedChildrenOnly: Boolean = false
+        alignDisplayedChildrenOnly: Boolean = false,
+        source: String = "unknown"
     ) {
         val snapshot = ClockSnapshot.now()
         val now = snapshot.localTime
@@ -347,16 +409,18 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                 if (hasChanges) {
                     android.util.Log.d(
                         "ClockWeatherApp",
-                        "CLOCK_TRACE pushClockInstant widget=$id minute=$currentEpochMinute " +
-                            "path=$renderPath changedDigits=$changedDigitsCount " +
+                        "CLOCK_TRACE pushClockInstant source=$source widget=$id " +
+                            "minute=$currentEpochMinute path=$renderPath " +
+                            "changedDigits=$changedDigitsCount forceAll=$forceAllDigits " +
                             "quietRender=$quietRender suppressWindow=$suppressAnimationWindow " +
-                            "forceAll=$forceAllDigits prev=$prev new=$h1$h2:$m1$m2"
+                            "prev=$prev new=$h1$h2:$m1$m2"
                     )
                 } else {
                     android.util.Log.d(
                         "ClockWeatherApp",
-                        "CLOCK_TRACE pushClockInstant widget=$id minute=$currentEpochMinute " +
-                            "path=$renderPath changedDigits=0 no-op prev=$prev new=$h1$h2:$m1$m2"
+                        "CLOCK_TRACE pushClockInstant source=$source widget=$id " +
+                            "minute=$currentEpochMinute path=$renderPath changedDigits=0 no-op " +
+                            "prev=$prev new=$h1$h2:$m1$m2"
                     )
                 }
             }
