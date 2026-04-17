@@ -215,9 +215,10 @@ private fun HeroWeatherCard(
         // Animated weather sprite.
         Box(
             modifier = Modifier
-                .size(220.dp)
-                .padding(start = 12.dp, bottom = 12.dp)
                 .align(Alignment.BottomStart)
+                .fillMaxHeight()
+                .aspectRatio(1f)
+                .padding(start = 12.dp, bottom = 12.dp)
                 .clickable { debugIndex = (debugIndex + 1) % DEBUG_CONDITIONS.size }
         ) {
             WeatherAnimatedIcon(
