@@ -225,6 +225,22 @@ class BaseWidgetUpdaterTest {
     }
 
     @Test
+    fun `weather card height matches digit tile height`() = runBlocking {
+        every { mockResources.getDimension(any()) } returns 48f
+        every { mockResources.getDimension(R.dimen.flip_digit_height_medium) } returns 96f
+
+        updater.updateWidget(widgetId)
+
+        verify(atLeast = 1) {
+            anyConstructed<RemoteViews>().setViewLayoutHeight(
+                R.id.weather_card,
+                96f,
+                android.util.TypedValue.COMPLEX_UNIT_PX,
+            )
+        }
+    }
+
+    @Test
     fun `same minute non tick update preserves existing clock bindings`() = runBlocking {
         val currentMinute = System.currentTimeMillis() / 60000L
         mockkObject(ClockSnapshot.Companion)

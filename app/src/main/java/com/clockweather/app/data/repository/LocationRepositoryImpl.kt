@@ -171,7 +171,8 @@ class LocationRepositoryImpl @Inject constructor(
             ReverseGeocodeResult(
                 name = resolvedName.value,
                 country = country,
-                isSpecificName = resolvedName.isSpecific
+                isSpecificName = resolvedName.isSpecific,
+                area = resolvedName.area
             )
         }.getOrElse { error ->
             Log.w(GEO_DEBUG_TAG, "Android Geocoder reverse lookup failed", error)
@@ -205,7 +206,8 @@ class LocationRepositoryImpl @Inject constructor(
             ReverseGeocodeResult(
                 name = resolvedName.value,
                 country = country,
-                isSpecificName = resolvedName.isSpecific
+                isSpecificName = resolvedName.isSpecific,
+                area = resolvedName.area
             )
         }.getOrElse { error ->
             Log.w(GEO_DEBUG_TAG, "Reverse geocode fallback failed", error)
@@ -246,13 +248,15 @@ class LocationRepositoryImpl @Inject constructor(
             country = country,
             latitude = androidLocation.latitude,
             longitude = androidLocation.longitude,
-            isCurrentLocation = true
+            isCurrentLocation = true,
+            area = area
         )
     }
 
     private data class ReverseGeocodeResult(
         val name: String,
         val country: String,
-        val isSpecificName: Boolean
+        val isSpecificName: Boolean,
+        val area: String? = null
     )
 }

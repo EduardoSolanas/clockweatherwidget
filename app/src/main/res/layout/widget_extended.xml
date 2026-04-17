@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Extended Clock + Weather + 7-Day Forecast Widget (~4x4 cells) -->
+<!-- Extended Clock + Weather + 5-Day Forecast Widget (~4x4 cells) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/transparent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:orientation="vertical"
     android:padding="10dp">
 
@@ -32,9 +34,9 @@
         layout="@layout/widget_weather_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp" />
+        android:layout_marginBottom="6dp" />
 
-    <!-- 7-DAY FORECAST horizontal columns -->
+    <!-- 5-DAY FORECAST horizontal columns -->
     <LinearLayout
         android:id="@+id/forecast_container"
         android:layout_width="match_parent"
@@ -78,20 +80,6 @@
             <ImageView android:id="@+id/fday5_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
             <TextView android:id="@+id/fday5_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
             <TextView android:id="@+id/fday5_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
-        </LinearLayout>
-
-        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday6_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday6_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday6_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday6_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
-        </LinearLayout>
-
-        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday7_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday7_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday7_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday7_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
         </LinearLayout>
 
     </LinearLayout>

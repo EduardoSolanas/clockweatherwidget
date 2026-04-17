@@ -5,6 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/transparent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:orientation="vertical"
     android:padding="12dp">
 
@@ -21,7 +23,7 @@
         android:letterSpacing="0.05"
         android:text="Mon, Mar 9"
         android:textColor="@color/widget_text_primary"
-        android:textSize="15sp"
+        android:textSize="20sp"
         android:textStyle="bold" />
 
     <include

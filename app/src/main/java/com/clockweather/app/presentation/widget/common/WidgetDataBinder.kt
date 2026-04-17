@@ -47,7 +47,7 @@ object WidgetDataBinder {
         val location = weatherData.location
         val todayForecast = weatherData.dailyForecasts.firstOrNull()
 
-        views.setTextViewText(R.id.city_name, location.name)
+        views.setTextViewText(R.id.city_name, location.area ?: location.name)
         views.setTextViewText(R.id.condition_text, context.getString(current.weatherCondition.labelResId))
         views.setImageViewResource(
             R.id.weather_icon,
@@ -82,12 +82,10 @@ object WidgetDataBinder {
             RowIds(R.id.fday3_name, R.id.fday3_icon, R.id.fday3_high),
             RowIds(R.id.fday4_name, R.id.fday4_icon, R.id.fday4_high),
             RowIds(R.id.fday5_name, R.id.fday5_icon, R.id.fday5_high),
-            RowIds(R.id.fday6_name, R.id.fday6_icon, R.id.fday6_high),
-            RowIds(R.id.fday7_name, R.id.fday7_icon, R.id.fday7_high),
         )
         val futureDays = weatherData.dailyForecasts
             .filter { it.date.isAfter(today) }
-            .take(7)
+            .take(5)
         futureDays.forEachIndexed { i, f ->
             val r = rows[i]
             val dayLabel = DateFormatter.formatDayName(f.date)

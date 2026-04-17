@@ -28,7 +28,8 @@ class WeatherEntityMapper @Inject constructor() {
         latitude = entity.latitude,
         longitude = entity.longitude,
         timezone = entity.timezone,
-        isCurrentLocation = entity.isCurrentLocation
+        isCurrentLocation = entity.isCurrentLocation,
+        area = entity.area
     )
 
     fun mapLocationToEntity(domain: Location): LocationEntity = LocationEntity(
@@ -38,7 +39,8 @@ class WeatherEntityMapper @Inject constructor() {
         latitude = domain.latitude,
         longitude = domain.longitude,
         timezone = domain.timezone,
-        isCurrentLocation = domain.isCurrentLocation
+        isCurrentLocation = domain.isCurrentLocation,
+        area = domain.area
     )
 
     // ── CurrentWeather ────────────────────────────────────────────────────────

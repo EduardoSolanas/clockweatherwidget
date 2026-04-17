@@ -105,11 +105,30 @@ class WidgetDataBinderTest {
     }
 
     @Test
+    fun `bindWeatherViews prefers location area over name for city_name`() {
+        val weatherData = sampleWeatherData(locationName = "Fitzrovia", locationArea = "London")
+
+        WidgetDataBinder.bindWeatherViews(context, views, weatherData, TemperatureUnit.CELSIUS)
+
+        verify(exactly = 1) { views.setTextViewText(R.id.city_name, "London") }
+        verify(exactly = 0) { views.setTextViewText(R.id.city_name, "Fitzrovia") }
+    }
+
+    @Test
+    fun `bindWeatherViews falls back to location name when area is null`() {
+        val weatherData = sampleWeatherData(locationName = "London", locationArea = null)
+
+        WidgetDataBinder.bindWeatherViews(context, views, weatherData, TemperatureUnit.CELSIUS)
+
+        verify(exactly = 1) { views.setTextViewText(R.id.city_name, "London") }
+    }
+
+    @Test
     fun `bindWeeklyForecastRows skips current day and starts from tomorrow`() {
         val today = LocalDate.of(2026, 4, 3)
         mockkObject(DateFormatter)
         every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 10)) } returns "Fri"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 8)) } returns "Wed"
 
         val weatherData = sampleWeatherData(
             dailyForecasts = (0..7).map { offset ->
@@ -146,12 +165,14 @@ class WidgetDataBinderTest {
         verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sat") }
         verify(exactly = 1) { views.setImageViewResource(R.id.fday1_icon, R.drawable.ic_widget_weather_clear_day) }
         verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, "21°") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday7_name, "Fri") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday7_high, "27°") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Wed") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, "25°") }
         verify(exactly = 1) { views.setViewVisibility(R.id.forecast_container, View.VISIBLE) }
     }
 
     private fun sampleWeatherData(
+        locationName: String = "London",
+        locationArea: String? = null,
         dailyForecasts: List<DailyForecast> = listOf(
             DailyForecast(
                 date = LocalDate.of(2026, 4, 3),
@@ -177,10 +198,11 @@ class WidgetDataBinderTest {
         return WeatherData(
             location = Location(
                 id = 1L,
-                name = "London",
+                name = locationName,
                 country = "UK",
                 latitude = 51.5072,
                 longitude = -0.1276,
+                area = locationArea,
             ),
             currentWeather = CurrentWeather(
                 temperature = 17.0,

@@ -1,25 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!-- Cloud body -->
-    <path
-        android:pathData="M6.5,11 C6.5,11 5,11 5,9.5 C5,8.12 6.12,7 7.5,7 C7.63,7 7.75,7.01 7.87,7.03 C8.37,5.85 9.55,5 10.93,5 C12.74,5 14.21,6.43 14.24,8.23 C14.41,8.08 14.63,8 14.87,8 C15.98,8 16.87,8.89 16.87,10 C16.87,11.1 15.98,12 14.87,12 L6.5,12 Z"
-        android:fillColor="#FFCFD8DC" />
+    <!-- Cloud shifted up so fog lines sit below -->
+    <group android:translateY="-4">
+        <!-- Cloud drop shadow -->
+        <path android:pathData="M17.5,19.5c1.93,0 3.5,-1.57 3.5,-3.5c0,-1.67 -1.18,-3.07 -2.76,-3.42C18.11,9.53 15.28,7.5 12,7.5c-3.15,0 -5.87,1.86 -7.02,4.61C4.41,12.33 4,12.89 4,13.56C2.3,13.93 1,15.43 1,17.25C1,19.32 2.68,21 4.75,21l12.75,0z"
+            android:fillColor="#33000000"/>
+        <!-- Cloud body (glossy mid-tone, fog-like) -->
+        <path android:pathData="M17.5,19c1.93,0 3.5,-1.57 3.5,-3.5c0,-1.67 -1.18,-3.07 -2.76,-3.42C18.11,9.03 15.28,7 12,7c-3.15,0 -5.87,1.86 -7.02,4.61C4.41,11.83 4,12.39 4,13.06C2.3,13.43 1,14.93 1,16.75C1,18.82 2.68,20.5 4.75,20.5l12.75,0z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="12" android:startY="5" android:endX="12" android:endY="20">
+                    <item android:color="#FFECEFF1" android:offset="0.0"/>
+                    <item android:color="#FF90A4AE" android:offset="1.0"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Cloud highlight rim -->
+        <path android:pathData="M17.5,19c1.93,0 3.5,-1.57 3.5,-3.5c0,-1.67 -1.18,-3.07 -2.76,-3.42C18.11,9.03 15.28,7 12,7c-3.15,0 -5.87,1.86 -7.02,4.61C4.41,11.83 4,12.39 4,13.06"
+            android:strokeWidth="0.8" android:strokeLineCap="round" android:strokeColor="#FFFFFFFF"/>
+        <!-- Cloud top reflections -->
+        <path android:pathData="M9,9.5 A4,4 0,0 1,14 8"
+            android:strokeWidth="1.5" android:strokeLineCap="round" android:strokeColor="#FFFFFFFF"/>
+        <path android:pathData="M16.5,10.5 A2.5,2.5 0,0 1,19 12"
+            android:strokeWidth="1" android:strokeLineCap="round" android:strokeColor="#FFFFFFFF"/>
+    </group>
 
-    <!-- Fog line 1 (full width, below cloud) -->
+    <!-- Fog line 1 (widest) -->
     <path
-        android:pathData="M3,14 Q12,13 21,14"
+        android:pathData="M3,17.5 Q12,16.5 21,17.5"
         android:strokeWidth="1.8"
         android:strokeLineCap="round"
         android:fillColor="#00000000">
-        <aapt:attr name="android:strokeColor" xmlns:aapt="http://schemas.android.com/aapt">
-            <gradient android:type="linear"
-                android:startX="3" android:startY="14"
-                android:endX="21" android:endY="14">
+        <aapt:attr name="android:strokeColor">
+            <gradient android:type="linear" android:startX="3" android:startY="17.5" android:endX="21" android:endY="17.5">
                 <item android:offset="0.0" android:color="#00B0BEC5"/>
                 <item android:offset="0.2" android:color="#FFB0BEC5"/>
                 <item android:offset="0.8" android:color="#FFB0BEC5"/>
@@ -28,16 +46,14 @@
         </aapt:attr>
     </path>
 
-    <!-- Fog line 2 (slightly shorter) -->
+    <!-- Fog line 2 -->
     <path
-        android:pathData="M5,16.5 Q12,15.5 19,16.5"
+        android:pathData="M5,20 Q12,19 19,20"
         android:strokeWidth="1.8"
         android:strokeLineCap="round"
         android:fillColor="#00000000">
-        <aapt:attr name="android:strokeColor" xmlns:aapt="http://schemas.android.com/aapt">
-            <gradient android:type="linear"
-                android:startX="5" android:startY="16.5"
-                android:endX="19" android:endY="16.5">
+        <aapt:attr name="android:strokeColor">
+            <gradient android:type="linear" android:startX="5" android:startY="20" android:endX="19" android:endY="20">
                 <item android:offset="0.0" android:color="#00CFD8DC"/>
                 <item android:offset="0.25" android:color="#FFCFD8DC"/>
                 <item android:offset="0.75" android:color="#FFCFD8DC"/>
@@ -46,16 +62,14 @@
         </aapt:attr>
     </path>
 
-    <!-- Fog line 3 (shorter, fading) -->
+    <!-- Fog line 3 (shortest) -->
     <path
-        android:pathData="M7,19 Q12,18 17,19"
+        android:pathData="M7,22.5 Q12,21.5 17,22.5"
         android:strokeWidth="1.8"
         android:strokeLineCap="round"
         android:fillColor="#00000000">
-        <aapt:attr name="android:strokeColor" xmlns:aapt="http://schemas.android.com/aapt">
-            <gradient android:type="linear"
-                android:startX="7" android:startY="19"
-                android:endX="17" android:endY="19">
+        <aapt:attr name="android:strokeColor">
+            <gradient android:type="linear" android:startX="7" android:startY="22.5" android:endX="17" android:endY="22.5">
                 <item android:offset="0.0" android:color="#0090A4AE"/>
                 <item android:offset="0.3" android:color="#CC90A4AE"/>
                 <item android:offset="0.7" android:color="#CC90A4AE"/>
@@ -63,5 +77,4 @@
             </gradient>
         </aapt:attr>
     </path>
-
 </vector>

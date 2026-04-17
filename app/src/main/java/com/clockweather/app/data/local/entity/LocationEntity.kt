@@ -11,6 +11,7 @@ data class LocationEntity(
     val latitude: Double,
     val longitude: Double,
     val timezone: String,
-    val isCurrentLocation: Boolean
+    val isCurrentLocation: Boolean,
+    val area: String? = null
 )
 

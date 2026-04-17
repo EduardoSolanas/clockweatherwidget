@@ -2,7 +2,8 @@ package com.clockweather.app.data.repository
 
 internal data class ResolvedCurrentLocationName(
     val value: String,
-    val isSpecific: Boolean
+    val isSpecific: Boolean,
+    val area: String? = null
 )
 
 internal fun resolveCurrentLocationName(
@@ -46,9 +47,15 @@ internal fun resolveCurrentLocationNameDetails(
     ).firstOrNull()
 
     if (specificName != null) {
+        val area = orderedDistinctNames(
+            locality,
+            subAdminArea,
+            adminArea
+        ).firstOrNull { it != specificName }
         return ResolvedCurrentLocationName(
             value = specificName,
-            isSpecific = true
+            isSpecific = true,
+            area = area
         )
     }
 
@@ -58,15 +65,20 @@ internal fun resolveCurrentLocationNameDetails(
     ).firstOrNull()
 
     if (areaName != null) {
+        val broader = orderedDistinctNames(
+            adminArea
+        ).firstOrNull { it != areaName }
         return ResolvedCurrentLocationName(
             value = areaName,
-            isSpecific = false
+            isSpecific = false,
+            area = broader
         )
     }
 
     return ResolvedCurrentLocationName(
         value = fallbackLabel,
-        isSpecific = false
+        isSpecific = false,
+        area = null
     )
 }
 
@@ -80,4 +92,3 @@ private fun orderedDistinctNames(vararg names: String?): List<String> {
     }
     return resolved
 }
-

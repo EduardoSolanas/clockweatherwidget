@@ -135,6 +135,14 @@ abstract class BaseWidgetUpdater(
                     views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
                 }
 
+                if (android.os.Build.VERSION.SDK_INT >= 31) {
+                    views.setViewLayoutHeight(
+                        com.clockweather.app.R.id.weather_card,
+                        context.resources.getDimension(dimHeight),
+                        android.util.TypedValue.COMPLEX_UNIT_PX,
+                    )
+                }
+
                 val colonSize = context.resources.getDimension(dimText) * 0.8f
                 views.setTextViewTextSize(com.clockweather.app.R.id.colon, android.util.TypedValue.COMPLEX_UNIT_PX, colonSize)
                 val ampmSize = when (tileSize) {
@@ -281,12 +289,6 @@ abstract class BaseWidgetUpdater(
                 add(com.clockweather.app.R.id.fday5_name)
                 add(com.clockweather.app.R.id.fday5_icon)
                 add(com.clockweather.app.R.id.fday5_high)
-                add(com.clockweather.app.R.id.fday6_name)
-                add(com.clockweather.app.R.id.fday6_icon)
-                add(com.clockweather.app.R.id.fday6_high)
-                add(com.clockweather.app.R.id.fday7_name)
-                add(com.clockweather.app.R.id.fday7_icon)
-                add(com.clockweather.app.R.id.fday7_high)
                 addAll(
                     listOf(
                         com.clockweather.app.R.id.digit_h1,

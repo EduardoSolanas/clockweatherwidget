@@ -7,6 +7,6 @@ data class Location(
     val latitude: Double,
     val longitude: Double,
     val timezone: String = "auto",
-    val isCurrentLocation: Boolean = false
+    val isCurrentLocation: Boolean = false,
+    val area: String? = null
 )
-

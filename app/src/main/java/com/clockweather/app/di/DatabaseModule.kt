@@ -26,7 +26,7 @@ object DatabaseModule {
             WeatherDatabase::class.java,
             WeatherDatabase.DATABASE_NAME
         )
-        .addMigrations(WeatherDatabase.MIGRATION_1_2)
+        .addMigrations(WeatherDatabase.MIGRATION_1_2, WeatherDatabase.MIGRATION_2_3)
         .build()
 
     @Provides
