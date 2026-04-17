@@ -46,6 +46,8 @@ class WeatherDetailViewModel @Inject constructor(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
     private var weatherLoadJob: Job? = null
 
+    internal var lastRefreshTimeMs: Long = 0L
+
     /** Observes the temperature unit from DataStore — updates immediately when changed in Settings. */
     val temperatureUnit: StateFlow<TemperatureUnit> = dataStore.data
         .map { prefs ->
@@ -165,6 +167,9 @@ class WeatherDetailViewModel @Inject constructor(
     }
 
     fun refresh() {
+        val now = System.currentTimeMillis()
+        if (lastRefreshTimeMs > 0L && now - lastRefreshTimeMs < REFRESH_THROTTLE_MS) return
+        lastRefreshTimeMs = now
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
@@ -224,5 +229,9 @@ class WeatherDetailViewModel @Inject constructor(
         refreshWeatherUseCase(location, forecastDays = forecastDays)
         val app = context.applicationContext as? com.clockweather.app.ClockWeatherApplication
         app?.refreshAllWidgets(app, isClockTick = false)
+    }
+
+    companion object {
+        const val REFRESH_THROTTLE_MS = 5 * 60 * 1000L
     }
 }

@@ -116,6 +116,51 @@ class WeatherDetailViewModelTest {
     }
 
     @Test
+    fun `refresh is throttled — second call within 5 minutes skips weather fetch and widget sync`() = runTest(dispatcher) {
+        val viewModel = WeatherDetailViewModel(
+            getWeatherDataUseCase = getWeatherDataUseCase,
+            refreshWeatherUseCase = refreshWeatherUseCase,
+            locationRepository = locationRepository,
+            dataStore = dataStore,
+            context = context,
+        )
+        advanceUntilIdle() // initial load
+
+        viewModel.refresh()
+        advanceUntilIdle() // first manual refresh — allowed
+
+        viewModel.refresh()
+        advanceUntilIdle() // second manual refresh within 5 min — throttled
+
+        // Only 2 calls total: 1 initial + 1 manual; second manual must be suppressed
+        coVerify(exactly = 2) { refreshWeatherUseCase(location, forecastDays = 7) }
+        coVerify(exactly = 2) { app.refreshAllWidgets(app, false, false) }
+    }
+
+    @Test
+    fun `refresh is allowed again after 5-minute throttle window elapses`() = runTest(dispatcher) {
+        val viewModel = WeatherDetailViewModel(
+            getWeatherDataUseCase = getWeatherDataUseCase,
+            refreshWeatherUseCase = refreshWeatherUseCase,
+            locationRepository = locationRepository,
+            dataStore = dataStore,
+            context = context,
+        )
+        advanceUntilIdle()
+
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        // Simulate 5+ minutes elapsed by rewinding the recorded timestamp
+        viewModel.lastRefreshTimeMs -= WeatherDetailViewModel.REFRESH_THROTTLE_MS
+
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        coVerify(exactly = 3) { refreshWeatherUseCase(location, forecastDays = 7) }
+    }
+
+    @Test
     fun `manual detail refresh also refreshes widgets from shared cache`() = runTest(dispatcher) {
         val viewModel = WeatherDetailViewModel(
             getWeatherDataUseCase = getWeatherDataUseCase,
