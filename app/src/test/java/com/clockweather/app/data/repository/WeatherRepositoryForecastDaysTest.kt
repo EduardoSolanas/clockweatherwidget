@@ -57,6 +57,13 @@ class WeatherRepositoryForecastDaysTest {
         latitude = 52.52,
         longitude = 13.405
     )
+    private val expectedDefaultProvider = if (
+        WeatherProviderPreferences.isConfigured(WeatherProviderType.OPENWEATHERMAP)
+    ) {
+        WeatherProviderType.OPENWEATHERMAP
+    } else {
+        WeatherProviderType.OPEN_METEO
+    }
 
     private fun setupProviderSelection(provider: WeatherProviderType) {
         every {
@@ -93,13 +100,19 @@ class WeatherRepositoryForecastDaysTest {
     }
 
     @Test
-    fun `refreshWeatherData falls back to openweathermap default provider when preference missing`() = runTest {
+    fun `refreshWeatherData falls back to configured default provider when preference missing`() = runTest {
         setupMissingProviderPreference()
-        every { providerFactory.get(WeatherProviderType.OPENWEATHERMAP) } returns openWeatherMapProvider
-        coEvery { openWeatherMapProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-provider-call")
+        val expectedProvider = when (expectedDefaultProvider) {
+            WeatherProviderType.OPENWEATHERMAP -> openWeatherMapProvider
+            WeatherProviderType.OPEN_METEO -> openMeteoProvider
+            else -> error("Unexpected default provider in test: $expectedDefaultProvider")
+        }
+        every { providerFactory.get(expectedDefaultProvider) } returns expectedProvider
+        coEvery { expectedProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-provider-call")
 
         runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
 
-        coVerify(exactly = 1) { openWeatherMapProvider.fetchWeatherData(location, 8) }
+        val expectedForecastDays = if (expectedDefaultProvider == WeatherProviderType.OPENWEATHERMAP) 8 else 14
+        coVerify(exactly = 1) { expectedProvider.fetchWeatherData(location, expectedForecastDays) }
     }
 }

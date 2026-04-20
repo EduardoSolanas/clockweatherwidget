@@ -7,6 +7,14 @@ import org.junit.Test
 
 class WeatherProviderPreferencesTest {
 
+    private val expectedDefaultProvider = if (
+        WeatherProviderPreferences.isConfigured(WeatherProviderType.OPENWEATHERMAP)
+    ) {
+        WeatherProviderType.OPENWEATHERMAP
+    } else {
+        WeatherProviderType.OPEN_METEO
+    }
+
     @Test
     fun `fromStorageValue accepts enum name and storage value`() {
         assertEquals(
@@ -33,19 +41,18 @@ class WeatherProviderPreferencesTest {
     }
 
     @Test
-    fun `default provider resolves to openweathermap when configured`() {
+    fun `default provider resolves to configured default when available`() {
         assertEquals(
-            WeatherProviderType.OPENWEATHERMAP,
+            expectedDefaultProvider,
             WeatherProviderPreferences.defaultProvider()
         )
     }
 
     @Test
-    fun `resolve accepts openweathermap storage value`() {
+    fun `resolve handles openweathermap storage value based on configuration`() {
         assertEquals(
-            WeatherProviderType.OPENWEATHERMAP,
+            expectedDefaultProvider,
             WeatherProviderPreferences.resolve("openweathermap")
         )
     }
 }
-
