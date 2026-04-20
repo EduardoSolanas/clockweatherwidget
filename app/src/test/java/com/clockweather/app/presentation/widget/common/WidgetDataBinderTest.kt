@@ -49,6 +49,10 @@ class WidgetDataBinderTest {
         every { context.getString(WeatherCondition.PARTLY_CLOUDY_DAY.labelResId) } returns "Partly cloudy"
         every { context.getString(R.string.label_today) } returns "Today"
         every { context.getString(R.string.unit_celsius, 11.0) } returns "11°"
+        every { context.getString(R.string.unit_celsius, 12.0) } returns "12°"
+        every { context.getString(R.string.unit_celsius, 13.0) } returns "13°"
+        every { context.getString(R.string.unit_celsius, 14.0) } returns "14°"
+        every { context.getString(R.string.unit_celsius, 15.0) } returns "15°"
         every { context.getString(R.string.unit_celsius, 20.0) } returns "20°"
         every { context.getString(R.string.unit_celsius, 21.0) } returns "21°"
         every { context.getString(R.string.unit_celsius, 22.0) } returns "22°"
@@ -164,9 +168,9 @@ class WidgetDataBinderTest {
 
         verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sat") }
         verify(exactly = 1) { views.setImageViewResource(R.id.fday1_icon, R.drawable.ic_widget_weather_clear_day) }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, "21°") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, "21°/11°") }
         verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Wed") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, "25°") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, "25°/15°") }
         verify(exactly = 1) { views.setViewVisibility(R.id.forecast_container, View.VISIBLE) }
     }
 

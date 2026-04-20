@@ -86,13 +86,15 @@ object WidgetDataBinder {
         val futureDays = weatherData.dailyForecasts
             .filter { it.date.isAfter(today) }
             .take(5)
+        val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit
         futureDays.forEachIndexed { i, f ->
             val r = rows[i]
             val dayLabel = DateFormatter.formatDayName(f.date)
             views.setTextViewText(r.name, dayLabel)
             views.setImageViewResource(r.icon, WeatherIconMapper.getDrawableResId(f.weatherCondition))
-            val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit
-            views.setTextViewText(r.high, context.getString(tempFormat, f.temperatureMax))
+            val high = context.getString(tempFormat, f.temperatureMax)
+            val low = context.getString(tempFormat, f.temperatureMin)
+            views.setTextViewText(r.high, "$high/$low")
         }
         views.setViewVisibility(R.id.forecast_container, android.view.View.VISIBLE)
     }

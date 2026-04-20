@@ -10,76 +10,90 @@
     android:orientation="vertical"
     android:padding="10dp">
 
-    <!-- CLOCK ROW -->
-    <include layout="@layout/widget_clock_block"
+    <!-- TOP CONTAINER: clock tiles + date + weather (location/temp) -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        android:background="@android:color/transparent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingTop="10dp"
+        android:paddingBottom="4dp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp">
 
-    <!-- Date -->
-    <TextView
-        android:id="@+id/widget_date"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-        android:text="Mon, Mar 9"
-        android:textColor="@color/widget_text_primary"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        android:letterSpacing="0.05" />
+        <!-- CLOCK ROW -->
+        <include layout="@layout/widget_clock_block"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
-    <!-- CURRENT WEATHER ROW (optional, hidden by default) -->
-    <include
-        layout="@layout/widget_weather_card"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="6dp" />
+        <!-- Date (left-aligned, sits just above the location in the weather card) -->
+        <TextView
+            android:id="@+id/widget_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="0dp"
+            android:text="Mon, Mar 9"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
+
+        <!-- CURRENT WEATHER ROW (optional, hidden by default) grows to fill -->
+        <include
+            layout="@layout/widget_weather_card"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
 
     <!-- 5-DAY FORECAST horizontal columns -->
     <LinearLayout
         android:id="@+id/forecast_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="2"
         android:background="@drawable/weather_card_bg"
         android:orientation="horizontal"
         android:visibility="gone"
-        android:padding="4dp">
+        android:paddingTop="0dp"
+        android:paddingBottom="4dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday1_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday1_name" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
             <ImageView android:id="@+id/fday1_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday1_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday1_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
+            <TextView android:id="@+id/fday1_high" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday2_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday2_name" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
             <ImageView android:id="@+id/fday2_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday2_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday2_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
+            <TextView android:id="@+id/fday2_high" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday3_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday3_name" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
             <ImageView android:id="@+id/fday3_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday3_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday3_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
+            <TextView android:id="@+id/fday3_high" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday4_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday4_name" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
             <ImageView android:id="@+id/fday4_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday4_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday4_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
+            <TextView android:id="@+id/fday4_high" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:id="@+id/fday5_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="10sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:id="@+id/fday5_name" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
             <ImageView android:id="@+id/fday5_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
-            <TextView android:id="@+id/fday5_high" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
-            <TextView android:id="@+id/fday5_low" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text_secondary" android:textSize="10sp" android:gravity="center" />
+            <TextView android:id="@+id/fday5_high" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
         </LinearLayout>
 
     </LinearLayout>
