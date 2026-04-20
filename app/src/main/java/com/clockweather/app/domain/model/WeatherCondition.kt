@@ -141,6 +141,44 @@ enum class WeatherCondition(
             else                                                 -> if (isDay) MAINLY_CLEAR_DAY else MAINLY_CLEAR_NIGHT
         }
 
+        /**
+         * Map OpenWeatherMap condition IDs → domain WeatherCondition.
+         * Reference: https://openweathermap.org/weather-conditions
+         */
+        fun fromOpenWeatherMapId(id: Int, isDay: Boolean = true): WeatherCondition = when (id) {
+            // Thunderstorm 2xx
+            200, 201, 210, 230, 231 -> THUNDERSTORM
+            202, 211, 212, 221, 232 -> THUNDERSTORM
+            // Drizzle 3xx
+            300, 310, 313 -> DRIZZLE_LIGHT
+            301, 311, 321 -> DRIZZLE_MODERATE
+            302, 312, 314 -> DRIZZLE_DENSE
+            // Rain 5xx
+            500 -> RAIN_SLIGHT
+            501 -> RAIN_MODERATE
+            502, 503, 504 -> RAIN_HEAVY
+            511 -> FREEZING_RAIN_LIGHT
+            520 -> RAIN_SHOWER_SLIGHT
+            521 -> RAIN_SHOWER_MODERATE
+            522, 531 -> RAIN_SHOWER_VIOLENT
+            // Snow 6xx
+            600 -> SNOW_SLIGHT
+            601 -> SNOW_MODERATE
+            602 -> SNOW_HEAVY
+            611, 612, 613 -> SNOW_GRAINS
+            615, 616 -> SNOW_SLIGHT
+            620 -> SNOW_SHOWER_SLIGHT
+            621, 622 -> SNOW_SHOWER_HEAVY
+            // Atmosphere 7xx
+            701, 711, 721, 731, 741, 751, 761, 762, 771, 781 -> FOG
+            // Clear / Clouds 8xx
+            800 -> if (isDay) CLEAR_DAY else CLEAR_NIGHT
+            801 -> if (isDay) MAINLY_CLEAR_DAY else MAINLY_CLEAR_NIGHT
+            802 -> if (isDay) PARTLY_CLOUDY_DAY else PARTLY_CLOUDY_NIGHT
+            803, 804 -> OVERCAST
+            else -> if (isDay) MAINLY_CLEAR_DAY else MAINLY_CLEAR_NIGHT
+        }
+
         /** Map WeatherAPI.com condition codes → domain WeatherCondition */
         fun fromWeatherApiCode(code: Int, isDay: Boolean = true): WeatherCondition = when (code) {
             1000 -> if (isDay) CLEAR_DAY else CLEAR_NIGHT

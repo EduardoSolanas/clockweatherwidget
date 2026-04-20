@@ -21,11 +21,17 @@ val googleWeatherApiKey: String = System.getenv("GOOGLE_WEATHER_API_KEY")
         if (f.exists()) props.load(f.inputStream())
     }.getProperty("GOOGLE_WEATHER_API_KEY", "")
 
+val openWeatherMapApiKey: String = System.getenv("OPENWEATHERMAP_API_KEY")
+    ?: Properties().also { props ->
+        val f = rootProject.file("local.properties")
+        if (f.exists()) props.load(f.inputStream())
+    }.getProperty("OPENWEATHERMAP_API_KEY", "")
+
 val defaultWeatherProvider: String = System.getenv("DEFAULT_WEATHER_PROVIDER")
     ?: Properties().also { props ->
         val f = rootProject.file("local.properties")
         if (f.exists()) props.load(f.inputStream())
-    }.getProperty("DEFAULT_WEATHER_PROVIDER", "OPEN_METEO")
+    }.getProperty("DEFAULT_WEATHER_PROVIDER", "OPENWEATHERMAP")
 
 android {
     namespace = "com.clockweather.app"
@@ -46,6 +52,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "WEATHER_API_KEY", "\"$weatherApiKey\"")
         buildConfigField("String", "GOOGLE_WEATHER_API_KEY", "\"$googleWeatherApiKey\"")
+        buildConfigField("String", "OPENWEATHERMAP_API_KEY", "\"$openWeatherMapApiKey\"")
         buildConfigField("String", "DEFAULT_WEATHER_PROVIDER", "\"$defaultWeatherProvider\"")
     }
 

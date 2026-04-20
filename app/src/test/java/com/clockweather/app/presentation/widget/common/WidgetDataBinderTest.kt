@@ -174,6 +174,106 @@ class WidgetDataBinderTest {
         verify(exactly = 1) { views.setViewVisibility(R.id.forecast_container, View.VISIBLE) }
     }
 
+    @Test
+    fun `bindWeeklyForecastRows anchors from weather snapshot day when location is ahead of device`() {
+        val deviceToday = LocalDate.of(2026, 4, 3)
+        val weatherToday = LocalDate.of(2026, 4, 4)
+        mockkObject(DateFormatter)
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 5)) } returns "Sun"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 9)) } returns "Thu"
+
+        val weatherData = sampleWeatherData(
+            dailyForecasts = (0..7).map { offset ->
+                DailyForecast(
+                    date = weatherToday.plusDays(offset.toLong()),
+                    weatherCondition = WeatherCondition.CLEAR_DAY,
+                    temperatureMax = 20.0 + offset,
+                    temperatureMin = 10.0 + offset,
+                    feelsLikeMax = 20.0 + offset,
+                    feelsLikeMin = 10.0 + offset,
+                    sunrise = LocalTime.of(6, 0),
+                    sunset = LocalTime.of(19, 0),
+                    daylightDurationSeconds = 36000.0,
+                    precipitationSum = 0.0,
+                    precipitationProbability = 0,
+                    windSpeedMax = 10.0,
+                    windDirectionDominant = WindDirection.N,
+                    windDirectionDegrees = 0,
+                    uvIndexMax = 5.0,
+                    averageHumidity = 60,
+                    averagePressure = 1012.0,
+                )
+            },
+        ).copy(
+            currentWeather = sampleWeatherData().currentWeather.copy(
+                lastUpdated = LocalDateTime.of(2026, 4, 4, 0, 15),
+            ),
+        )
+
+        WidgetDataBinder.bindWeeklyForecastRows(
+            context = context,
+            views = views,
+            weatherData = weatherData,
+            temperatureUnit = TemperatureUnit.CELSIUS,
+            today = deviceToday,
+        )
+
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sun") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, match { it.toString().contains("21") }) }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Thu") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, match { it.toString().contains("25") }) }
+    }
+
+    @Test
+    fun `bindWeeklyForecastRows anchors from weather snapshot day when location is behind device`() {
+        val deviceToday = LocalDate.of(2026, 4, 5)
+        val weatherToday = LocalDate.of(2026, 4, 4)
+        mockkObject(DateFormatter)
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 5)) } returns "Sun"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 9)) } returns "Thu"
+
+        val weatherData = sampleWeatherData(
+            dailyForecasts = (0..7).map { offset ->
+                DailyForecast(
+                    date = weatherToday.plusDays(offset.toLong()),
+                    weatherCondition = WeatherCondition.CLEAR_DAY,
+                    temperatureMax = 20.0 + offset,
+                    temperatureMin = 10.0 + offset,
+                    feelsLikeMax = 20.0 + offset,
+                    feelsLikeMin = 10.0 + offset,
+                    sunrise = LocalTime.of(6, 0),
+                    sunset = LocalTime.of(19, 0),
+                    daylightDurationSeconds = 36000.0,
+                    precipitationSum = 0.0,
+                    precipitationProbability = 0,
+                    windSpeedMax = 10.0,
+                    windDirectionDominant = WindDirection.N,
+                    windDirectionDegrees = 0,
+                    uvIndexMax = 5.0,
+                    averageHumidity = 60,
+                    averagePressure = 1012.0,
+                )
+            },
+        ).copy(
+            currentWeather = sampleWeatherData().currentWeather.copy(
+                lastUpdated = LocalDateTime.of(2026, 4, 4, 23, 45),
+            ),
+        )
+
+        WidgetDataBinder.bindWeeklyForecastRows(
+            context = context,
+            views = views,
+            weatherData = weatherData,
+            temperatureUnit = TemperatureUnit.CELSIUS,
+            today = deviceToday,
+        )
+
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sun") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, match { it.toString().contains("21") }) }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Thu") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, match { it.toString().contains("25") }) }
+    }
+
     private fun sampleWeatherData(
         locationName: String = "London",
         locationArea: String? = null,

@@ -396,6 +396,39 @@ class BaseWidgetUpdaterTest {
         confirmVerified(appWidgetManager)
     }
 
+    @Test
+    fun `first render refreshes weather even when cached data is fresh`() = runBlocking {
+        val location = Location(
+            id = 42L,
+            name = "London",
+            country = "UK",
+            latitude = 51.5072,
+            longitude = -0.1276,
+        )
+        val today = LocalDate.now()
+        val currentMinute = System.currentTimeMillis() / 60000L
+        mockkObject(ClockSnapshot.Companion)
+        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
+            localTime = LocalTime.of(10, 26),
+            epochMinute = currentMinute,
+        )
+        every { locationRepo.getSavedLocations() } returns flowOf(listOf(location))
+        every { weatherRepo.getCachedWeatherData(location.id) } returns flowOf(
+            sampleWeatherData(
+                location = location,
+                currentLastUpdated = LocalDateTime.of(today, LocalTime.of(10, 0)),
+                startDate = today,
+            ),
+        )
+
+        // Baseline not ready — simulates a freshly placed widget.
+        WidgetClockStateStore.clearWidget(realContext, widgetId)
+
+        updater.updateWidget(widgetId)
+
+        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(location, 7) }
+    }
+
     private fun sampleWeatherData(
         location: Location,
         currentLastUpdated: LocalDateTime,

@@ -20,6 +20,7 @@ import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.ClockTileSize
 import com.clockweather.app.domain.model.WeatherProviderType
 import com.clockweather.app.domain.repository.LocationRepository
+import com.clockweather.app.domain.repository.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +36,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val locationRepository: LocationRepository,
+    private val weatherRepository: WeatherRepository,
     private val dataStore: DataStore<Preferences>,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -215,12 +217,23 @@ class SettingsViewModel @Inject constructor(
         if (!WeatherProviderPreferences.isConfigured(provider)) return
 
         viewModelScope.launch {
+            val normalizedForecastDays = normalizeForecastDaysForProvider(
+                requestedDays = dataStore.data.first()[KEY_FORECAST_DAYS]
+                    ?: smartDefaultForecastDays(context.resources.configuration.screenWidthDp),
+                provider = provider
+            )
             dataStore.edit {
-                val currentForecastDays = it[KEY_FORECAST_DAYS]
-                    ?: smartDefaultForecastDays(context.resources.configuration.screenWidthDp)
                 it[KEY_WEATHER_PROVIDER] = provider.storageValue
-                it[KEY_FORECAST_DAYS] = normalizeForecastDaysForProvider(currentForecastDays, provider)
+                it[KEY_FORECAST_DAYS] = normalizedForecastDays
             }
+            runCatching {
+                refreshWeatherForProviderChange(
+                    locationRepository = locationRepository,
+                    weatherRepository = weatherRepository,
+                    forecastDays = normalizedForecastDays
+                )
+            }
+            triggerWidgetUpdate()
             com.clockweather.app.worker.WeatherUpdateScheduler.scheduleImmediateRefresh(context)
         }
     }
@@ -381,4 +394,15 @@ class SettingsViewModel @Inject constructor(
             app?.refreshAllWidgets(context, isClockTick = false)
         }
     }
+}
+
+internal suspend fun refreshWeatherForProviderChange(
+    locationRepository: LocationRepository,
+    weatherRepository: WeatherRepository,
+    forecastDays: Int
+) {
+    val location = locationRepository.getSavedLocations().first().firstOrNull()
+        ?: locationRepository.getCurrentLocation()
+        ?: locationRepository.getFallbackLocation()
+    weatherRepository.refreshWeatherData(location, forecastDays)
 }

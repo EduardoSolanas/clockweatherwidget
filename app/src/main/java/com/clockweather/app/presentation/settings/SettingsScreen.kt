@@ -417,18 +417,25 @@ fun SettingsScreen(
                 label = stringResource(R.string.settings_weather_provider_label),
                 description = stringResource(R.string.settings_weather_provider_desc)
             )
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                viewModel.availableWeatherProviders.forEach { provider ->
-                    FilterChip(
-                        selected = provider == weatherProvider,
-                        onClick = { viewModel.setWeatherProvider(provider) },
-                        label = { Text(stringResource(provider.labelResId)) }
-                    )
+                providerChipRows(viewModel.availableWeatherProviders).forEach { providerRow ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        providerRow.forEach { provider ->
+                            FilterChip(
+                                selected = provider == weatherProvider,
+                                onClick = { viewModel.setWeatherProvider(provider) },
+                                label = { Text(stringResource(provider.labelResId)) }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -507,4 +514,12 @@ private fun SettingsToggleRow(
             modifier        = Modifier.padding(start = 16.dp)
         )
     }
+}
+
+internal fun providerChipRows(
+    providers: List<com.clockweather.app.domain.model.WeatherProviderType>,
+    maxItemsPerRow: Int = 2
+): List<List<com.clockweather.app.domain.model.WeatherProviderType>> {
+    require(maxItemsPerRow > 0) { "maxItemsPerRow must be greater than 0" }
+    return providers.chunked(maxItemsPerRow)
 }

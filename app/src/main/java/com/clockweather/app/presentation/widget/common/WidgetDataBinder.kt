@@ -83,10 +83,8 @@ object WidgetDataBinder {
             RowIds(R.id.fday4_name, R.id.fday4_icon, R.id.fday4_high),
             RowIds(R.id.fday5_name, R.id.fday5_icon, R.id.fday5_high),
         )
-        val futureDays = weatherData.dailyForecasts
-            .filter { it.date.isAfter(today) }
-            .take(5)
         val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit
+        val futureDays = selectForecastWidgetDays(weatherData)
         futureDays.forEachIndexed { i, f ->
             val r = rows[i]
             val dayLabel = DateFormatter.formatDayName(f.date)
@@ -111,4 +109,12 @@ object WidgetDataBinder {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
+}
+
+internal fun selectForecastWidgetDays(weatherData: WeatherData): List<com.clockweather.app.domain.model.DailyForecast> {
+    val forecastAnchorDate = weatherData.currentWeather.lastUpdated.toLocalDate()
+    return weatherData.dailyForecasts
+        .sortedBy { it.date }
+        .filter { it.date.isAfter(forecastAnchorDate) }
+        .take(5)
 }

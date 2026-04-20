@@ -28,6 +28,12 @@ enum class WeatherProviderType(
         labelResId = R.string.weather_provider_weather_api,
         maxForecastDays = 3,
         supportedForecastDays = listOf(3)
+    ),
+    OPENWEATHERMAP(
+        storageValue = "openweathermap",
+        labelResId = R.string.weather_provider_openweathermap,
+        maxForecastDays = 8,
+        supportedForecastDays = listOf(7, 8)
     );
 
     companion object {

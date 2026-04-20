@@ -186,7 +186,7 @@ abstract class BaseWidgetUpdater(
                 }
 
                 var weather = weatherRepo.getCachedWeatherData(location.id).first()
-                if (allowWeatherRefresh && shouldRefreshWeather(weather, LocalDate.now(), minimumFutureForecastDaysRequired)) {
+                if (allowWeatherRefresh && (isFirstRender || shouldRefreshWeather(weather, LocalDate.now(), minimumFutureForecastDaysRequired))) {
                     try {
                         val forecastDays = requiredForecastDaysForRefresh(
                             prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_FORECAST_DAYS] ?: 7,

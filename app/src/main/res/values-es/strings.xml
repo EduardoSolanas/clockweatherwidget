@@ -184,6 +184,7 @@
     <string name="weather_provider_open_meteo">Open-Meteo</string>
     <string name="weather_provider_google">Google Weather</string>
     <string name="weather_provider_weather_api">WeatherAPI.com</string>
+    <string name="weather_provider_openweathermap">OpenWeatherMap</string>
 
     <!-- Widget Config -->
     <string name="config_title">Configurar Widget</string>

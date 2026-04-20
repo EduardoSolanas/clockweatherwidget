@@ -31,5 +31,21 @@ class WeatherProviderPreferencesTest {
     fun `available providers always include open meteo`() {
         assertTrue(WeatherProviderPreferences.availableProviders().contains(WeatherProviderType.OPEN_METEO))
     }
+
+    @Test
+    fun `default provider resolves to openweathermap when configured`() {
+        assertEquals(
+            WeatherProviderType.OPENWEATHERMAP,
+            WeatherProviderPreferences.defaultProvider()
+        )
+    }
+
+    @Test
+    fun `resolve accepts openweathermap storage value`() {
+        assertEquals(
+            WeatherProviderType.OPENWEATHERMAP,
+            WeatherProviderPreferences.resolve("openweathermap")
+        )
+    }
 }
 

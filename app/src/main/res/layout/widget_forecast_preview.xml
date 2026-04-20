@@ -107,29 +107,6 @@
             <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_widget_weather_partly_cloudy_day" android:contentDescription="@null" />
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="15°/7°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" />
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="Sat" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" />
-            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_widget_weather_clear_day" android:contentDescription="@null" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="18°/10°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="Sun" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" />
-            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_widget_weather_clear_day" android:contentDescription="@null" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="19°/11°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" />
-        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>
-
