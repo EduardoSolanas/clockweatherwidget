@@ -68,31 +68,31 @@
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
             <TextView android:id="@+id/fday1_name" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday1_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <ImageView android:id="@+id/fday1_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:padding="2dp" android:scaleType="fitCenter" />
             <TextView android:id="@+id/fday1_high" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
             <TextView android:id="@+id/fday2_name" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday2_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <ImageView android:id="@+id/fday2_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:padding="2dp" android:scaleType="fitCenter" />
             <TextView android:id="@+id/fday2_high" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
             <TextView android:id="@+id/fday3_name" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday3_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <ImageView android:id="@+id/fday3_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:padding="2dp" android:scaleType="fitCenter" />
             <TextView android:id="@+id/fday3_high" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
             <TextView android:id="@+id/fday4_name" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday4_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <ImageView android:id="@+id/fday4_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:padding="2dp" android:scaleType="fitCenter" />
             <TextView android:id="@+id/fday4_high" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
             <TextView android:id="@+id/fday5_name" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
-            <ImageView android:id="@+id/fday5_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:scaleType="fitCenter" />
+            <ImageView android:id="@+id/fday5_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:contentDescription="@null" android:padding="2dp" android:scaleType="fitCenter" />
             <TextView android:id="@+id/fday5_high" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
         </LinearLayout>
 
