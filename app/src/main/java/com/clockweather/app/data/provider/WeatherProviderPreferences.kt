@@ -7,12 +7,12 @@ import com.clockweather.app.domain.model.WeatherProviderType
 object WeatherProviderPreferences {
     val KEY_WEATHER_PROVIDER = stringPreferencesKey("weather_provider")
 
-    fun defaultProvider(): WeatherProviderType {
-        val configuredDefault = WeatherProviderType.fromStorageValue(BuildConfig.DEFAULT_WEATHER_PROVIDER)
-        return configuredDefault
-            ?.takeIf(::isConfigured)
-            ?: WeatherProviderType.OPEN_METEO
-    }
+    fun defaultProvider(): WeatherProviderType =
+        if (isConfigured(WeatherProviderType.OPENWEATHERMAP)) {
+            WeatherProviderType.OPENWEATHERMAP
+        } else {
+            WeatherProviderType.OPEN_METEO
+        }
 
     fun resolve(rawValue: String?): WeatherProviderType {
         val requested = WeatherProviderType.fromStorageValue(rawValue) ?: defaultProvider()
@@ -29,4 +29,3 @@ object WeatherProviderPreferences {
         WeatherProviderType.OPENWEATHERMAP -> BuildConfig.OPENWEATHERMAP_API_KEY.isNotBlank()
     }
 }
-

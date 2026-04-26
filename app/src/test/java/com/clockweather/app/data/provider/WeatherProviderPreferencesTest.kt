@@ -50,8 +50,13 @@ class WeatherProviderPreferencesTest {
 
     @Test
     fun `resolve handles openweathermap storage value based on configuration`() {
+        val expected = if (WeatherProviderPreferences.isConfigured(WeatherProviderType.OPENWEATHERMAP)) {
+            WeatherProviderType.OPENWEATHERMAP
+        } else {
+            WeatherProviderPreferences.defaultProvider()
+        }
         assertEquals(
-            expectedDefaultProvider,
+            expected,
             WeatherProviderPreferences.resolve("openweathermap")
         )
     }
