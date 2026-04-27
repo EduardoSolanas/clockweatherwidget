@@ -104,9 +104,16 @@ class WeatherDtoMapper @Inject constructor() {
             val sunset = runCatching { LocalDateTime.parse(sunsetStr, timeFormatter).toLocalTime() }
                 .getOrElse { LocalTime.of(18, 0) }
 
+            // Use daytime hourly weather condition for daily forecast instead of assuming isDay=true
+            val daytimeWeatherCondition = dayHourly
+                .filter { it.isDay }
+                .firstOrNull()
+                ?.weatherCondition
+                ?: WeatherCondition.fromCode(dto.weatherCode[i], isDay = true)
+
             DailyForecast(
                 date = date,
-                weatherCondition = WeatherCondition.fromCode(dto.weatherCode[i], isDay = true),
+                weatherCondition = daytimeWeatherCondition,
                 temperatureMax = dto.temperatureMax[i],
                 temperatureMin = dto.temperatureMin[i],
                 feelsLikeMax = dto.apparentTemperatureMax[i],
