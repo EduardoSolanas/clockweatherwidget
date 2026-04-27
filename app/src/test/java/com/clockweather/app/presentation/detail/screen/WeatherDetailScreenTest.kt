@@ -7,6 +7,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.util.Locale
 
 class WeatherDetailScreenTest {
@@ -55,6 +56,46 @@ class WeatherDetailScreenTest {
         )
 
         assertEquals("London  ·  Fri, 27 Mar", title)
+    }
+
+    @Test
+    fun `selectWeatherDetailForecasts sorts by date before applying forecast day limit`() {
+        val today = LocalDate.of(2026, 3, 26)
+        val forecasts = listOf(
+            buildForecast(LocalDate.of(2026, 3, 28)),
+            buildForecast(LocalDate.of(2026, 3, 26)),
+            buildForecast(LocalDate.of(2026, 3, 27))
+        )
+
+        val selected = selectWeatherDetailForecasts(forecasts, forecastDays = 2, today = today)
+
+        assertEquals(
+            listOf(LocalDate.of(2026, 3, 26), LocalDate.of(2026, 3, 27)),
+            selected.map { it.date }
+        )
+    }
+
+    @Test
+    fun `selectWeatherDetailForecasts filters out past dates`() {
+        val today = LocalDate.of(2026, 3, 27)
+        val forecasts = listOf(
+            buildForecast(LocalDate.of(2026, 3, 25)), // past
+            buildForecast(LocalDate.of(2026, 3, 26)), // past
+            buildForecast(LocalDate.of(2026, 3, 27)), // today
+            buildForecast(LocalDate.of(2026, 3, 28)), // future
+            buildForecast(LocalDate.of(2026, 3, 29))  // future
+        )
+
+        val selected = selectWeatherDetailForecasts(forecasts, forecastDays = 7, today = today)
+
+        assertEquals(
+            listOf(
+                LocalDate.of(2026, 3, 27),
+                LocalDate.of(2026, 3, 28),
+                LocalDate.of(2026, 3, 29)
+            ),
+            selected.map { it.date }
+        )
     }
 
     private fun buildForecast(date: LocalDate): DailyForecast = DailyForecast(

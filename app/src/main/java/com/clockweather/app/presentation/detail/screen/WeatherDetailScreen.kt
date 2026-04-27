@@ -16,6 +16,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clockweather.app.R
+import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.presentation.common.UiState
 import com.clockweather.app.presentation.detail.WeatherDetailViewModel
 import java.time.LocalDate
@@ -30,7 +31,7 @@ internal fun normalizeSelectedDayIndex(selectedDayIndex: Int, forecastCount: Int
 internal fun buildWeatherTopBarTitle(
     locationName: String,
     selectedDayIndex: Int,
-    forecasts: List<com.clockweather.app.domain.model.DailyForecast>,
+    forecasts: List<DailyForecast>,
     locale: Locale = Locale.getDefault()
 ): String {
     val normalizedIndex = normalizeSelectedDayIndex(selectedDayIndex, forecasts.size)
@@ -40,6 +41,15 @@ internal fun buildWeatherTopBarTitle(
     val dateStr = date.format(DateTimeFormatter.ofPattern("EEE, d MMM", locale))
     return "$locationName  ·  $dateStr"
 }
+
+internal fun selectWeatherDetailForecasts(
+    dailyForecasts: List<DailyForecast>,
+    forecastDays: Int,
+    today: LocalDate = LocalDate.now()
+): List<DailyForecast> = dailyForecasts
+    .sortedBy { it.date }
+    .filter { it.date >= today }
+    .take(forecastDays)
 
 @OptIn(ExperimentalMaterial3Api::class, com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
 @Composable
@@ -85,7 +95,11 @@ fun WeatherDetailScreen(
 
     // Lift selected day index here so TopAppBar can react to it
     var selectedDayIndex by remember { mutableIntStateOf(0) }
-    val forecasts = (uiState as? UiState.Success)?.data?.dailyForecasts?.take(forecastDays) ?: emptyList()
+    val forecasts = (uiState as? UiState.Success)
+        ?.data
+        ?.dailyForecasts
+        ?.let { selectWeatherDetailForecasts(it, forecastDays) }
+        ?: emptyList()
     selectedDayIndex = normalizeSelectedDayIndex(selectedDayIndex, forecasts.size)
 
     // Build title: "London" for today, "London · Sat, 8 Mar" for other days
