@@ -42,6 +42,17 @@ class WidgetWeatherSectionLayoutTest {
         }
     }
 
+    @Test
+    fun `main weather icon has inset padding to avoid edge clipping`() {
+        val xml = readLayout("widget_weather_card.xml")
+
+        assertTrue(
+            "weather_icon should reserve padding so large icons do not draw flush to the ImageView bounds",
+            xml.contains("android:id=\"@+id/weather_icon\"") &&
+                xml.contains("android:padding"),
+        )
+    }
+
     private fun readLayout(fileName: String): String {
         val candidates = listOf(
             File("src/main/res/layout/$fileName"),

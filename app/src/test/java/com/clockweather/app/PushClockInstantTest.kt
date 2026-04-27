@@ -4,10 +4,18 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.util.Log
 import android.widget.RemoteViews
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.preferencesOf
 import com.clockweather.app.presentation.widget.common.ClockSnapshot
 import com.clockweather.app.presentation.widget.common.DigitState
 import com.clockweather.app.presentation.widget.common.WidgetClockStateStore
+import com.clockweather.app.util.WidgetPrefsCache
 import io.mockk.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOf
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -74,11 +82,26 @@ class PushClockInstantTest {
 
         // Clean state so each test starts fresh.
         WidgetClockStateStore.clearWidget(realContext, widgetId)
+        seedPrefsCache(highPrecision = true)
     }
 
     @After
     fun teardown() {
+        WidgetPrefsCache.resetForTesting()
         unmockkAll()
+    }
+
+    private fun seedPrefsCache(highPrecision: Boolean) {
+        WidgetPrefsCache.resetForTesting()
+        val dataStore = mockk<DataStore<Preferences>>()
+        every { dataStore.data } returns flowOf(
+            preferencesOf(
+                booleanPreferencesKey("high_precision_clock") to highPrecision,
+                booleanPreferencesKey("use_24h_clock") to true,
+            )
+        )
+        WidgetPrefsCache.init(dataStore, CoroutineScope(Dispatchers.Unconfined))
+        WidgetPrefsCache.seedBlocking(dataStore)
     }
 
     // ── Core invariant: only partial updates ─────────────────────
@@ -95,6 +118,16 @@ class PushClockInstantTest {
         app.pushClockInstant(forceAllDigits = true)
 
         verify(atLeast = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+    }
+
+    @Test
+    fun `pushClockInstant does not push RemoteViews in host driven TextClock mode`() {
+        seedPrefsCache(highPrecision = false)
+
+        app.pushClockInstant(forceAllDigits = true)
+
+        verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        assertNotNull(WidgetClockStateStore.getLastDigits(realContext, widgetId))
     }
 
     // ── State persistence ────────────────────────────────────────
@@ -216,4 +249,3 @@ class PushClockInstantTest {
         )
     }
 }
-

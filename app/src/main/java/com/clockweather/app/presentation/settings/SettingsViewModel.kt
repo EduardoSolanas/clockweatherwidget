@@ -164,8 +164,8 @@ class SettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "system")
 
     val isHighPrecisionEnabled: StateFlow<Boolean> = dataStore.data
-        .map { prefs -> prefs[KEY_HIGH_PRECISION] ?: true }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+        .map { prefs -> prefs[KEY_HIGH_PRECISION] ?: false }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val flipAnimationEnabled: StateFlow<Boolean> = dataStore.data
         .map { prefs -> prefs[KEY_FLIP_ANIMATION] ?: true }
@@ -313,6 +313,7 @@ class SettingsViewModel @Inject constructor(
             dataStore.edit { it[KEY_HIGH_PRECISION] = enabled }
             // B2: pass the new value directly — don't rely on DataStore read racing the write
             com.clockweather.app.receiver.ClockAlarmReceiver.scheduleNextTick(context, enabled)
+            triggerWidgetUpdate()
         }
     }
 

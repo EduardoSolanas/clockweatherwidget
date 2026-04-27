@@ -119,6 +119,7 @@ class PartialVsFullUpdateContractTest {
         every { anyConstructed<RemoteViews>().setDisplayedChild(any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setViewVisibility(any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setTextViewText(any(), any()) } just Runs
+        every { anyConstructed<RemoteViews>().setCharSequence(any<Int>(), any<String>(), any<CharSequence>()) } just Runs
         every { anyConstructed<RemoteViews>().setTextViewTextSize(any(), any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setTextColor(any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setInt(any(), any(), any()) } just Runs

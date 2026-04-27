@@ -71,6 +71,9 @@
     <string name="cd_navigate_back">Back</string>
     <string name="cd_settings">Settings</string>
     <string name="label_weather_fallback_title">Weather</string>
+    <string name="widget_weather_unavailable_title">Weather</string>
+    <string name="widget_weather_unavailable_condition">Updating weather</string>
+    <string name="widget_weather_unavailable_temp">--°</string>
 
     <!-- CurrentWeatherCard -->
     <string name="label_7day_forecast">7-DAY FORECAST</string>
@@ -148,13 +151,13 @@
     <string name="settings_show_today_forecast_desc">Display today\'s weather above the 7-day forecast rows</string>
     <string name="settings_category_advanced">Advanced / Reliability</string>
     <string name="settings_high_precision_clock_label">High Precision Clock</string>
-    <string name="settings_high_precision_clock_desc">Wake up the device every minute to ensure the time is perfectly accurate. Use if the clock stops ticking.</string>
+    <string name="settings_high_precision_clock_desc">Normal mode uses Android\'s built-in widget clock without waking the device every minute. Turn this on only if your launcher does not keep the clock moving.</string>
     <string name="settings_exact_alarm_permission_title">System Permission Required</string>
-    <string name="settings_exact_alarm_permission_desc">High Precision mode requires the \'Alarms &amp; reminders\' permission on Android 12+. Without this, updates may be delayed by a few minutes in battery saver mode.</string>
+    <string name="settings_exact_alarm_permission_desc">The High Precision fallback requires the \'Alarms &amp; reminders\' permission on Android 12+. Leave this off unless the widget clock stops on your launcher.</string>
     <string name="settings_exact_alarm_permission_button">Grant Permission</string>
     <string name="settings_exact_alarm_permission_granted">Permission Granted</string>
     <string name="settings_battery_optimization_title">Battery Optimization</string>
-    <string name="settings_battery_optimization_desc">Set to Unrestricted so the widget clock always updates while the screen is on. Keeps the app process alive for instant time ticks. Battery impact is negligible.</string>
+    <string name="settings_battery_optimization_desc">Optional fallback for aggressive battery managers. The clock itself uses Android\'s built-in widget clock; this mainly helps background weather refreshes.</string>
     <string name="settings_battery_optimization_button">Set Unrestricted</string>
     <string name="settings_battery_optimization_granted">Unrestricted ✓</string>
 

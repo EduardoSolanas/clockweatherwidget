@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Shared clock digit row — included in all widget layouts.
-     Text size + colors are applied at runtime by BaseWidgetUpdater. -->
+<!-- Shared clock row.
+     Four visual tiles are preserved; TextClock owns the live hour/minute text. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -8,52 +8,87 @@
     android:orientation="horizontal">
 
     <FrameLayout
+        android:id="@+id/clock_hour_pair"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1">
-        <TextView
-            android:id="@+id/digit_h1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/flip_digit_bg_light"
-            android:fontFamily="monospace"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:padding="8dp"
-            android:text="0"
-            android:textColor="@color/flip_digit_text_light"
-            android:textSize="48sp"
-            android:textStyle="bold" />
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_gravity="center_vertical"
-            android:background="@drawable/flip_hinge_line" />
-    </FrameLayout>
+        android:layout_weight="2">
 
-    <FrameLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_marginStart="@dimen/flip_digit_gap">
-        <TextView
-            android:id="@+id/digit_h2"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/flip_digit_bg_light"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/digit_h1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/flip_digit_bg_light"
+                    android:fontFamily="monospace"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:padding="8dp"
+                    android:text=" "
+                    android:textColor="@color/flip_digit_text_light"
+                    android:textSize="48sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/flip_hinge_line" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/flip_digit_gap"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/digit_h2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/flip_digit_bg_light"
+                    android:fontFamily="monospace"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:padding="8dp"
+                    android:text=" "
+                    android:textColor="@color/flip_digit_text_light"
+                    android:textSize="48sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/flip_hinge_line" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <TextClock
+            android:id="@+id/clock_hour"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:fontFamily="monospace"
+            android:format12Hour="hh"
+            android:format24Hour="HH"
             android:gravity="center"
             android:includeFontPadding="false"
+            android:letterSpacing="0.64"
+            android:maxLines="1"
             android:padding="8dp"
-            android:text="0"
+            android:singleLine="true"
             android:textColor="@color/flip_digit_text_light"
             android:textSize="48sp"
             android:textStyle="bold" />
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_gravity="center_vertical"
-            android:background="@drawable/flip_hinge_line" />
     </FrameLayout>
 
     <TextView
@@ -69,61 +104,98 @@
         android:textStyle="bold" />
 
     <FrameLayout
+        android:id="@+id/clock_minute_pair"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1">
-        <TextView
-            android:id="@+id/digit_m1"
+        android:layout_weight="2">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/flip_digit_bg_light"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/digit_m1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/flip_digit_bg_light"
+                    android:fontFamily="monospace"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:padding="8dp"
+                    android:text=" "
+                    android:textColor="@color/flip_digit_text_light"
+                    android:textSize="48sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/flip_hinge_line" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/flip_digit_gap"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/digit_m2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/flip_digit_bg_light"
+                    android:fontFamily="monospace"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:padding="8dp"
+                    android:text=" "
+                    android:textColor="@color/flip_digit_text_light"
+                    android:textSize="48sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/flip_hinge_line" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <TextClock
+            android:id="@+id/clock_minute"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:fontFamily="monospace"
+            android:format12Hour="mm"
+            android:format24Hour="mm"
             android:gravity="center"
             android:includeFontPadding="false"
+            android:letterSpacing="0.64"
+            android:maxLines="1"
             android:padding="8dp"
-            android:text="0"
+            android:singleLine="true"
             android:textColor="@color/flip_digit_text_light"
             android:textSize="48sp"
             android:textStyle="bold" />
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_gravity="center_vertical"
-            android:background="@drawable/flip_hinge_line" />
     </FrameLayout>
 
-    <FrameLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_marginStart="@dimen/flip_digit_gap">
-        <TextView
-            android:id="@+id/digit_m2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/flip_digit_bg_light"
-            android:fontFamily="monospace"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:padding="8dp"
-            android:text="0"
-            android:textColor="@color/flip_digit_text_light"
-            android:textSize="48sp"
-            android:textStyle="bold" />
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_gravity="center_vertical"
-            android:background="@drawable/flip_hinge_line" />
-    </FrameLayout>
-
-    <TextView
+    <TextClock
         android:id="@+id/ampm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:layout_marginStart="6dp"
         android:layout_marginBottom="4dp"
+        android:format12Hour="a"
+        android:format24Hour=""
         android:textColor="@color/flip_digit_text_light"
         android:textSize="@dimen/flip_ampm_text_size"
         android:textStyle="bold" />

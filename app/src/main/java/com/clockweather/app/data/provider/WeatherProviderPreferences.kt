@@ -7,12 +7,7 @@ import com.clockweather.app.domain.model.WeatherProviderType
 object WeatherProviderPreferences {
     val KEY_WEATHER_PROVIDER = stringPreferencesKey("weather_provider")
 
-    fun defaultProvider(): WeatherProviderType =
-        if (isConfigured(WeatherProviderType.OPENWEATHERMAP)) {
-            WeatherProviderType.OPENWEATHERMAP
-        } else {
-            WeatherProviderType.OPEN_METEO
-        }
+    fun defaultProvider(): WeatherProviderType = WeatherProviderType.OPEN_METEO
 
     fun resolve(rawValue: String?): WeatherProviderType {
         val requested = WeatherProviderType.fromStorageValue(rawValue) ?: defaultProvider()

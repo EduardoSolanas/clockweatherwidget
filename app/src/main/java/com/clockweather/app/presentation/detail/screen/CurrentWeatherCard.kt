@@ -64,8 +64,9 @@ fun WeatherDetailContent(
     onDaySelected: (Int) -> Unit = {},
     forecastDays: Int = 7
 ) {
-    val forecasts = weatherData.dailyForecasts.take(forecastDays)
+    val forecasts = selectWeatherDetailForecasts(weatherData.dailyForecasts, forecastDays)
     val selectedForecast = forecasts.getOrNull(selectedDayIndex) ?: forecasts.firstOrNull()
+    val displayWeatherData = weatherData.copy(dailyForecasts = forecasts)
 
     Column(
         modifier = Modifier
@@ -77,7 +78,7 @@ fun WeatherDetailContent(
     ) {
         // ── Hero card ──────────────────────────────────────────────────────
         HeroWeatherCard(
-            weatherData = weatherData,
+            weatherData = displayWeatherData,
             temperatureUnit = temperatureUnit,
             selectedDayIndex = selectedDayIndex
         )
@@ -98,7 +99,7 @@ fun WeatherDetailContent(
         )
 
         // ── Detail metrics grid ─────────────────────────────────────────────
-        MetricsGrid(weatherData = weatherData, temperatureUnit = temperatureUnit, selectedDayIndex = selectedDayIndex)
+        MetricsGrid(weatherData = displayWeatherData, temperatureUnit = temperatureUnit, selectedDayIndex = selectedDayIndex)
 
         // ── Sunrise / Sunset ────────────────────────────────────────────────
         val shownForecast = selectedForecast

@@ -18,6 +18,7 @@ import com.clockweather.app.util.WidgetPrefsCache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -63,6 +64,8 @@ abstract class BaseWidgetUpdater(
                 val currentEpochMinute = snapshot.epochMinute
                 val prefs = entryPoint.dataStore().data.first()
                 val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: android.text.format.DateFormat.is24HourFormat(context)
+                val highPrecisionClock = prefs[booleanPreferencesKey("high_precision_clock")] ?: false
+                val useHostDrivenClock = !highPrecisionClock
                 val showDate = prefs[booleanPreferencesKey("show_date_in_widget")] ?: true
                 val tempUnitName = prefs[stringPreferencesKey("temperature_unit")] ?: TemperatureUnit.CELSIUS.name
                 val tempUnit = runCatching { TemperatureUnit.valueOf(tempUnitName) }.getOrDefault(TemperatureUnit.CELSIUS)
@@ -109,7 +112,13 @@ abstract class BaseWidgetUpdater(
                 } catch (e: Exception) { /* ignore */ }
 
                 if (!preserveClockForSameMinuteNonTick) {
-                    WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
+                    WidgetDataBinder.bindSimpleClockViews(
+                        views,
+                        now.hour,
+                        now.minute,
+                        is24h,
+                        useHostDrivenClock = useHostDrivenClock,
+                    )
                 }
 
                 if (!preserveClockForSameMinuteNonTick) {
@@ -131,6 +140,16 @@ abstract class BaseWidgetUpdater(
                         views.setViewLayoutHeight(id, context.resources.getDimension(dimHeight), android.util.TypedValue.COMPLEX_UNIT_PX)
                     }
 
+                    views.setTextColor(id, digitColor)
+                    views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
+                }
+                listOf(
+                    com.clockweather.app.R.id.clock_hour,
+                    com.clockweather.app.R.id.clock_minute,
+                ).forEach { id ->
+                    try {
+                        views.setOnClickPendingIntent(id, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
+                    } catch (e: Exception) { /* ignore */ }
                     views.setTextColor(id, digitColor)
                     views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
                 }
@@ -170,22 +189,18 @@ abstract class BaseWidgetUpdater(
                 val locationRepo = entryPoint.locationRepository()
                 val weatherRepo = entryPoint.weatherRepository()
                 val locations = locationRepo.getSavedLocations().first()
-                val location = locations.firstOrNull() ?: locationRepo.getCurrentLocation()?.also {
-                    locationRepo.saveLocation(it)
+                val detectedLocation = if (locations.isEmpty()) {
+                    withTimeoutOrNull(6_000L) { locationRepo.getCurrentLocation() }
+                } else {
+                    null
+                }
+                val location = locations.firstOrNull() ?: run {
+                    val candidate = detectedLocation ?: locationRepo.getFallbackLocation()
+                    val savedId = locationRepo.saveLocation(candidate)
+                    if (candidate.id == 0L) candidate.copy(id = savedId) else candidate
                 }
 
-                if (location == null) {
-                    if (isFirstRender) {
-                        appWidgetManager.updateAppWidget(appWidgetId, views)
-                    } else {
-                        appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
-                    }
-                    WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
-                    WidgetClockStateStore.markBaselineReady(context, appWidgetId)
-                    return@withContext
-                }
-
-                var weather = weatherRepo.getCachedWeatherData(location.id).first()
+                var weather = weatherRepo.getWeatherData(location).first()
                 if (allowWeatherRefresh && (isFirstRender || shouldRefreshWeather(weather, LocalDate.now(), minimumFutureForecastDaysRequired))) {
                     try {
                         val forecastDays = requiredForecastDaysForRefresh(
@@ -193,13 +208,15 @@ abstract class BaseWidgetUpdater(
                             minimumFutureForecastDaysRequired,
                         )
                         weatherRepo.refreshWeatherData(location, forecastDays)
-                        weather = weatherRepo.getCachedWeatherData(location.id).first()
+                        weather = weatherRepo.getWeatherData(location).first()
                     } catch (e: Exception) { }
                 }
 
                 if (weather != null) {
                     WidgetDataBinder.bindWeatherViews(context, views, weather, tempUnit)
                     bindExtra(views, weather, tempUnit, prefs)
+                } else {
+                    WidgetDataBinder.bindWeatherUnavailableViews(context, views)
                 }
 
                 if (isFirstRender) {
@@ -242,13 +259,25 @@ abstract class BaseWidgetUpdater(
                 }
 
                 val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: android.text.format.DateFormat.is24HourFormat(context)
+                val highPrecisionClock = prefs[booleanPreferencesKey("high_precision_clock")] ?: false
+                if (!highPrecisionClock) {
+                    WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
+                    Log.d(tag, "Host-driven TextClock owns clock update for widget $appWidgetId")
+                    return@withContext
+                }
                 val views = RemoteViews(context.packageName, layoutResId)
                 val now = snapshot.localTime
                 val newDigits = DigitState.from(now.hour, now.minute, is24h)
 
                 Log.d(tag, "CLOCK_TRACE updateClockOnly id=$appWidgetId minute=$currentEpochMinute last=$lastRenderedEpochMinute new=$newDigits")
 
-                WidgetDataBinder.bindSimpleClockViews(views, now.hour, now.minute, is24h)
+                WidgetDataBinder.bindSimpleClockViews(
+                    views,
+                    now.hour,
+                    now.minute,
+                    is24h,
+                    useHostDrivenClock = false,
+                )
 
                 WidgetClockStateStore.saveLastDigits(context, appWidgetId, newDigits)
 
@@ -295,6 +324,10 @@ abstract class BaseWidgetUpdater(
                         com.clockweather.app.R.id.digit_h2,
                         com.clockweather.app.R.id.digit_m1,
                         com.clockweather.app.R.id.digit_m2,
+                        com.clockweather.app.R.id.clock_hour_pair,
+                        com.clockweather.app.R.id.clock_minute_pair,
+                        com.clockweather.app.R.id.clock_hour,
+                        com.clockweather.app.R.id.clock_minute,
                         com.clockweather.app.R.id.colon,
                         com.clockweather.app.R.id.ampm
                     )

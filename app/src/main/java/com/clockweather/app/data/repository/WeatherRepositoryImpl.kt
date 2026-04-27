@@ -12,11 +12,11 @@ import com.clockweather.app.data.provider.WeatherDataProviderFactory
 import com.clockweather.app.data.provider.WeatherProviderPreferences
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
+import com.clockweather.app.domain.model.normalizeDailyConditions
 import com.clockweather.app.domain.repository.WeatherRepository
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -38,7 +38,7 @@ class WeatherRepositoryImpl @Inject constructor(
     // B4: prevents concurrent widgets from firing duplicate network requests for the same location
     private val refreshMutex = Mutex()
 
-    override fun getWeatherData(location: Location): Flow<WeatherData> {
+    override fun getWeatherData(location: Location): Flow<WeatherData?> {
         return combine(
             currentWeatherDao.getCurrentWeather(location.id),
             hourlyForecastDao.getHourlyForecasts(location.id),
@@ -54,7 +54,7 @@ class WeatherRepositoryImpl @Inject constructor(
                 dailyForecasts = daily.map { entityMapper.mapDailyToDomain(it) },
                 airQuality = entityMapper.mapAirQualityFromEntity(current)
             )
-        }.filterNotNull()
+        }
     }
 
     override suspend fun refreshWeatherData(location: Location, forecastDays: Int) {
@@ -63,30 +63,25 @@ class WeatherRepositoryImpl @Inject constructor(
                 dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
             )
             val provider = providerFactory.get(providerType)
-            val weatherData = provider.fetchWeatherData(
-                location = location,
-                forecastDays = forecastDays.coerceIn(1, providerType.maxForecastDays)
-            )
-            persistWeatherData(weatherData, location.id)
-        }
-    }
-
-    override fun getCachedWeatherData(locationId: Long): Flow<WeatherData?> {
-        return combine(
-            currentWeatherDao.getCurrentWeather(locationId),
-            hourlyForecastDao.getHourlyForecasts(locationId),
-            dailyForecastDao.getDailyForecasts(locationId),
-            locationDao.getLocationById(locationId)
-        ) { current, hourly, daily, locationEntity ->
-            val loc = locationEntity?.let { entityMapper.mapLocationToDomain(it) } ?: return@combine null
-            current ?: return@combine null
-            WeatherData(
-                location = loc,
-                currentWeather = entityMapper.mapCurrentWeatherToDomain(current),
-                hourlyForecasts = hourly.map { entityMapper.mapHourlyToDomain(it) },
-                dailyForecasts = daily.map { entityMapper.mapDailyToDomain(it) },
-                airQuality = entityMapper.mapAirQualityFromEntity(current)
-            )
+            val weatherData = try {
+                provider.fetchWeatherData(
+                    location = location,
+                    forecastDays = forecastDays.coerceIn(1, providerType.maxForecastDays)
+                )
+            } catch (error: Exception) {
+                if (providerType == com.clockweather.app.domain.model.WeatherProviderType.OPEN_METEO) {
+                    throw error
+                }
+                providerFactory.get(com.clockweather.app.domain.model.WeatherProviderType.OPEN_METEO)
+                    .fetchWeatherData(
+                        location = location,
+                        forecastDays = forecastDays.coerceIn(
+                            1,
+                            com.clockweather.app.domain.model.WeatherProviderType.OPEN_METEO.maxForecastDays
+                        )
+                    )
+            }
+            persistWeatherData(weatherData.normalizeDailyConditions(), location.id)
         }
     }
 

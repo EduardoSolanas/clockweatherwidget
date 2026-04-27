@@ -328,6 +328,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         val cachedPrefs = WidgetPrefsCache.getCachedSnapshot()
         val is24h = cachedPrefs?.get(booleanPreferencesKey("use_24h_clock"))
             ?: android.text.format.DateFormat.is24HourFormat(this)
+        val highPrecisionClock = cachedPrefs?.get(booleanPreferencesKey("high_precision_clock")) ?: false
         val mgr = AppWidgetManager.getInstance(this)
 
         val displayHour = if (is24h) now.hour
@@ -351,6 +352,25 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             ForecastWidgetProvider::class.java,
             LargeWidgetProvider::class.java
         )
+
+        if (!highPrecisionClock) {
+            providerLayouts.forEach { (providerClass, _) ->
+                val ids = mgr.getAppWidgetIds(ComponentName(this, providerClass))
+                ids.forEach { id ->
+                    if (suppressAnimationWindow) {
+                        WidgetClockStateStore.markNoAnimationUntilEpochMinute(this, id, currentEpochMinute + 1L)
+                    }
+                    WidgetClockStateStore.saveLastDigits(this, id, DigitState(h1, h2, m1, m2))
+                    WidgetClockStateStore.markRendered(this, id, currentEpochMinute)
+                    android.util.Log.d(
+                        "ClockWeatherApp",
+                        "CLOCK_TRACE pushClockInstant source=$source widget=$id " +
+                            "minute=$currentEpochMinute path=host_text_clock no-op"
+                    )
+                }
+            }
+            return
+        }
 
         providerLayouts.forEach { (providerClass, layoutId) ->
             val usesSimpleClockText = providerClass in simpleTextClockProviders
@@ -500,12 +520,12 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         widgetRefreshMutex.withLock { block() }
     }
 
-    /** Read the high-precision preference. Defaults to true. */
+    /** Read the high-precision preference. Defaults to false because TextClock owns normal time updates. */
     suspend fun resolveHighPrecision(): Boolean {
         return try {
-            dataStore.data.first()[booleanPreferencesKey("high_precision_clock")] ?: true
+            dataStore.data.first()[booleanPreferencesKey("high_precision_clock")] ?: false
         } catch (_: Exception) {
-            true
+            false
         }
     }
 

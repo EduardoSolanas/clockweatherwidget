@@ -128,10 +128,21 @@ class BaseWidgetUpdaterTest {
         every { entryPoint.locationRepository() } returns locationRepo
         every { locationRepo.getSavedLocations() } returns flowOf(emptyList())
         coEvery { locationRepo.getCurrentLocation() } returns null
+        every { locationRepo.getFallbackLocation() } returns Location(
+            id = 0L,
+            name = "London",
+            country = "GB",
+            latitude = 51.5074,
+            longitude = -0.1278,
+            isCurrentLocation = true,
+        )
+        coEvery { locationRepo.saveLocation(any()) } answers {
+            firstArg<Location>().id.takeIf { it != 0L } ?: 1L
+        }
 
         weatherRepo = mockk(relaxed = true)
         every { entryPoint.weatherRepository() } returns weatherRepo
-        every { weatherRepo.getCachedWeatherData(any()) } returns flowOf(null)
+        every { weatherRepo.getWeatherData(any()) } returns flowOf(null)
 
         mockResources = mockk(relaxed = true)
         mockContext = mockk(relaxed = true)
@@ -140,11 +151,15 @@ class BaseWidgetUpdaterTest {
         every { mockContext.resources } returns mockResources
         every { mockContext.getColor(R.color.flip_digit_text_light) } returns Color.BLACK
         every { mockContext.getColor(R.color.flip_digit_text_dark) } returns Color.WHITE
+        every { mockContext.getString(R.string.widget_weather_unavailable_title) } returns "Weather"
+        every { mockContext.getString(R.string.widget_weather_unavailable_condition) } returns "Updating weather"
+        every { mockContext.getString(R.string.widget_weather_unavailable_temp) } returns "--°"
         every { mockResources.getDimension(any()) } returns 48f
 
         mockkConstructor(RemoteViews::class)
         every { anyConstructed<RemoteViews>().setViewVisibility(any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setTextViewText(any(), any()) } just Runs
+        every { anyConstructed<RemoteViews>().setCharSequence(any<Int>(), any<String>(), any<CharSequence>()) } just Runs
         every { anyConstructed<RemoteViews>().setTextViewTextSize(any(), any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setTextColor(any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setInt(any(), any(), any()) } just Runs
@@ -173,6 +188,15 @@ class BaseWidgetUpdaterTest {
         verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
         assertNotNull(WidgetClockStateStore.getLastDigits(realContext, widgetId))
         confirmVerified(appWidgetManager)
+    }
+
+    @Test
+    fun `missing current location uses fallback and refreshes weather`() = runBlocking {
+        updater.updateWidget(widgetId)
+
+        verify(exactly = 1) { locationRepo.getFallbackLocation() }
+        coVerify(exactly = 1) { locationRepo.saveLocation(match { it.name == "London" }) }
+        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(match { it.name == "London" }, 7) }
     }
 
     @Test
@@ -265,7 +289,7 @@ class BaseWidgetUpdaterTest {
     }
 
     @Test
-    fun `updateClockOnly uses partiallyUpdateAppWidget when minute changes`() = runBlocking {
+    fun `updateClockOnly skips manual RemoteViews push in host driven clock mode`() = runBlocking {
         WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState(1, 4, 3, 7))
         WidgetClockStateStore.markBaselineReady(realContext, widgetId)
         WidgetClockStateStore.markRendered(realContext, widgetId, System.currentTimeMillis() / 60000L - 1)
@@ -279,11 +303,11 @@ class BaseWidgetUpdaterTest {
         updater.updateClockOnly(widgetId)
 
         verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
-        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
-        verify(exactly = 1) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_h1, any()) }
-        verify(exactly = 1) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_h2, any()) }
-        verify(exactly = 1) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m1, any()) }
-        verify(exactly = 1) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m2, any()) }
+        verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_h1, any()) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_h2, any()) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m1, any()) }
+        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m2, any()) }
         confirmVerified(appWidgetManager)
     }
 
@@ -326,7 +350,7 @@ class BaseWidgetUpdaterTest {
             epochMinute = currentMinute,
         )
         every { locationRepo.getSavedLocations() } returns flowOf(listOf(location))
-        every { weatherRepo.getCachedWeatherData(location.id) } returns flowOf(
+        every { weatherRepo.getWeatherData(location) } returns flowOf(
             sampleWeatherData(
                 location = location,
                 currentLastUpdated = LocalDateTime.of(2026, 4, 2, 23, 55),
@@ -355,7 +379,7 @@ class BaseWidgetUpdaterTest {
             epochMinute = currentMinute,
         )
         every { locationRepo.getSavedLocations() } returns flowOf(listOf(location))
-        every { weatherRepo.getCachedWeatherData(location.id) } returns flowOf(
+        every { weatherRepo.getWeatherData(location) } returns flowOf(
             sampleWeatherData(
                 location = location,
                 currentLastUpdated = LocalDateTime.of(2026, 4, 3, 9, 0),
@@ -413,7 +437,7 @@ class BaseWidgetUpdaterTest {
             epochMinute = currentMinute,
         )
         every { locationRepo.getSavedLocations() } returns flowOf(listOf(location))
-        every { weatherRepo.getCachedWeatherData(location.id) } returns flowOf(
+        every { weatherRepo.getWeatherData(location) } returns flowOf(
             sampleWeatherData(
                 location = location,
                 currentLastUpdated = LocalDateTime.of(today, LocalTime.of(10, 0)),
@@ -427,6 +451,74 @@ class BaseWidgetUpdaterTest {
         updater.updateWidget(widgetId)
 
         coVerify(exactly = 1) { weatherRepo.refreshWeatherData(location, 7) }
+    }
+
+    @Test
+    fun `empty weather cache triggers refresh before showing unavailable state`() = runBlocking {
+        val location = Location(
+            id = 43L,
+            name = "London",
+            country = "UK",
+            latitude = 51.5072,
+            longitude = -0.1276,
+        )
+        val currentMinute = System.currentTimeMillis() / 60000L
+        mockkObject(ClockSnapshot.Companion)
+        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
+            localTime = LocalTime.of(10, 26),
+            epochMinute = currentMinute,
+        )
+        every { locationRepo.getSavedLocations() } returns flowOf(listOf(location))
+        every { weatherRepo.getWeatherData(location) } returnsMany listOf(flowOf(null), flowOf(null))
+
+        updater.updateWidget(widgetId)
+
+        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(location, 7) }
+        verify(exactly = 1) {
+            anyConstructed<RemoteViews>().setTextViewText(R.id.condition_text, "Updating weather")
+        }
+        verify(exactly = 1) {
+            anyConstructed<RemoteViews>().setViewVisibility(R.id.weather_card, android.view.View.VISIBLE)
+        }
+    }
+
+    @Test
+    fun `first render uses saved location id immediately after detecting current location`() = runBlocking {
+        val detectedLocation = Location(
+            id = 0L,
+            name = "Greater London",
+            country = "UK",
+            latitude = 51.5072,
+            longitude = -0.1276,
+            isCurrentLocation = true,
+        )
+        val savedLocation = detectedLocation.copy(id = 99L)
+        val currentMinute = System.currentTimeMillis() / 60000L
+        mockkObject(ClockSnapshot.Companion)
+        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
+            localTime = LocalTime.of(10, 26),
+            epochMinute = currentMinute,
+        )
+        every { locationRepo.getSavedLocations() } returns flowOf(emptyList())
+        coEvery { locationRepo.getCurrentLocation() } returns detectedLocation
+        coEvery { locationRepo.saveLocation(detectedLocation) } returns 99L
+        every { weatherRepo.getWeatherData(savedLocation) } returnsMany listOf(
+            flowOf(null),
+            flowOf(
+                sampleWeatherData(
+                    location = savedLocation,
+                    currentLastUpdated = LocalDateTime.of(LocalDate.now(), LocalTime.of(10, 0)),
+                    startDate = LocalDate.now(),
+                )
+            )
+        )
+
+        WidgetClockStateStore.clearWidget(realContext, widgetId)
+
+        updater.updateWidget(widgetId)
+
+        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(savedLocation, 7) }
+        verify(exactly = 2) { weatherRepo.getWeatherData(savedLocation) }
     }
 
     private fun sampleWeatherData(

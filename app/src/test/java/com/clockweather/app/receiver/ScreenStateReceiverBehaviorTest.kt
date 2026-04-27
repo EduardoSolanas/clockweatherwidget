@@ -17,10 +17,10 @@ import org.robolectric.annotation.Config
  * Behavioral tests for [ScreenStateReceiver] — the dynamically registered screen-lifecycle handler.
  *
  * Invariants protected:
- * 1. SCREEN_OFF unregisters TIME_TICK and schedules a keepalive alarm.
+ * 1. SCREEN_OFF unregisters TIME_TICK without scheduling a wakeup keepalive.
  * 2. SCREEN_ON registers TIME_TICK and triggers unlock convergence only when not keyguard-locked.
  * 3. USER_PRESENT triggers unlock convergence (not throttled by prior SCREEN_ON).
- * 4. DREAMING_STARTED unregisters TIME_TICK and schedules a keepalive alarm.
+ * 4. DREAMING_STARTED unregisters TIME_TICK without scheduling a wakeup keepalive.
  * 5. DREAMING_STOPPED registers TIME_TICK and triggers unlock convergence only when not keyguard-locked.
  * 6. Rapid SCREEN_ON events within 2500 ms are throttled (only first fires).
  * 7. USER_PRESENT bypasses throttle even when called immediately after SCREEN_ON.
@@ -75,10 +75,10 @@ class ScreenStateReceiverBehaviorTest {
     }
 
     @Test
-    fun `SCREEN_OFF schedules keepalive alarm`() {
+    fun `SCREEN_OFF does not schedule keepalive alarm`() {
         receiver.onReceive(context, Intent(Intent.ACTION_SCREEN_OFF))
 
-        verify(exactly = 1) { ClockAlarmReceiver.scheduleKeepalive(any()) }
+        verify(exactly = 0) { ClockAlarmReceiver.scheduleKeepalive(any()) }
     }
 
     @Test
@@ -145,10 +145,10 @@ class ScreenStateReceiverBehaviorTest {
     }
 
     @Test
-    fun `DREAMING_STARTED schedules keepalive alarm`() {
+    fun `DREAMING_STARTED does not schedule keepalive alarm`() {
         receiver.onReceive(context, Intent(Intent.ACTION_DREAMING_STARTED))
 
-        verify(exactly = 1) { ClockAlarmReceiver.scheduleKeepalive(any()) }
+        verify(exactly = 0) { ClockAlarmReceiver.scheduleKeepalive(any()) }
     }
 
     @Test
@@ -318,4 +318,3 @@ class ScreenStateReceiverBehaviorTest {
         }
     }
 }
-

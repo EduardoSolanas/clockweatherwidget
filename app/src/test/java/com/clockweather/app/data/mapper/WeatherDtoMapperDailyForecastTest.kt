@@ -14,7 +14,7 @@ class WeatherDtoMapperDailyForecastTest {
     private val mapper = WeatherDtoMapper()
 
     @Test
-    fun `daily forecast uses daytime weather condition from hourly data instead of nighttime`() {
+    fun `daily forecast uses DTO daily weather code`() {
         val location = Location(
             id = 1L,
             name = "Test City",
@@ -36,7 +36,7 @@ class WeatherDtoMapperDailyForecastTest {
                 temperature = 18.0,
                 apparentTemperature = 17.0,
                 isDay = 1,
-                weatherCode = 80, // Code for moderate rain
+                weatherCode = 80,
                 windSpeed = 12.0,
                 windDirection = 180,
                 windGusts = 15.0,
@@ -55,7 +55,7 @@ class WeatherDtoMapperDailyForecastTest {
                 temperature = listOf(12.0, 18.0),
                 apparentTemperature = listOf(10.0, 17.0),
                 isDay = listOf(0, 1),
-                weatherCode = listOf(80, 0), // Night: rain, Day: clear
+                weatherCode = listOf(80, 0), // Night: rain, Day: clear — but only daily code is used
                 windSpeed = listOf(10.0, 12.0),
                 windDirection = listOf(180, 180),
                 relativeHumidity = listOf(70, 60),
@@ -68,7 +68,7 @@ class WeatherDtoMapperDailyForecastTest {
             hourlyUnits = null,
             daily = DailyWeatherDto(
                 time = listOf("2026-04-27"),
-                weatherCode = listOf(80), // Overall day code (rain)
+                weatherCode = listOf(80), // WMO 80 = RAIN_SHOWER_SLIGHT — this is what should be used
                 temperatureMax = listOf(20.0),
                 temperatureMin = listOf(10.0),
                 apparentTemperatureMax = listOf(18.0),
@@ -87,14 +87,12 @@ class WeatherDtoMapperDailyForecastTest {
 
         val weatherData = mapper.mapToWeatherData(response, location)
 
-        // The daily forecast should use the daytime weather condition (CLEAR_DAY from hourly code 0)
-        // NOT the overall daily code 80 (RAIN_MODERATE)
         assertEquals(1, weatherData.dailyForecasts.size)
-        assertEquals(WeatherCondition.CLEAR_DAY, weatherData.dailyForecasts[0].weatherCondition)
+        assertEquals(WeatherCondition.RAIN_SHOWER_SLIGHT, weatherData.dailyForecasts[0].weatherCondition)
     }
 
     @Test
-    fun `daily forecast falls back to DTO weather code when no daytime hourly data available`() {
+    fun `daily forecast uses DTO weather code even with no daytime hourly data`() {
         val location = Location(
             id = 1L,
             name = "Test City",

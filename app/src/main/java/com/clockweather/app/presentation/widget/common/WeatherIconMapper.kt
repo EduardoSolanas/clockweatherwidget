@@ -40,4 +40,3 @@ object WeatherIconMapper {
         WeatherCondition.UNKNOWN -> R.drawable.ic_widget_weather_clear_day
     }
 }
-

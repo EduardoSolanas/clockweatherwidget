@@ -17,6 +17,7 @@ import com.clockweather.app.domain.model.WindDirection
 import com.clockweather.app.domain.repository.LocationRepository
 import com.clockweather.app.domain.usecase.GetWeatherDataUseCase
 import com.clockweather.app.domain.usecase.RefreshWeatherUseCase
+import com.clockweather.app.presentation.common.UiState
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -24,6 +25,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -176,6 +179,31 @@ class WeatherDetailViewModelTest {
 
         coVerify(exactly = 2) { refreshWeatherUseCase(location, forecastDays = 7) }
         coVerify(exactly = 2) { app.refreshAllWidgets(app, false, false) }
+    }
+
+    @Test
+    fun `cancelling an in flight load does not show coroutine cancellation in UI`() = runTest(dispatcher) {
+        every { getWeatherDataUseCase(location) } returns flow {
+            delay(60_000)
+            emit(sampleWeatherData(location))
+        }
+
+        val viewModel = WeatherDetailViewModel(
+            getWeatherDataUseCase = getWeatherDataUseCase,
+            refreshWeatherUseCase = refreshWeatherUseCase,
+            locationRepository = locationRepository,
+            dataStore = dataStore,
+            context = context,
+        )
+
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        val uiState = viewModel.uiState.value
+        when (uiState) {
+            is UiState.Error -> error("Expected cancellation to stay internal, but UI showed: ${uiState.message}")
+            else -> Unit
+        }
     }
 
     private fun sampleWeatherData(location: Location): WeatherData {

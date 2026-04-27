@@ -35,7 +35,7 @@ class BootCompletedReceiver : BroadcastReceiver() {
                             app?.registerScreenStateReceiver()
                         }
 
-                        val isHighPrecision = app?.resolveHighPrecision() ?: true
+                        val isHighPrecision = app?.resolveHighPrecision() ?: false
                         ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
                     }
                 } finally {

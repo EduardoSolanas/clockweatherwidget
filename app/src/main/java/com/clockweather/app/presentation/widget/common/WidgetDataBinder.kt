@@ -3,6 +3,7 @@ package com.clockweather.app.presentation.widget.common
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import android.widget.RemoteViews
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.TemperatureUnit
@@ -18,7 +19,8 @@ object WidgetDataBinder {
         views: RemoteViews,
         hour: Int,
         minute: Int,
-        is24h: Boolean = true
+        is24h: Boolean = true,
+        useHostDrivenClock: Boolean = true
     ) {
         val displayHour = if (is24h) hour
             else if (hour == 0) 12
@@ -30,11 +32,30 @@ object WidgetDataBinder {
         val m1 = minute / 10
         val m2 = minute % 10
 
-        views.setTextViewText(R.id.digit_h1, h1.toString())
-        views.setTextViewText(R.id.digit_h2, h2.toString())
-        views.setTextViewText(R.id.digit_m1, m1.toString())
-        views.setTextViewText(R.id.digit_m2, m2.toString())
-        views.setTextViewText(R.id.ampm, if (is24h) "" else if (hour < 12) "AM" else "PM")
+        val hourFormat = if (is24h) "HH" else "hh"
+        val ampmFormat = if (is24h) "" else "a"
+        views.setCharSequence(R.id.clock_hour, "setFormat12Hour", hourFormat)
+        views.setCharSequence(R.id.clock_hour, "setFormat24Hour", hourFormat)
+        views.setCharSequence(R.id.clock_minute, "setFormat12Hour", "mm")
+        views.setCharSequence(R.id.clock_minute, "setFormat24Hour", "mm")
+        views.setCharSequence(R.id.ampm, "setFormat12Hour", ampmFormat)
+        views.setCharSequence(R.id.ampm, "setFormat24Hour", ampmFormat)
+
+        if (useHostDrivenClock) {
+            views.setViewVisibility(R.id.clock_hour, android.view.View.VISIBLE)
+            views.setViewVisibility(R.id.clock_minute, android.view.View.VISIBLE)
+            views.setTextViewText(R.id.digit_h1, " ")
+            views.setTextViewText(R.id.digit_h2, " ")
+            views.setTextViewText(R.id.digit_m1, " ")
+            views.setTextViewText(R.id.digit_m2, " ")
+        } else {
+            views.setViewVisibility(R.id.clock_hour, android.view.View.GONE)
+            views.setViewVisibility(R.id.clock_minute, android.view.View.GONE)
+            views.setTextViewText(R.id.digit_h1, h1.toString())
+            views.setTextViewText(R.id.digit_h2, h2.toString())
+            views.setTextViewText(R.id.digit_m1, m1.toString())
+            views.setTextViewText(R.id.digit_m2, m2.toString())
+        }
     }
 
     fun bindWeatherViews(
@@ -68,6 +89,18 @@ object WidgetDataBinder {
         views.setViewVisibility(R.id.weather_card, android.view.View.VISIBLE)
     }
 
+    fun bindWeatherUnavailableViews(
+        context: Context,
+        views: RemoteViews,
+    ) {
+        views.setTextViewText(R.id.city_name, context.getString(R.string.widget_weather_unavailable_title))
+        views.setTextViewText(R.id.condition_text, context.getString(R.string.widget_weather_unavailable_condition))
+        views.setImageViewResource(R.id.weather_icon, R.drawable.ic_widget_weather_partly_cloudy_day)
+        views.setTextViewText(R.id.current_temp, context.getString(R.string.widget_weather_unavailable_temp))
+        views.setTextViewText(R.id.high_low, "")
+        views.setViewVisibility(R.id.weather_card, View.VISIBLE)
+    }
+
     fun bindWeeklyForecastRows(
         context: Context,
         views: RemoteViews,
@@ -85,16 +118,25 @@ object WidgetDataBinder {
         )
         val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit
         val futureDays = selectForecastWidgetDays(weatherData)
-        futureDays.forEachIndexed { i, f ->
-            val r = rows[i]
-            val dayLabel = DateFormatter.formatDayName(f.date)
-            views.setTextViewText(r.name, dayLabel)
-            views.setImageViewResource(r.icon, WeatherIconMapper.getDrawableResId(f.weatherCondition))
-            val high = context.getString(tempFormat, f.temperatureMax)
-            val low = context.getString(tempFormat, f.temperatureMin)
-            views.setTextViewText(r.high, "$high/$low")
+        rows.forEachIndexed { i, r ->
+            val forecast = futureDays.getOrNull(i)
+            if (forecast == null) {
+                views.setViewVisibility(r.name, View.GONE)
+                views.setViewVisibility(r.icon, View.GONE)
+                views.setViewVisibility(r.high, View.GONE)
+            } else {
+                views.setViewVisibility(r.name, View.VISIBLE)
+                views.setViewVisibility(r.icon, View.VISIBLE)
+                views.setViewVisibility(r.high, View.VISIBLE)
+                val dayLabel = DateFormatter.formatDayName(forecast.date)
+                views.setTextViewText(r.name, dayLabel)
+                views.setImageViewResource(r.icon, WeatherIconMapper.getDrawableResId(forecast.weatherCondition))
+                val high = context.getString(tempFormat, forecast.temperatureMax)
+                val low = context.getString(tempFormat, forecast.temperatureMin)
+                views.setTextViewText(r.high, "$high/$low")
+            }
         }
-        views.setViewVisibility(R.id.forecast_container, android.view.View.VISIBLE)
+        views.setViewVisibility(R.id.forecast_container, View.VISIBLE)
     }
 
     fun buildDetailPendingIntent(context: Context, appWidgetId: Int): PendingIntent {

@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -149,17 +150,22 @@ class WeatherDetailViewModel @Inject constructor(
 
                 try {
                     refreshWeatherAndWidgets(location, forecastDays.value)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     // Network failed — continue with cache
                 }
 
                 getWeatherDataUseCase(location)
                     .catch { e ->
+                        if (e is CancellationException) throw e
                         _uiState.value = UiState.Error(e.message ?: context.getString(R.string.error_no_data))
                     }
                     .collect { weatherData ->
                         _uiState.value = UiState.Success(weatherData)
                     }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: context.getString(R.string.error_no_data))
             }

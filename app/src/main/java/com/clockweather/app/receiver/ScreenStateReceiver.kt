@@ -27,9 +27,8 @@ class ScreenStateReceiver : BroadcastReceiver() {
 
         when (intent.action) {
             Intent.ACTION_SCREEN_OFF -> {
-                Log.d(TAG, "Screen OFF - unregister TIME_TICK + keepalive")
+                Log.d(TAG, "Screen OFF - unregister TIME_TICK")
                 app.unregisterTimeTickReceiver()
-                ClockAlarmReceiver.scheduleKeepalive(context)
             }
             Intent.ACTION_SCREEN_ON -> {
                 Log.d(TAG, "Screen ON - register TIME_TICK + unlock convergence")
@@ -54,9 +53,8 @@ class ScreenStateReceiver : BroadcastReceiver() {
                 launchUnlockConvergence(app, context, Intent.ACTION_USER_PRESENT)
             }
             Intent.ACTION_DREAMING_STARTED -> {
-                Log.d(TAG, "Dreaming started - unregister TIME_TICK + keepalive")
+                Log.d(TAG, "Dreaming started - unregister TIME_TICK")
                 app.unregisterTimeTickReceiver()
-                ClockAlarmReceiver.scheduleKeepalive(context)
             }
             Intent.ACTION_DREAMING_STOPPED -> {
                 Log.d(TAG, "Dreaming stopped - register TIME_TICK + unlock convergence")

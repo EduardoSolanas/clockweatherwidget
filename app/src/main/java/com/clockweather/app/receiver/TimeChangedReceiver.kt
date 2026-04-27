@@ -22,7 +22,7 @@ class TimeChangedReceiver : BroadcastReceiver() {
                         withTimeout(10_000) {
                             val app = context.applicationContext as? ClockWeatherApplication
                             app?.refreshAllWidgets(context, isClockTick = false)
-                            val isHighPrecision = app?.resolveHighPrecision() ?: true
+                            val isHighPrecision = app?.resolveHighPrecision() ?: false
                             ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
                         }
                     } finally {

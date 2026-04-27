@@ -92,7 +92,6 @@ class WeatherDtoMapper @Inject constructor() {
         return dto.time.indices.map { i ->
             val date = LocalDate.parse(dto.time[i], dateFormatter)
 
-            // Aggregate hourly data for this day
             val dayHourly = hourlyForecasts.filter { it.dateTime.toLocalDate() == date }
             val avgHumidity = if (dayHourly.isNotEmpty()) dayHourly.map { it.humidity }.average().toInt() else 0
             val avgPressure = if (dayHourly.isNotEmpty()) dayHourly.map { it.pressure }.average() else 0.0
@@ -104,16 +103,9 @@ class WeatherDtoMapper @Inject constructor() {
             val sunset = runCatching { LocalDateTime.parse(sunsetStr, timeFormatter).toLocalTime() }
                 .getOrElse { LocalTime.of(18, 0) }
 
-            // Use daytime hourly weather condition for daily forecast instead of assuming isDay=true
-            val daytimeWeatherCondition = dayHourly
-                .filter { it.isDay }
-                .firstOrNull()
-                ?.weatherCondition
-                ?: WeatherCondition.fromCode(dto.weatherCode[i], isDay = true)
-
             DailyForecast(
                 date = date,
-                weatherCondition = daytimeWeatherCondition,
+                weatherCondition = WeatherCondition.fromCode(dto.weatherCode[i], isDay = true),
                 temperatureMax = dto.temperatureMax[i],
                 temperatureMin = dto.temperatureMin[i],
                 feelsLikeMax = dto.apparentTemperatureMax[i],

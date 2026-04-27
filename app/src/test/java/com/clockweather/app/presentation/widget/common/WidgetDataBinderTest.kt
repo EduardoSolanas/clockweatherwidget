@@ -47,6 +47,9 @@ class WidgetDataBinderTest {
         views = mockk(relaxed = true)
 
         every { context.getString(WeatherCondition.PARTLY_CLOUDY_DAY.labelResId) } returns "Partly cloudy"
+        every { context.getString(R.string.widget_weather_unavailable_title) } returns "Weather"
+        every { context.getString(R.string.widget_weather_unavailable_condition) } returns "Updating weather"
+        every { context.getString(R.string.widget_weather_unavailable_temp) } returns "--°"
         every { context.getString(R.string.label_today) } returns "Today"
         every { context.getString(R.string.unit_celsius, 11.0) } returns "11°"
         every { context.getString(R.string.unit_celsius, 12.0) } returns "12°"
@@ -63,6 +66,7 @@ class WidgetDataBinderTest {
         every { context.getString(R.string.unit_celsius, 27.0) } returns "27°"
 
         every { views.setTextViewText(any(), any()) } just Runs
+        every { views.setCharSequence(any<Int>(), any<String>(), any<CharSequence>()) } just Runs
         every { views.setImageViewResource(any(), any()) } just Runs
         every { views.setViewVisibility(any(), any()) } just Runs
     }
@@ -73,25 +77,69 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindSimpleClockViews sets four digits and clears ampm in 24h mode`() {
-        WidgetDataBinder.bindSimpleClockViews(views, hour = 10, minute = 26, is24h = true)
+    fun `bindSimpleClockViews writes four digits in manual clock mode`() {
+        WidgetDataBinder.bindSimpleClockViews(
+            views,
+            hour = 10,
+            minute = 26,
+            is24h = true,
+            useHostDrivenClock = false,
+        )
 
         verify(exactly = 1) { views.setTextViewText(R.id.digit_h1, "1") }
         verify(exactly = 1) { views.setTextViewText(R.id.digit_h2, "0") }
         verify(exactly = 1) { views.setTextViewText(R.id.digit_m1, "2") }
         verify(exactly = 1) { views.setTextViewText(R.id.digit_m2, "6") }
-        verify(exactly = 1) { views.setTextViewText(R.id.ampm, "") }
+        verify(exactly = 1) { views.setViewVisibility(R.id.clock_hour, View.GONE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.clock_minute, View.GONE) }
     }
 
     @Test
-    fun `bindSimpleClockViews converts midnight for 12h mode`() {
+    fun `bindSimpleClockViews configures host driven TextClock formats in 24h mode`() {
+        WidgetDataBinder.bindSimpleClockViews(views, hour = 10, minute = 26, is24h = true)
+
+        verify(exactly = 1) { views.setCharSequence(R.id.clock_hour, "setFormat12Hour", "HH") }
+        verify(exactly = 1) { views.setCharSequence(R.id.clock_hour, "setFormat24Hour", "HH") }
+        verify(exactly = 1) { views.setCharSequence(R.id.clock_minute, "setFormat12Hour", "mm") }
+        verify(exactly = 1) { views.setCharSequence(R.id.clock_minute, "setFormat24Hour", "mm") }
+        verify(exactly = 1) { views.setCharSequence(R.id.ampm, "setFormat12Hour", "") }
+        verify(exactly = 1) { views.setCharSequence(R.id.ampm, "setFormat24Hour", "") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h1, " ") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h2, " ") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m1, " ") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m2, " ") }
+        verify(exactly = 1) { views.setViewVisibility(R.id.clock_hour, View.VISIBLE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.clock_minute, View.VISIBLE) }
+    }
+
+    @Test
+    fun `bindSimpleClockViews configures host driven TextClock formats in 12h mode`() {
         WidgetDataBinder.bindSimpleClockViews(views, hour = 0, minute = 5, is24h = false)
+
+        verify(exactly = 1) { views.setCharSequence(R.id.clock_hour, "setFormat12Hour", "hh") }
+        verify(exactly = 1) { views.setCharSequence(R.id.clock_hour, "setFormat24Hour", "hh") }
+        verify(exactly = 1) { views.setCharSequence(R.id.clock_minute, "setFormat12Hour", "mm") }
+        verify(exactly = 1) { views.setCharSequence(R.id.clock_minute, "setFormat24Hour", "mm") }
+        verify(exactly = 1) { views.setCharSequence(R.id.ampm, "setFormat12Hour", "a") }
+        verify(exactly = 1) { views.setCharSequence(R.id.ampm, "setFormat24Hour", "a") }
+    }
+
+    @Test
+    fun `bindSimpleClockViews converts midnight for 12h manual clock mode`() {
+        WidgetDataBinder.bindSimpleClockViews(
+            views,
+            hour = 0,
+            minute = 5,
+            is24h = false,
+            useHostDrivenClock = false,
+        )
 
         verify(exactly = 1) { views.setTextViewText(R.id.digit_h1, "1") }
         verify(exactly = 1) { views.setTextViewText(R.id.digit_h2, "2") }
         verify(exactly = 1) { views.setTextViewText(R.id.digit_m1, "0") }
         verify(exactly = 1) { views.setTextViewText(R.id.digit_m2, "5") }
-        verify(exactly = 1) { views.setTextViewText(R.id.ampm, "AM") }
+        verify(exactly = 1) { views.setCharSequence(R.id.ampm, "setFormat12Hour", "a") }
+        verify(exactly = 1) { views.setCharSequence(R.id.ampm, "setFormat24Hour", "a") }
     }
 
     @Test
@@ -125,6 +173,18 @@ class WidgetDataBinderTest {
         WidgetDataBinder.bindWeatherViews(context, views, weatherData, TemperatureUnit.CELSIUS)
 
         verify(exactly = 1) { views.setTextViewText(R.id.city_name, "London") }
+    }
+
+    @Test
+    fun `bindWeatherUnavailableViews keeps weather card visible with updating state`() {
+        WidgetDataBinder.bindWeatherUnavailableViews(context, views)
+
+        verify(exactly = 1) { views.setTextViewText(R.id.city_name, "Weather") }
+        verify(exactly = 1) { views.setTextViewText(R.id.condition_text, "Updating weather") }
+        verify(exactly = 1) { views.setImageViewResource(R.id.weather_icon, R.drawable.ic_widget_weather_partly_cloudy_day) }
+        verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "--°") }
+        verify(exactly = 1) { views.setTextViewText(R.id.high_low, "") }
+        verify(exactly = 1) { views.setViewVisibility(R.id.weather_card, View.VISIBLE) }
     }
 
     @Test
@@ -272,6 +332,55 @@ class WidgetDataBinderTest {
         verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, match { it.toString().contains("21") }) }
         verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Thu") }
         verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, match { it.toString().contains("25") }) }
+    }
+
+    @Test
+    fun `bindWeeklyForecastRows hides unused rows when provider returns fewer future days`() {
+        val today = LocalDate.of(2026, 4, 3)
+        mockkObject(DateFormatter)
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 5)) } returns "Sun"
+
+        val weatherData = sampleWeatherData(
+            dailyForecasts = (0..2).map { offset ->
+                DailyForecast(
+                    date = today.plusDays(offset.toLong()),
+                    weatherCondition = WeatherCondition.CLEAR_DAY,
+                    temperatureMax = 20.0 + offset,
+                    temperatureMin = 10.0 + offset,
+                    feelsLikeMax = 20.0 + offset,
+                    feelsLikeMin = 10.0 + offset,
+                    sunrise = LocalTime.of(6, 0),
+                    sunset = LocalTime.of(19, 0),
+                    daylightDurationSeconds = 36000.0,
+                    precipitationSum = 0.0,
+                    precipitationProbability = 0,
+                    windSpeedMax = 10.0,
+                    windDirectionDominant = WindDirection.N,
+                    windDirectionDegrees = 0,
+                    uvIndexMax = 5.0,
+                    averageHumidity = 60,
+                    averagePressure = 1012.0,
+                )
+            },
+        )
+
+        WidgetDataBinder.bindWeeklyForecastRows(
+            context = context,
+            views = views,
+            weatherData = weatherData,
+            temperatureUnit = TemperatureUnit.CELSIUS,
+            today = today,
+        )
+
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday1_name, View.VISIBLE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday2_name, View.VISIBLE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday3_name, View.GONE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday3_icon, View.GONE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday3_high, View.GONE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday5_name, View.GONE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday5_icon, View.GONE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday5_high, View.GONE) }
     }
 
     private fun sampleWeatherData(

@@ -4,6 +4,7 @@ import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.repository.WeatherRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -11,6 +12,6 @@ class GetCurrentWeatherUseCase @Inject constructor(
     private val weatherRepository: WeatherRepository
 ) {
     operator fun invoke(location: Location): Flow<CurrentWeather> =
-        weatherRepository.getWeatherData(location).map { it.currentWeather }
+        weatherRepository.getWeatherData(location).filterNotNull().map { it.currentWeather }
 }
 

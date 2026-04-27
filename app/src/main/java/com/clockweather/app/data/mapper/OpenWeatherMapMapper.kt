@@ -25,10 +25,11 @@ class OpenWeatherMapMapper @Inject constructor() {
         location: Location
     ): WeatherData {
         val zoneId = zoneId(response)
+        val hourlyForecasts = response.hourly.orEmpty().map { mapHourly(it, zoneId) }
         return WeatherData(
             location = location,
             currentWeather = mapCurrent(response, zoneId),
-            hourlyForecasts = response.hourly.orEmpty().map { mapHourly(it, zoneId) },
+            hourlyForecasts = hourlyForecasts,
             dailyForecasts = response.daily.map { mapDaily(it, zoneId) },
             airQuality = null
         )
@@ -88,7 +89,10 @@ class OpenWeatherMapMapper @Inject constructor() {
         )
     }
 
-    private fun mapDaily(dto: OpenWeatherMapDailyDto, zoneId: ZoneId): DailyForecast {
+    private fun mapDaily(
+        dto: OpenWeatherMapDailyDto,
+        zoneId: ZoneId
+    ): DailyForecast {
         val sunrise = dto.sunrise?.let { toLocalTime(it, zoneId) } ?: LocalTime.of(6, 0)
         val sunset = dto.sunset?.let { toLocalTime(it, zoneId) } ?: LocalTime.of(18, 0)
         val daylightDurationSeconds = if (sunset.isAfter(sunrise)) {
@@ -97,8 +101,10 @@ class OpenWeatherMapMapper @Inject constructor() {
             43200.0
         }
 
+        val date = Instant.ofEpochSecond(dto.dt).atZone(zoneId).toLocalDate()
+
         return DailyForecast(
-            date = Instant.ofEpochSecond(dto.dt).atZone(zoneId).toLocalDate(),
+            date = date,
             weatherCondition = WeatherCondition.fromOpenWeatherMapId(
                 dto.weather.firstOrNull()?.id ?: 800,
                 isDay = true

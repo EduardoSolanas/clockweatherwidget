@@ -298,6 +298,14 @@ class ClockAlarmReceiverTest {
     }
 
     @Test
+    fun `scheduleNextTick does not arm minute alarm when high precision is disabled`() {
+        ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision = false)
+
+        verify(exactly = 0) { alarmManager.setExactAndAllowWhileIdle(any(), any(), any()) }
+        verify(exactly = 0) { alarmManager.setAndAllowWhileIdle(any(), any(), any()) }
+    }
+
+    @Test
     fun `scheduleKeepalive skips when battery critical`() {
         // Battery at 3%
         val batteryIntent = mockk<Intent>()

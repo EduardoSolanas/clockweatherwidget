@@ -212,9 +212,15 @@ class ClockAlarmReceiver : BroadcastReceiver() {
             }
         }
 
-        fun scheduleNextTick(context: Context, isHighPrecision: Boolean = true) {
+        fun scheduleNextTick(context: Context, isHighPrecision: Boolean = false) {
             if (!hasAnyActiveWidgets(context)) {
                 cancelNextTick(context)
+                return
+            }
+
+            if (!isHighPrecision) {
+                cancelNextTick(context)
+                Log.d(TAG, "Host-driven TextClock mode - minute alarm not scheduled")
                 return
             }
 
