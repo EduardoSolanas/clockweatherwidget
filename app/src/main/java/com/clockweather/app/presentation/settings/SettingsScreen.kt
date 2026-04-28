@@ -35,6 +35,7 @@ fun SettingsScreen(
     val dateFontSizeSp   by viewModel.dateFontSizeSp.collectAsStateWithLifecycle()
     val clockTheme       by viewModel.clockTheme.collectAsStateWithLifecycle()
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
+    val weatherIconStyle by viewModel.weatherIconStyle.collectAsStateWithLifecycle()
     val isBatteryOptimizationExempt by viewModel.isBatteryOptimizationExempt.collectAsStateWithLifecycle()
     var showBatteryHelpDialog by remember { mutableStateOf(false) }
     val weatherRefreshIntervalMinutes by viewModel.weatherRefreshIntervalMinutes.collectAsStateWithLifecycle()
@@ -301,6 +302,31 @@ fun SettingsScreen(
                 checked     = showTodayExtended,
                 onCheckedChange = { viewModel.setShowTodayExtended(it) }
             )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            SettingsLabel(
+                label = stringResource(R.string.settings_weather_icon_style_label),
+                description = stringResource(R.string.settings_weather_icon_style_desc)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf(
+                    SettingsViewModel.ICON_STYLE_GLASS to stringResource(R.string.settings_weather_icon_style_glass),
+                    SettingsViewModel.ICON_STYLE_CLAY to stringResource(R.string.settings_weather_icon_style_clay),
+                    SettingsViewModel.ICON_STYLE_NEON to stringResource(R.string.settings_weather_icon_style_neon)
+                ).forEach { (style, label) ->
+                    FilterChip(
+                        selected = weatherIconStyle == style,
+                        onClick = { viewModel.setWeatherIconStyle(style) },
+                        label = { Text(label) }
+                    )
+                }
+            }
 
             // ══════════════════════════════════════════════════════════
             // ⚙️  ADVANCED
