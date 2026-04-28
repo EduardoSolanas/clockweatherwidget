@@ -7,14 +7,6 @@ import org.junit.Test
 
 class WeatherProviderPreferencesTest {
 
-    private val expectedDefaultProvider = if (
-        WeatherProviderPreferences.isConfigured(WeatherProviderType.OPENWEATHERMAP)
-    ) {
-        WeatherProviderType.OPENWEATHERMAP
-    } else {
-        WeatherProviderType.OPEN_METEO
-    }
-
     @Test
     fun `fromStorageValue accepts enum name and storage value`() {
         assertEquals(
@@ -41,9 +33,9 @@ class WeatherProviderPreferencesTest {
     }
 
     @Test
-    fun `default provider resolves to configured default when available`() {
+    fun `default provider is always open meteo — the zero-config fallback`() {
         assertEquals(
-            expectedDefaultProvider,
+            WeatherProviderType.OPEN_METEO,
             WeatherProviderPreferences.defaultProvider()
         )
     }
