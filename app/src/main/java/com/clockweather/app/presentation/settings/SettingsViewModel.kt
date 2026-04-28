@@ -53,16 +53,12 @@ class SettingsViewModel @Inject constructor(
         val KEY_DATE_FONT_SIZE = floatPreferencesKey("date_font_size_sp")
         val KEY_CLOCK_THEME = stringPreferencesKey("clock_theme")
         val KEY_CLOCK_TILE_SIZE = stringPreferencesKey("clock_tile_size")
-        val KEY_WEATHER_ICON_STYLE = stringPreferencesKey("weather_icon_style")
         val KEY_LANGUAGE = stringPreferencesKey("language")
         val KEY_FORECAST_DAYS = intPreferencesKey("forecast_days")
         const val DEFAULT_DATE_FONT_SP = 15f
         const val DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES = 30
         const val CLOCK_THEME_DARK = "dark"
         const val CLOCK_THEME_LIGHT = "light"
-        const val ICON_STYLE_GLASS = "glass_layered"
-        const val ICON_STYLE_CLAY = "clay_3d"
-        const val ICON_STYLE_NEON = "neon_edge"
 
         /**
          * Returns 14 for screens >=600dp wide (tablets / foldables in landscape),
@@ -159,10 +155,6 @@ class SettingsViewModel @Inject constructor(
                 .getOrDefault(ClockTileSize.MEDIUM)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ClockTileSize.MEDIUM)
-
-    val weatherIconStyle: StateFlow<String> = dataStore.data
-        .map { prefs -> prefs[KEY_WEATHER_ICON_STYLE] ?: ICON_STYLE_GLASS }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ICON_STYLE_GLASS)
 
     val selectedLanguage: StateFlow<String> = dataStore.data
         .map { prefs -> prefs[KEY_LANGUAGE] ?: "system" }
@@ -292,13 +284,6 @@ class SettingsViewModel @Inject constructor(
     fun setClockTileSize(size: ClockTileSize) {
         viewModelScope.launch {
             dataStore.edit { it[KEY_CLOCK_TILE_SIZE] = size.name }
-            triggerWidgetUpdate()
-        }
-    }
-
-    fun setWeatherIconStyle(style: String) {
-        viewModelScope.launch {
-            dataStore.edit { it[KEY_WEATHER_ICON_STYLE] = style }
             triggerWidgetUpdate()
         }
     }

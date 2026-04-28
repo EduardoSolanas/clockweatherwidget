@@ -15,8 +15,6 @@ import java.time.LocalDate
 
 object WidgetDataBinder {
 
-    private const val NEON_TINT_COLOR = 0xFF00E5FF.toInt()
-
     fun bindSimpleClockViews(
         views: RemoteViews,
         hour: Int,
@@ -64,8 +62,7 @@ object WidgetDataBinder {
         context: Context,
         views: RemoteViews,
         weatherData: WeatherData,
-        temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
-        iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED
+        temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS
     ) {
         val current = weatherData.currentWeather
         val location = weatherData.location
@@ -75,9 +72,8 @@ object WidgetDataBinder {
         views.setTextViewText(R.id.condition_text, context.getString(current.weatherCondition.labelResId))
         views.setImageViewResource(
             R.id.weather_icon,
-            WeatherIconMapper.getDrawableResId(current.weatherCondition, iconStyle)
+            WeatherIconMapper.getDrawableResId(current.weatherCondition)
         )
-        applyIconStyleTint(views, R.id.weather_icon, iconStyle)
         views.setTextViewText(
             R.id.current_temp,
             TemperatureFormatter.formatWithUnit(current.temperature, temperatureUnit)
@@ -96,15 +92,10 @@ object WidgetDataBinder {
     fun bindWeatherUnavailableViews(
         context: Context,
         views: RemoteViews,
-        iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
     ) {
         views.setTextViewText(R.id.city_name, context.getString(R.string.widget_weather_unavailable_title))
         views.setTextViewText(R.id.condition_text, context.getString(R.string.widget_weather_unavailable_condition))
-        views.setImageViewResource(
-            R.id.weather_icon,
-            WeatherIconMapper.getDrawableResId(com.clockweather.app.domain.model.WeatherCondition.PARTLY_CLOUDY_DAY, iconStyle)
-        )
-        applyIconStyleTint(views, R.id.weather_icon, iconStyle)
+        views.setImageViewResource(R.id.weather_icon, R.drawable.ic_widget_weather_partly_cloudy_day)
         views.setTextViewText(R.id.current_temp, context.getString(R.string.widget_weather_unavailable_temp))
         views.setTextViewText(R.id.high_low, "")
         views.setViewVisibility(R.id.weather_card, View.VISIBLE)
@@ -116,7 +107,6 @@ object WidgetDataBinder {
         weatherData: WeatherData,
         temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
         today: LocalDate = LocalDate.now(),
-        iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
     ) {
         data class RowIds(val name: Int, val icon: Int, val high: Int)
         val rows = listOf(
@@ -140,20 +130,13 @@ object WidgetDataBinder {
                 views.setViewVisibility(r.high, View.VISIBLE)
                 val dayLabel = DateFormatter.formatDayName(forecast.date)
                 views.setTextViewText(r.name, dayLabel)
-                views.setImageViewResource(r.icon, WeatherIconMapper.getDrawableResId(forecast.weatherCondition, iconStyle))
-                applyIconStyleTint(views, r.icon, iconStyle)
+                views.setImageViewResource(r.icon, WeatherIconMapper.getDrawableResId(forecast.weatherCondition))
                 val high = context.getString(tempFormat, forecast.temperatureMax)
                 val low = context.getString(tempFormat, forecast.temperatureMin)
                 views.setTextViewText(r.high, "$high/$low")
             }
         }
         views.setViewVisibility(R.id.forecast_container, View.VISIBLE)
-    }
-
-    private fun applyIconStyleTint(views: RemoteViews, viewId: Int, iconStyle: WeatherIconMapper.IconStyle) {
-        if (iconStyle == WeatherIconMapper.IconStyle.NEON_EDGE) {
-            views.setInt(viewId, "setColorFilter", NEON_TINT_COLOR)
-        }
     }
 
     fun buildDetailPendingIntent(context: Context, appWidgetId: Int): PendingIntent {
