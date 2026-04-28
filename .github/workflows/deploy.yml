@@ -59,8 +59,11 @@ jobs:
 
       - run: chmod +x gradlew
 
+      - name: Clean
+        run: ./gradlew clean
+
       - name: Run Unit Tests
-        run: ./gradlew clean testReleaseUnitTest
+        run: ./gradlew :app:testReleaseUnitTest
         env:
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
