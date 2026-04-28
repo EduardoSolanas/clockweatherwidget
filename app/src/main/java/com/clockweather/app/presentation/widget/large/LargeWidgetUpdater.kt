@@ -21,8 +21,6 @@ class LargeWidgetUpdater(
     override val layoutResId = R.layout.widget_large
     override val rootViewId = R.id.widget_root
     override val dateViewId = R.id.widget_date
-    override val usesSimpleClockDigits = true
-    override val forceStaticClockRendering = true
 
     override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
         val showToday = prefs[booleanPreferencesKey("show_today_compact")] ?: true

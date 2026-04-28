@@ -34,7 +34,7 @@ class WeatherUpdateWorker @AssistedInject constructor(
             }
             // Notify widgets to update via centralized helper
             val app = applicationContext as? ClockWeatherApplication
-            app?.refreshAllWidgets(applicationContext, isClockTick = false)
+            app?.refreshAllWidgets(applicationContext)
             
             Result.success()
         } catch (e: Exception) {

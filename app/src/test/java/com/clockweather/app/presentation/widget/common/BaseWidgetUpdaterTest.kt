@@ -25,14 +25,9 @@ import com.clockweather.app.domain.model.WindDirection
 import com.clockweather.app.domain.repository.LocationRepository
 import com.clockweather.app.domain.repository.WeatherRepository
 import io.mockk.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.After
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -116,7 +111,6 @@ class BaseWidgetUpdaterTest {
 
         appWidgetManager = mockk()
         every { appWidgetManager.updateAppWidget(any<Int>(), any()) } just Runs
-        every { appWidgetManager.partiallyUpdateAppWidget(any<Int>(), any()) } just Runs
 
         entryPoint = mockk(relaxed = true)
 
@@ -169,7 +163,6 @@ class BaseWidgetUpdaterTest {
         mockkStatic(PendingIntent::class)
         every { PendingIntent.getActivity(any(), any(), any(), any()) } returns mockk()
 
-        WidgetClockStateStore.clearWidget(realContext, widgetId)
         updater = TestWidgetUpdater(mockContext, appWidgetManager, entryPoint)
     }
 
@@ -179,14 +172,10 @@ class BaseWidgetUpdaterTest {
     }
 
     @Test
-    fun `first render uses updateAppWidget`() = runBlocking {
-        assertNull(WidgetClockStateStore.getLastDigits(realContext, widgetId))
-
+    fun `updateWidget always uses updateAppWidget`() = runBlocking {
         updater.updateWidget(widgetId)
 
         verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
-        verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
-        assertNotNull(WidgetClockStateStore.getLastDigits(realContext, widgetId))
         confirmVerified(appWidgetManager)
     }
 
@@ -197,19 +186,6 @@ class BaseWidgetUpdaterTest {
         verify(exactly = 1) { locationRepo.getFallbackLocation() }
         coVerify(exactly = 1) { locationRepo.saveLocation(match { it.name == "London" }) }
         coVerify(exactly = 1) { weatherRepo.refreshWeatherData(match { it.name == "London" }, 7) }
-    }
-
-    @Test
-    fun `subsequent render uses partiallyUpdateAppWidget`() = runBlocking {
-        // Simulate a prior completed render: baseline ready AND digits saved.
-        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
-        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState(1, 4, 3, 7))
-
-        updater.updateWidget(widgetId)
-
-        verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
-        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
-        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -262,76 +238,6 @@ class BaseWidgetUpdaterTest {
                 android.util.TypedValue.COMPLEX_UNIT_PX,
             )
         }
-    }
-
-    @Test
-    fun `same minute non tick update preserves existing clock bindings`() = runBlocking {
-        val currentMinute = System.currentTimeMillis() / 60000L
-        mockkObject(ClockSnapshot.Companion)
-        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
-            localTime = LocalTime.of(10, 26),
-            epochMinute = currentMinute,
-        )
-
-        // Simulate completed prior render so the same-minute preservation logic can engage.
-        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
-        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState.from(10, 26, true))
-        WidgetClockStateStore.markRendered(realContext, widgetId, currentMinute)
-
-        updater.updateWidget(widgetId, isMinuteTick = false, allowWeatherRefresh = false)
-
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_h1, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_h2, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m1, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m2, any()) }
-        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
-        confirmVerified(appWidgetManager)
-    }
-
-    @Test
-    fun `updateClockOnly skips manual RemoteViews push in host driven clock mode`() = runBlocking {
-        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState(1, 4, 3, 7))
-        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
-        WidgetClockStateStore.markRendered(realContext, widgetId, System.currentTimeMillis() / 60000L - 1)
-
-        com.clockweather.app.util.WidgetPrefsCache.init(
-            mockk<DataStore<Preferences>> { every { data } returns flowOf(prefs) },
-            CoroutineScope(Dispatchers.Unconfined),
-        )
-        delay(50)
-
-        updater.updateClockOnly(widgetId)
-
-        verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
-        verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_h1, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_h2, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m1, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m2, any()) }
-        confirmVerified(appWidgetManager)
-    }
-
-    @Test
-    fun `updateClockOnly skips when same minute already rendered`() = runBlocking {
-        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState(1, 4, 3, 7))
-        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
-        WidgetClockStateStore.markRendered(realContext, widgetId, System.currentTimeMillis() / 60000L)
-
-        com.clockweather.app.util.WidgetPrefsCache.init(
-            mockk<DataStore<Preferences>> { every { data } returns flowOf(prefs) },
-            CoroutineScope(Dispatchers.Unconfined),
-        )
-        delay(50)
-
-        updater.updateClockOnly(widgetId)
-
-        verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
-        verify(exactly = 0) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_h1, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_h2, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m1, any()) }
-        verify(exactly = 0) { anyConstructed<RemoteViews>().setTextViewText(R.id.digit_m2, any()) }
-        confirmVerified(appWidgetManager)
     }
 
     @Test
@@ -393,66 +299,6 @@ class BaseWidgetUpdaterTest {
         coVerify(exactly = 1) { weatherRepo.refreshWeatherData(location, 8) }
     }
 
-    /**
-     * Regression guard: clearDigits (settings change) must NOT trigger a full
-     * [AppWidgetManager.updateAppWidget] when the baseline is already established.
-     * A full replace would flash the layout XML defaults ("0000") for one frame.
-     */
-    @Test
-    fun `clearDigits with active baseline keeps next updateWidget as partial - no 0000 flash`() = runBlocking {
-        // Step 1: Establish a baseline (first full render has happened).
-        WidgetClockStateStore.markBaselineReady(realContext, widgetId)
-        WidgetClockStateStore.saveLastDigits(realContext, widgetId, DigitState(1, 4, 3, 7))
-
-        updater.updateWidget(widgetId)
-        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
-        confirmVerified(appWidgetManager)
-
-        // Step 2: Settings change — clearDigits must NOT reset the baseline.
-        WidgetClockStateStore.clearDigits(realContext, widgetId)
-        clearMocks(appWidgetManager, answers = false)
-
-        updater.updateWidget(widgetId)
-
-        // Must stay partial — baseline is still set, so no full layout flash.
-        verify(exactly = 0) { appWidgetManager.updateAppWidget(widgetId, any()) }
-        verify(exactly = 1) { appWidgetManager.partiallyUpdateAppWidget(widgetId, any()) }
-        confirmVerified(appWidgetManager)
-    }
-
-    @Test
-    fun `first render refreshes weather even when cached data is fresh`() = runBlocking {
-        val location = Location(
-            id = 42L,
-            name = "London",
-            country = "UK",
-            latitude = 51.5072,
-            longitude = -0.1276,
-        )
-        val today = LocalDate.now()
-        val currentMinute = System.currentTimeMillis() / 60000L
-        mockkObject(ClockSnapshot.Companion)
-        every { ClockSnapshot.now(any(), any()) } returns ClockSnapshot(
-            localTime = LocalTime.of(10, 26),
-            epochMinute = currentMinute,
-        )
-        every { locationRepo.getSavedLocations() } returns flowOf(listOf(location))
-        every { weatherRepo.getWeatherData(location) } returns flowOf(
-            sampleWeatherData(
-                location = location,
-                currentLastUpdated = LocalDateTime.of(today, LocalTime.of(10, 0)),
-                startDate = today,
-            ),
-        )
-
-        // Baseline not ready — simulates a freshly placed widget.
-        WidgetClockStateStore.clearWidget(realContext, widgetId)
-
-        updater.updateWidget(widgetId)
-
-        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(location, 7) }
-    }
-
     @Test
     fun `empty weather cache triggers refresh before showing unavailable state`() = runBlocking {
         val location = Location(
@@ -512,8 +358,6 @@ class BaseWidgetUpdaterTest {
                 )
             )
         )
-
-        WidgetClockStateStore.clearWidget(realContext, widgetId)
 
         updater.updateWidget(widgetId)
 

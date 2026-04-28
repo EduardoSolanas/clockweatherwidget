@@ -23,6 +23,7 @@ build_output.txt
 # AI/IDE folders
 .claude/
 .gemini/
+.kotlin/
 node_modules/
 package.json
 package-lock.json

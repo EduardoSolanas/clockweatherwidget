@@ -1,6 +1,5 @@
 package com.clockweather.app.presentation.settings
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import androidx.datastore.core.DataStore
@@ -55,7 +54,6 @@ class SettingsViewModel @Inject constructor(
         val KEY_CLOCK_THEME = stringPreferencesKey("clock_theme")
         val KEY_CLOCK_TILE_SIZE = stringPreferencesKey("clock_tile_size")
         val KEY_LANGUAGE = stringPreferencesKey("language")
-        val KEY_HIGH_PRECISION = booleanPreferencesKey("high_precision_clock")
         val KEY_FLIP_ANIMATION = booleanPreferencesKey("flip_animation_enabled")
         val KEY_FORECAST_DAYS = intPreferencesKey("forecast_days")
         const val DEFAULT_DATE_FONT_SP = 15f
@@ -163,10 +161,6 @@ class SettingsViewModel @Inject constructor(
         .map { prefs -> prefs[KEY_LANGUAGE] ?: "system" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "system")
 
-    val isHighPrecisionEnabled: StateFlow<Boolean> = dataStore.data
-        .map { prefs -> prefs[KEY_HIGH_PRECISION] ?: false }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
     val flipAnimationEnabled: StateFlow<Boolean> = dataStore.data
         .map { prefs -> prefs[KEY_FLIP_ANIMATION] ?: true }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -183,9 +177,6 @@ class SettingsViewModel @Inject constructor(
             normalizeForecastDaysForProvider(requestedDays, provider)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)
-
-    private val _isExactAlarmPermissionGranted = MutableStateFlow(checkExactAlarmPermission())
-    val isExactAlarmPermissionGranted = _isExactAlarmPermissionGranted.asStateFlow()
 
     private val _isBatteryOptimizationExempt = MutableStateFlow(checkBatteryOptimizationExempt())
     val isBatteryOptimizationExempt = _isBatteryOptimizationExempt.asStateFlow()
@@ -308,20 +299,9 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setHighPrecisionEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            dataStore.edit { it[KEY_HIGH_PRECISION] = enabled }
-            // B2: pass the new value directly — don't rely on DataStore read racing the write
-            com.clockweather.app.receiver.ClockAlarmReceiver.scheduleNextTick(context, enabled)
-            triggerWidgetUpdate()
-        }
-    }
-
     fun setFlipAnimationEnabled(enabled: Boolean) {
         viewModelScope.launch {
             dataStore.edit { it[KEY_FLIP_ANIMATION] = enabled }
-            // Clear baseline state so widgets do a full rebuild with the new mode
-            resetClockStateForActiveWidgets()
             triggerWidgetUpdate()
         }
     }
@@ -341,33 +321,8 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun resetClockStateForActiveWidgets() {
-        val mgr = AppWidgetManager.getInstance(context)
-        val providerClasses = listOf(
-            com.clockweather.app.presentation.widget.compact.CompactWidgetProvider::class.java,
-            com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider::class.java,
-            com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider::class.java,
-            com.clockweather.app.presentation.widget.large.LargeWidgetProvider::class.java
-        )
-        providerClasses.forEach { providerClass ->
-            val ids = mgr.getAppWidgetIds(android.content.ComponentName(context, providerClass))
-            ids.forEach { id ->
-                com.clockweather.app.presentation.widget.common.WidgetClockStateStore.clearWidget(context, id)
-            }
-        }
-    }
-
     fun refreshPermissionStatus() {
-        _isExactAlarmPermissionGranted.value = checkExactAlarmPermission()
         _isBatteryOptimizationExempt.value = checkBatteryOptimizationExempt()
-    }
-
-    private fun checkExactAlarmPermission(): Boolean {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
-            return alarmManager.canScheduleExactAlarms()
-        }
-        return true // Pre-Android 12 doesn't have this restriction
     }
 
     /**
@@ -389,10 +344,7 @@ class SettingsViewModel @Inject constructor(
     private fun triggerWidgetUpdate() {
         val app = context.applicationContext as? ClockWeatherApplication
         viewModelScope.launch {
-            // Clear stored digit state so the refresh uses updateAppWidget()
-            // (full replacement) — necessary because theme/size/style changed.
-            app?.invalidateAllWidgetBaselines()
-            app?.refreshAllWidgets(context, isClockTick = false)
+            app?.refreshAllWidgets(context)
         }
     }
 }

@@ -14,7 +14,6 @@ import com.clockweather.app.di.WidgetEntryPoint
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.ClockTileSize
-import com.clockweather.app.util.WidgetPrefsCache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -27,6 +26,8 @@ import java.util.Locale
  * Shared base for all widget updaters.
  * Handles: clock binding, single DataStore read, location/weather fetch, error logging.
  * Subclasses only override layout ID, date/root view IDs, and extra weather binding.
+ *
+ * Clock time is rendered by the TextClock views in the layout — no manual digit pushing needed.
  */
 abstract class BaseWidgetUpdater(
     protected val context: Context,
@@ -38,34 +39,22 @@ abstract class BaseWidgetUpdater(
     abstract val layoutResId: Int
     abstract val rootViewId: Int
     abstract val dateViewId: Int
-    open val usesSimpleClockDigits: Boolean = false
-    open val forceStaticClockRendering: Boolean = false
     open val minimumFutureForecastDaysRequired: Int = 0
-
-    protected fun resolveUsesSimpleDigits(prefs: Preferences): Boolean {
-        if (forceStaticClockRendering || usesSimpleClockDigits) return true
-        val flipEnabled = prefs[booleanPreferencesKey("flip_animation_enabled")] ?: true
-        return !flipEnabled
-    }
 
     /** Called after weather data is available. Subclasses apply their specific bindings. */
     abstract fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences)
 
     suspend fun updateWidget(
         appWidgetId: Int,
-        isMinuteTick: Boolean = false,
-        allowWeatherRefresh: Boolean = !isMinuteTick
+        allowWeatherRefresh: Boolean = true
     ) {
         withContext(Dispatchers.IO) {
             try {
-                Log.d(tag, "updateWidget id=$appWidgetId isMinuteTick=$isMinuteTick")
+                Log.d(tag, "updateWidget id=$appWidgetId")
                 val snapshot = ClockSnapshot.now()
                 val now = snapshot.localTime
-                val currentEpochMinute = snapshot.epochMinute
                 val prefs = entryPoint.dataStore().data.first()
                 val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: android.text.format.DateFormat.is24HourFormat(context)
-                val highPrecisionClock = prefs[booleanPreferencesKey("high_precision_clock")] ?: false
-                val useHostDrivenClock = !highPrecisionClock
                 val showDate = prefs[booleanPreferencesKey("show_date_in_widget")] ?: true
                 val tempUnitName = prefs[stringPreferencesKey("temperature_unit")] ?: TemperatureUnit.CELSIUS.name
                 val tempUnit = runCatching { TemperatureUnit.valueOf(tempUnitName) }.getOrDefault(TemperatureUnit.CELSIUS)
@@ -90,40 +79,21 @@ abstract class BaseWidgetUpdater(
                     ClockTileSize.EXTRA_LARGE -> com.clockweather.app.R.dimen.flip_text_size_xl
                 }
 
-                // isBaselineReady persists across settings changes (only clearWidget() resets it).
-                // Use it — not prevDigits==null — to decide full vs partial update.
-                // clearDigits() clears prevDigits so we always rebind digits after a settings
-                // change, but it must NOT trigger a full updateAppWidget() (which flashes "0000").
-                val isBaselineReady = WidgetClockStateStore.isBaselineReady(context, appWidgetId)
-                val isFirstRender = !isBaselineReady
-                val lastRenderedEpochMinute = WidgetClockStateStore.getLastRenderedEpochMinute(context, appWidgetId)
-                val preserveClockForSameMinuteNonTick =
-                    !isFirstRender &&
-                        !isMinuteTick &&
-                        lastRenderedEpochMinute == currentEpochMinute
-                if (preserveClockForSameMinuteNonTick) {
-                    Log.d(tag, "CLOCK_TRACE preserving clock tiles for same-minute non-tick update id=$appWidgetId minute=$currentEpochMinute")
-                }
-
                 val views = RemoteViews(context.packageName, layoutResId)
 
                 try {
                     views.setOnClickPendingIntent(rootViewId, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
                 } catch (e: Exception) { /* ignore */ }
 
-                if (!preserveClockForSameMinuteNonTick) {
-                    WidgetDataBinder.bindSimpleClockViews(
-                        views,
-                        now.hour,
-                        now.minute,
-                        is24h,
-                        useHostDrivenClock = useHostDrivenClock,
-                    )
-                }
-
-                if (!preserveClockForSameMinuteNonTick) {
-                    WidgetClockStateStore.saveLastDigits(context, appWidgetId, DigitState.from(now.hour, now.minute, is24h))
-                }
+                // TextClock handles live minute-by-minute updates automatically.
+                // This call sets the format strings and makes the TextClock views visible.
+                WidgetDataBinder.bindSimpleClockViews(
+                    views,
+                    now.hour,
+                    now.minute,
+                    is24h,
+                    useHostDrivenClock = true,
+                )
 
                 listOf(
                     com.clockweather.app.R.id.digit_h1,
@@ -201,7 +171,7 @@ abstract class BaseWidgetUpdater(
                 }
 
                 var weather = weatherRepo.getWeatherData(location).first()
-                if (allowWeatherRefresh && (isFirstRender || shouldRefreshWeather(weather, LocalDate.now(), minimumFutureForecastDaysRequired))) {
+                if (allowWeatherRefresh && shouldRefreshWeather(weather, LocalDate.now(), minimumFutureForecastDaysRequired)) {
                     try {
                         val forecastDays = requiredForecastDaysForRefresh(
                             prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_FORECAST_DAYS] ?: 7,
@@ -219,73 +189,10 @@ abstract class BaseWidgetUpdater(
                     WidgetDataBinder.bindWeatherUnavailableViews(context, views)
                 }
 
-                if (isFirstRender) {
-                    appWidgetManager.updateAppWidget(appWidgetId, views)
-                } else {
-                    appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
-                }
-                WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
-                WidgetClockStateStore.markBaselineReady(context, appWidgetId)
-                Log.d(tag, "Widget $appWidgetId updated (firstRender=$isFirstRender).")
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+                Log.d(tag, "Widget $appWidgetId updated.")
             } catch (e: Exception) {
                 Log.e(tag, "Widget update failed for widget $appWidgetId", e)
-            }
-        }
-    }
-
-    suspend fun updateClockOnly(
-        appWidgetId: Int,
-        allowAnimation: Boolean = false
-    ) {
-        Log.d(tag, "Updating clock only for widget $appWidgetId")
-        withContext(Dispatchers.IO) {
-            try {
-                val prefs = WidgetPrefsCache.get(entryPoint.dataStore())
-
-                val snapshot = ClockSnapshot.now()
-                val currentEpochMinute = snapshot.epochMinute
-                val lastRenderedEpochMinute = WidgetClockStateStore.getLastRenderedEpochMinute(context, appWidgetId)
-
-                if (lastRenderedEpochMinute != null && lastRenderedEpochMinute == currentEpochMinute) {
-                    Log.d(tag, "Widget $appWidgetId already rendered for minute $currentEpochMinute — skipping")
-                    return@withContext
-                }
-
-                val updateMode = WidgetClockUpdateModeResolver.resolve(lastRenderedEpochMinute, currentEpochMinute)
-                if (updateMode == WidgetClockUpdateMode.FULL) {
-                    Log.d(tag, "Falling back to full update for widget $appWidgetId")
-                    updateWidget(appWidgetId, allowWeatherRefresh = false)
-                    return@withContext
-                }
-
-                val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: android.text.format.DateFormat.is24HourFormat(context)
-                val highPrecisionClock = prefs[booleanPreferencesKey("high_precision_clock")] ?: false
-                if (!highPrecisionClock) {
-                    WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
-                    Log.d(tag, "Host-driven TextClock owns clock update for widget $appWidgetId")
-                    return@withContext
-                }
-                val views = RemoteViews(context.packageName, layoutResId)
-                val now = snapshot.localTime
-                val newDigits = DigitState.from(now.hour, now.minute, is24h)
-
-                Log.d(tag, "CLOCK_TRACE updateClockOnly id=$appWidgetId minute=$currentEpochMinute last=$lastRenderedEpochMinute new=$newDigits")
-
-                WidgetDataBinder.bindSimpleClockViews(
-                    views,
-                    now.hour,
-                    now.minute,
-                    is24h,
-                    useHostDrivenClock = false,
-                )
-
-                WidgetClockStateStore.saveLastDigits(context, appWidgetId, newDigits)
-
-                appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
-                WidgetClockStateStore.markRendered(context, appWidgetId, currentEpochMinute)
-                Log.d(tag, "Widget $appWidgetId clock-only update successful.")
-            } catch (e: Exception) {
-                Log.e(tag, "Clock-only update failed for widget $appWidgetId", e)
             }
         }
     }
@@ -342,11 +249,6 @@ abstract class BaseWidgetUpdater(
         }
     }
 }
-
-internal fun shouldUseIncrementalClockBinding(
-    isFirstRender: Boolean,
-    isMinuteTick: Boolean
-): Boolean = !isFirstRender && isMinuteTick
 
 internal fun shouldRefreshWeather(
     weather: WeatherData?,

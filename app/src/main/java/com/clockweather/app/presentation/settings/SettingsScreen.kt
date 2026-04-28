@@ -34,8 +34,6 @@ fun SettingsScreen(
     val dateFontSizeSp   by viewModel.dateFontSizeSp.collectAsStateWithLifecycle()
     val clockTheme       by viewModel.clockTheme.collectAsStateWithLifecycle()
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
-    val isHighPrecisionEnabled by viewModel.isHighPrecisionEnabled.collectAsStateWithLifecycle()
-    val isExactAlarmGranted by viewModel.isExactAlarmPermissionGranted.collectAsStateWithLifecycle()
     val isBatteryOptimizationExempt by viewModel.isBatteryOptimizationExempt.collectAsStateWithLifecycle()
     val weatherRefreshIntervalMinutes by viewModel.weatherRefreshIntervalMinutes.collectAsStateWithLifecycle()
     val forecastDays by viewModel.forecastDays.collectAsStateWithLifecycle()
@@ -307,56 +305,7 @@ fun SettingsScreen(
             // ══════════════════════════════════════════════════════════
             SettingsSectionHeader(stringResource(R.string.settings_category_advanced))
 
-            SettingsToggleRow(
-                label       = stringResource(R.string.settings_high_precision_clock_label),
-                description = stringResource(R.string.settings_high_precision_clock_desc),
-                checked     = isHighPrecisionEnabled,
-                onCheckedChange = { viewModel.setHighPrecisionEnabled(it) }
-            )
-
-            if (isHighPrecisionEnabled && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            stringResource(R.string.settings_exact_alarm_permission_title),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            stringResource(R.string.settings_exact_alarm_permission_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    
-                    if (isExactAlarmGranted) {
-                        Text(
-                            stringResource(R.string.settings_exact_alarm_permission_granted),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 16.dp)
-                        )
-                    } else {
-                        Button(
-                            onClick = {
-                                val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                    data = android.net.Uri.parse("package:${context.packageName}")
-                                }
-                                context.startActivity(intent)
-                            },
-                            modifier = Modifier.padding(start = 16.dp)
-                        ) {
-                            Text(stringResource(R.string.settings_exact_alarm_permission_button))
-                        }
-                    }
-                }
-            }
-
-            // Battery optimization — always shown in Advanced section.
+            // Battery optimization — shown in Advanced section.
             // When the app is battery-optimized, Android can kill the process while
             // the screen is on, causing the widget clock to freeze. Setting to
             // "Unrestricted" ensures the process stays alive for TIME_TICK delivery.

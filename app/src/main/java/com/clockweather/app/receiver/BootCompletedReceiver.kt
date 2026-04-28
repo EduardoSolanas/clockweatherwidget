@@ -3,7 +3,6 @@ package com.clockweather.app.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.clockweather.app.ClockWeatherApplication
 import com.clockweather.app.worker.WeatherUpdateScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,20 +22,11 @@ class BootCompletedReceiver : BroadcastReceiver() {
             CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
                 try {
                     withTimeout(15_000) {
-                        // B3: read stored interval pref so the worker respects the user's setting
+                        // Read stored interval pref so the worker respects the user's setting.
                         val intervalMinutes = try {
                             context.dataStore.data.first()[intPreferencesKey("update_interval_minutes")] ?: 30
                         } catch (_: Exception) { 30 }
-
                         WeatherUpdateScheduler.schedule(context, intervalMinutes)
-
-                        val app = context.applicationContext as? ClockWeatherApplication
-                        if (ClockAlarmReceiver.hasAnyActiveWidgets(context)) {
-                            app?.registerScreenStateReceiver()
-                        }
-
-                        val isHighPrecision = app?.resolveHighPrecision() ?: false
-                        ClockAlarmReceiver.scheduleNextTick(context, isHighPrecision)
                     }
                 } finally {
                     pendingResult.finish()

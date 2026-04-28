@@ -6,20 +6,14 @@ import org.junit.Test
 /**
  * Structural contract tests for [WeatherDetailActivity].
  *
- * Clock sync on activity → home transitions is handled globally by
- * [ClockWeatherApplication.ActivityLifecycleCallbacks] + [ProcessLifecycleOwner].
- * The activity itself must NOT contain any async onStop() logic.
- *
- * The original bug: onStop() called syncClockNow() which triggered a full
- * widget rebuild (updateAppWidget) — causing 1-second delay + 4-digit flicker
- * when navigating from weather page back to home.
+ * The activity must NOT contain any async onStop() logic — widget updates are
+ * driven by the system (TextClock auto-sync) and WorkManager, not by activity
+ * lifecycle hooks.
  */
 class WeatherDetailActivityTest {
 
     @Test
     fun `WeatherDetailActivity does not override onStop`() {
-        // Clock sync is now handled globally in ClockWeatherApplication via
-        // ActivityLifecycleCallbacks. No per-activity onStop() override needed.
         val methods = WeatherDetailActivity::class.java.declaredMethods
         val hasOnStop = methods.any { it.name == "onStop" }
         assertFalse(
@@ -31,9 +25,6 @@ class WeatherDetailActivityTest {
 
     @Test
     fun `WeatherDetailActivity does not hold CoroutineScope fields`() {
-        // If the class holds a CoroutineScope or Job, it means onStop() is launching
-        // async work — the old broken pattern that caused flicker.
-        // pushClockInstant() is synchronous and requires no coroutine.
         val fields = WeatherDetailActivity::class.java.declaredFields
         val coroutineFields = fields.filter {
             it.type.name.contains("CoroutineScope") ||
@@ -41,8 +32,7 @@ class WeatherDetailActivityTest {
                 it.type.name.contains("SupervisorJob")
         }
         assertTrue(
-            "WeatherDetailActivity should not hold coroutine fields — " +
-                "clock sync must be synchronous (pushClockInstant). Found: ${coroutineFields.map { it.name }}",
+            "WeatherDetailActivity should not hold coroutine fields. Found: ${coroutineFields.map { it.name }}",
             coroutineFields.isEmpty()
         )
     }
