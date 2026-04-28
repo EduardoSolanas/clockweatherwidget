@@ -161,7 +161,6 @@
     <!-- Widget setup banner -->
     <string name="setup_banner_title">El reloj del widget necesita configuración</string>
     <string name="setup_banner_bullet_battery">Batería: Sin restricciones</string>
-    <string name="setup_banner_bullet_alarm">Permiso de alarmas</string>
     <string name="setup_banner_action">Configurar</string>
 
     <!-- Forecast days setting -->

@@ -1,6 +1,5 @@
 package com.clockweather.app.presentation.detail
 
-import android.app.AlarmManager
 import android.content.Context
 import android.os.PowerManager
 import androidx.datastore.core.DataStore
@@ -53,7 +52,6 @@ class WeatherDetailViewModelTest {
     private lateinit var context: Context
     private lateinit var app: ClockWeatherApplication
     private lateinit var powerManager: PowerManager
-    private lateinit var alarmManager: AlarmManager
 
     private val location = Location(
         id = 1L,
@@ -74,14 +72,10 @@ class WeatherDetailViewModelTest {
         context = mockk()
         app = mockk(relaxed = true)
         powerManager = mockk()
-        alarmManager = mockk()
-
         every { context.applicationContext } returns app
         every { context.packageName } returns "com.clockweather.app"
         every { context.getSystemService(Context.POWER_SERVICE) } returns powerManager
-        every { context.getSystemService(Context.ALARM_SERVICE) } returns alarmManager
         every { powerManager.isIgnoringBatteryOptimizations(any()) } returns true
-        every { alarmManager.canScheduleExactAlarms() } returns true
 
         every { dataStore.data } returns flowOf(
             preferencesOf(
@@ -94,7 +88,7 @@ class WeatherDetailViewModelTest {
         coEvery { locationRepository.getCurrentLocation() } returns null
         every { getWeatherDataUseCase(location) } returns flowOf(sampleWeatherData(location))
         coEvery { refreshWeatherUseCase(location, forecastDays = 7) } just runs
-        coEvery { app.refreshAllWidgets(app, false, false) } just runs
+        coEvery { app.refreshAllWidgets(app) } just runs
     }
 
     @After
@@ -115,7 +109,7 @@ class WeatherDetailViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { refreshWeatherUseCase(location, forecastDays = 7) }
-        coVerify(exactly = 1) { app.refreshAllWidgets(app, false, false) }
+        coVerify(exactly = 1) { app.refreshAllWidgets(app) }
     }
 
     @Test
@@ -137,7 +131,7 @@ class WeatherDetailViewModelTest {
 
         // Only 2 calls total: 1 initial + 1 manual; second manual must be suppressed
         coVerify(exactly = 2) { refreshWeatherUseCase(location, forecastDays = 7) }
-        coVerify(exactly = 2) { app.refreshAllWidgets(app, false, false) }
+        coVerify(exactly = 2) { app.refreshAllWidgets(app) }
     }
 
     @Test
@@ -178,7 +172,7 @@ class WeatherDetailViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 2) { refreshWeatherUseCase(location, forecastDays = 7) }
-        coVerify(exactly = 2) { app.refreshAllWidgets(app, false, false) }
+        coVerify(exactly = 2) { app.refreshAllWidgets(app) }
     }
 
     @Test

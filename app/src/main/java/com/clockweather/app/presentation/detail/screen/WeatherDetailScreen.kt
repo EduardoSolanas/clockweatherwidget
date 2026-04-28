@@ -83,8 +83,6 @@ fun WeatherDetailScreen(
     val temperatureUnit by viewModel.temperatureUnit.collectAsStateWithLifecycle()
     val forecastDays by viewModel.forecastDays.collectAsStateWithLifecycle()
     val needsBattery by viewModel.needsBatteryExemption.collectAsStateWithLifecycle()
-    val needsAlarm by viewModel.needsExactAlarmPermission.collectAsStateWithLifecycle()
-    val showSetupBanner = needsBattery || needsAlarm
 
     // Re-check permissions whenever the user returns from the system settings screen.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -133,10 +131,9 @@ fun WeatherDetailScreen(
             // ── Widget reliability setup banner ───────────────────────────
             // Shown until the user grants both battery exemption + exact alarm.
             // Dismisses automatically once both are granted (ON_RESUME check).
-            if (showSetupBanner) {
+            if (needsBattery) {
                 WidgetSetupBanner(
                     needsBattery = needsBattery,
-                    needsAlarm = needsAlarm,
                     onSetupClick = onNavigateToSettings
                 )
             }
@@ -219,14 +216,11 @@ fun WeatherDetailScreen(
 @Composable
 private fun WidgetSetupBanner(
     needsBattery: Boolean,
-    needsAlarm: Boolean,
     onSetupClick: () -> Unit
 ) {
     val bulletBattery = stringResource(R.string.setup_banner_bullet_battery)
-    val bulletAlarm   = stringResource(R.string.setup_banner_bullet_alarm)
     val missing = buildList {
         if (needsBattery) add(bulletBattery)
-        if (needsAlarm)   add(bulletAlarm)
     }.joinToString(" · ")
 
     Surface(

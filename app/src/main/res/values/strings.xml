@@ -164,7 +164,6 @@
     <!-- Widget setup banner (shown in WeatherDetailScreen until both are granted) -->
     <string name="setup_banner_title">Widget clock needs setup</string>
     <string name="setup_banner_bullet_battery">Battery: Unrestricted</string>
-    <string name="setup_banner_bullet_alarm">Alarms permission</string>
     <string name="setup_banner_action">Fix</string>
 
     <!-- Forecast days setting -->
