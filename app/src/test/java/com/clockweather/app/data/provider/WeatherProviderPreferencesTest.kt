@@ -33,11 +33,13 @@ class WeatherProviderPreferencesTest {
     }
 
     @Test
-    fun `default provider is always open meteo — the zero-config fallback`() {
-        assertEquals(
-            WeatherProviderType.OPEN_METEO,
-            WeatherProviderPreferences.defaultProvider()
-        )
+    fun `default provider is openweathermap when key is configured, otherwise open meteo`() {
+        val expected = if (WeatherProviderPreferences.isConfigured(WeatherProviderType.OPENWEATHERMAP)) {
+            WeatherProviderType.OPENWEATHERMAP
+        } else {
+            WeatherProviderType.OPEN_METEO
+        }
+        assertEquals(expected, WeatherProviderPreferences.defaultProvider())
     }
 
     @Test

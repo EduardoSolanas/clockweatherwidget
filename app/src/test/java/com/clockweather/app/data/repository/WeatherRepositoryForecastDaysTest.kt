@@ -93,13 +93,16 @@ class WeatherRepositoryForecastDaysTest {
 
     @Test
     fun `refreshWeatherData falls back to configured default provider when preference missing`() = runTest {
+        val defaultProvider = WeatherProviderPreferences.defaultProvider()
+        val expectedForecastDays = 14.coerceIn(1, defaultProvider.maxForecastDays)
+        val defaultDataProvider: WeatherDataProvider = mockk()
         setupMissingProviderPreference()
-        every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
-        coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-provider-call")
+        every { providerFactory.get(defaultProvider) } returns defaultDataProvider
+        coEvery { defaultDataProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-provider-call")
 
         runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
 
-        coVerify(exactly = 1) { openMeteoProvider.fetchWeatherData(location, 14) }
+        coVerify(exactly = 1) { defaultDataProvider.fetchWeatherData(location, expectedForecastDays) }
     }
 
     @Test
