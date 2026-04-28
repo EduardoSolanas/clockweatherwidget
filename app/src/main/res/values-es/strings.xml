@@ -71,6 +71,10 @@
     <string name="cd_navigate_back">Volver</string>
     <string name="cd_settings">Ajustes</string>
     <string name="label_weather_fallback_title">Tiempo</string>
+    <string name="first_install_dialog_title">Bienvenido a Reloj y Tiempo</string>
+    <string name="first_install_dialog_message">Para mejores resultados, permite ubicación para clima actual preciso. Excluir la optimización de batería es opcional y solo ayuda a la fiabilidad de actualizaciones en segundo plano en algunos dispositivos.</string>
+    <string name="first_install_dialog_continue">Continuar</string>
+    <string name="first_install_dialog_open_settings">Abrir ajustes</string>
 
     <!-- CurrentWeatherCard -->
     <string name="label_7day_forecast">PRONÓSTICO 7 DÍAS</string>
@@ -149,6 +153,10 @@
     <string name="settings_battery_optimization_desc">Opción de respaldo para gestores de batería agresivos. El reloj usa el reloj integrado de Android para widgets; esto ayuda sobre todo a las actualizaciones del clima.</string>
     <string name="settings_battery_optimization_button">Sin restricciones</string>
     <string name="settings_battery_optimization_granted">Sin restricciones ✓</string>
+    <string name="settings_battery_optimization_help_button_cd">Por qué ayuda</string>
+    <string name="settings_battery_optimization_help_title">Por qué puede ayudar excluir batería</string>
+    <string name="settings_battery_optimization_help_message">Algunos fabricantes detienen el trabajo en segundo plano de forma agresiva. Poner esta app en Sin restricciones puede mejorar la fiabilidad de actualización del clima cuando la app está cerrada. Es opcional.</string>
+    <string name="action_ok">Aceptar</string>
 
     <!-- Widget setup banner -->
     <string name="setup_banner_title">El reloj del widget necesita configuración</string>

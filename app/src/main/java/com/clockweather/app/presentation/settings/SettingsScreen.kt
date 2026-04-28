@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,6 +36,7 @@ fun SettingsScreen(
     val clockTheme       by viewModel.clockTheme.collectAsStateWithLifecycle()
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
     val isBatteryOptimizationExempt by viewModel.isBatteryOptimizationExempt.collectAsStateWithLifecycle()
+    var showBatteryHelpDialog by remember { mutableStateOf(false) }
     val weatherRefreshIntervalMinutes by viewModel.weatherRefreshIntervalMinutes.collectAsStateWithLifecycle()
     val forecastDays by viewModel.forecastDays.collectAsStateWithLifecycle()
     val forecastDayOptions by viewModel.availableForecastDayOptions.collectAsStateWithLifecycle()
@@ -315,10 +317,22 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        stringResource(R.string.settings_battery_optimization_title),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            stringResource(R.string.settings_battery_optimization_title),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        IconButton(
+                            onClick = { showBatteryHelpDialog = true },
+                            modifier = Modifier.size(30.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                                contentDescription = stringResource(R.string.settings_battery_optimization_help_button_cd),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                     Text(
                         stringResource(R.string.settings_battery_optimization_desc),
                         style = MaterialTheme.typography.bodySmall,
@@ -356,6 +370,22 @@ fun SettingsScreen(
                         Text(stringResource(R.string.settings_battery_optimization_button))
                     }
                 }
+            }
+            if (showBatteryHelpDialog) {
+                AlertDialog(
+                    onDismissRequest = { showBatteryHelpDialog = false },
+                    title = {
+                        Text(stringResource(R.string.settings_battery_optimization_help_title))
+                    },
+                    text = {
+                        Text(stringResource(R.string.settings_battery_optimization_help_message))
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showBatteryHelpDialog = false }) {
+                            Text(stringResource(R.string.action_ok))
+                        }
+                    }
+                )
             }
 
             Spacer(Modifier.height(24.dp))
