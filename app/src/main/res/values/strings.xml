@@ -138,8 +138,6 @@
     <string name="settings_clock_tile_size_desc">Choose how big the clock numbers should be on your home screen</string>
     <string name="settings_24h_clock_label">24-hour clock</string>
     <string name="settings_24h_clock_desc">Use 24 h format instead of AM/PM</string>
-    <string name="settings_flip_animation_label">Flip animation</string>
-    <string name="settings_flip_animation_desc">Animate the clock digits with a flip effect when the time changes</string>
     <string name="settings_show_date_label">Show date</string>
     <string name="settings_show_date_desc">Display the current date below the clock</string>
     <string name="settings_date_font_size_label">Date font size</string>
@@ -150,12 +148,6 @@
     <string name="settings_show_today_forecast_label">Show today — forecast widget</string>
     <string name="settings_show_today_forecast_desc">Display today\'s weather above the 7-day forecast rows</string>
     <string name="settings_category_advanced">Advanced / Reliability</string>
-    <string name="settings_high_precision_clock_label">High Precision Clock</string>
-    <string name="settings_high_precision_clock_desc">Normal mode uses Android\'s built-in widget clock without waking the device every minute. Turn this on only if your launcher does not keep the clock moving.</string>
-    <string name="settings_exact_alarm_permission_title">System Permission Required</string>
-    <string name="settings_exact_alarm_permission_desc">The High Precision fallback requires the \'Alarms &amp; reminders\' permission on Android 12+. Leave this off unless the widget clock stops on your launcher.</string>
-    <string name="settings_exact_alarm_permission_button">Grant Permission</string>
-    <string name="settings_exact_alarm_permission_granted">Permission Granted</string>
     <string name="settings_battery_optimization_title">Battery Optimization</string>
     <string name="settings_battery_optimization_desc">Optional fallback for aggressive battery managers. The clock itself uses Android\'s built-in widget clock; this mainly helps background weather refreshes.</string>
     <string name="settings_battery_optimization_button">Set Unrestricted</string>

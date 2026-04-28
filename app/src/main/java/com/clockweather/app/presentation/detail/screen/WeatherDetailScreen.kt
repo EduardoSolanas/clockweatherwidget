@@ -129,8 +129,8 @@ fun WeatherDetailScreen(
                 .padding(paddingValues)
         ) {
             // ── Widget reliability setup banner ───────────────────────────
-            // Shown until the user grants both battery exemption + exact alarm.
-            // Dismisses automatically once both are granted (ON_RESUME check).
+            // Shown until the user grants battery exemption.
+            // Dismisses automatically once granted (ON_RESUME check).
             if (needsBattery) {
                 WidgetSetupBanner(
                     needsBattery = needsBattery,

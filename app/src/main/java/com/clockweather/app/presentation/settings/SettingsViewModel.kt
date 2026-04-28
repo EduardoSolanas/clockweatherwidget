@@ -54,7 +54,6 @@ class SettingsViewModel @Inject constructor(
         val KEY_CLOCK_THEME = stringPreferencesKey("clock_theme")
         val KEY_CLOCK_TILE_SIZE = stringPreferencesKey("clock_tile_size")
         val KEY_LANGUAGE = stringPreferencesKey("language")
-        val KEY_FLIP_ANIMATION = booleanPreferencesKey("flip_animation_enabled")
         val KEY_FORECAST_DAYS = intPreferencesKey("forecast_days")
         const val DEFAULT_DATE_FONT_SP = 15f
         const val DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES = 30
@@ -160,10 +159,6 @@ class SettingsViewModel @Inject constructor(
     val selectedLanguage: StateFlow<String> = dataStore.data
         .map { prefs -> prefs[KEY_LANGUAGE] ?: "system" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "system")
-
-    val flipAnimationEnabled: StateFlow<Boolean> = dataStore.data
-        .map { prefs -> prefs[KEY_FLIP_ANIMATION] ?: true }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     val weatherRefreshIntervalMinutes: StateFlow<Int> = dataStore.data
         .map { prefs -> prefs[KEY_WEATHER_REFRESH_INTERVAL] ?: DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES }
@@ -299,13 +294,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setFlipAnimationEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            dataStore.edit { it[KEY_FLIP_ANIMATION] = enabled }
-            triggerWidgetUpdate()
-        }
-    }
-
     fun setWeatherRefreshInterval(minutes: Int) {
         viewModelScope.launch {
             val validMinutes = minutes.coerceIn(5, 1440)  // 5 min to 24 hours
@@ -327,9 +315,8 @@ class SettingsViewModel @Inject constructor(
 
     /**
      * Returns true if this app is excluded from battery optimizations (i.e. set to
-     * "Unrestricted" in Battery > App battery usage). When optimized, the OS may kill
-     * the process while the screen is on, causing the widget clock to freeze until the
-     * next AlarmManager wake-up or screen-off/on cycle.
+     * "Unrestricted" in Battery > App battery usage). This primarily improves
+     * reliability of background weather refreshes on aggressive OEM battery managers.
      */
     private fun checkBatteryOptimizationExempt(): Boolean {
         val pm = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager

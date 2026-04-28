@@ -135,8 +135,6 @@
     <string name="settings_clock_tile_size_desc">Elige qué tan grandes se verán los números en tu pantalla</string>
     <string name="settings_24h_clock_label">Formato 24 horas</string>
     <string name="settings_24h_clock_desc">Usar formato 24h en lugar de AM/PM</string>
-    <string name="settings_flip_animation_label">Animación de volteo</string>
-    <string name="settings_flip_animation_desc">Animar los dígitos del reloj con un efecto de volteo cuando cambia la hora</string>
     <string name="settings_show_date_label">Mostrar fecha</string>
     <string name="settings_show_date_desc">Mostrar la fecha actual debajo del reloj</string>
     <string name="settings_date_font_size_label">Tamaño fuente fecha</string>
@@ -147,12 +145,6 @@
     <string name="settings_show_today_forecast_label">Mostrar hoy — widget pronóstico</string>
     <string name="settings_show_today_forecast_desc">Mostrar el tiempo de hoy sobre el pronóstico de 7 días</string>
     <string name="settings_category_advanced">Avanzado / Fiabilidad</string>
-    <string name="settings_high_precision_clock_label">Reloj de alta precisión</string>
-    <string name="settings_high_precision_clock_desc">El modo normal usa el reloj integrado de Android para widgets sin despertar el dispositivo cada minuto. Activa esto solo si el reloj no avanza en tu lanzador.</string>
-    <string name="settings_exact_alarm_permission_title">Permiso del sistema requerido</string>
-    <string name="settings_exact_alarm_permission_desc">El modo de alta precisión requiere el permiso de \'Alarmas y recordatorios\' en Android 12+. Déjalo desactivado salvo que el reloj del widget se detenga en tu lanzador.</string>
-    <string name="settings_exact_alarm_permission_button">Conceder permiso</string>
-    <string name="settings_exact_alarm_permission_granted">Permiso concedido</string>
     <string name="settings_battery_optimization_title">Optimización de batería</string>
     <string name="settings_battery_optimization_desc">Opción de respaldo para gestores de batería agresivos. El reloj usa el reloj integrado de Android para widgets; esto ayuda sobre todo a las actualizaciones del clima.</string>
     <string name="settings_battery_optimization_button">Sin restricciones</string>

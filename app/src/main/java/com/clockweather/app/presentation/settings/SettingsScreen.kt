@@ -308,7 +308,7 @@ fun SettingsScreen(
             // Battery optimization — shown in Advanced section.
             // When the app is battery-optimized, Android can kill the process while
             // the screen is on, causing the widget clock to freeze. Setting to
-            // "Unrestricted" ensures the process stays alive for TIME_TICK delivery.
+            // "Unrestricted" primarily helps background weather refresh reliability.
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
