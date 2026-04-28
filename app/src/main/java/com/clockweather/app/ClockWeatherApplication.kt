@@ -19,11 +19,13 @@ import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
 import com.clockweather.app.presentation.widget.large.LargeWidgetProvider
 import com.clockweather.app.util.WidgetPrefsCache
 import com.clockweather.app.util.dataStore
+import com.clockweather.app.worker.WeatherUpdateScheduler
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
@@ -42,6 +44,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         // Initialise the in-memory preference cache so widget updates skip disk I/O.
         WidgetPrefsCache.init(dataStore, appScope)
         WidgetPrefsCache.seedBlocking(dataStore)
+        appScope.launch { WeatherUpdateScheduler.ensureScheduled(this@ClockWeatherApplication, dataStore) }
     }
 
     private suspend fun recoverClockThemeAfterBrokenMigration() {

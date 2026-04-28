@@ -1,11 +1,15 @@
 package com.clockweather.app.worker
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
 
 object WeatherUpdateScheduler {
@@ -39,6 +43,11 @@ object WeatherUpdateScheduler {
             ExistingPeriodicWorkPolicy.UPDATE,
             workRequest
         )
+    }
+
+    suspend fun ensureScheduled(context: Context, dataStore: DataStore<Preferences>) {
+        val intervalMinutes = dataStore.data.first()[intPreferencesKey("update_interval_minutes")] ?: 30
+        schedule(context, intervalMinutes)
     }
 
     fun cancel(context: Context) {
