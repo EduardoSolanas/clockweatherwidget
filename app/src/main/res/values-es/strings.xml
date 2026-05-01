@@ -83,6 +83,13 @@
     <string name="label_today">Hoy</string>
     <string name="label_conditions">CONDICIONES</string>
     <string name="label_air_quality">CALIDAD DEL AIRE</string>
+    <string name="label_weather_animation_gallery">GALERÍA DE ANIMACIONES DEL CLIMA</string>
+    <string name="label_weather_animation_style_atmospheric">Atmós</string>
+    <string name="label_weather_animation_style_glass_ai">Vidrio IA</string>
+    <string name="label_weather_animation_style_minimal">Minimal</string>
+    <string name="label_weather_animation_style_neon">Neón</string>
+    <string name="label_weather_animation_style_noir">Noir</string>
+    <string name="label_weather_animation_style_aurora">Aurora</string>
     <string name="label_updated_format">Actualizado %s</string>
     <string name="label_sun_sunrise">Amanecer</string>
     <string name="label_sun_sunset">Ocaso</string>
@@ -148,6 +155,12 @@
     <string name="settings_show_weather_compact_desc">Mostrar la tarjeta de clima actual debajo del reloj</string>
     <string name="settings_show_today_forecast_label">Mostrar hoy — widget pronóstico</string>
     <string name="settings_show_today_forecast_desc">Mostrar el tiempo de hoy sobre el pronóstico de 7 días</string>
+    <string name="settings_weather_icon_style_label">Estilo de iconos del clima</string>
+    <string name="settings_weather_icon_style_desc">Elige la familia visual de iconos del clima</string>
+    <string name="settings_weather_icon_style_glass_ai">Vidrio IA</string>
+    <string name="settings_weather_icon_style_glass">Vidrio</string>
+    <string name="settings_weather_icon_style_clay">Arcilla 3D</string>
+    <string name="settings_weather_icon_style_neon">Neón</string>
     <string name="settings_category_advanced">Avanzado / Fiabilidad</string>
     <string name="settings_battery_optimization_title">Optimización de batería</string>
     <string name="settings_battery_optimization_desc">Opción de respaldo para gestores de batería agresivos. El reloj usa el reloj integrado de Android para widgets; esto ayuda sobre todo a las actualizaciones del clima.</string>

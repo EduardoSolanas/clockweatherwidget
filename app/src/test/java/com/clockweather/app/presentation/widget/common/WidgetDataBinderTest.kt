@@ -235,6 +235,38 @@ class WidgetDataBinderTest {
     }
 
     @Test
+    fun `bindWeeklyForecastRows uses selected icon style`() {
+        val today = LocalDate.of(2026, 4, 3)
+        mockkObject(DateFormatter)
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
+
+        val weatherData = sampleWeatherData(
+            dailyForecasts = listOf(
+                sampleWeatherData().dailyForecasts.first().copy(date = today),
+                sampleWeatherData().dailyForecasts.first().copy(
+                    date = today.plusDays(1),
+                    weatherCondition = WeatherCondition.THUNDERSTORM,
+                    temperatureMax = 21.0,
+                    temperatureMin = 12.0,
+                ),
+            ),
+        )
+
+        WidgetDataBinder.bindWeeklyForecastRows(
+            context = context,
+            views = views,
+            weatherData = weatherData,
+            temperatureUnit = TemperatureUnit.CELSIUS,
+            today = today,
+            iconStyle = WeatherIconMapper.IconStyle.NEON_EDGE,
+        )
+
+        verify(exactly = 1) {
+            views.setImageViewResource(R.id.fday1_icon, R.drawable.ic_weather_neon_edge_thunderstorm)
+        }
+    }
+
+    @Test
     fun `bindWeeklyForecastRows anchors from weather snapshot day when location is ahead of device`() {
         val deviceToday = LocalDate.of(2026, 4, 3)
         val weatherToday = LocalDate.of(2026, 4, 4)

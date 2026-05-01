@@ -8,7 +8,9 @@ import com.clockweather.app.R
 import com.clockweather.app.di.WidgetEntryPoint
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
+import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.presentation.widget.common.BaseWidgetUpdater
+import com.clockweather.app.presentation.widget.common.WeatherIconMapper
 import com.clockweather.app.presentation.widget.common.WidgetDataBinder
 
 class ForecastWidgetUpdater(
@@ -23,6 +25,9 @@ class ForecastWidgetUpdater(
     override val minimumFutureForecastDaysRequired = 7
 
     override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
-        WidgetDataBinder.bindWeeklyForecastRows(context, views, weather, tempUnit)
+        val iconStyle = WeatherIconMapper.fromPreferenceValue(
+            prefs[SettingsViewModel.KEY_WEATHER_ICON_STYLE] ?: SettingsViewModel.ICON_STYLE_GLASS
+        )
+        WidgetDataBinder.bindWeeklyForecastRows(context, views, weather, tempUnit, iconStyle = iconStyle)
     }
 }

@@ -58,6 +58,10 @@ abstract class BaseWidgetUpdater(
                 val showDate = prefs[booleanPreferencesKey("show_date_in_widget")] ?: true
                 val tempUnitName = prefs[stringPreferencesKey("temperature_unit")] ?: TemperatureUnit.CELSIUS.name
                 val tempUnit = runCatching { TemperatureUnit.valueOf(tempUnitName) }.getOrDefault(TemperatureUnit.CELSIUS)
+                val weatherIconStyle = WeatherIconMapper.fromPreferenceValue(
+                    prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_WEATHER_ICON_STYLE]
+                        ?: com.clockweather.app.presentation.settings.SettingsViewModel.ICON_STYLE_GLASS
+                )
 
                 val clockThemeName = prefs[stringPreferencesKey("clock_theme")] ?: "light"
                 val theme = WidgetThemeSelector.getTheme(clockThemeName)
@@ -183,10 +187,10 @@ abstract class BaseWidgetUpdater(
                 }
 
                 if (weather != null) {
-                    WidgetDataBinder.bindWeatherViews(context, views, weather, tempUnit)
+                    WidgetDataBinder.bindWeatherViews(context, views, weather, tempUnit, weatherIconStyle)
                     bindExtra(views, weather, tempUnit, prefs)
                 } else {
-                    WidgetDataBinder.bindWeatherUnavailableViews(context, views)
+                    WidgetDataBinder.bindWeatherUnavailableViews(context, views, weatherIconStyle)
                 }
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)

@@ -86,6 +86,13 @@
     <string name="label_today">Today</string>
     <string name="label_conditions">CONDITIONS</string>
     <string name="label_air_quality">AIR QUALITY</string>
+    <string name="label_weather_animation_gallery">WEATHER ANIMATION GALLERY</string>
+    <string name="label_weather_animation_style_atmospheric">Atmos</string>
+    <string name="label_weather_animation_style_glass_ai">Glass AI</string>
+    <string name="label_weather_animation_style_minimal">Minimal</string>
+    <string name="label_weather_animation_style_neon">Neon</string>
+    <string name="label_weather_animation_style_noir">Noir</string>
+    <string name="label_weather_animation_style_aurora">Aurora</string>
     <string name="label_updated_format">Updated %s</string>
     <string name="label_sun_sunrise">Sunrise</string>
     <string name="label_sun_sunset">Sunset</string>
@@ -151,6 +158,12 @@
     <string name="settings_show_weather_compact_desc">Display the current weather card below the clock</string>
     <string name="settings_show_today_forecast_label">Show today — forecast widget</string>
     <string name="settings_show_today_forecast_desc">Display today\'s weather above the 7-day forecast rows</string>
+    <string name="settings_weather_icon_style_label">Weather icon style</string>
+    <string name="settings_weather_icon_style_desc">Choose visual style family for weather icons</string>
+    <string name="settings_weather_icon_style_glass_ai">Glass AI</string>
+    <string name="settings_weather_icon_style_glass">Glass</string>
+    <string name="settings_weather_icon_style_clay">Clay 3D</string>
+    <string name="settings_weather_icon_style_neon">Neon</string>
     <string name="settings_category_advanced">Advanced / Reliability</string>
     <string name="settings_battery_optimization_title">Battery Optimization</string>
     <string name="settings_battery_optimization_desc">Optional fallback for aggressive battery managers. The clock itself uses Android\'s built-in widget clock; this mainly helps background weather refreshes.</string>

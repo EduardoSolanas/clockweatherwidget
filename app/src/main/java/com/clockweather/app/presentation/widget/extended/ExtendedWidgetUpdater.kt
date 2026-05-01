@@ -10,7 +10,9 @@ import com.clockweather.app.R
 import com.clockweather.app.di.WidgetEntryPoint
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
+import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.presentation.widget.common.BaseWidgetUpdater
+import com.clockweather.app.presentation.widget.common.WeatherIconMapper
 import com.clockweather.app.presentation.widget.common.WidgetDataBinder
 
 class ExtendedWidgetUpdater(
@@ -25,7 +27,10 @@ class ExtendedWidgetUpdater(
 
     override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
         val showToday = prefs[booleanPreferencesKey("show_today_extended")] ?: false
+        val iconStyle = WeatherIconMapper.fromPreferenceValue(
+            prefs[SettingsViewModel.KEY_WEATHER_ICON_STYLE] ?: SettingsViewModel.ICON_STYLE_GLASS
+        )
         views.setViewVisibility(R.id.weather_card, if (showToday) View.VISIBLE else View.GONE)
-        WidgetDataBinder.bindWeeklyForecastRows(context, views, weather, tempUnit)
+        WidgetDataBinder.bindWeeklyForecastRows(context, views, weather, tempUnit, iconStyle = iconStyle)
     }
 }

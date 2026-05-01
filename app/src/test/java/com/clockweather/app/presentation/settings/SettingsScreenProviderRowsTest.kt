@@ -26,4 +26,25 @@ class SettingsScreenProviderRowsTest {
             rows
         )
     }
+
+    @Test
+    fun `weather icon style chips are split into rows`() {
+        val rows = iconStyleRows(
+            listOf(
+                SettingsViewModel.ICON_STYLE_GLASS_AI,
+                SettingsViewModel.ICON_STYLE_GLASS,
+                SettingsViewModel.ICON_STYLE_CLAY,
+                SettingsViewModel.ICON_STYLE_NEON
+            ),
+            maxItemsPerRow = 2
+        )
+
+        assertEquals(
+            listOf(
+                listOf(SettingsViewModel.ICON_STYLE_GLASS_AI, SettingsViewModel.ICON_STYLE_GLASS),
+                listOf(SettingsViewModel.ICON_STYLE_CLAY, SettingsViewModel.ICON_STYLE_NEON)
+            ),
+            rows
+        )
+    }
 }

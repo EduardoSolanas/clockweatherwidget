@@ -1,7 +1,9 @@
 package com.clockweather.app.presentation.settings
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,6 +37,7 @@ fun SettingsScreen(
     val dateFontSizeSp   by viewModel.dateFontSizeSp.collectAsStateWithLifecycle()
     val clockTheme       by viewModel.clockTheme.collectAsStateWithLifecycle()
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
+    val weatherIconStyle by viewModel.weatherIconStyle.collectAsStateWithLifecycle()
     val isBatteryOptimizationExempt by viewModel.isBatteryOptimizationExempt.collectAsStateWithLifecycle()
     var showBatteryHelpDialog by remember { mutableStateOf(false) }
     val weatherRefreshIntervalMinutes by viewModel.weatherRefreshIntervalMinutes.collectAsStateWithLifecycle()
@@ -302,6 +305,40 @@ fun SettingsScreen(
                 onCheckedChange = { viewModel.setShowTodayExtended(it) }
             )
 
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            SettingsLabel(
+                label = stringResource(R.string.settings_weather_icon_style_label),
+                description = stringResource(R.string.settings_weather_icon_style_desc)
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val iconStyleLabels = listOf(
+                    SettingsViewModel.ICON_STYLE_GLASS_AI to stringResource(R.string.settings_weather_icon_style_glass_ai),
+                    SettingsViewModel.ICON_STYLE_GLASS to stringResource(R.string.settings_weather_icon_style_glass),
+                    SettingsViewModel.ICON_STYLE_CLAY to stringResource(R.string.settings_weather_icon_style_clay),
+                    SettingsViewModel.ICON_STYLE_NEON to stringResource(R.string.settings_weather_icon_style_neon)
+                )
+                iconStyleRows(iconStyleLabels).forEach { iconStyleRow ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        iconStyleRow.forEach { (style, label) ->
+                            WeatherIconStyleChip(
+                                selected = weatherIconStyle == style,
+                                label = label,
+                                onClick = { viewModel.setWeatherIconStyle(style) }
+                            )
+                        }
+                    }
+                }
+            }
+
             // ══════════════════════════════════════════════════════════
             // ⚙️  ADVANCED
             // ══════════════════════════════════════════════════════════
@@ -495,10 +532,43 @@ private fun SettingsToggleRow(
     }
 }
 
+@Composable
+private fun WeatherIconStyleChip(
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(8.dp)
+    Surface(
+        modifier = Modifier.clickable(onClick = onClick),
+        shape = shape,
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+        )
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+        )
+    }
+}
+
 internal fun providerChipRows(
     providers: List<com.clockweather.app.domain.model.WeatherProviderType>,
     maxItemsPerRow: Int = 2
 ): List<List<com.clockweather.app.domain.model.WeatherProviderType>> {
     require(maxItemsPerRow > 0) { "maxItemsPerRow must be greater than 0" }
     return providers.chunked(maxItemsPerRow)
+}
+
+internal fun <T> iconStyleRows(
+    iconStyles: List<T>,
+    maxItemsPerRow: Int = 2
+): List<List<T>> {
+    require(maxItemsPerRow > 0) { "maxItemsPerRow must be greater than 0" }
+    return iconStyles.chunked(maxItemsPerRow)
 }
