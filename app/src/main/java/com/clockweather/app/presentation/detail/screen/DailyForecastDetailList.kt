@@ -12,14 +12,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.DailyForecast
+import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
+import com.clockweather.app.util.WindSpeedFormatter
 
 @Composable
 fun DailyForecastDetailList(
     dailyForecasts: List<DailyForecast>,
-    temperatureUnit: TemperatureUnit
+    temperatureUnit: TemperatureUnit,
+    speedUnit: SpeedUnit = SpeedUnit.KMH
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -28,13 +31,13 @@ fun DailyForecastDetailList(
             fontWeight = FontWeight.Bold
         )
         dailyForecasts.take(7).forEach { forecast ->
-            DailyForecastDetailItem(forecast = forecast, temperatureUnit = temperatureUnit)
+            DailyForecastDetailItem(forecast = forecast, temperatureUnit = temperatureUnit, speedUnit = speedUnit)
         }
     }
 }
 
 @Composable
-fun DailyForecastDetailItem(forecast: DailyForecast, temperatureUnit: TemperatureUnit) {
+fun DailyForecastDetailItem(forecast: DailyForecast, temperatureUnit: TemperatureUnit, speedUnit: SpeedUnit = SpeedUnit.KMH) {
     var expanded by remember { mutableStateOf(false) }
 
     Card(
@@ -80,7 +83,7 @@ fun DailyForecastDetailItem(forecast: DailyForecast, temperatureUnit: Temperatur
                 WeatherMetricRow(stringResource(R.string.label_precipitation), stringResource(R.string.unit_mm, forecast.precipitationSum) + " " + stringResource(R.string.unit_percent, forecast.precipitationProbability))
                 WeatherMetricRow(stringResource(R.string.label_humidity), stringResource(R.string.unit_percent, forecast.averageHumidity))
                 WeatherMetricRow(stringResource(R.string.label_pressure), stringResource(R.string.unit_hpa, forecast.averagePressure))
-                WeatherMetricRow(stringResource(R.string.label_metric_wind_max), stringResource(R.string.unit_kmh, forecast.windSpeedMax) + " " + stringResource(forecast.windDirectionDominant.labelResId))
+                WeatherMetricRow(stringResource(R.string.label_metric_wind_max), WindSpeedFormatter.formatWithUnit(forecast.windSpeedMax, speedUnit) + " " + stringResource(forecast.windDirectionDominant.labelResId))
                 WeatherMetricRow(stringResource(R.string.label_metric_uv_index_max), forecast.uvIndexMax.toInt().toString())
                 WeatherMetricRow(stringResource(R.string.label_sunrise), DateFormatter.formatTime(forecast.sunrise, is24Hour = true))
                 WeatherMetricRow(stringResource(R.string.label_sunset), DateFormatter.formatTime(forecast.sunset, is24Hour = true))

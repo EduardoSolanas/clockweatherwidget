@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -32,9 +33,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.HourlyForecast
+import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
+import com.clockweather.app.util.WindSpeedFormatter
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.math.roundToInt
@@ -114,6 +117,7 @@ internal fun resolveCurrentHourIndex(hours: List<HourlyForecast>, nowHour: Int):
 fun HourlyWeatherGraph(
     hourlyForecasts: List<HourlyForecast>,
     temperatureUnit: TemperatureUnit,
+    speedUnit: SpeedUnit = SpeedUnit.KMH,
     modifier: Modifier = Modifier,
     selectedDate: LocalDate? = null
 ) {
@@ -378,6 +382,7 @@ fun HourlyWeatherGraph(
                                     HourlyMetaSlice(
                                         hour = hour,
                                         columnWidth = layoutMetrics.columnWidthDp,
+                                        speedUnit = speedUnit,
                                         isCurrent = isTodayView && index == currentIdx,
                                         onSurface = onSurface,
                                         onSurfaceVariant = onSurfaceVariant
@@ -462,11 +467,12 @@ private fun HourlyTimeSlice(
 private fun HourlyMetaSlice(
     hour: HourlyForecast,
     columnWidth: Dp,
+    speedUnit: SpeedUnit,
     isCurrent: Boolean,
     onSurface: Color,
     onSurfaceVariant: Color
 ) {
-    val labelColor = if (isCurrent) CurveColor else onSurface
+    val precipColor = PrecipColor
 
     Column(
         modifier = Modifier
@@ -490,30 +496,36 @@ private fun HourlyMetaSlice(
 
         Spacer(Modifier.height(6.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(34.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(hour.weatherCondition.labelResId),
-                style = MaterialTheme.typography.labelSmall,
-                fontSize = 10.sp,
-                color = labelColor,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        Spacer(Modifier.height(8.dp))
-
+        Icon(
+            painter = painterResource(R.drawable.ic_rain_drops),
+            contentDescription = null,
+            tint = precipColor,
+            modifier = Modifier.size(14.dp)
+        )
         Text(
             text = stringResource(R.string.unit_percent, hour.precipitationProbability),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = if (hour.precipitationProbability > 0) PrecipColor else onSurfaceVariant,
+            color = precipColor,
+            maxLines = 1,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(6.dp))
+
+        Icon(
+            painter = painterResource(R.drawable.ic_widget_weather_wind_arrow),
+            contentDescription = null,
+            tint = onSurfaceVariant,
+            modifier = Modifier
+                .size(20.dp)
+                .rotate(hour.windDirectionDegrees.toFloat())
+        )
+        Text(
+            text = WindSpeedFormatter.formatWithUnit(hour.windSpeed, speedUnit),
+            style = MaterialTheme.typography.labelSmall,
+            color = onSurfaceVariant,
             maxLines = 1,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -569,5 +581,5 @@ private val CurrentHourSelectionHorizontalInset = 2.dp
 private val CurrentHourSelectionVerticalInset = 2.dp
 private val TimeRowH = 52.dp
 private val GraphH = 148.dp
-private val BottomSliceH = 112.dp
+private val BottomSliceH = 150.dp
 private val HourlyGraphPanelHeight = TimeRowH + GraphH + BottomSliceH

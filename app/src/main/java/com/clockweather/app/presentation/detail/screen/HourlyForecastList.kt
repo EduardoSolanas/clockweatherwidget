@@ -12,9 +12,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.HourlyForecast
+import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
+import com.clockweather.app.util.WindSpeedFormatter
 
 private val HourlyForecastRowMinHeight = 88.dp
 private val HourlyForecastTimeSliceWidth = 72.dp
@@ -24,7 +26,8 @@ private val HourlyForecastTemperatureSliceWidth = 72.dp
 @Composable
 fun HourlyForecastList(
     hourlyForecasts: List<HourlyForecast>,
-    temperatureUnit: TemperatureUnit
+    temperatureUnit: TemperatureUnit,
+    speedUnit: SpeedUnit = SpeedUnit.KMH
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -34,19 +37,15 @@ fun HourlyForecastList(
         )
         // Show next 72 hours
         hourlyForecasts.take(72).forEach { forecast ->
-            HourlyForecastItem(forecast = forecast, temperatureUnit = temperatureUnit)
+            HourlyForecastItem(forecast = forecast, temperatureUnit = temperatureUnit, speedUnit = speedUnit)
         }
     }
 }
 
 @Composable
-fun HourlyForecastItem(forecast: HourlyForecast, temperatureUnit: TemperatureUnit) {
+fun HourlyForecastItem(forecast: HourlyForecast, temperatureUnit: TemperatureUnit, speedUnit: SpeedUnit = SpeedUnit.KMH) {
     val temperatureLabel = "${TemperatureFormatter.format(forecast.temperature, temperatureUnit)}°"
-    val windLabel = stringResource(
-        R.string.label_wind_speed_kmh,
-        forecast.windSpeed.toInt(),
-        stringResource(forecast.windDirection.labelResId)
-    )
+    val windLabel = "💨 ${WindSpeedFormatter.formatWithUnit(forecast.windSpeed, speedUnit)} ${stringResource(forecast.windDirection.labelResId)}"
     val humidityLabel = stringResource(R.string.label_metric_humidity_short, forecast.humidity)
     val uvLabel = stringResource(R.string.label_metric_uv_short, forecast.uvIndex.toInt())
 

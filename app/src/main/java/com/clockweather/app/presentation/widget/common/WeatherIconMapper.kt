@@ -5,6 +5,7 @@ import com.clockweather.app.domain.model.WeatherCondition
 
 object WeatherIconMapper {
 
+
     enum class IconStyle { GLASS_AI_GENERATED, GLASS_LAYERED, CLAY_3D, NEON_EDGE }
 
     fun fromPreferenceValue(value: String): IconStyle = when (value) {

@@ -26,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -47,12 +48,14 @@ import androidx.compose.ui.platform.LocalDensity
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.AirQuality
 import com.clockweather.app.domain.model.DailyForecast
+import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.presentation.widget.common.WeatherIconMapper
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
+import com.clockweather.app.util.WindSpeedFormatter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -72,6 +75,7 @@ private val DEBUG_CONDITIONS = WeatherCondition.entries.toList()
 fun WeatherDetailContent(
     weatherData: WeatherData,
     temperatureUnit: TemperatureUnit,
+    speedUnit: SpeedUnit = SpeedUnit.KMH,
     selectedDayIndex: Int = 0,
     onDaySelected: (Int) -> Unit = {},
     forecastDays: Int = 7
@@ -101,6 +105,7 @@ fun WeatherDetailContent(
         HourlyWeatherGraph(
             hourlyForecasts = weatherData.hourlyForecasts,
             temperatureUnit = temperatureUnit,
+            speedUnit = speedUnit,
             selectedDate = selectedForecast?.date
         )
 
@@ -108,12 +113,13 @@ fun WeatherDetailContent(
         SevenDayForecastCard(
             forecasts = forecasts,
             temperatureUnit = temperatureUnit,
+            speedUnit = speedUnit,
             selectedDayIndex = selectedDayIndex,
             onDaySelected = onDaySelected
         )
 
         // ── Detail metrics grid ─────────────────────────────────────────────
-        MetricsGrid(weatherData = displayWeatherData, temperatureUnit = temperatureUnit, selectedDayIndex = selectedDayIndex)
+        MetricsGrid(weatherData = displayWeatherData, temperatureUnit = temperatureUnit, speedUnit = speedUnit, selectedDayIndex = selectedDayIndex)
 
         // ── Sunrise / Sunset ────────────────────────────────────────────────
         val shownForecast = selectedForecast
@@ -390,6 +396,7 @@ private fun HeroStat(emoji: String, value: String) {
 private fun SevenDayForecastCard(
     forecasts: List<DailyForecast>,
     temperatureUnit: TemperatureUnit,
+    speedUnit: SpeedUnit,
     selectedDayIndex: Int,
     onDaySelected: (Int) -> Unit
 ) {
@@ -480,6 +487,7 @@ private fun SevenDayForecastCard(
                     ForecastDayColumn(
                         forecast = forecast,
                         temperatureUnit = temperatureUnit,
+                        speedUnit = speedUnit,
                         isToday = resolveForecastIsToday(forecast.date, LocalDate.now()),
                         isSelected = index == selectedDayIndex,
                         onClick = { onDaySelected(index) },
@@ -522,6 +530,7 @@ private fun ForecastScrollButton(
 private fun ForecastDayColumn(
     forecast: DailyForecast,
     temperatureUnit: TemperatureUnit,
+    speedUnit: SpeedUnit,
     isToday: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -532,17 +541,18 @@ private fun ForecastDayColumn(
     val outlineColor = if (isSelected) Color.White.copy(alpha = 0.92f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
     val primaryTextColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
     val secondaryTextColor = if (isSelected) Color.White.copy(alpha = 0.72f) else MaterialTheme.colorScheme.onSurfaceVariant
-    val precipitationColor = if (forecast.precipitationProbability > 0) Color(0xFF64B5F6) else secondaryTextColor
+    val precipitationColor = Color(0xFF64B5F6)
     val dateLabel = remember(forecast.date) {
         forecast.date.format(DateTimeFormatter.ofPattern("dd/MM", Locale.getDefault()))
     }
     val highLabel = TemperatureFormatter.format(forecast.temperatureMax, temperatureUnit) + "°"
     val lowLabel = TemperatureFormatter.format(forecast.temperatureMin, temperatureUnit) + "°"
+    val windLabel = WindSpeedFormatter.formatWithUnit(forecast.windSpeedMax, speedUnit)
     val cornerRadius = 12.dp
 
     Surface(
         modifier = modifier
-            .height(if (isCompact) 172.dp else 208.dp)
+            .height(if (isCompact) 220.dp else 260.dp)
             .clickable(onClick = onClick)
             .border(2.dp, outlineColor, RoundedCornerShape(cornerRadius)),
         shape = RoundedCornerShape(cornerRadius),
@@ -585,12 +595,36 @@ private fun ForecastDayColumn(
                 )
             }
 
-            Spacer(Modifier.height(if (isCompact) 6.dp else 10.dp))
+            Spacer(Modifier.height(if (isCompact) 4.dp else 8.dp))
 
+            Icon(
+                painter = painterResource(R.drawable.ic_rain_drops),
+                contentDescription = null,
+                tint = precipitationColor,
+                modifier = Modifier.size(if (isCompact) 14.dp else 18.dp)
+            )
             Text(
                 text = stringResource(R.string.unit_percent, forecast.precipitationProbability),
                 style = if (isCompact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.titleMedium,
                 color = precipitationColor,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1
+            )
+
+            Spacer(Modifier.height(if (isCompact) 4.dp else 8.dp))
+
+            Icon(
+                painter = painterResource(R.drawable.ic_widget_weather_wind_arrow),
+                contentDescription = null,
+                tint = secondaryTextColor,
+                modifier = Modifier
+                    .size(if (isCompact) 20.dp else 24.dp)
+                    .rotate(forecast.windDirectionDegrees.toFloat())
+            )
+            Text(
+                text = windLabel,
+                style = if (isCompact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.titleMedium,
+                color = secondaryTextColor,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1
             )
@@ -683,7 +717,7 @@ private fun ForecastDayRow(
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             SmallMetric("💧", stringResource(R.string.unit_mm, forecast.precipitationSum))
-            SmallMetric("💨", stringResource(R.string.unit_kmh, forecast.windSpeedMax))
+            SmallMetric("💨", WindSpeedFormatter.formatWithUnit(forecast.windSpeedMax, SpeedUnit.KMH))
             SmallMetric("☀️", "UV ${forecast.uvIndexMax.toInt()}")
             SmallMetric("🌅", DateFormatter.formatTime(forecast.sunrise, true))
             SmallMetric("🌇", DateFormatter.formatTime(forecast.sunset, true))
@@ -702,7 +736,7 @@ private fun SmallMetric(icon: String, value: String) {
 // ─── Metrics grid ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun MetricsGrid(weatherData: WeatherData, temperatureUnit: TemperatureUnit, selectedDayIndex: Int) {
+private fun MetricsGrid(weatherData: WeatherData, temperatureUnit: TemperatureUnit, speedUnit: SpeedUnit, selectedDayIndex: Int) {
     val c = weatherData.currentWeather
     val f = weatherData.dailyForecasts.getOrNull(selectedDayIndex)
 
@@ -725,7 +759,7 @@ private fun MetricsGrid(weatherData: WeatherData, temperatureUnit: TemperatureUn
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 MetricCard(stringResource(R.string.label_metric_cloud_cover), stringResource(R.string.unit_percent, c.cloudCover), Modifier.weight(1f))
-                MetricCard(stringResource(R.string.label_metric_wind_gusts), stringResource(R.string.unit_kmh, c.windGusts), Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_wind_gusts), WindSpeedFormatter.formatWithUnit(c.windGusts, speedUnit), Modifier.weight(1f))
             }
         } else if (f != null) {
             // Daily forecast data
@@ -735,7 +769,7 @@ private fun MetricsGrid(weatherData: WeatherData, temperatureUnit: TemperatureUn
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 MetricCard(stringResource(R.string.label_metric_humidity), stringResource(R.string.unit_percent, f.averageHumidity), Modifier.weight(1f))
-                MetricCard(stringResource(R.string.label_metric_max_wind), stringResource(R.string.unit_kmh, f.windSpeedMax) + " " + stringResource(f.windDirectionDominant.labelResId), Modifier.weight(1f))
+                MetricCard(stringResource(R.string.label_metric_max_wind), WindSpeedFormatter.formatWithUnit(f.windSpeedMax, speedUnit) + " " + stringResource(f.windDirectionDominant.labelResId), Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 MetricCard(stringResource(R.string.label_metric_rain_chance), stringResource(R.string.unit_percent, f.precipitationProbability), Modifier.weight(1f))

@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.repository.LocationRepository
@@ -51,10 +52,17 @@ class WeatherDetailViewModel @Inject constructor(
     /** Observes the temperature unit from DataStore — updates immediately when changed in Settings. */
     val temperatureUnit: StateFlow<TemperatureUnit> = dataStore.data
         .map { prefs ->
-            val name = prefs[stringPreferencesKey("temperature_unit")] ?: TemperatureUnit.CELSIUS.name
+            val name = prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_TEMP_UNIT] ?: TemperatureUnit.CELSIUS.name
             runCatching { TemperatureUnit.valueOf(name) }.getOrDefault(TemperatureUnit.CELSIUS)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TemperatureUnit.CELSIUS)
+
+    val speedUnit: StateFlow<SpeedUnit> = dataStore.data
+        .map { prefs ->
+            val name = prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_SPEED_UNIT] ?: SpeedUnit.KMH.name
+            runCatching { SpeedUnit.valueOf(name) }.getOrDefault(SpeedUnit.KMH)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SpeedUnit.KMH)
 
     val forecastDays: StateFlow<Int> = dataStore.data
         .map { prefs -> prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_FORECAST_DAYS] ?: 7 }

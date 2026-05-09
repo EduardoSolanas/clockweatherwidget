@@ -29,6 +29,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit
 ) {
     val temperatureUnit  by viewModel.temperatureUnit.collectAsStateWithLifecycle()
+    val speedUnit        by viewModel.speedUnit.collectAsStateWithLifecycle()
     val weatherProvider by viewModel.weatherProvider.collectAsStateWithLifecycle()
     val use24hClock      by viewModel.use24hClock.collectAsStateWithLifecycle()
     val showDateInWidget by viewModel.showDateInWidget.collectAsStateWithLifecycle()
@@ -201,6 +202,27 @@ fun SettingsScreen(
                                 }
                             )
                         }
+                    )
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            SettingsLabel(
+                label       = stringResource(R.string.settings_wind_speed_unit),
+                description = stringResource(R.string.settings_wind_speed_unit)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                com.clockweather.app.domain.model.SpeedUnit.entries.forEach { unit ->
+                    FilterChip(
+                        selected = unit == speedUnit,
+                        onClick  = { viewModel.setSpeedUnit(unit) },
+                        label = { Text(unit.symbol) }
                     )
                 }
             }

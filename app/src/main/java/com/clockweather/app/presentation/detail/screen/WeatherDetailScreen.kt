@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.DailyForecast
+import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.presentation.common.UiState
 import com.clockweather.app.presentation.detail.WeatherDetailViewModel
 import java.time.LocalDate
@@ -81,6 +82,7 @@ fun WeatherDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val temperatureUnit by viewModel.temperatureUnit.collectAsStateWithLifecycle()
+    val speedUnit by viewModel.speedUnit.collectAsStateWithLifecycle()
     val forecastDays by viewModel.forecastDays.collectAsStateWithLifecycle()
     val needsBattery by viewModel.needsBatteryExemption.collectAsStateWithLifecycle()
 
@@ -195,6 +197,7 @@ fun WeatherDetailScreen(
                         WeatherDetailContent(
                             weatherData = state.data,
                             temperatureUnit = temperatureUnit,
+                            speedUnit = speedUnit,
                             selectedDayIndex = selectedDayIndex,
                             onDaySelected = { selectedDayIndex = it },
                             forecastDays = forecastDays
