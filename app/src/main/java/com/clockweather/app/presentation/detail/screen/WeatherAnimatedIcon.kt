@@ -26,15 +26,45 @@ fun WeatherAnimatedIcon(condition: WeatherCondition, modifier: Modifier = Modifi
         WeatherCondition.FOG, WeatherCondition.DEPOSITING_RIME_FOG -> FogBackground(modifier)
         WeatherCondition.DRIZZLE_LIGHT, WeatherCondition.DRIZZLE_MODERATE,
         WeatherCondition.DRIZZLE_DENSE, WeatherCondition.FREEZING_DRIZZLE_LIGHT,
-        WeatherCondition.FREEZING_DRIZZLE_HEAVY -> DrizzleBackground(modifier)
+        WeatherCondition.FREEZING_DRIZZLE_HEAVY -> DrizzleBackground(
+            modifier = modifier,
+            intensity = when (condition) {
+                WeatherCondition.DRIZZLE_LIGHT,
+                WeatherCondition.FREEZING_DRIZZLE_LIGHT -> 0.45f
+                WeatherCondition.DRIZZLE_MODERATE -> 0.75f
+                else -> 1f
+            }
+        )
         WeatherCondition.RAIN_SLIGHT, WeatherCondition.RAIN_MODERATE,
         WeatherCondition.RAIN_SHOWER_SLIGHT, WeatherCondition.FREEZING_RAIN_LIGHT,
-        WeatherCondition.FREEZING_RAIN_HEAVY -> RainBackground(modifier, false)
+        WeatherCondition.FREEZING_RAIN_HEAVY -> RainBackground(
+            modifier = modifier,
+            intensity = when (condition) {
+                WeatherCondition.RAIN_SLIGHT,
+                WeatherCondition.RAIN_SHOWER_SLIGHT,
+                WeatherCondition.FREEZING_RAIN_LIGHT -> 0.55f
+                WeatherCondition.RAIN_MODERATE -> 0.9f
+                else -> 1.25f
+            }
+        )
         WeatherCondition.RAIN_HEAVY, WeatherCondition.RAIN_SHOWER_MODERATE,
-        WeatherCondition.RAIN_SHOWER_VIOLENT -> RainBackground(modifier, true)
+        WeatherCondition.RAIN_SHOWER_VIOLENT -> RainBackground(
+            modifier = modifier,
+            intensity = if (condition == WeatherCondition.RAIN_HEAVY) 1.55f else 1.9f
+        )
         WeatherCondition.SNOW_SLIGHT, WeatherCondition.SNOW_MODERATE, WeatherCondition.SNOW_HEAVY,
         WeatherCondition.SNOW_GRAINS, WeatherCondition.SNOW_SHOWER_SLIGHT,
-        WeatherCondition.SNOW_SHOWER_HEAVY -> SnowBackground(modifier)
+        WeatherCondition.SNOW_SHOWER_HEAVY -> SnowBackground(
+            modifier = modifier,
+            intensity = when (condition) {
+                WeatherCondition.SNOW_SLIGHT,
+                WeatherCondition.SNOW_SHOWER_SLIGHT -> 0.55f
+                WeatherCondition.SNOW_MODERATE,
+                WeatherCondition.SNOW_GRAINS -> 0.95f
+                WeatherCondition.SNOW_HEAVY -> 1.45f
+                else -> 1.8f
+            }
+        )
         WeatherCondition.THUNDERSTORM, WeatherCondition.THUNDERSTORM_SLIGHT_HAIL,
         WeatherCondition.THUNDERSTORM_HEAVY_HAIL -> ThunderstormBackground(modifier)
         else -> SunBackground(modifier)
@@ -497,9 +527,14 @@ fun OvercastBackground(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun RainBackground(modifier: Modifier = Modifier, heavy: Boolean = false) {
+fun RainBackground(modifier: Modifier = Modifier, intensity: Float = 1f) {
     val time by rememberTime()
-    val particleCount = if (heavy) 120 else 50
+    val particleCount = when {
+        intensity < 0.7f -> 28
+        intensity < 1.1f -> 60
+        intensity < 1.6f -> 110
+        else -> 165
+    }
     val particles = rememberParticles(particleCount, Size(1000f, 1000f))
 
     Canvas(modifier = modifier.fillMaxSize()) {
@@ -508,10 +543,11 @@ fun RainBackground(modifier: Modifier = Modifier, heavy: Boolean = false) {
         val center = Offset(w / 2, h / 2)
         val cloudSize = h * 0.45f
         val cloudCenter = center + Offset(0f, h * 0.05f)
+        val heavy = intensity >= 1.2f
 
         // Triple-layered Storm Cloud
-        drawCloud(cloudCenter + Offset(-w * 0.1f, -h * 0.1f), cloudSize * 0.8f, CloudShadow, 0.6f)
-        drawCloud(cloudCenter, cloudSize, if (heavy) CloudStorm else CloudShadow, 0.95f)
+        drawCloud(cloudCenter + Offset(-w * 0.1f, -h * 0.1f), cloudSize * (0.7f + intensity * 0.08f), CloudShadow, 0.45f + intensity * 0.12f)
+        drawCloud(cloudCenter, cloudSize * (0.9f + intensity * 0.06f), if (heavy) CloudStorm else CloudShadow, 0.78f + intensity * 0.1f)
 
         // AAA Rain particles with Parallax and Splashes
         val spawnWidth = cloudSize * 1.5f
@@ -519,16 +555,17 @@ fun RainBackground(modifier: Modifier = Modifier, heavy: Boolean = false) {
         val spawnHeight = h - spawnStartY
 
         particles.forEach { p ->
-            val drift = (time / 10f) * 2f * p.z
+            val drift = (time / 10f) * (1.4f + intensity) * p.z
             val x = (p.x + drift) % spawnWidth + (cloudCenter.x - spawnWidth / 2)
-            val y = (p.y + (time / 10f) * p.speed) % spawnHeight + spawnStartY
+            val y = (p.y + (time / 10f) * p.speed * (0.6f + intensity * 0.45f)) % spawnHeight + spawnStartY
+            val streakLength = p.speed * (1.1f + intensity * 1.2f) * p.z
             
             // Draw Rain Drop
             drawLine(
                 color = RainBlue.copy(alpha = p.alpha),
                 start = Offset(x, y),
-                end = Offset(x - 2f * p.z, y + p.speed * 2f * p.z),
-                strokeWidth = p.size * p.z,
+                end = Offset(x - (1.5f + intensity) * p.z, y + streakLength),
+                strokeWidth = p.size * p.z * (0.8f + intensity * 0.35f),
                 cap = StrokeCap.Round
             )
             
@@ -536,8 +573,8 @@ fun RainBackground(modifier: Modifier = Modifier, heavy: Boolean = false) {
             val bottomLimit = spawnStartY + spawnHeight - 20f
             if (y > bottomLimit) {
                 val splashProgress = (y - bottomLimit) / 20f
-                val splashW = p.size * 4f * splashProgress
-                val splashH = p.size * 1.5f * splashProgress
+                val splashW = p.size * (3f + intensity * 3f) * splashProgress
+                val splashH = p.size * (1.2f + intensity) * splashProgress
                 drawOval(
                     color = Color.White.copy(alpha = p.alpha * (1f - splashProgress)),
                     topLeft = Offset(x - splashW / 2, bottomLimit - splashH / 2),
@@ -549,9 +586,9 @@ fun RainBackground(modifier: Modifier = Modifier, heavy: Boolean = false) {
 }
 
 @Composable
-fun DrizzleBackground(modifier: Modifier = Modifier) {
+fun DrizzleBackground(modifier: Modifier = Modifier, intensity: Float = 0.7f) {
     val time by rememberTime()
-    val particles = rememberParticles(15, Size(1000f, 1000f))
+    val particles = rememberParticles((12 + intensity * 18).toInt(), Size(1000f, 1000f))
 
     Canvas(modifier = modifier.fillMaxSize()) {
         val h = size.height
@@ -561,8 +598,8 @@ fun DrizzleBackground(modifier: Modifier = Modifier) {
         val cloudCenter = center + Offset(0f, h * 0.05f)
 
         // Soft overcast clouds
-        drawCloud(cloudCenter + Offset(-w * 0.15f, -h * 0.05f), cloudSize * 0.7f, CloudShadow, 0.4f)
-        drawCloud(cloudCenter, cloudSize, CloudShadow, 0.8f)
+        drawCloud(cloudCenter + Offset(-w * 0.15f, -h * 0.05f), cloudSize * 0.7f, CloudShadow, 0.3f + intensity * 0.2f)
+        drawCloud(cloudCenter, cloudSize, CloudShadow, 0.6f + intensity * 0.22f)
 
         // AAA Ultra-light Mist Drizzle
         val spawnWidth = cloudSize * 1.4f
@@ -570,14 +607,14 @@ fun DrizzleBackground(modifier: Modifier = Modifier) {
         val spawnHeight = h - spawnStartY
 
         particles.forEach { p ->
-            val drift = (time / 15f) * p.z
+            val drift = (time / 15f) * p.z * (0.7f + intensity)
             val x = (p.x + drift) % spawnWidth + (cloudCenter.x - spawnWidth / 2)
-            val y = (p.y + (time / 15f) * p.speed * 0.4f) % spawnHeight + spawnStartY
+            val y = (p.y + (time / 15f) * p.speed * (0.22f + intensity * 0.28f)) % spawnHeight + spawnStartY
             
             // Mist particles instead of harsh lines
             drawCircle(
                 color = RainBlue.copy(alpha = p.alpha * 0.6f),
-                radius = p.size * 0.8f * p.z,
+                radius = p.size * (0.7f + intensity * 0.35f) * p.z,
                 center = Offset(x, y)
             )
         }
@@ -585,9 +622,15 @@ fun DrizzleBackground(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SnowBackground(modifier: Modifier = Modifier) {
+fun SnowBackground(modifier: Modifier = Modifier, intensity: Float = 1f) {
     val time by rememberTime()
-    val particles = rememberParticles(100, Size(1000f, 1000f))
+    val particleCount = when {
+        intensity < 0.7f -> 36
+        intensity < 1.1f -> 80
+        intensity < 1.6f -> 125
+        else -> 180
+    }
+    val particles = rememberParticles(particleCount, Size(1000f, 1000f))
 
     Canvas(modifier = modifier.fillMaxSize()) {
         val h = size.height
@@ -597,8 +640,8 @@ fun SnowBackground(modifier: Modifier = Modifier) {
         val cloudCenter = center + Offset(0f, -h * 0.1f)
 
         // Layered Winter Clouds
-        drawCloud(cloudCenter + Offset(w * 0.1f, -h * 0.05f), cloudSize * 0.8f, CloudShadow, 0.5f)
-        drawCloud(cloudCenter, cloudSize, CloudWhite, 0.95f)
+        drawCloud(cloudCenter + Offset(w * 0.1f, -h * 0.05f), cloudSize * (0.72f + intensity * 0.1f), CloudShadow, 0.35f + intensity * 0.16f)
+        drawCloud(cloudCenter, cloudSize * (0.88f + intensity * 0.08f), CloudWhite, 0.82f + intensity * 0.12f)
 
         val spawnWidth = cloudSize * 1.5f
         val spawnStartY = cloudCenter.y + h * 0.05f
@@ -607,9 +650,9 @@ fun SnowBackground(modifier: Modifier = Modifier) {
         // AAA Blizzard Particles
         particles.forEach { p ->
             // Complex swirling wind
-            val baseDrift = sin((time + p.x) / (500f * p.z)) * 30f * p.z
-            val gust = sin((time + p.y) / 1500f) * 50f * p.z
-            val fallSpeed = (time / 20f) * p.speed * 0.5f
+            val baseDrift = sin((time + p.x) / (500f * p.z)) * (18f + intensity * 18f) * p.z
+            val gust = sin((time + p.y) / 1500f) * (18f + intensity * 28f) * p.z
+            val fallSpeed = (time / 20f) * p.speed * (0.24f + intensity * 0.28f)
             
             val x = (p.x + baseDrift + gust) % spawnWidth + (cloudCenter.x - spawnWidth / 2)
             val y = (p.y + fallSpeed) % spawnHeight + spawnStartY
@@ -618,7 +661,7 @@ fun SnowBackground(modifier: Modifier = Modifier) {
             val isForeground = p.z > 1.2f
             val isBackground = p.z < 0.6f
             val flakeAlpha = if (isForeground) p.alpha * 0.8f else if (isBackground) p.alpha * 0.3f else p.alpha
-            val flakeRadius = if (isForeground) p.size * 3.5f * p.z else p.size * 1.5f * p.z
+            val flakeRadius = if (isForeground) p.size * (2.2f + intensity * 1.6f) * p.z else p.size * (0.9f + intensity * 0.8f) * p.z
             
             val pulse = (sin((time + p.x) / 300f) + 1f) / 2f
             drawCircle(

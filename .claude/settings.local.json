@@ -48,7 +48,9 @@
       "Bash(adb -s 45231FDAP003A9 pull \"/data/app/~~awv73WDkBDiQdCErtv7Prg==/com.droid27.sensev2flipclockweather-Me6CdRBUQJzQ-QF3AjGEPQ==/base.apk\" /tmp/sense_widget.apk)",
       "Bash(python -c \":*)",
       "Bash(./gradlew installDebug)",
-      "Bash(gemini --yolo \"/icon ''cloudy weather sprite, cartoon style, white and light gray fluffy clouds with soft shadows, pixel art friendly, transparent background, clean vector look, no text''\")"
+      "Bash(gemini --yolo \"/icon ''cloudy weather sprite, cartoon style, white and light gray fluffy clouds with soft shadows, pixel art friendly, transparent background, clean vector look, no text''\")",
+      "Bash(xargs grep *)",
+      "Bash(./gradlew.bat assembleDebug)"
     ]
   }
 }

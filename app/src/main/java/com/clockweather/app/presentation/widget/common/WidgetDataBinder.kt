@@ -44,10 +44,10 @@ object WidgetDataBinder {
         if (useHostDrivenClock) {
             views.setViewVisibility(R.id.clock_hour, android.view.View.VISIBLE)
             views.setViewVisibility(R.id.clock_minute, android.view.View.VISIBLE)
-            views.setTextViewText(R.id.digit_h1, " ")
-            views.setTextViewText(R.id.digit_h2, " ")
-            views.setTextViewText(R.id.digit_m1, " ")
-            views.setTextViewText(R.id.digit_m2, " ")
+            views.setTextViewText(R.id.digit_h1, h1.toString())
+            views.setTextViewText(R.id.digit_h2, h2.toString())
+            views.setTextViewText(R.id.digit_m1, m1.toString())
+            views.setTextViewText(R.id.digit_m2, m2.toString())
         } else {
             views.setViewVisibility(R.id.clock_hour, android.view.View.GONE)
             views.setViewVisibility(R.id.clock_minute, android.view.View.GONE)
