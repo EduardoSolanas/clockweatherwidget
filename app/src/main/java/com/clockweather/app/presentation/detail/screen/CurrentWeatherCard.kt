@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.AirQuality
@@ -65,6 +66,75 @@ import kotlinx.coroutines.launch
 
 internal fun resolveForecastIsToday(forecastDate: LocalDate, today: LocalDate): Boolean =
     forecastDate == today
+
+internal data class ForecastDayTextColors(
+    val primary: Color,
+    val secondary: Color
+)
+
+internal fun forecastDayTextColors(isSelected: Boolean): ForecastDayTextColors =
+    ForecastDayTextColors(
+        primary = Color.White,
+        secondary = Color.White.copy(alpha = if (isSelected) 0.72f else 0.76f)
+    )
+
+internal data class ForecastDayCompactTextSizes(
+    val highSp: Float,
+    val lowSp: Float,
+    val precipitationSp: Float,
+    val windSp: Float,
+    val daySp: Float,
+    val dateSp: Float
+)
+
+private fun ForecastDayCompactTextSizes.scaled(scale: Float): ForecastDayCompactTextSizes =
+    ForecastDayCompactTextSizes(
+        highSp = highSp * scale,
+        lowSp = lowSp * scale,
+        precipitationSp = precipitationSp * scale,
+        windSp = windSp * scale,
+        daySp = daySp * scale,
+        dateSp = dateSp * scale
+    )
+
+internal fun forecastDayDensityTextScale(densityDpi: Int): Float = when {
+    densityDpi <= 280 -> 0.88f
+    densityDpi <= 360 -> 0.94f
+    else -> 1f
+}
+
+internal fun forecastDayCompactTextSizes(
+    columnWidthDp: Float,
+    densityDpi: Int
+): ForecastDayCompactTextSizes {
+    val baseSizes = when {
+        columnWidthDp <= 46f -> ForecastDayCompactTextSizes(
+            highSp = 14f,
+            lowSp = 12f,
+            precipitationSp = 10.5f,
+            windSp = 9.5f,
+            daySp = 12f,
+            dateSp = 11f
+        )
+        columnWidthDp <= 50f -> ForecastDayCompactTextSizes(
+            highSp = 15f,
+            lowSp = 12.5f,
+            precipitationSp = 11f,
+            windSp = 10f,
+            daySp = 12.5f,
+            dateSp = 11.5f
+        )
+        else -> ForecastDayCompactTextSizes(
+            highSp = 16f,
+            lowSp = 13f,
+            precipitationSp = 11.5f,
+            windSp = 10.5f,
+            daySp = 13f,
+            dateSp = 12f
+        )
+    }
+    return baseSizes.scaled(forecastDayDensityTextScale(densityDpi))
+}
 
 // ─── Debug: all conditions in cycle order ─────────────────────────────────────
 private val DEBUG_CONDITIONS = WeatherCondition.entries.toList()
@@ -539,8 +609,9 @@ private fun ForecastDayColumn(
 ) {
     val capsuleColor = if (isSelected) Color(0xFF141723) else Color(0xFF10131D)
     val outlineColor = if (isSelected) Color.White.copy(alpha = 0.92f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
-    val primaryTextColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
-    val secondaryTextColor = if (isSelected) Color.White.copy(alpha = 0.72f) else MaterialTheme.colorScheme.onSurfaceVariant
+    val textColors = forecastDayTextColors(isSelected)
+    val primaryTextColor = textColors.primary
+    val secondaryTextColor = textColors.secondary
     val precipitationColor = Color(0xFF64B5F6)
     val dateLabel = remember(forecast.date) {
         forecast.date.format(DateTimeFormatter.ofPattern("dd/MM", Locale.getDefault()))
@@ -560,22 +631,59 @@ private fun ForecastDayColumn(
         tonalElevation = if (isSelected) 6.dp else 0.dp,
         shadowElevation = if (isSelected) 10.dp else 0.dp
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = if (isCompact) 4.dp else 10.dp, vertical = if (isCompact) 8.dp else 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        @Suppress("UnusedBoxWithConstraintsScopeModifier")
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val compactTextSizes = forecastDayCompactTextSizes(
+                columnWidthDp = maxWidth.value,
+                densityDpi = LocalConfiguration.current.densityDpi
+            )
+            val highTextStyle = if (isCompact) {
+                MaterialTheme.typography.bodyMedium.copy(fontSize = compactTextSizes.highSp.sp)
+            } else {
+                MaterialTheme.typography.titleLarge
+            }
+            val lowTextStyle = if (isCompact) {
+                MaterialTheme.typography.bodySmall.copy(fontSize = compactTextSizes.lowSp.sp)
+            } else {
+                MaterialTheme.typography.titleMedium
+            }
+            val precipitationTextStyle = if (isCompact) {
+                MaterialTheme.typography.labelSmall.copy(fontSize = compactTextSizes.precipitationSp.sp)
+            } else {
+                MaterialTheme.typography.titleMedium
+            }
+            val windTextStyle = if (isCompact) {
+                MaterialTheme.typography.labelSmall.copy(fontSize = compactTextSizes.windSp.sp)
+            } else {
+                MaterialTheme.typography.titleMedium
+            }
+            val dayTextStyle = if (isCompact) {
+                MaterialTheme.typography.labelMedium.copy(fontSize = compactTextSizes.daySp.sp)
+            } else {
+                MaterialTheme.typography.titleMedium
+            }
+            val dateTextStyle = if (isCompact) {
+                MaterialTheme.typography.labelSmall.copy(fontSize = compactTextSizes.dateSp.sp)
+            } else {
+                MaterialTheme.typography.titleMedium
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = if (isCompact) 3.dp else 10.dp, vertical = if (isCompact) 8.dp else 14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             Text(
                 text = highLabel,
-                style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.titleLarge,
+                style = highTextStyle,
                 fontWeight = FontWeight.SemiBold,
                 color = primaryTextColor,
                 maxLines = 1
             )
             Text(
                 text = lowLabel,
-                style = if (isCompact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.titleMedium,
+                style = lowTextStyle,
                 fontWeight = FontWeight.Medium,
                 color = secondaryTextColor,
                 maxLines = 1
@@ -605,7 +713,7 @@ private fun ForecastDayColumn(
             )
             Text(
                 text = stringResource(R.string.unit_percent, forecast.precipitationProbability),
-                style = if (isCompact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.titleMedium,
+                style = precipitationTextStyle,
                 color = precipitationColor,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1
@@ -623,7 +731,7 @@ private fun ForecastDayColumn(
             )
             Text(
                 text = windLabel,
-                style = if (isCompact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.titleMedium,
+                style = windTextStyle,
                 color = secondaryTextColor,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1
@@ -633,17 +741,18 @@ private fun ForecastDayColumn(
 
             Text(
                 text = if (isToday) stringResource(R.string.label_today) else DateFormatter.formatDayName(forecast.date),
-                style = if (isCompact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleMedium,
+                style = dayTextStyle,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                 color = primaryTextColor,
                 maxLines = 1
             )
             Text(
                 text = dateLabel,
-                style = if (isCompact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.titleMedium,
+                style = dateTextStyle,
                 color = secondaryTextColor,
                 maxLines = 1
             )
+            }
         }
     }
 }
