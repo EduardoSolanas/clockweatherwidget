@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Weather card: icon fills the whole card; location/temp overlay on top. -->
+<!-- Weather card: compact overlay; location/temp overlay on top of the icon. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/weather_card"
     android:layout_width="match_parent"
@@ -13,7 +13,7 @@
     <!-- BIG weather icon: anchored to row bottom, overflows upward into clock area. -->
     <ImageView
         android:id="@+id/weather_icon"
-        android:layout_width="171dp"
+        android:layout_width="196dp"
         android:layout_height="126dp"
         android:layout_gravity="bottom|center_horizontal"
         android:paddingBottom="10dp"
@@ -32,6 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
+            android:maxWidth="132dp"
             android:maxLines="1"
             android:textColor="@color/widget_text_primary"
             android:textSize="16sp"

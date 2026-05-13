@@ -6,6 +6,7 @@ import android.content.Intent
 import android.view.View
 import android.widget.RemoteViews
 import com.clockweather.app.R
+import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.presentation.detail.WeatherDetailActivity
@@ -14,6 +15,7 @@ import com.clockweather.app.util.TemperatureFormatter
 import java.time.LocalDate
 
 object WidgetDataBinder {
+    private const val WidgetLocationMaxChars = 18
 
     fun bindSimpleClockViews(
         views: RemoteViews,
@@ -69,7 +71,7 @@ object WidgetDataBinder {
         val location = weatherData.location
         val todayForecast = weatherData.dailyForecasts.firstOrNull()
 
-        views.setTextViewText(R.id.city_name, location.area ?: location.name)
+        views.setTextViewText(R.id.city_name, resolveWidgetLocationLabel(location, WidgetLocationMaxChars))
         views.setTextViewText(R.id.condition_text, context.getString(current.weatherCondition.labelResId))
         views.setImageViewResource(
             R.id.weather_icon,
@@ -156,6 +158,19 @@ object WidgetDataBinder {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+    }
+}
+
+internal fun resolveWidgetLocationLabel(
+    location: Location,
+    maxChars: Int = 18
+): String {
+    val name = location.name.trim()
+    val area = location.area?.trim()?.takeIf { it.isNotBlank() && it != name }
+    return if (name.length > maxChars && area != null && area.length < name.length) {
+        area
+    } else {
+        name
     }
 }
 

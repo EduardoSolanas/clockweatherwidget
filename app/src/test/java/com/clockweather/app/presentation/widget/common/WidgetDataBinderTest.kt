@@ -157,13 +157,13 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindWeatherViews prefers location area over name for city_name`() {
+    fun `bindWeatherViews keeps specific location name when it fits city_name`() {
         val weatherData = sampleWeatherData(locationName = "Fitzrovia", locationArea = "London")
 
         WidgetDataBinder.bindWeatherViews(context, views, weatherData, TemperatureUnit.CELSIUS)
 
-        verify(exactly = 1) { views.setTextViewText(R.id.city_name, "London") }
-        verify(exactly = 0) { views.setTextViewText(R.id.city_name, "Fitzrovia") }
+        verify(exactly = 1) { views.setTextViewText(R.id.city_name, "Fitzrovia") }
+        verify(exactly = 0) { views.setTextViewText(R.id.city_name, "London") }
     }
 
     @Test
@@ -173,6 +173,19 @@ class WidgetDataBinderTest {
         WidgetDataBinder.bindWeatherViews(context, views, weatherData, TemperatureUnit.CELSIUS)
 
         verify(exactly = 1) { views.setTextViewText(R.id.city_name, "London") }
+    }
+
+    @Test
+    fun `bindWeatherViews uses broader area when specific location is too long for city_name`() {
+        val weatherData = sampleWeatherData(
+            locationName = "London Borough of Islington",
+            locationArea = "London",
+        )
+
+        WidgetDataBinder.bindWeatherViews(context, views, weatherData, TemperatureUnit.CELSIUS)
+
+        verify(exactly = 1) { views.setTextViewText(R.id.city_name, "London") }
+        verify(exactly = 0) { views.setTextViewText(R.id.city_name, "London Borough of Islington") }
     }
 
     @Test

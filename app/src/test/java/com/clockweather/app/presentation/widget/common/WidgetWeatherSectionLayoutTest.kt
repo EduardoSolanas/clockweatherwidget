@@ -53,6 +53,18 @@ class WidgetWeatherSectionLayoutTest {
         )
     }
 
+    @Test
+    fun `main weather location text has a bounded width and ellipsizes as fallback`() {
+        val xml = readLayout("widget_weather_card.xml")
+
+        assertTrue(
+            "city_name should keep a max width fallback even when label selection cannot find a shorter area",
+            xml.contains("android:id=\"@+id/city_name\"") &&
+                xml.contains("android:maxWidth=") &&
+                xml.contains("android:ellipsize=\"end\""),
+        )
+    }
+
     private fun readLayout(fileName: String): String {
         val candidates = listOf(
             File("src/main/res/layout/$fileName"),

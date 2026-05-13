@@ -2,7 +2,7 @@
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="96dp"
     android:height="70dp"
-    android:viewportWidth="23"
+    android:viewportWidth="24.5"
     android:viewportHeight="17">
     <group android:pivotX="14" android:pivotY="12" android:scaleX="1" android:scaleY="1" android:translateX="-2.5" android:translateY="-1.5">
 
