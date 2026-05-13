@@ -6,38 +6,99 @@
     android:viewportHeight="17">
     <group android:pivotX="14" android:pivotY="12" android:scaleX="1" android:scaleY="1" android:translateX="-2.5" android:translateY="-1.5">
 
-    <path android:pathData="M10.3,4.3a4.6,4.6 0 1,0 3.9,8.2a3.8,3.8 0 1,1 -3.9,-8.2z">
+    <!-- full moon behind cloud -->
+    <path android:pathData="M10,3.5a4.2,4.2 0 1,0 0,8.4a4.2,4.2 0 1,0 0,-8.4z">
         <aapt:attr name="android:fillColor">
-            <gradient android:type="linear" android:startX="7" android:startY="4" android:endX="14" android:endY="12">
-                <item android:offset="0" android:color="#FFF6F9FF" />
-                <item android:offset="1" android:color="#FFB4C5EE" />
+            <gradient android:type="radial" android:centerX="9" android:centerY="6.5" android:gradientRadius="5.5">
+                <item android:offset="0" android:color="#FFFFFEF5" />
+                <item android:offset="0.4" android:color="#FFF0ECD8" />
+                <item android:offset="0.8" android:color="#FFD8D0B8" />
+                <item android:offset="1" android:color="#FFC0B89E" />
             </gradient>
         </aapt:attr>
     </path>
 
+    <!-- moon rim -->
     <path
-        android:strokeColor="#33000000"
+        android:strokeColor="#30605040"
+        android:strokeWidth="0.35"
+        android:pathData="M10,3.5a4.2,4.2 0 1,0 0,8.4a4.2,4.2 0 1,0 0,-8.4z" />
+
+    <!-- moon specular -->
+    <path
+        android:strokeColor="#50FFFFFF"
         android:strokeWidth="0.7"
         android:strokeLineCap="round"
-        android:pathData="M12.6,10.4c0.5,0.7 1,1.5 1.3,2.4" />
+        android:pathData="M8.4,5c0.6,-0.4 1.5,-0.5 2.2,-0.2" />
 
-    <path android:pathData="M8.5,17.8h12.1c2.1,0 3.8,-1.6 3.8,-3.7c0,-1.8 -1.3,-3.3 -3.1,-3.6c-0.6,-2.3 -2.7,-4 -5.3,-4c-2.7,0 -5,1.9 -5.4,4.5c-1.9,0.1 -3.4,1.6 -3.4,3.4c0,1.8 1.5,3.4 3.3,3.4z">
+    <!-- crater large -->
+    <path android:pathData="M9,6.8a1.1,1.1 0 1,0 0,2.2a1.1,1.1 0 1,0 0,-2.2z">
         <aapt:attr name="android:fillColor">
-            <gradient android:type="linear" android:startX="14" android:startY="6" android:endX="14" android:endY="18">
-                <item android:offset="0" android:color="#FFF4F8FC" />
-                <item android:offset="1" android:color="#FFB9C9D9" />
+            <gradient android:type="radial" android:centerX="8.8" android:centerY="7.6" android:gradientRadius="1.3">
+                <item android:offset="0" android:color="#18706050" />
+                <item android:offset="1" android:color="#0C504030" />
             </gradient>
         </aapt:attr>
     </path>
 
+    <!-- crater medium -->
+    <path android:pathData="M12,5.2a0.8,0.8 0 1,0 0,1.6a0.8,0.8 0 1,0 0,-1.6z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="11.8" android:centerY="5.8" android:gradientRadius="1">
+                <item android:offset="0" android:color="#14706050" />
+                <item android:offset="1" android:color="#0A504030" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- crater small -->
+    <path android:pathData="M11,9.5a0.6,0.6 0 1,0 0,1.2a0.6,0.6 0 1,0 0,-1.2z"
+        android:fillColor="#10605040" />
+
+    <!-- crater tiny -->
+    <path android:pathData="M8,5a0.4,0.4 0 1,0 0,0.8a0.4,0.4 0 1,0 0,-0.8z"
+        android:fillColor="#0C605040" />
+
+    <!-- dark cloud shadow -->
+    <path android:pathData="M8.9,18.4h12.1c2.1,0 3.8,-1.6 3.8,-3.7c0,-1.8 -1.3,-3.3 -3.1,-3.6c-0.6,-2.3 -2.7,-4 -5.3,-4c-2.7,0 -5,1.9 -5.4,4.5c-1.9,0.1 -3.4,1.6 -3.4,3.4c0,1.8 1.5,3.4 3.3,3.4z"
+        android:fillColor="#22000000"/>
+
+    <!-- dark cloud body (night) -->
+    <path android:pathData="M8.5,17.8h12.1c2.1,0 3.8,-1.6 3.8,-3.7c0,-1.8 -1.3,-3.3 -3.1,-3.6c-0.6,-2.3 -2.7,-4 -5.3,-4c-2.7,0 -5,1.9 -5.4,4.5c-1.9,0.1 -3.4,1.6 -3.4,3.4c0,1.8 1.5,3.4 3.3,3.4z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="14" android:startY="6" android:endX="14" android:endY="18.5">
+                <item android:offset="0" android:color="#FF8090A4" />
+                <item android:offset="0.4" android:color="#FF687888" />
+                <item android:offset="1" android:color="#FF4A5868" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- cloud moonlight highlight -->
     <path
-        android:strokeColor="#80FFFFFF"
-        android:strokeWidth="0.9"
+        android:strokeColor="#30FFFFFF"
+        android:strokeWidth="0.8"
         android:strokeLineCap="round"
         android:pathData="M12.6,8.4c1.1,-0.6 2.4,-0.8 3.6,-0.5" />
 
+    <!-- cloud bottom edge -->
     <path
-        android:fillColor="#C8FFFFFF"
-        android:pathData="M21.2,6l0.35,0.65l0.7,0.13l-0.52,0.52l0.13,0.7l-0.66,-0.35l-0.66,0.35l0.13,-0.7l-0.52,-0.52l0.7,-0.13z" />
+        android:strokeColor="#18000000"
+        android:strokeWidth="0.4"
+        android:strokeLineCap="round"
+        android:pathData="M9.5,17.8h11" />
+
+    <!-- stars -->
+    <path
+        android:fillColor="#D0FFFFFF"
+        android:pathData="M21.2,5.5l0.45,0.85l0.9,0.16l-0.66,0.66l0.16,0.9l-0.85,-0.45l-0.85,0.45l0.16,-0.9l-0.66,-0.66l0.9,-0.16z" />
+
+    <path
+        android:fillColor="#90FFFFFF"
+        android:pathData="M19.2,3.5l0.28,0.52l0.58,0.1l-0.42,0.42l0.1,0.58l-0.54,-0.28l-0.54,0.28l0.1,-0.58l-0.42,-0.42l0.58,-0.1z" />
+
+    <path
+        android:fillColor="#50FFFFFF"
+        android:pathData="M23,8l0.2,0.35l0.38,0.07l-0.28,0.28l0.07,0.38l-0.37,-0.2l-0.37,0.2l0.07,-0.38l-0.28,-0.28l0.38,-0.07z" />
     </group>
 </vector>

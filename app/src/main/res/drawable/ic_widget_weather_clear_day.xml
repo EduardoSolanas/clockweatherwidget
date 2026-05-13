@@ -6,26 +6,54 @@
     android:viewportHeight="22">
     <group android:pivotX="14" android:pivotY="12" android:scaleX="1" android:scaleY="1" android:translateX="-2.5" android:translateY="-1.5">
 
+    <!-- outer glow -->
+    <path android:pathData="M14,4.8a7.2,7.2 0 1,0 0,14.4a7.2,7.2 0 1,0 0,-14.4z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="14" android:centerY="12" android:gradientRadius="7.2">
+                <item android:offset="0" android:color="#30FFCC4C" />
+                <item android:offset="0.7" android:color="#12FFCC4C" />
+                <item android:offset="1" android:color="#00FFCC4C" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- sun rays -->
     <path
         android:strokeColor="#FFE9A928"
         android:strokeWidth="1.5"
         android:strokeLineCap="round"
         android:pathData="M14,2.2v2M14,19.8v2M2.8,12h2M23.2,12h2M5.9,5.1l1.4,1.4M20.7,17.5l1.4,1.4M22.1,5.1l-1.4,1.4M7.3,17.5l-1.4,1.4" />
 
+    <!-- sun body -->
     <path android:pathData="M14,6.2a5.8,5.8 0 1,0 0,11.6a5.8,5.8 0 1,0 0,-11.6z">
         <aapt:attr name="android:fillColor">
-            <gradient android:type="radial" android:centerX="14" android:centerY="9.2" android:gradientRadius="7.2">
-                <item android:offset="0" android:color="#FFFFF1B3" />
-                <item android:offset="0.68" android:color="#FFFFCC4C" />
+            <gradient android:type="radial" android:centerX="13" android:centerY="9.5" android:gradientRadius="7.5">
+                <item android:offset="0" android:color="#FFFFFADF" />
+                <item android:offset="0.35" android:color="#FFFFF1B3" />
+                <item android:offset="0.7" android:color="#FFFFCC4C" />
                 <item android:offset="1" android:color="#FFF39B20" />
             </gradient>
         </aapt:attr>
     </path>
 
+    <!-- rim shadow -->
     <path
-        android:strokeColor="#6EFFFFFF"
-        android:strokeWidth="0.9"
+        android:strokeColor="#20D07000"
+        android:strokeWidth="0.6"
+        android:pathData="M14,6.2a5.8,5.8 0 1,0 0,11.6a5.8,5.8 0 1,0 0,-11.6z" />
+
+    <!-- specular highlight -->
+    <path
+        android:strokeColor="#70FFFFFF"
+        android:strokeWidth="1.0"
         android:strokeLineCap="round"
         android:pathData="M11.1,7.9c1.2,-0.8 2.8,-1 4.2,-0.4" />
+
+    <!-- small inner shine -->
+    <path
+        android:strokeColor="#40FFFFFF"
+        android:strokeWidth="0.6"
+        android:strokeLineCap="round"
+        android:pathData="M10.5,9.5c0.5,-0.4 1.2,-0.6 1.8,-0.5" />
     </group>
 </vector>

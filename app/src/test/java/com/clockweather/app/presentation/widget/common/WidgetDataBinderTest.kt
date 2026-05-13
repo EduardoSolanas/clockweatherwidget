@@ -95,7 +95,7 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindSimpleClockViews configures host driven TextClock formats with manual fallback digits in 24h mode`() {
+    fun `bindSimpleClockViews configures host driven TextClock formats and clears manual digit text in 24h mode`() {
         WidgetDataBinder.bindSimpleClockViews(views, hour = 10, minute = 26, is24h = true)
 
         verify(exactly = 1) { views.setCharSequence(R.id.clock_hour, "setFormat12Hour", "HH") }
@@ -104,10 +104,10 @@ class WidgetDataBinderTest {
         verify(exactly = 1) { views.setCharSequence(R.id.clock_minute, "setFormat24Hour", "mm") }
         verify(exactly = 1) { views.setCharSequence(R.id.ampm, "setFormat12Hour", "") }
         verify(exactly = 1) { views.setCharSequence(R.id.ampm, "setFormat24Hour", "") }
-        verify(exactly = 1) { views.setTextViewText(R.id.digit_h1, "1") }
-        verify(exactly = 1) { views.setTextViewText(R.id.digit_h2, "0") }
-        verify(exactly = 1) { views.setTextViewText(R.id.digit_m1, "2") }
-        verify(exactly = 1) { views.setTextViewText(R.id.digit_m2, "6") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h1, " ") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_h2, " ") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m1, " ") }
+        verify(exactly = 1) { views.setTextViewText(R.id.digit_m2, " ") }
         verify(exactly = 1) { views.setViewVisibility(R.id.clock_hour, View.VISIBLE) }
         verify(exactly = 1) { views.setViewVisibility(R.id.clock_minute, View.VISIBLE) }
     }
