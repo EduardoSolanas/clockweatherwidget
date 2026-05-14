@@ -75,6 +75,9 @@
     <string name="first_install_dialog_message">Para mejores resultados, permite ubicación para clima actual preciso. Excluir la optimización de batería es opcional y solo ayuda a la fiabilidad de actualizaciones en segundo plano en algunos dispositivos.</string>
     <string name="first_install_dialog_continue">Continuar</string>
     <string name="first_install_dialog_open_settings">Abrir ajustes</string>
+    <string name="widget_weather_unavailable_title">Tiempo</string>
+    <string name="widget_weather_unavailable_condition">Actualizando clima</string>
+    <string name="widget_weather_unavailable_temp">--°</string>
 
     <!-- CurrentWeatherCard -->
     <string name="label_7day_forecast">PRONÓSTICO 7 DÍAS</string>
@@ -149,6 +152,7 @@
     <string name="settings_show_date_label">Mostrar fecha</string>
     <string name="settings_show_date_desc">Mostrar la fecha actual debajo del reloj</string>
     <string name="settings_date_font_size_label">Tamaño fuente fecha</string>
+    <string name="settings_widget_text_scale_label">Tamaño del texto del widget</string>
     <string name="settings_temp_celsius">°C — Celsius</string>
     <string name="settings_temp_fahrenheit">°F — Fahrenheit</string>
     <string name="settings_show_weather_compact_label">Mostrar clima — compacto / grande</string>

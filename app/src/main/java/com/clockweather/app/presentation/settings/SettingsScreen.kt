@@ -35,7 +35,7 @@ fun SettingsScreen(
     val showDateInWidget by viewModel.showDateInWidget.collectAsStateWithLifecycle()
     val showTodayCompact by viewModel.showTodayCompact.collectAsStateWithLifecycle()
     val showTodayExtended by viewModel.showTodayExtended.collectAsStateWithLifecycle()
-    val dateFontSizeSp   by viewModel.dateFontSizeSp.collectAsStateWithLifecycle()
+    val widgetTextScale  by viewModel.widgetTextScale.collectAsStateWithLifecycle()
     val clockTheme       by viewModel.clockTheme.collectAsStateWithLifecycle()
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
     val weatherIconStyle by viewModel.weatherIconStyle.collectAsStateWithLifecycle()
@@ -156,18 +156,18 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.settings_date_font_size_label), style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.settings_widget_text_scale_label), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            "${dateFontSizeSp.roundToInt()} sp",
+                            "${(widgetTextScale * 100).roundToInt()}%",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Slider(
-                        value         = dateFontSizeSp,
-                        onValueChange = { viewModel.setDateFontSize(it) },
-                        valueRange    = 10f..22f,
-                        steps         = 11,
+                        value         = widgetTextScale,
+                        onValueChange = { viewModel.setWidgetTextScale(it) },
+                        valueRange    = 0.75f..1.15f,
+                        steps         = 7,
                         modifier      = Modifier.weight(1f)
                     )
                 }

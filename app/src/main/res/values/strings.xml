@@ -152,6 +152,7 @@
     <string name="settings_show_date_label">Show date</string>
     <string name="settings_show_date_desc">Display the current date below the clock</string>
     <string name="settings_date_font_size_label">Date font size</string>
+    <string name="settings_widget_text_scale_label">Widget text size</string>
     <string name="settings_temp_celsius">°C — Celsius</string>
     <string name="settings_temp_fahrenheit">°F — Fahrenheit</string>
     <string name="settings_show_weather_compact_label">Show weather — compact / large</string>

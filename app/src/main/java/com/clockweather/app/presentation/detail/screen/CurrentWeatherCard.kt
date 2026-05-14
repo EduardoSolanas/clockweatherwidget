@@ -7,13 +7,11 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
+import kotlin.math.sqrt
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,13 +25,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -53,7 +49,6 @@ import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
-import com.clockweather.app.presentation.widget.common.WeatherIconMapper
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
 import com.clockweather.app.util.WindSpeedFormatter
@@ -153,8 +148,6 @@ fun WeatherDetailContent(
     val forecasts = selectWeatherDetailForecasts(weatherData.dailyForecasts, forecastDays)
     val selectedForecast = forecasts.getOrNull(selectedDayIndex) ?: forecasts.firstOrNull()
     val displayWeatherData = weatherData.copy(dailyForecasts = forecasts)
-    var previewSelection by remember { mutableStateOf<WeatherAnimationSelection?>(null) }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -167,8 +160,7 @@ fun WeatherDetailContent(
         HeroWeatherCard(
             weatherData = displayWeatherData,
             temperatureUnit = temperatureUnit,
-            selectedDayIndex = selectedDayIndex,
-            previewSelection = previewSelection
+            selectedDayIndex = selectedDayIndex
         )
 
         // ── Hourly Forecast Graph ──────────────────────────────────────────
@@ -201,11 +193,6 @@ fun WeatherDetailContent(
         }
 
         // ── Last updated ────────────────────────────────────────────────────
-        WeatherAnimationGalleryCard(
-            selected = previewSelection,
-            onPreviewSelected = { previewSelection = it }
-        )
-
         val lastUpdated = weatherData.currentWeather.lastUpdated
         val minutes = DateFormatter.minutesAgo(lastUpdated)
         val timeString = when {
@@ -232,8 +219,7 @@ fun WeatherDetailContent(
 private fun HeroWeatherCard(
     weatherData: WeatherData,
     temperatureUnit: TemperatureUnit,
-    selectedDayIndex: Int,
-    previewSelection: WeatherAnimationSelection? = null
+    selectedDayIndex: Int
 ) {
     val current = weatherData.currentWeather
     val forecasts = weatherData.dailyForecasts
@@ -244,7 +230,6 @@ private fun HeroWeatherCard(
 
     val weatherCondition = when {
         debugIndex >= 0 -> DEBUG_CONDITIONS[debugIndex]
-        previewSelection != null -> previewSelection.condition
         selectedDayIndex == 0 -> current.weatherCondition
         else -> selectedForecast?.weatherCondition ?: current.weatherCondition
     }
@@ -275,7 +260,6 @@ private fun HeroWeatherCard(
     }
 
     val displayCondition = if (debugIndex < 0) weatherCondition else DEBUG_CONDITIONS[debugIndex]
-    val displayStyle = previewSelection?.style ?: WeatherPreviewStyle.ATMOSPHERIC
     val conditionLabelId = displayCondition.labelResId
     val condition = stringResource(conditionLabelId)
     val tempDisplay = if (selectedDayIndex == 0)
@@ -312,18 +296,17 @@ private fun HeroWeatherCard(
             .heightIn(min = 360.dp)
             .clip(RoundedCornerShape(32.dp))
             .background(backgroundBrush)
+            .clickable { debugIndex = (debugIndex + 1) % DEBUG_CONDITIONS.size }
     ) {
         // Animated weather sprite.
         Box(
             modifier = Modifier
                 .size(220.dp)
-                .padding(start = 12.dp, bottom = 12.dp)
+                .padding(start = 24.dp, bottom = 20.dp)
                 .align(Alignment.BottomStart)
-                .clickable { debugIndex = (debugIndex + 1) % DEBUG_CONDITIONS.size }
         ) {
-            WeatherAnimationPreviewVisual(
+            WeatherAnimatedIcon(
                 condition = displayCondition,
-                style = displayStyle,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -436,12 +419,13 @@ private fun HeroWeatherCard(
         
         // AAA Atmospheric Glass Overlays
         val cName = displayCondition.name.uppercase()
+        val overlayModifier = Modifier.matchParentSize()
         when {
-            cName.contains("SNOW") -> FrostOverlay()
-            cName.contains("THUNDER") || cName.contains("STORM") || cName == "RAIN_HEAVY" || cName.contains("VIOLENT") -> WetGlassOverlay(intensity = 1.0f)
-            cName == "RAIN_MODERATE" || cName.contains("SHOWER_MODERATE") -> WetGlassOverlay(intensity = 0.6f)
-            cName == "RAIN_SLIGHT" || cName.contains("SHOWER_SLIGHT") -> WetGlassOverlay(intensity = 0.35f)
-            cName.contains("DRIZZLE") -> WetGlassOverlay(intensity = 0.2f)
+            cName.contains("SNOW") -> FrostOverlay(modifier = overlayModifier)
+            cName.contains("THUNDER") || cName.contains("STORM") || cName == "RAIN_HEAVY" || cName.contains("VIOLENT") -> WetGlassOverlay(intensity = 1.0f, modifier = overlayModifier)
+            cName == "RAIN_MODERATE" || cName.contains("SHOWER_MODERATE") -> WetGlassOverlay(intensity = 0.6f, modifier = overlayModifier)
+            cName == "RAIN_SLIGHT" || cName.contains("SHOWER_SLIGHT") -> WetGlassOverlay(intensity = 0.35f, modifier = overlayModifier)
+            cName.contains("DRIZZLE") -> WetGlassOverlay(intensity = 0.2f, modifier = overlayModifier)
         }
     }
 }
@@ -1011,496 +995,6 @@ private fun AqMetric(label: String, value: String, modifier: Modifier = Modifier
     }
 }
 
-
-private enum class WeatherPreviewStyle(
-    @androidx.annotation.StringRes val labelResId: Int
-) {
-    ATMOSPHERIC(R.string.label_weather_animation_style_atmospheric),
-    GLASS_AI(R.string.label_weather_animation_style_glass_ai),
-    MINIMAL(R.string.label_weather_animation_style_minimal),
-    NEON(R.string.label_weather_animation_style_neon),
-    NOIR(R.string.label_weather_animation_style_noir),
-    AURORA(R.string.label_weather_animation_style_aurora),
-}
-
-private data class WeatherAnimationSelection(
-    val condition: WeatherCondition,
-    val style: WeatherPreviewStyle
-)
-
-@Composable
-private fun WeatherAnimationGalleryCard(
-    selected: WeatherAnimationSelection?,
-    onPreviewSelected: (WeatherAnimationSelection) -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            val galleryScroll = rememberScrollState()
-            Text(
-                text = stringResource(R.string.label_weather_animation_gallery),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 1.2.sp
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(galleryScroll),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Spacer(Modifier.width(96.dp))
-                WeatherPreviewStyle.entries.forEach { style ->
-                    Text(
-                        text = stringResource(style.labelResId),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.width(92.dp),
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(Modifier.width(8.dp))
-                }
-            }
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(420.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(WeatherCondition.entries.toList(), key = { it.name }) { condition ->
-                    WeatherAnimationPreviewRow(
-                        condition = condition,
-                        galleryScroll = galleryScroll,
-                        selected = selected,
-                        onPreviewSelected = onPreviewSelected
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun WeatherAnimationPreviewRow(
-    condition: WeatherCondition,
-    galleryScroll: androidx.compose.foundation.ScrollState,
-    selected: WeatherAnimationSelection?,
-    onPreviewSelected: (WeatherAnimationSelection) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = stringResource(condition.labelResId),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.width(96.dp)
-        )
-
-        Row(modifier = Modifier.horizontalScroll(galleryScroll)) {
-            WeatherPreviewStyle.entries.forEach { style ->
-                WeatherAnimationPreviewCell(
-                    condition = condition,
-                    style = style,
-                    selected = selected?.condition == condition && selected.style == style,
-                    onClick = { onPreviewSelected(WeatherAnimationSelection(condition, style)) },
-                    modifier = Modifier.width(92.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun WeatherAnimationPreviewCell(
-    condition: WeatherCondition,
-    style: WeatherPreviewStyle,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = when (style) {
-            WeatherPreviewStyle.ATMOSPHERIC -> MaterialTheme.colorScheme.surface
-            WeatherPreviewStyle.GLASS_AI -> Color(0xFF0F172A)
-            WeatherPreviewStyle.MINIMAL -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
-            WeatherPreviewStyle.NEON -> Color(0xFF09090F)
-            WeatherPreviewStyle.NOIR -> Color(0xFF111827)
-            WeatherPreviewStyle.AURORA -> Color(0xFF071A2B)
-        },
-        modifier = modifier
-            .height(82.dp)
-            .border(
-                width = if (selected) 2.dp else 0.dp,
-                color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clickable(onClick = onClick)
-    ) {
-        WeatherAnimationPreviewVisual(condition = condition, style = style, modifier = Modifier.fillMaxSize())
-    }
-}
-
-@Composable
-private fun WeatherAnimationPreviewVisual(
-    condition: WeatherCondition,
-    style: WeatherPreviewStyle,
-    modifier: Modifier = Modifier
-) {
-    when (style) {
-        WeatherPreviewStyle.ATMOSPHERIC -> {
-            WeatherAnimatedIcon(condition = condition, modifier = modifier.padding(6.dp))
-        }
-        WeatherPreviewStyle.GLASS_AI -> {
-            GlassAiAnimatedPreview(condition = condition, modifier = modifier)
-        }
-        WeatherPreviewStyle.MINIMAL -> {
-            MinimalAnimatedPreview(condition = condition, modifier = modifier)
-        }
-        WeatherPreviewStyle.NEON -> {
-            NeonAnimatedPreview(condition = condition, modifier = modifier)
-        }
-        WeatherPreviewStyle.NOIR -> {
-            NoirAnimatedPreview(condition = condition, modifier = modifier)
-        }
-        WeatherPreviewStyle.AURORA -> {
-            AuroraAnimatedPreview(condition = condition, modifier = modifier)
-        }
-    }
-}
-
-@Composable
-private fun GlassAiAnimatedPreview(condition: WeatherCondition, modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "glass_ai_preview_${condition.name}")
-    val bob by transition.animateFloat(
-        initialValue = -4f,
-        targetValue = 4f,
-        animationSpec = infiniteRepeatable(tween(2200, easing = LinearEasing), RepeatMode.Reverse),
-        label = "bob"
-    )
-    val pulse by transition.animateFloat(
-        initialValue = 0.94f,
-        targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(tween(1700, easing = LinearEasing), RepeatMode.Reverse),
-        label = "pulse"
-    )
-    val sway by transition.animateFloat(
-        initialValue = -7f,
-        targetValue = 7f,
-        animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Reverse),
-        label = "sway"
-    )
-    val glowAlpha by transition.animateFloat(
-        initialValue = 0.18f,
-        targetValue = 0.42f,
-        animationSpec = infiniteRepeatable(tween(1500, easing = LinearEasing), RepeatMode.Reverse),
-        label = "glow"
-    )
-    val accent = previewAccentColor(condition)
-    val painter = painterResource(
-        WeatherIconMapper.getDrawableResId(condition, WeatherIconMapper.IconStyle.GLASS_AI_GENERATED)
-    )
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(accent.copy(alpha = glowAlpha), Color.Transparent),
-                    radius = 120f
-                )
-            )
-            .padding(6.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(modifier = Modifier.matchParentSize().graphicsLayer { alpha = 0.32f }) {
-            WeatherAnimatedIcon(condition = condition, modifier = Modifier.fillMaxSize())
-        }
-        if (condition.name.contains("THUNDER")) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(accent.copy(alpha = 0.12f + glowAlpha * 0.2f))
-            )
-        }
-        Image(
-            painter = painter,
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    translationY = bob
-                    scaleX = pulse
-                    scaleY = pulse
-                    rotationZ = if (condition.name.contains("RAIN") || condition.name.contains("SNOW") || condition.name.contains("THUNDER")) sway else 0f
-                }
-        )
-    }
-}
-
-@Composable
-private fun MinimalAnimatedPreview(condition: WeatherCondition, modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "minimal_preview_${condition.name}")
-    val alpha by transition.animateFloat(
-        initialValue = 0.72f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1600, easing = LinearEasing), RepeatMode.Reverse),
-        label = "alpha"
-    )
-    val rise by transition.animateFloat(
-        initialValue = 4f,
-        targetValue = -4f,
-        animationSpec = infiniteRepeatable(tween(2000, easing = LinearEasing), RepeatMode.Reverse),
-        label = "rise"
-    )
-    val rotate by transition.animateFloat(
-        initialValue = -8f,
-        targetValue = 8f,
-        animationSpec = infiniteRepeatable(tween(2600, easing = LinearEasing), RepeatMode.Reverse),
-        label = "rotate"
-    )
-    val accentPulse by transition.animateFloat(
-        initialValue = 0.12f,
-        targetValue = 0.28f,
-        animationSpec = infiniteRepeatable(tween(1800, easing = LinearEasing), RepeatMode.Reverse),
-        label = "accent"
-    )
-    val accent = previewAccentColor(condition)
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(accent.copy(alpha = accentPulse), Color.Transparent)
-                )
-            )
-            .padding(10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Image(
-            painter = painterResource(condition.iconResId),
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(accent.copy(alpha = 0.95f)),
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    this.alpha = alpha
-                    translationY = rise
-                    rotationZ = if (condition.name.contains("CLEAR") || condition.name.contains("THUNDER")) rotate else 0f
-                }
-        )
-    }
-}
-
-@Composable
-private fun NeonAnimatedPreview(condition: WeatherCondition, modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "neon_preview_${condition.name}")
-    val pulse by transition.animateFloat(
-        initialValue = 0.22f,
-        targetValue = 0.58f,
-        animationSpec = infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Reverse),
-        label = "pulse"
-    )
-    val tilt by transition.animateFloat(
-        initialValue = -10f,
-        targetValue = 10f,
-        animationSpec = infiniteRepeatable(tween(1800, easing = LinearEasing), RepeatMode.Reverse),
-        label = "tilt"
-    )
-    val scale by transition.animateFloat(
-        initialValue = 0.92f,
-        targetValue = 1.1f,
-        animationSpec = infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Reverse),
-        label = "scale"
-    )
-    val accent = previewAccentColor(condition)
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(accent.copy(alpha = pulse), Color.Transparent),
-                    radius = 110f
-                )
-            )
-            .padding(6.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Image(
-            painter = painterResource(
-                WeatherIconMapper.getDrawableResId(condition, WeatherIconMapper.IconStyle.GLASS_AI_GENERATED)
-            ),
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(accent.copy(alpha = 0.95f)),
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    rotationZ = tilt
-                    scaleX = scale
-                    scaleY = scale
-                }
-        )
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .graphicsLayer { alpha = 0.4f }
-        ) {
-            WeatherAnimatedIcon(condition = condition, modifier = Modifier.fillMaxSize())
-        }
-    }
-}
-
-@Composable
-private fun NoirAnimatedPreview(condition: WeatherCondition, modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "noir_preview_${condition.name}")
-    val fogDrift by transition.animateFloat(
-        initialValue = -12f,
-        targetValue = 12f,
-        animationSpec = infiniteRepeatable(tween(2800, easing = LinearEasing), RepeatMode.Reverse),
-        label = "fog"
-    )
-    val flash by transition.animateFloat(
-        initialValue = 0.05f,
-        targetValue = if (condition.name.contains("THUNDER")) 0.55f else 0.18f,
-        animationSpec = infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Reverse),
-        label = "flash"
-    )
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0B1020), Color(0xFF1F2937), Color(0xFF020617))
-                )
-            )
-            .padding(8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .graphicsLayer {
-                    translationX = fogDrift
-                    alpha = 0.28f
-                }
-        ) {
-            WeatherAnimatedIcon(condition = condition, modifier = Modifier.fillMaxSize())
-        }
-        Image(
-            painter = painterResource(condition.iconResId),
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.92f)),
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    alpha = 0.88f
-                    scaleX = 0.96f
-                    scaleY = 0.96f
-                }
-        )
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(Color.White.copy(alpha = flash))
-        )
-    }
-}
-
-@Composable
-private fun AuroraAnimatedPreview(condition: WeatherCondition, modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "aurora_preview_${condition.name}")
-    val hue by transition.animateFloat(
-        initialValue = 0.12f,
-        targetValue = 0.36f,
-        animationSpec = infiniteRepeatable(tween(2200, easing = LinearEasing), RepeatMode.Reverse),
-        label = "hue"
-    )
-    val rise by transition.animateFloat(
-        initialValue = 5f,
-        targetValue = -5f,
-        animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Reverse),
-        label = "rise"
-    )
-    val shimmer by transition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.5f,
-        animationSpec = infiniteRepeatable(tween(1300, easing = LinearEasing), RepeatMode.Reverse),
-        label = "shimmer"
-    )
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF061826),
-                        Color(0xFF0A2F40).copy(alpha = 0.9f),
-                        Color(0xFF123B5A)
-                    )
-                )
-            )
-            .padding(8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF7CFFCB).copy(alpha = hue),
-                            Color(0xFF7AA2FF).copy(alpha = shimmer),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
-        Image(
-            painter = painterResource(
-                WeatherIconMapper.getDrawableResId(condition, WeatherIconMapper.IconStyle.GLASS_AI_GENERATED)
-            ),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    translationY = rise
-                    alpha = 0.98f
-                }
-        )
-        if (condition.name.contains("SNOW") || condition.name.contains("FOG")) {
-            Box(modifier = Modifier.matchParentSize().graphicsLayer { alpha = 0.35f }) {
-                WeatherAnimatedIcon(condition = condition, modifier = Modifier.fillMaxSize())
-            }
-        }
-    }
-}
-
-private fun previewAccentColor(condition: WeatherCondition): Color = when {
-    condition.name.contains("THUNDER") -> Color(0xFFFFB300)
-    condition.name.contains("SNOW") -> Color(0xFFE3F2FD)
-    condition.name.contains("RAIN") || condition.name.contains("DRIZZLE") -> Color(0xFF4FC3F7)
-    condition.name.contains("FOG") -> Color(0xFFCFD8DC)
-    condition.name.contains("NIGHT") -> Color(0xFF90CAF9)
-    condition == WeatherCondition.OVERCAST -> Color(0xFFB0BEC5)
-    else -> Color(0xFFFFD54F)
-}
-
 // Keep for backward compat
 @Composable
 fun WeatherMetricRow(label: String, value: String) {
@@ -1521,52 +1015,61 @@ fun WindDirectionIndicator(degrees: Float, modifier: Modifier = Modifier) {
 
 @Composable
 private fun FrostOverlay(modifier: Modifier = Modifier) {
+    val crystals = remember {
+        val rng = kotlin.random.Random(42)
+        List(180) {
+            val corner = rng.nextInt(4)
+            val edgeBias = rng.nextFloat().let { it * it }
+            val spread = rng.nextFloat() * 0.4f
+            val (nx, ny) = when (corner) {
+                0 -> Pair(edgeBias * 0.5f, spread)
+                1 -> Pair(1f - edgeBias * 0.5f, spread)
+                2 -> Pair(edgeBias * 0.5f, 1f - spread)
+                else -> Pair(1f - edgeBias * 0.5f, 1f - spread)
+            }
+            Triple(nx, ny, 1f + rng.nextFloat() * 3.5f)
+        }
+    }
+
     Canvas(modifier = modifier.fillMaxSize()) {
         val w = size.width
         val h = size.height
+        val cx = w / 2f
+        val cy = h / 2f
+        val maxDist = sqrt(cx * cx + cy * cy)
 
-        // Top Left Frost Creep
-        drawPath(
-            path = Path().apply {
-                moveTo(0f, 0f)
-                lineTo(w * 0.5f, 0f)
-                lineTo(0f, h * 0.4f)
-                close()
-            },
-            brush = Brush.linearGradient(
-                colors = listOf(Color.White.copy(alpha = 0.7f), Color.Transparent),
-                start = Offset(0f, 0f),
-                end = Offset(w * 0.45f, h * 0.35f)
-            ),
-            blendMode = BlendMode.Screen
-        )
-
-        // Bottom Right Frost Creep
-        drawPath(
-            path = Path().apply {
-                moveTo(w, h)
-                lineTo(w * 0.5f, h)
-                lineTo(w, h * 0.7f)
-                close()
-            },
-            brush = Brush.linearGradient(
-                colors = listOf(Color.White.copy(alpha = 0.8f), Color.Transparent),
-                start = Offset(w, h),
-                end = Offset(w * 0.55f, h * 0.75f)
-            ),
-            blendMode = BlendMode.Screen
-        )
-        
-        // Edge Freezing Vignette - More intense
+        // Subtle edge vignette
         drawRect(
             brush = Brush.radialGradient(
-                colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.4f)),
-                center = Offset(w / 2, h / 2),
-                radius = w * 0.9f
+                0f to Color.Transparent,
+                0.7f to Color.Transparent,
+                1f to Color.White.copy(alpha = 0.3f),
+                center = Offset(cx, cy),
+                radius = maxDist * 0.85f
             ),
-            size = size,
-            blendMode = BlendMode.Screen
+            size = size
         )
+
+        crystals.forEach { (nx, ny, baseSize) ->
+            val px = nx * w
+            val py = ny * h
+            val dist = sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy)) / maxDist
+            val alpha = (dist * 1.3f).coerceIn(0f, 1f)
+            val r = baseSize * (0.8f + dist * 1.5f)
+
+            drawCircle(
+                color = Color.White.copy(alpha = alpha * 0.85f),
+                radius = r,
+                center = Offset(px, py)
+            )
+            if (r > 2.5f) {
+                drawCircle(
+                    color = Color.White.copy(alpha = alpha * 0.3f),
+                    radius = r * 2.2f,
+                    center = Offset(px, py)
+                )
+            }
+        }
     }
 }
 

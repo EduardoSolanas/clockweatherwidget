@@ -82,9 +82,8 @@
             android:format24Hour="HH"
             android:gravity="center"
             android:includeFontPadding="false"
-            android:letterSpacing="0.64"
+
             android:maxLines="1"
-            android:padding="8dp"
             android:singleLine="true"
             android:textColor="@color/flip_digit_text_light"
             android:textSize="48sp"
@@ -178,9 +177,8 @@
             android:format24Hour="mm"
             android:gravity="center"
             android:includeFontPadding="false"
-            android:letterSpacing="0.64"
+
             android:maxLines="1"
-            android:padding="8dp"
             android:singleLine="true"
             android:textColor="@color/flip_digit_text_light"
             android:textSize="48sp"

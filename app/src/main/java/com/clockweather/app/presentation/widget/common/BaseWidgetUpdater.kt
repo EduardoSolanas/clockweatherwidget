@@ -2,7 +2,9 @@ package com.clockweather.app.presentation.widget.common
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.res.Resources
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
@@ -40,6 +42,7 @@ abstract class BaseWidgetUpdater(
     abstract val rootViewId: Int
     abstract val dateViewId: Int
     open val minimumFutureForecastDaysRequired: Int = 0
+    open val widgetPaddingDp: Float = 12f
 
     /** Called after weather data is available. Subclasses apply their specific bindings. */
     abstract fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences)
@@ -62,6 +65,12 @@ abstract class BaseWidgetUpdater(
                     prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_WEATHER_ICON_STYLE]
                         ?: com.clockweather.app.presentation.settings.SettingsViewModel.ICON_STYLE_GLASS
                 )
+                val widgetTextScale = (
+                    prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_WIDGET_TEXT_SCALE]
+                        ?: widgetTextScaleFromLegacyDateSize(
+                            prefs[floatPreferencesKey("date_font_size_sp")]
+                        )
+                    ).coerceIn(0.75f, 1.15f)
 
                 val clockThemeName = prefs[stringPreferencesKey("clock_theme")] ?: "light"
                 val theme = WidgetThemeSelector.getTheme(clockThemeName)
@@ -70,18 +79,22 @@ abstract class BaseWidgetUpdater(
 
                 val tileSizeName = prefs[stringPreferencesKey("clock_tile_size")] ?: "MEDIUM"
                 val tileSize = runCatching { ClockTileSize.valueOf(tileSizeName) }.getOrDefault(ClockTileSize.MEDIUM)
+                val clockTextPx = widgetTextPx(
+                    context.resources,
+                    WidgetTextRole.clock(tileSize),
+                    widgetTextScale,
+                )
                 val dimHeight = when (tileSize) {
                     ClockTileSize.SMALL -> com.clockweather.app.R.dimen.flip_digit_height_small
                     ClockTileSize.MEDIUM -> com.clockweather.app.R.dimen.flip_digit_height_medium
                     ClockTileSize.LARGE -> com.clockweather.app.R.dimen.flip_digit_height_large
                     ClockTileSize.EXTRA_LARGE -> com.clockweather.app.R.dimen.flip_digit_height_xl
                 }
-                val dimText = when (tileSize) {
-                    ClockTileSize.SMALL -> com.clockweather.app.R.dimen.flip_text_size_small
-                    ClockTileSize.MEDIUM -> com.clockweather.app.R.dimen.flip_text_size_medium
-                    ClockTileSize.LARGE -> com.clockweather.app.R.dimen.flip_text_size_large
-                    ClockTileSize.EXTRA_LARGE -> com.clockweather.app.R.dimen.flip_text_size_xl
-                }
+                val fontScale = context.resources.configuration.fontScale.takeIf { it > 0f } ?: 1f
+                val heightPx = computeFlipTileHeightPx(
+                    context.resources.getDimension(dimHeight), fontScale, widgetTextScale,
+                )
+                val gapPx = context.resources.getDimension(com.clockweather.app.R.dimen.flip_digit_gap)
 
                 val views = RemoteViews(context.packageName, layoutResId)
 
@@ -103,7 +116,7 @@ abstract class BaseWidgetUpdater(
                     com.clockweather.app.R.id.digit_h1,
                     com.clockweather.app.R.id.digit_h2,
                     com.clockweather.app.R.id.digit_m1,
-                    com.clockweather.app.R.id.digit_m2
+                    com.clockweather.app.R.id.digit_m2,
                 ).forEach { id ->
                     views.setInt(id, "setBackgroundResource", tileBgRes)
                     try {
@@ -111,11 +124,12 @@ abstract class BaseWidgetUpdater(
                     } catch (e: Exception) { /* ignore */ }
 
                     if (android.os.Build.VERSION.SDK_INT >= 31) {
-                        views.setViewLayoutHeight(id, context.resources.getDimension(dimHeight), android.util.TypedValue.COMPLEX_UNIT_PX)
+                        views.setViewLayoutHeight(id, heightPx, android.util.TypedValue.COMPLEX_UNIT_PX)
                     }
 
+                    views.setInt(id, "setGravity", Gravity.CENTER)
                     views.setTextColor(id, digitColor)
-                    views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
+                    views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, clockTextPx)
                 }
                 listOf(
                     com.clockweather.app.R.id.clock_hour,
@@ -124,35 +138,70 @@ abstract class BaseWidgetUpdater(
                     try {
                         views.setOnClickPendingIntent(id, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
                     } catch (e: Exception) { /* ignore */ }
+                    if (android.os.Build.VERSION.SDK_INT >= 31) {
+                        views.setViewLayoutHeight(id, heightPx, android.util.TypedValue.COMPLEX_UNIT_PX)
+                    }
+                    views.setInt(id, "setGravity", Gravity.CENTER)
                     views.setTextColor(id, digitColor)
-                    views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(dimText))
+                    views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, clockTextPx)
                 }
+
+                val colonSize = clockTextPx * 0.8f
+                val paint = android.graphics.Paint().apply {
+                    typeface = android.graphics.Typeface.MONOSPACE
+                    textSize = clockTextPx
+                    isFakeBoldText = true
+                }
+                val glyphAdvancePx = paint.measureText("0")
+                val colonPaint = android.graphics.Paint().apply {
+                    typeface = android.graphics.Typeface.MONOSPACE
+                    textSize = colonSize
+                    isFakeBoldText = true
+                }
+                val colonGlyphPx = colonPaint.measureText(":")
+                val colonMarginPx = gapPx * 2
+                val density = context.resources.displayMetrics.density
+                val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+                val widgetWidthDp = options.getInt(
+                    AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0
+                ).toFloat()
+                val widgetWidthPx = if (widgetWidthDp > 0) {
+                    widgetWidthDp * density
+                } else {
+                    context.resources.displayMetrics.widthPixels * 0.9f
+                }
+                val widgetPaddingPx = widgetPaddingDp * density * 2
+                val ampmMarginPx = 6f * density
+                val clockBlockWidthPx = widgetWidthPx - widgetPaddingPx - ampmMarginPx
+                val pairWidthPx = (clockBlockWidthPx - colonGlyphPx - colonMarginPx) / 2f
+                val letterSpacing = computeFlipClockLetterSpacing(
+                    pairWidthPx, gapPx, glyphAdvancePx, clockTextPx,
+                )
+                views.setFloat(com.clockweather.app.R.id.clock_hour, "setLetterSpacing", letterSpacing)
+                views.setFloat(com.clockweather.app.R.id.clock_minute, "setLetterSpacing", letterSpacing)
 
                 if (android.os.Build.VERSION.SDK_INT >= 31) {
                     views.setViewLayoutHeight(
                         com.clockweather.app.R.id.weather_card,
-                        context.resources.getDimension(dimHeight),
+                        heightPx,
                         android.util.TypedValue.COMPLEX_UNIT_PX,
                     )
                 }
 
-                val colonSize = context.resources.getDimension(dimText) * 0.8f
                 views.setTextViewTextSize(com.clockweather.app.R.id.colon, android.util.TypedValue.COMPLEX_UNIT_PX, colonSize)
-                val ampmSize = when (tileSize) {
-                    ClockTileSize.SMALL -> 10f
-                    ClockTileSize.MEDIUM -> 12f
-                    ClockTileSize.LARGE -> 14f
-                    ClockTileSize.EXTRA_LARGE -> 16f
-                }
-                views.setTextViewTextSize(com.clockweather.app.R.id.ampm, android.util.TypedValue.COMPLEX_UNIT_SP, ampmSize)
+                val ampmSize = widgetTextPx(context.resources, WidgetTextRole.clockCaption(tileSize), widgetTextScale)
+                views.setTextViewTextSize(com.clockweather.app.R.id.ampm, android.util.TypedValue.COMPLEX_UNIT_PX, ampmSize)
                 views.setTextColor(com.clockweather.app.R.id.colon, digitColor)
                 views.setTextColor(com.clockweather.app.R.id.ampm, digitColor)
 
                 if (showDate) {
                     val dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault()))
-                    val fontSizeSp = prefs[floatPreferencesKey("date_font_size_sp")] ?: 15f
                     views.setTextViewText(dateViewId, dateStr)
-                    views.setTextViewTextSize(dateViewId, android.util.TypedValue.COMPLEX_UNIT_SP, fontSizeSp)
+                    views.setTextViewTextSize(
+                        dateViewId,
+                        android.util.TypedValue.COMPLEX_UNIT_PX,
+                        widgetTextPx(context.resources, WidgetTextRole.EMPHASIS, widgetTextScale),
+                    )
                     views.setViewVisibility(dateViewId, View.VISIBLE)
                 } else {
                     views.setViewVisibility(dateViewId, View.GONE)
@@ -192,12 +241,40 @@ abstract class BaseWidgetUpdater(
                 } else {
                     WidgetDataBinder.bindWeatherUnavailableViews(context, views, weatherIconStyle)
                 }
+                applyWeatherTextSizing(views, widgetTextScale)
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
                 Log.d(tag, "Widget $appWidgetId updated.")
             } catch (e: Exception) {
                 Log.e(tag, "Widget update failed for widget $appWidgetId", e)
             }
+        }
+    }
+
+    private fun applyWeatherTextSizing(views: RemoteViews, widgetTextScale: Float) {
+        views.setTextViewTextSize(com.clockweather.app.R.id.city_name, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.EMPHASIS, widgetTextScale))
+        views.setTextViewTextSize(com.clockweather.app.R.id.condition_text, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.SECONDARY, widgetTextScale))
+        views.setTextViewTextSize(com.clockweather.app.R.id.current_temp, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.TEMPERATURE, widgetTextScale))
+        views.setTextViewTextSize(com.clockweather.app.R.id.high_low, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.BODY, widgetTextScale))
+
+        listOf(
+            com.clockweather.app.R.id.fday1_name,
+            com.clockweather.app.R.id.fday2_name,
+            com.clockweather.app.R.id.fday3_name,
+            com.clockweather.app.R.id.fday4_name,
+            com.clockweather.app.R.id.fday5_name,
+        ).forEach { id ->
+            views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.FORECAST_LABEL, widgetTextScale))
+        }
+
+        listOf(
+            com.clockweather.app.R.id.fday1_high,
+            com.clockweather.app.R.id.fday2_high,
+            com.clockweather.app.R.id.fday3_high,
+            com.clockweather.app.R.id.fday4_high,
+            com.clockweather.app.R.id.fday5_high,
+        ).forEach { id ->
+            views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.FORECAST_META, widgetTextScale))
         }
     }
 
@@ -270,3 +347,79 @@ internal fun requiredForecastDaysForRefresh(
     requestedForecastDays: Int,
     minimumFutureForecastDaysRequired: Int,
 ): Int = maxOf(requestedForecastDays, minimumFutureForecastDaysRequired + 1)
+
+private const val ODD_DIGIT_PANEL_TRANSLATION_DP = -1.5f
+private const val EVEN_DIGIT_PANEL_TRANSLATION_DP = 1.5f
+
+internal enum class DigitPanelCorrection(val translationDp: Float) {
+    ODD(ODD_DIGIT_PANEL_TRANSLATION_DP),
+    EVEN(EVEN_DIGIT_PANEL_TRANSLATION_DP),
+}
+
+internal enum class WidgetTextRole(val multiplier: Float) {
+    FORECAST_META(0.80f),
+    FORECAST_LABEL(0.88f),
+    SECONDARY(0.88f),
+    BODY(1.00f),
+    EMPHASIS(1.08f),
+    TEMPERATURE(1.85f),
+    CLOCK_SMALL(3.20f),
+    CLOCK_MEDIUM(4.00f),
+    CLOCK_LARGE(4.50f),
+    CLOCK_XL(5.00f),
+    CLOCK_CAPTION_SMALL(0.75f),
+    CLOCK_CAPTION_MEDIUM(0.90f),
+    CLOCK_CAPTION_LARGE(1.00f),
+    CLOCK_CAPTION_XL(1.15f);
+
+    companion object {
+        fun clock(tileSize: ClockTileSize): WidgetTextRole = when (tileSize) {
+            ClockTileSize.SMALL -> CLOCK_SMALL
+            ClockTileSize.MEDIUM -> CLOCK_MEDIUM
+            ClockTileSize.LARGE -> CLOCK_LARGE
+            ClockTileSize.EXTRA_LARGE -> CLOCK_XL
+        }
+
+        fun clockCaption(tileSize: ClockTileSize): WidgetTextRole = when (tileSize) {
+            ClockTileSize.SMALL -> CLOCK_CAPTION_SMALL
+            ClockTileSize.MEDIUM -> CLOCK_CAPTION_MEDIUM
+            ClockTileSize.LARGE -> CLOCK_CAPTION_LARGE
+            ClockTileSize.EXTRA_LARGE -> CLOCK_CAPTION_XL
+        }
+    }
+}
+
+internal fun widgetSystemBaseTextPx(resources: Resources): Float {
+    val fontScale = resources.configuration.fontScale.takeIf { it > 0f } ?: 1f
+    return 14f * resources.displayMetrics.density * fontScale
+}
+
+internal fun widgetTextPx(
+    resources: Resources,
+    role: WidgetTextRole,
+    settingsScale: Float = 1f,
+): Float = widgetSystemBaseTextPx(resources) * role.multiplier * settingsScale
+
+internal fun widgetTextScaleFromLegacyDateSize(legacyDateSizeSp: Float?): Float =
+    ((legacyDateSizeSp ?: 15f) / 15f).coerceIn(0.75f, 1.15f)
+
+internal fun widgetDigitOffsetPx(
+    resources: Resources,
+    correction: DigitPanelCorrection,
+): Float = correction.translationDp * resources.displayMetrics.density
+
+internal fun computeFlipTileHeightPx(
+    baseDimenPx: Float,
+    fontScale: Float,
+    widgetTextScale: Float,
+): Float = baseDimenPx * fontScale * widgetTextScale
+
+internal fun computeFlipClockLetterSpacing(
+    pairWidthPx: Float,
+    gapPx: Float,
+    glyphAdvancePx: Float,
+    fontSizePx: Float,
+): Float {
+    val tileCenterDistancePx = (pairWidthPx + gapPx) / 2f
+    return ((tileCenterDistancePx - glyphAdvancePx) / fontSizePx).coerceAtLeast(0f)
+}

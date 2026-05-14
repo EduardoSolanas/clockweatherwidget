@@ -51,12 +51,14 @@ class SettingsViewModel @Inject constructor(
         val KEY_SHOW_TODAY_COMPACT = booleanPreferencesKey("show_today_compact")
         val KEY_SHOW_TODAY_EXTENDED = booleanPreferencesKey("show_today_extended")
         val KEY_DATE_FONT_SIZE = floatPreferencesKey("date_font_size_sp")
+        val KEY_WIDGET_TEXT_SCALE = floatPreferencesKey("widget_text_scale")
         val KEY_CLOCK_THEME = stringPreferencesKey("clock_theme")
         val KEY_CLOCK_TILE_SIZE = stringPreferencesKey("clock_tile_size")
         val KEY_WEATHER_ICON_STYLE = stringPreferencesKey("weather_icon_style")
         val KEY_LANGUAGE = stringPreferencesKey("language")
         val KEY_FORECAST_DAYS = intPreferencesKey("forecast_days")
         const val DEFAULT_DATE_FONT_SP = 15f
+        const val DEFAULT_WIDGET_TEXT_SCALE = 1f
         const val DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES = 30
         const val CLOCK_THEME_DARK = "dark"
         const val CLOCK_THEME_LIGHT = "light"
@@ -148,6 +150,14 @@ class SettingsViewModel @Inject constructor(
     val dateFontSizeSp: StateFlow<Float> = dataStore.data
         .map { prefs -> prefs[KEY_DATE_FONT_SIZE] ?: DEFAULT_DATE_FONT_SP }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_DATE_FONT_SP)
+
+    val widgetTextScale: StateFlow<Float> = dataStore.data
+        .map { prefs ->
+            prefs[KEY_WIDGET_TEXT_SCALE]
+                ?: ((prefs[KEY_DATE_FONT_SIZE] ?: DEFAULT_DATE_FONT_SP) / DEFAULT_DATE_FONT_SP)
+                    .coerceIn(0.75f, 1.15f)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_WIDGET_TEXT_SCALE)
 
     val clockTheme: StateFlow<String> = dataStore.data
         .map { prefs -> prefs[KEY_CLOCK_THEME] ?: CLOCK_THEME_LIGHT }
@@ -279,6 +289,13 @@ class SettingsViewModel @Inject constructor(
     fun setDateFontSize(sp: Float) {
         viewModelScope.launch {
             dataStore.edit { it[KEY_DATE_FONT_SIZE] = sp }
+            triggerWidgetUpdate()
+        }
+    }
+
+    fun setWidgetTextScale(scale: Float) {
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_WIDGET_TEXT_SCALE] = scale.coerceIn(0.75f, 1.15f) }
             triggerWidgetUpdate()
         }
     }

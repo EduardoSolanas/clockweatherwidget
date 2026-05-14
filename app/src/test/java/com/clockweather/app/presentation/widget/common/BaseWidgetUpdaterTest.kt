@@ -3,8 +3,11 @@ package com.clockweather.app.presentation.widget.common
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.os.Bundle
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Color
+import android.util.DisplayMetrics
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.datastore.core.DataStore
@@ -27,6 +30,7 @@ import com.clockweather.app.domain.repository.WeatherRepository
 import io.mockk.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -111,6 +115,9 @@ class BaseWidgetUpdaterTest {
 
         appWidgetManager = mockk()
         every { appWidgetManager.updateAppWidget(any<Int>(), any()) } just Runs
+        every { appWidgetManager.getAppWidgetOptions(any()) } returns Bundle().apply {
+            putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 250)
+        }
 
         entryPoint = mockk(relaxed = true)
 
@@ -149,6 +156,10 @@ class BaseWidgetUpdaterTest {
         every { mockContext.getString(R.string.widget_weather_unavailable_condition) } returns "Updating weather"
         every { mockContext.getString(R.string.widget_weather_unavailable_temp) } returns "--°"
         every { mockResources.getDimension(any()) } returns 48f
+        every { mockResources.displayMetrics } returns DisplayMetrics().apply {
+            density = 2f
+        }
+        every { mockResources.configuration } returns Configuration().apply { fontScale = 1.5f }
 
         mockkConstructor(RemoteViews::class)
         every { anyConstructed<RemoteViews>().setViewVisibility(any(), any()) } just Runs
@@ -157,6 +168,7 @@ class BaseWidgetUpdaterTest {
         every { anyConstructed<RemoteViews>().setTextViewTextSize(any(), any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setTextColor(any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setInt(any(), any(), any()) } just Runs
+        every { anyConstructed<RemoteViews>().setFloat(any(), any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setOnClickPendingIntent(any(), any()) } just Runs
         every { anyConstructed<RemoteViews>().setViewLayoutHeight(any(), any(), any()) } just Runs
 
@@ -176,6 +188,7 @@ class BaseWidgetUpdaterTest {
         updater.updateWidget(widgetId)
 
         verify(exactly = 1) { appWidgetManager.updateAppWidget(widgetId, any()) }
+        verify(exactly = 1) { appWidgetManager.getAppWidgetOptions(widgetId) }
         confirmVerified(appWidgetManager)
     }
 
@@ -225,18 +238,45 @@ class BaseWidgetUpdaterTest {
     }
 
     @Test
-    fun `weather card height matches digit tile height`() = runBlocking {
-        every { mockResources.getDimension(any()) } returns 48f
-        every { mockResources.getDimension(R.dimen.flip_digit_height_medium) } returns 96f
+    fun `weather card and clock heights scale with font settings`() = runBlocking {
+        // getDimension(any()) returns 48f, fontScale=1.5, widgetTextScale=1.0
+        // heightPx = 48 * 1.5 * 1.0 = 72
+        val expectedHeight = 72f
 
         updater.updateWidget(widgetId)
 
         verify(atLeast = 1) {
             anyConstructed<RemoteViews>().setViewLayoutHeight(
                 R.id.weather_card,
-                96f,
+                expectedHeight,
                 android.util.TypedValue.COMPLEX_UNIT_PX,
             )
+        }
+        verify(atLeast = 1) {
+            anyConstructed<RemoteViews>().setViewLayoutHeight(
+                R.id.clock_hour,
+                expectedHeight,
+                android.util.TypedValue.COMPLEX_UNIT_PX,
+            )
+        }
+        verify(atLeast = 1) {
+            anyConstructed<RemoteViews>().setViewLayoutHeight(
+                R.id.clock_minute,
+                expectedHeight,
+                android.util.TypedValue.COMPLEX_UNIT_PX,
+            )
+        }
+    }
+
+    @Test
+    fun `dynamic letter spacing is applied to both TextClocks`() = runBlocking {
+        updater.updateWidget(widgetId)
+
+        verify(exactly = 1) {
+            anyConstructed<RemoteViews>().setFloat(R.id.clock_hour, "setLetterSpacing", any())
+        }
+        verify(exactly = 1) {
+            anyConstructed<RemoteViews>().setFloat(R.id.clock_minute, "setLetterSpacing", any())
         }
     }
 
@@ -326,6 +366,103 @@ class BaseWidgetUpdaterTest {
         verify(exactly = 1) {
             anyConstructed<RemoteViews>().setViewVisibility(R.id.weather_card, android.view.View.VISIBLE)
         }
+    }
+
+    @Test
+    fun `widget text px uses system base role multiplier and settings scale`() {
+        val resources = mockk<Resources>()
+        every { resources.displayMetrics } returns DisplayMetrics().apply {
+            density = 2f
+        }
+        every { resources.configuration } returns Configuration().apply { fontScale = 1.5f }
+
+        assertEquals(42f, widgetSystemBaseTextPx(resources), 0.01f)
+        assertEquals(42f, widgetTextPx(resources, WidgetTextRole.BODY), 0.01f)
+        assertEquals(33.6f, widgetTextPx(resources, WidgetTextRole.FORECAST_META), 0.01f)
+        assertEquals(77.7f, widgetTextPx(resources, WidgetTextRole.TEMPERATURE), 0.01f)
+        assertEquals(33.6f, widgetTextPx(resources, WidgetTextRole.BODY, settingsScale = 0.8f), 0.01f)
+    }
+
+    @Test
+    fun `clock role is selected from tile size`() {
+        assertEquals(WidgetTextRole.CLOCK_SMALL, WidgetTextRole.clock(com.clockweather.app.domain.model.ClockTileSize.SMALL))
+        assertEquals(WidgetTextRole.CLOCK_MEDIUM, WidgetTextRole.clock(com.clockweather.app.domain.model.ClockTileSize.MEDIUM))
+        assertEquals(WidgetTextRole.CLOCK_LARGE, WidgetTextRole.clock(com.clockweather.app.domain.model.ClockTileSize.LARGE))
+        assertEquals(WidgetTextRole.CLOCK_XL, WidgetTextRole.clock(com.clockweather.app.domain.model.ClockTileSize.EXTRA_LARGE))
+    }
+
+    @Test
+    fun `digit panel correction applies small outward offsets`() {
+        val resources = mockk<Resources>()
+        every { resources.displayMetrics } returns DisplayMetrics().apply {
+            density = 2f
+        }
+
+        assertEquals(-3f, widgetDigitOffsetPx(resources, DigitPanelCorrection.ODD), 0.01f)
+        assertEquals(3f, widgetDigitOffsetPx(resources, DigitPanelCorrection.EVEN), 0.01f)
+    }
+
+    @Test
+    fun `computeFlipClockLetterSpacing centers digits over their tiles`() {
+        // Two tiles sharing a 400px-wide container with a 4px gap between them.
+        // Tile center distance = (400 + 4) / 2 = 202px.
+        // With glyphAdvance=60px and fontSize=100px:
+        // letterSpacing = (202 - 60) / 100 = 1.42
+        val ls = computeFlipClockLetterSpacing(
+            pairWidthPx = 400f,
+            gapPx = 4f,
+            glyphAdvancePx = 60f,
+            fontSizePx = 100f,
+        )
+        assertEquals(1.42f, ls, 0.001f)
+    }
+
+    @Test
+    fun `computeFlipClockLetterSpacing clamps to zero when tiles are too narrow`() {
+        // If tiles are so narrow that glyphAdvance already exceeds the tile center distance,
+        // letterSpacing should be clamped to 0 (no negative spacing).
+        val ls = computeFlipClockLetterSpacing(
+            pairWidthPx = 80f,
+            gapPx = 4f,
+            glyphAdvancePx = 60f,
+            fontSizePx = 100f,
+        )
+        // (80 + 4) / 2 = 42, (42 - 60) / 100 = -0.18 → clamped to 0
+        assertEquals(0f, ls, 0.001f)
+    }
+
+    @Test
+    fun `computeFlipClockLetterSpacing with real-world dimensions`() {
+        // Typical Pixel 7: density=2.625, widget ~470px pair width, gap=5.25px
+        // clockTextPx≈147, monospace glyph advance≈88px (0.6*147)
+        val ls = computeFlipClockLetterSpacing(
+            pairWidthPx = 470f,
+            gapPx = 5.25f,
+            glyphAdvancePx = 88.2f,
+            fontSizePx = 147f,
+        )
+        // (470 + 5.25) / 2 = 237.625, (237.625 - 88.2) / 147 ≈ 1.0161
+        assertEquals(1.016f, ls, 0.01f)
+    }
+
+    @Test
+    fun `computeFlipTileHeightPx preserves base height at default scales`() {
+        // At fontScale=1 and widgetTextScale=1, height equals the base dimen
+        assertEquals(252f, computeFlipTileHeightPx(252f, 1f, 1f), 0.001f)
+    }
+
+    @Test
+    fun `computeFlipTileHeightPx scales with font and widget settings`() {
+        // base=252px (96dp * 2.625), fontScale=1.3, widgetTextScale=1.15
+        // 252 * 1.3 * 1.15 = 376.74
+        assertEquals(376.74f, computeFlipTileHeightPx(252f, 1.3f, 1.15f), 0.01f)
+    }
+
+    @Test
+    fun `legacy date font size is converted to bounded widget text scale`() {
+        assertEquals(1f, widgetTextScaleFromLegacyDateSize(null), 0.01f)
+        assertEquals(0.8f, widgetTextScaleFromLegacyDateSize(12f), 0.01f)
+        assertEquals(1.15f, widgetTextScaleFromLegacyDateSize(22f), 0.01f)
     }
 
     @Test

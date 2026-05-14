@@ -23,6 +23,7 @@ class ForecastWidgetUpdater(
     override val rootViewId = R.id.widget_root
     override val dateViewId = R.id.widget_date
     override val minimumFutureForecastDaysRequired = 7
+    override val widgetPaddingDp = 10f
 
     override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
         val iconStyle = WeatherIconMapper.fromPreferenceValue(
