@@ -89,6 +89,24 @@ private val FogGray         = Color(0xFF78909C)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+internal fun rainParticleCountForIntensity(intensity: Float): Int = when {
+    intensity < 0.5f -> 14
+    intensity < 1.0f -> 28
+    intensity < 1.5f -> 46
+    intensity < 2.0f -> 64
+    else -> 82
+}
+
+internal fun drizzleParticleCountForIntensity(intensity: Float): Int =
+    (6 + intensity.coerceIn(0.3f, 1.2f) * 7).toInt()
+
+internal fun snowParticleCountForIntensity(intensity: Float): Int = when {
+    intensity < 0.7f -> 18
+    intensity < 1.1f -> 32
+    intensity < 1.6f -> 48
+    else -> 64
+}
+
 private fun DrawScope.drawCloud(center: Offset, size: Float, color: Color, alpha: Float = 1f) {
     val radius = size / 2
     val cloudColor = color.copy(alpha = alpha)
@@ -529,13 +547,7 @@ fun OvercastBackground(modifier: Modifier = Modifier) {
 @Composable
 fun RainBackground(modifier: Modifier = Modifier, intensity: Float = 1f) {
     val time by rememberTime()
-    val particleCount = when {
-        intensity < 0.5f -> 16
-        intensity < 1.0f -> 45
-        intensity < 1.5f -> 90
-        intensity < 2.0f -> 140
-        else -> 200
-    }
+    val particleCount = rainParticleCountForIntensity(intensity)
     val particles = rememberParticles(particleCount, Size(1000f, 1000f))
 
     Canvas(modifier = modifier.fillMaxSize()) {
@@ -553,29 +565,44 @@ fun RainBackground(modifier: Modifier = Modifier, intensity: Float = 1f) {
         val spawnWidth = cloudSize * 1.2f
         val spawnStartY = cloudCenter.y + h * 0.05f
         val spawnHeight = h - spawnStartY
+        val rainSlant = (1.8f + intensity * 2.2f).coerceAtMost(6.5f)
 
         particles.forEach { p ->
-            val drift = (time / 10f) * (0.8f + intensity * 0.8f) * p.z
+            val depth = p.z.coerceIn(0.45f, 1.6f)
+            val drift = (time / 10f) * (0.7f + intensity * 0.65f) * depth
             val x = (p.x + drift) % spawnWidth + (cloudCenter.x - spawnWidth / 2)
-            val fallMultiplier = 0.3f + intensity * 0.55f
+            val fallMultiplier = 0.42f + intensity * 0.58f
             val y = (p.y + (time / 10f) * p.speed * fallMultiplier) % spawnHeight + spawnStartY
-            val streakLength = p.speed * (0.6f + intensity * 1.5f) * p.z
+            val streakLength = p.speed * (1.25f + intensity * 1.9f) * depth
+            val strokeWidth = (p.size * (0.55f + intensity * 0.25f) * depth).coerceIn(0.8f, 3.2f)
+            val end = Offset(x - rainSlant * depth, y + streakLength)
+            val alpha = (p.alpha * (0.38f + intensity * 0.16f) * depth).coerceIn(0.16f, 0.72f)
 
             drawLine(
-                color = RainBlue.copy(alpha = p.alpha * (0.6f + intensity * 0.2f).coerceAtMost(1f)),
+                color = RainBlue.copy(alpha = alpha),
                 start = Offset(x, y),
-                end = Offset(x - (0.8f + intensity * 0.8f) * p.z, y + streakLength),
-                strokeWidth = p.size * p.z * (0.6f + intensity * 0.4f),
+                end = end,
+                strokeWidth = strokeWidth,
                 cap = StrokeCap.Round
             )
 
+            if (depth > 0.95f) {
+                drawLine(
+                    color = Color.White.copy(alpha = alpha * 0.32f),
+                    start = Offset(x + strokeWidth * 0.35f, y + streakLength * 0.12f),
+                    end = Offset(end.x + strokeWidth * 0.35f, end.y - streakLength * 0.18f),
+                    strokeWidth = (strokeWidth * 0.35f).coerceAtLeast(0.5f),
+                    cap = StrokeCap.Round
+                )
+            }
+
             val bottomLimit = spawnStartY + spawnHeight - 20f
-            if (y > bottomLimit && intensity >= 0.7f) {
+            if (y > bottomLimit && intensity >= 0.7f && depth > 0.8f) {
                 val splashProgress = (y - bottomLimit) / 20f
-                val splashW = p.size * (2f + intensity * 3f) * splashProgress
-                val splashH = p.size * (0.8f + intensity) * splashProgress
+                val splashW = p.size * (3.5f + intensity * 3.2f) * splashProgress * depth
+                val splashH = p.size * (0.55f + intensity * 0.45f) * splashProgress
                 drawOval(
-                    color = Color.White.copy(alpha = p.alpha * (1f - splashProgress) * 0.7f),
+                    color = Color.White.copy(alpha = p.alpha * (1f - splashProgress) * 0.42f),
                     topLeft = Offset(x - splashW / 2, bottomLimit - splashH / 2),
                     size = Size(splashW, splashH)
                 )
@@ -587,7 +614,7 @@ fun RainBackground(modifier: Modifier = Modifier, intensity: Float = 1f) {
 @Composable
 fun DrizzleBackground(modifier: Modifier = Modifier, intensity: Float = 0.7f) {
     val time by rememberTime()
-    val particles = rememberParticles((8 + intensity * 12).toInt(), Size(1000f, 1000f))
+    val particles = rememberParticles(drizzleParticleCountForIntensity(intensity), Size(1000f, 1000f))
 
     Canvas(modifier = modifier.fillMaxSize()) {
         val h = size.height
@@ -628,12 +655,7 @@ fun DrizzleBackground(modifier: Modifier = Modifier, intensity: Float = 0.7f) {
 @Composable
 fun SnowBackground(modifier: Modifier = Modifier, intensity: Float = 1f) {
     val time by rememberTime()
-    val particleCount = when {
-        intensity < 0.7f -> 36
-        intensity < 1.1f -> 80
-        intensity < 1.6f -> 125
-        else -> 180
-    }
+    val particleCount = snowParticleCountForIntensity(intensity)
     val particles = rememberParticles(particleCount, Size(1000f, 1000f))
 
     Canvas(modifier = modifier.fillMaxSize()) {
@@ -651,21 +673,28 @@ fun SnowBackground(modifier: Modifier = Modifier, intensity: Float = 1f) {
         val spawnStartY = cloudCenter.y + h * 0.05f
         val spawnHeight = h - spawnStartY
 
-        // AAA Blizzard Particles
+        // Sparse depth flakes: fewer particles, with size/alpha carrying realism.
         particles.forEach { p ->
-            // Complex swirling wind
-            val baseDrift = sin((time + p.x) / (500f * p.z)) * (18f + intensity * 18f) * p.z
-            val gust = sin((time + p.y) / 1500f) * (18f + intensity * 28f) * p.z
-            val fallSpeed = (time / 20f) * p.speed * (0.24f + intensity * 0.28f)
+            val depth = p.z.coerceIn(0.45f, 1.7f)
+            val baseDrift = sin((time + p.x) / (620f * depth)) * (14f + intensity * 14f) * depth
+            val gust = sin((time + p.y) / 1900f) * (10f + intensity * 20f) * depth
+            val fallSpeed = (time / 24f) * p.speed * (0.18f + intensity * 0.22f)
             
             val x = (p.x + baseDrift + gust) % spawnWidth + (cloudCenter.x - spawnWidth / 2)
             val y = (p.y + fallSpeed) % spawnHeight + spawnStartY
             
-            // Ultra AAA Depth Bokeh for Snowflakes
-            val isForeground = p.z > 1.2f
-            val isBackground = p.z < 0.6f
-            val flakeAlpha = if (isForeground) p.alpha * 0.8f else if (isBackground) p.alpha * 0.3f else p.alpha
-            val flakeRadius = if (isForeground) p.size * (2.2f + intensity * 1.6f) * p.z else p.size * (0.9f + intensity * 0.8f) * p.z
+            val isForeground = depth > 1.2f
+            val isBackground = depth < 0.65f
+            val flakeAlpha = when {
+                isForeground -> p.alpha * 0.78f
+                isBackground -> p.alpha * 0.26f
+                else -> p.alpha * 0.52f
+            }
+            val flakeRadius = if (isForeground) {
+                p.size * (2.7f + intensity * 1.2f) * depth
+            } else {
+                p.size * (1.15f + intensity * 0.55f) * depth
+            }
             
             val pulse = (sin((time + p.x) / 300f) + 1f) / 2f
             drawCircle(
@@ -674,12 +703,26 @@ fun SnowBackground(modifier: Modifier = Modifier, intensity: Float = 1f) {
                 center = Offset(x, y)
             )
             if (isForeground) {
-                // Bloom for foreground flakes
                 drawCircle(
-                    color = SnowWhite.copy(alpha = flakeAlpha * 0.2f),
-                    radius = flakeRadius * 2f,
+                    color = SnowWhite.copy(alpha = flakeAlpha * 0.16f),
+                    radius = flakeRadius * 1.9f,
                     center = Offset(x, y),
                     blendMode = BlendMode.Screen
+                )
+                val arm = flakeRadius * 0.78f
+                drawLine(
+                    color = SnowWhite.copy(alpha = flakeAlpha * 0.34f),
+                    start = Offset(x - arm, y),
+                    end = Offset(x + arm, y),
+                    strokeWidth = (flakeRadius * 0.18f).coerceAtLeast(0.6f),
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = SnowWhite.copy(alpha = flakeAlpha * 0.26f),
+                    start = Offset(x, y - arm),
+                    end = Offset(x, y + arm),
+                    strokeWidth = (flakeRadius * 0.14f).coerceAtLeast(0.5f),
+                    cap = StrokeCap.Round
                 )
             }
         }

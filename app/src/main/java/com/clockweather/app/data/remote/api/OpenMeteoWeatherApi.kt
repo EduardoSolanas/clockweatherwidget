@@ -24,7 +24,8 @@ interface OpenMeteoWeatherApi {
 
         const val CURRENT_PARAMS = "temperature_2m,relative_humidity_2m,apparent_temperature," +
                 "is_day,precipitation,weather_code,cloud_cover,pressure_msl,surface_pressure," +
-                "wind_speed_10m,wind_direction_10m,wind_gusts_10m"
+                "wind_speed_10m,wind_direction_10m,wind_gusts_10m," +
+                "dew_point_2m,visibility,uv_index"
 
         const val HOURLY_PARAMS = "temperature_2m,relative_humidity_2m,dew_point_2m," +
                 "apparent_temperature,precipitation_probability,weather_code,pressure_msl," +

@@ -6,8 +6,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import kotlin.math.sqrt
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,14 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -1015,131 +1009,24 @@ fun WindDirectionIndicator(degrees: Float, modifier: Modifier = Modifier) {
 
 @Composable
 private fun FrostOverlay(modifier: Modifier = Modifier) {
-    val crystals = remember {
-        val rng = kotlin.random.Random(42)
-        List(180) {
-            val corner = rng.nextInt(4)
-            val edgeBias = rng.nextFloat().let { it * it }
-            val spread = rng.nextFloat() * 0.4f
-            val (nx, ny) = when (corner) {
-                0 -> Pair(edgeBias * 0.5f, spread)
-                1 -> Pair(1f - edgeBias * 0.5f, spread)
-                2 -> Pair(edgeBias * 0.5f, 1f - spread)
-                else -> Pair(1f - edgeBias * 0.5f, 1f - spread)
-            }
-            Triple(nx, ny, 1f + rng.nextFloat() * 3.5f)
-        }
-    }
-
-    Canvas(modifier = modifier.fillMaxSize()) {
-        val w = size.width
-        val h = size.height
-        val cx = w / 2f
-        val cy = h / 2f
-        val maxDist = sqrt(cx * cx + cy * cy)
-
-        // Subtle edge vignette
-        drawRect(
-            brush = Brush.radialGradient(
-                0f to Color.Transparent,
-                0.7f to Color.Transparent,
-                1f to Color.White.copy(alpha = 0.3f),
-                center = Offset(cx, cy),
-                radius = maxDist * 0.85f
-            ),
-            size = size
-        )
-
-        crystals.forEach { (nx, ny, baseSize) ->
-            val px = nx * w
-            val py = ny * h
-            val dist = sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy)) / maxDist
-            val alpha = (dist * 1.3f).coerceIn(0f, 1f)
-            val r = baseSize * (0.8f + dist * 1.5f)
-
-            drawCircle(
-                color = Color.White.copy(alpha = alpha * 0.85f),
-                radius = r,
-                center = Offset(px, py)
-            )
-            if (r > 2.5f) {
-                drawCircle(
-                    color = Color.White.copy(alpha = alpha * 0.3f),
-                    radius = r * 2.2f,
-                    center = Offset(px, py)
-                )
-            }
-        }
-    }
+    Image(
+        painter = painterResource(R.drawable.weather_overlay_frost),
+        contentDescription = null,
+        modifier = modifier.fillMaxSize(),
+        contentScale = ContentScale.FillBounds,
+        alpha = 0.72f
+    )
 }
 
 // ─── Wet Glass/Camera Overlay ─────────────────────────────────────────────────
 
 @Composable
 private fun WetGlassOverlay(intensity: Float, modifier: Modifier = Modifier) {
-    // intensity: 0.2 = Drizzle, 0.5 = Rain, 1.0 = Heavy/Storm
-    val drops = remember(intensity) {
-        val count = (50 * intensity).toInt().coerceAtLeast(10)
-        List(count) {
-            // Avoid extreme edges (0.05..0.95 range) to prevent clipping artifacts on rounded corners
-            Offset(
-                x = 0.05f + kotlin.random.Random.nextFloat() * 0.9f,
-                y = 0.08f + kotlin.random.Random.nextFloat() * 0.84f // Extra margin at top/bottom
-            ) to (1f + kotlin.random.Random.nextFloat() * 2.5f) // drop size
-        }
-    }
-
-    Canvas(modifier = modifier.fillMaxSize()) {
-        val w = size.width
-        val h = size.height
-
-        // Fixed: Use SrcOver with alpha gradient instead of Multiply 
-        // to prevent black edge artifacts on rounded corners.
-        drawRect(
-            brush = Brush.radialGradient(
-                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.25f * intensity)),
-                center = Offset(w / 2, h / 2),
-                radius = w * 1.1f
-            ),
-            size = size
-        )
-
-        // Static condensation / camera lens drops - AAA High Visibility
-        drops.forEach { (pos, dropSize) ->
-            val scale = dropSize * intensity * 1.5f // Scaled up
-            val cx = pos.x * w
-            val cy = pos.y * h
-            
-            // Drop shadow/refraction depth - Darker
-            drawCircle(
-                color = Color.Black.copy(alpha = 0.4f * intensity),
-                radius = scale * 2.5f,
-                center = Offset(cx + 1.5f, cy + 1.5f)
-            )
-            
-            // Hot Specular Highlight
-            drawCircle(
-                color = Color.White.copy(alpha = 0.85f * intensity),
-                radius = scale * 1.6f,
-                center = Offset(cx - scale * 0.7f, cy - scale * 0.7f),
-                blendMode = BlendMode.Screen
-            )
-            
-            // Inner water glow
-            drawCircle(
-                color = Color.White.copy(alpha = 0.25f * intensity),
-                radius = scale * 1.2f,
-                center = Offset(cx, cy),
-                blendMode = BlendMode.Screen
-            )
-
-            // Main water drop body / Surface tension ring
-            drawCircle(
-                color = Color.White.copy(alpha = 0.35f * intensity),
-                radius = scale * 2.5f,
-                center = Offset(cx, cy),
-                style = Stroke(width = 1.2f)
-            )
-        }
-    }
+    Image(
+        painter = painterResource(R.drawable.weather_overlay_wet_glass),
+        contentDescription = null,
+        modifier = modifier.fillMaxSize(),
+        contentScale = ContentScale.FillBounds,
+        alpha = (0.35f + intensity.coerceIn(0.2f, 1f) * 0.35f).coerceIn(0.42f, 0.7f)
+    )
 }

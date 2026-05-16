@@ -25,7 +25,7 @@ class WidgetWeatherSectionLayoutTest {
     }
 
     @Test
-    fun `preview widget layouts include the shared preview weather card`() {
+    fun `preview widget layouts include the shared weather card`() {
         val layoutFiles = listOf(
             "widget_compact_preview.xml",
             "widget_extended_preview.xml",
@@ -36,8 +36,8 @@ class WidgetWeatherSectionLayoutTest {
         layoutFiles.forEach { layoutFile ->
             val xml = readLayout(layoutFile)
             assertTrue(
-                "$layoutFile should include @layout/widget_weather_card_preview",
-                xml.contains("<include") && xml.contains("layout=\"@layout/widget_weather_card_preview\""),
+                "$layoutFile should include @layout/widget_weather_card",
+                xml.contains("<include") && xml.contains("layout=\"@layout/widget_weather_card\""),
             )
         }
     }

@@ -6,11 +6,8 @@
     android:layout_height="wrap_content"
     android:minHeight="72dp"
     android:background="@android:color/transparent"
-    android:clipChildren="false"
-    android:clipToPadding="false"
-    android:visibility="gone">
+    android:visibility="visible">
 
-    <!-- BIG weather icon: anchored to row bottom, overflows upward into clock area. -->
     <ImageView
         android:id="@+id/weather_icon"
         android:layout_width="196dp"
@@ -18,7 +15,8 @@
         android:layout_gravity="bottom|center_horizontal"
         android:paddingBottom="10dp"
         android:contentDescription="@null"
-        android:scaleType="fitCenter" />
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_widget_weather_partly_cloudy_day" />
 
     <!-- Location overlay (start) -->
     <LinearLayout
@@ -34,6 +32,7 @@
             android:ellipsize="end"
             android:maxWidth="132dp"
             android:maxLines="1"
+            android:text="London"
             android:textColor="@color/widget_text_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -44,6 +43,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
+            android:text="Partly cloudy"
             android:textColor="@color/widget_text_secondary"
             android:textSize="13sp" />
     </LinearLayout>
@@ -61,6 +61,7 @@
             android:layout_height="wrap_content"
             android:gravity="end"
             android:includeFontPadding="false"
+            android:text="17°C"
             android:textColor="@color/widget_text_primary"
             android:textSize="28sp"
             android:textStyle="bold" />
@@ -72,6 +73,7 @@
             android:layout_marginTop="2dp"
             android:gravity="end"
             android:includeFontPadding="false"
+            android:text="20° / 11°"
             android:textColor="@color/widget_text_secondary"
             android:textSize="16sp" />
     </LinearLayout>

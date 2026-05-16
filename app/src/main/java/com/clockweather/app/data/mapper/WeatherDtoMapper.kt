@@ -46,7 +46,7 @@ class WeatherDtoMapper @Inject constructor() {
             temperature = dto.temperature,
             feelsLikeTemperature = dto.apparentTemperature,
             humidity = dto.relativeHumidity,
-            dewPoint = 0.0, // not in current endpoint, computed if needed
+            dewPoint = dto.dewPoint,
             precipitation = dto.precipitation,
             precipitationProbability = 0, // not in current endpoint
             weatherCondition = WeatherCondition.fromCode(dto.weatherCode, isDay),
@@ -56,8 +56,8 @@ class WeatherDtoMapper @Inject constructor() {
             windDirection = WindDirection.fromDegrees(dto.windDirection),
             windDirectionDegrees = dto.windDirection,
             windGusts = dto.windGusts,
-            visibility = 0.0, // not in current endpoint
-            uvIndex = 0.0, // not in current endpoint
+            visibility = dto.visibility,
+            uvIndex = dto.uvIndex,
             cloudCover = dto.cloudCover,
             lastUpdated = LocalDateTime.parse(dto.time, dateTimeFormatter)
         )

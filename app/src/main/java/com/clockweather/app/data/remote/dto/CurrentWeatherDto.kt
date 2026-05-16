@@ -17,5 +17,8 @@ data class CurrentWeatherDto(
     @Json(name = "wind_speed_10m") val windSpeed: Double,
     @Json(name = "wind_direction_10m") val windDirection: Int,
     @Json(name = "wind_gusts_10m") val windGusts: Double,
-    @Json(name = "is_day") val isDay: Int
+    @Json(name = "is_day") val isDay: Int,
+    @Json(name = "dew_point_2m") val dewPoint: Double = 0.0,
+    val visibility: Double = 0.0,
+    @Json(name = "uv_index") val uvIndex: Double = 0.0
 )
