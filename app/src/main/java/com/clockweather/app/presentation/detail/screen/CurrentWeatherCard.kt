@@ -26,7 +26,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -411,16 +410,6 @@ private fun HeroWeatherCard(
             }
         }
         
-        // AAA Atmospheric Glass Overlays
-        val cName = displayCondition.name.uppercase()
-        val overlayModifier = Modifier.matchParentSize()
-        when {
-            cName.contains("SNOW") -> FrostOverlay(modifier = overlayModifier)
-            cName.contains("THUNDER") || cName.contains("STORM") || cName == "RAIN_HEAVY" || cName.contains("VIOLENT") -> WetGlassOverlay(intensity = 1.0f, modifier = overlayModifier)
-            cName == "RAIN_MODERATE" || cName.contains("SHOWER_MODERATE") -> WetGlassOverlay(intensity = 0.6f, modifier = overlayModifier)
-            cName == "RAIN_SLIGHT" || cName.contains("SHOWER_SLIGHT") -> WetGlassOverlay(intensity = 0.35f, modifier = overlayModifier)
-            cName.contains("DRIZZLE") -> WetGlassOverlay(intensity = 0.2f, modifier = overlayModifier)
-        }
     }
 }
 
@@ -1005,28 +994,3 @@ fun WeatherMetricRow(label: String, value: String) {
 fun WindDirectionIndicator(degrees: Float, modifier: Modifier = Modifier) {
 }
 
-// ─── Freezing Frost Overlay ───────────────────────────────────────────────────
-
-@Composable
-private fun FrostOverlay(modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(R.drawable.weather_overlay_frost),
-        contentDescription = null,
-        modifier = modifier.fillMaxSize(),
-        contentScale = ContentScale.FillBounds,
-        alpha = 0.72f
-    )
-}
-
-// ─── Wet Glass/Camera Overlay ─────────────────────────────────────────────────
-
-@Composable
-private fun WetGlassOverlay(intensity: Float, modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(R.drawable.weather_overlay_wet_glass),
-        contentDescription = null,
-        modifier = modifier.fillMaxSize(),
-        contentScale = ContentScale.FillBounds,
-        alpha = (0.35f + intensity.coerceIn(0.2f, 1f) * 0.35f).coerceIn(0.42f, 0.7f)
-    )
-}
