@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Transparent base -->
     <item>
         <shape android:shape="rectangle">
             <solid android:color="#00000000" />
         </shape>
     </item>
 
+    <!-- Clock + weather top section -->
     <item
         android:left="14dp"
         android:top="10dp"
@@ -20,6 +22,7 @@
         </shape>
     </item>
 
+    <!-- Clock digit bar -->
     <item
         android:left="30dp"
         android:top="24dp"
@@ -31,6 +34,15 @@
         </shape>
     </item>
 
+    <!-- Glass weather icon (overlapping clock and weather card) -->
+    <item
+        android:left="110dp"
+        android:top="46dp"
+        android:right="110dp"
+        android:bottom="128dp"
+        android:drawable="@drawable/ic_widget_weather_clear_day" />
+
+    <!-- Weather card middle section -->
     <item
         android:left="14dp"
         android:top="96dp"
@@ -45,6 +57,7 @@
         </shape>
     </item>
 
+    <!-- Forecast row background -->
     <item
         android:left="14dp"
         android:top="148dp"
@@ -59,6 +72,7 @@
         </shape>
     </item>
 
+    <!-- Forecast day placeholders -->
     <item
         android:left="26dp"
         android:top="164dp"
@@ -114,4 +128,3 @@
         </shape>
     </item>
 </layer-list>
-

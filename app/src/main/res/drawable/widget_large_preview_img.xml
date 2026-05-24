@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Transparent base -->
     <item>
         <shape android:shape="rectangle">
             <solid android:color="#00000000" />
         </shape>
     </item>
 
+    <!-- Clock tile area -->
     <item
         android:left="16dp"
         android:top="12dp"
@@ -20,6 +22,7 @@
         </shape>
     </item>
 
+    <!-- Clock digit bar -->
     <item
         android:left="32dp"
         android:top="28dp"
@@ -31,6 +34,7 @@
         </shape>
     </item>
 
+    <!-- Weather card area -->
     <item
         android:left="16dp"
         android:top="124dp"
@@ -45,6 +49,7 @@
         </shape>
     </item>
 
+    <!-- Location text placeholder -->
     <item
         android:left="36dp"
         android:top="146dp"
@@ -56,17 +61,11 @@
         </shape>
     </item>
 
+    <!-- Glass weather icon -->
     <item
-        android:left="132dp"
-        android:top="138dp"
-        android:right="36dp"
-        android:bottom="30dp">
-        <shape android:shape="oval">
-            <solid android:color="@color/widget_glass_fill" />
-            <stroke
-                android:width="1dp"
-                android:color="@color/widget_glass_stroke" />
-        </shape>
-    </item>
+        android:left="76dp"
+        android:top="96dp"
+        android:right="76dp"
+        android:bottom="20dp"
+        android:drawable="@drawable/ic_widget_weather_clear_day" />
 </layer-list>
-

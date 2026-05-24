@@ -25,6 +25,7 @@ class ExtendedWidgetUpdater(
     override val rootViewId = R.id.widget_root
     override val dateViewId = R.id.widget_date
     override val widgetPaddingDp = 10f
+    override val hasForecastViews = true
 
     override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
         val showToday = prefs[booleanPreferencesKey("show_today_extended")] ?: false

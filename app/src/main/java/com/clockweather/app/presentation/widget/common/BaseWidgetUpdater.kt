@@ -43,6 +43,7 @@ abstract class BaseWidgetUpdater(
     abstract val dateViewId: Int
     open val minimumFutureForecastDaysRequired: Int = 0
     open val widgetPaddingDp: Float = 12f
+    open val hasForecastViews: Boolean = false
 
     /** Called after weather data is available. Subclasses apply their specific bindings. */
     abstract fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences)
@@ -257,24 +258,26 @@ abstract class BaseWidgetUpdater(
         views.setTextViewTextSize(com.clockweather.app.R.id.current_temp, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.TEMPERATURE, widgetTextScale))
         views.setTextViewTextSize(com.clockweather.app.R.id.high_low, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.BODY, widgetTextScale))
 
-        listOf(
-            com.clockweather.app.R.id.fday1_name,
-            com.clockweather.app.R.id.fday2_name,
-            com.clockweather.app.R.id.fday3_name,
-            com.clockweather.app.R.id.fday4_name,
-            com.clockweather.app.R.id.fday5_name,
-        ).forEach { id ->
-            views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.FORECAST_LABEL, widgetTextScale))
-        }
+        if (hasForecastViews) {
+            listOf(
+                com.clockweather.app.R.id.fday1_name,
+                com.clockweather.app.R.id.fday2_name,
+                com.clockweather.app.R.id.fday3_name,
+                com.clockweather.app.R.id.fday4_name,
+                com.clockweather.app.R.id.fday5_name,
+            ).forEach { id ->
+                views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.FORECAST_LABEL, widgetTextScale))
+            }
 
-        listOf(
-            com.clockweather.app.R.id.fday1_high,
-            com.clockweather.app.R.id.fday2_high,
-            com.clockweather.app.R.id.fday3_high,
-            com.clockweather.app.R.id.fday4_high,
-            com.clockweather.app.R.id.fday5_high,
-        ).forEach { id ->
-            views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.FORECAST_META, widgetTextScale))
+            listOf(
+                com.clockweather.app.R.id.fday1_high,
+                com.clockweather.app.R.id.fday2_high,
+                com.clockweather.app.R.id.fday3_high,
+                com.clockweather.app.R.id.fday4_high,
+                com.clockweather.app.R.id.fday5_high,
+            ).forEach { id ->
+                views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.FORECAST_META, widgetTextScale))
+            }
         }
     }
 
@@ -290,22 +293,24 @@ abstract class BaseWidgetUpdater(
                 add(com.clockweather.app.R.id.weather_icon)
                 add(com.clockweather.app.R.id.current_temp)
                 add(com.clockweather.app.R.id.high_low)
-                add(com.clockweather.app.R.id.forecast_container)
-                add(com.clockweather.app.R.id.fday1_name)
-                add(com.clockweather.app.R.id.fday1_icon)
-                add(com.clockweather.app.R.id.fday1_high)
-                add(com.clockweather.app.R.id.fday2_name)
-                add(com.clockweather.app.R.id.fday2_icon)
-                add(com.clockweather.app.R.id.fday2_high)
-                add(com.clockweather.app.R.id.fday3_name)
-                add(com.clockweather.app.R.id.fday3_icon)
-                add(com.clockweather.app.R.id.fday3_high)
-                add(com.clockweather.app.R.id.fday4_name)
-                add(com.clockweather.app.R.id.fday4_icon)
-                add(com.clockweather.app.R.id.fday4_high)
-                add(com.clockweather.app.R.id.fday5_name)
-                add(com.clockweather.app.R.id.fday5_icon)
-                add(com.clockweather.app.R.id.fday5_high)
+                if (hasForecastViews) {
+                    add(com.clockweather.app.R.id.forecast_container)
+                    add(com.clockweather.app.R.id.fday1_name)
+                    add(com.clockweather.app.R.id.fday1_icon)
+                    add(com.clockweather.app.R.id.fday1_high)
+                    add(com.clockweather.app.R.id.fday2_name)
+                    add(com.clockweather.app.R.id.fday2_icon)
+                    add(com.clockweather.app.R.id.fday2_high)
+                    add(com.clockweather.app.R.id.fday3_name)
+                    add(com.clockweather.app.R.id.fday3_icon)
+                    add(com.clockweather.app.R.id.fday3_high)
+                    add(com.clockweather.app.R.id.fday4_name)
+                    add(com.clockweather.app.R.id.fday4_icon)
+                    add(com.clockweather.app.R.id.fday4_high)
+                    add(com.clockweather.app.R.id.fday5_name)
+                    add(com.clockweather.app.R.id.fday5_icon)
+                    add(com.clockweather.app.R.id.fday5_high)
+                }
                 addAll(
                     listOf(
                         com.clockweather.app.R.id.digit_h1,
