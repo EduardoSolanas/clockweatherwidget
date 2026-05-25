@@ -30,4 +30,23 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
             }
         }
     }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        Log.d("ClockWeatherApp", "onAppWidgetOptionsChanged for ${this::class.simpleName}, id=$appWidgetId")
+        val pendingResult = goAsync()
+        scope.launch {
+            try {
+                val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
+                val updater = getUpdater(context, appWidgetManager, entryPoint)
+                updater.updateWidget(appWidgetId, allowWeatherRefresh = false)
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
 }
