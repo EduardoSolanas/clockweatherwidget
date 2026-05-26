@@ -16,7 +16,6 @@ import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
 import com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider
 import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
-import com.clockweather.app.presentation.widget.large.LargeWidgetProvider
 import com.clockweather.app.util.WidgetPrefsCache
 import com.clockweather.app.util.dataStore
 import com.clockweather.app.worker.WeatherUpdateScheduler
@@ -80,8 +79,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
             val providers = listOf(
                 CompactWidgetProvider(),
                 ExtendedWidgetProvider(),
-                ForecastWidgetProvider(),
-                LargeWidgetProvider()
+                ForecastWidgetProvider()
             )
             providers.forEach { provider ->
                 val component = ComponentName(context, provider::class.java)

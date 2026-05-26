@@ -12,7 +12,6 @@ class WidgetWeatherSectionLayoutTest {
             "widget_compact.xml",
             "widget_extended.xml",
             "widget_forecast.xml",
-            "widget_large.xml",
         )
 
         layoutFiles.forEach { layoutFile ->
@@ -30,14 +29,16 @@ class WidgetWeatherSectionLayoutTest {
             "widget_compact_preview.xml",
             "widget_extended_preview.xml",
             "widget_forecast_preview.xml",
-            "widget_large_preview.xml",
         )
 
         layoutFiles.forEach { layoutFile ->
             val xml = readLayout(layoutFile)
             assertTrue(
-                "$layoutFile should include @layout/widget_weather_card",
-                xml.contains("<include") && xml.contains("layout=\"@layout/widget_weather_card\""),
+                "$layoutFile should include @layout/widget_weather_card or @layout/widget_weather_card_preview",
+                xml.contains("<include") && (
+                    xml.contains("layout=\"@layout/widget_weather_card\"") ||
+                    xml.contains("layout=\"@layout/widget_weather_card_preview\"")
+                ),
             )
         }
     }

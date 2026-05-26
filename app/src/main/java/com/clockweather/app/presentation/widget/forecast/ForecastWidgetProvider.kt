@@ -7,6 +7,8 @@ import com.clockweather.app.presentation.widget.common.BaseWidgetProvider
 import com.clockweather.app.presentation.widget.common.BaseWidgetUpdater
 
 class ForecastWidgetProvider : BaseWidgetProvider() {
+    override val fallbackLayoutResId = com.clockweather.app.R.layout.widget_forecast
+
     override fun getUpdater(
         context: Context,
         appWidgetManager: AppWidgetManager,

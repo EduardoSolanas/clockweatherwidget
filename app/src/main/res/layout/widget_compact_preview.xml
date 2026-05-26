@@ -11,7 +11,7 @@
     tools:ignore="HardcodedText,SmallSp">
 
     <include
-        layout="@layout/widget_clock_block"
+        layout="@layout/widget_clock_block_preview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
@@ -22,13 +22,13 @@
         android:layout_marginTop="6dp"
         android:layout_marginStart="0dp"
         android:format12Hour="EEE, MMM d"
-        android:format24Hour="EEE, MMM d"
+        android:format24Hour="EEE, d MMM"
         android:textColor="@color/widget_text_primary"
         android:textSize="14sp"
         android:textStyle="bold" />
 
     <include
-        layout="@layout/widget_weather_card"
+        layout="@layout/widget_weather_card_preview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"

@@ -89,18 +89,6 @@
                 android:resource="@xml/widget_forecast_info" />
         </receiver>
 
-        <!-- Large Widget Provider (big clock + weather) -->
-        <receiver
-            android:name=".presentation.widget.large.LargeWidgetProvider"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_large_info" />
-        </receiver>
-
 
         <!-- Boot Completed Receiver -->
         <receiver
