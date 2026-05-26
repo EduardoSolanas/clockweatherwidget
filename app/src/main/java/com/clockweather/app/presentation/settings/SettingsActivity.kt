@@ -1,5 +1,7 @@
 package com.clockweather.app.presentation.settings
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
@@ -14,14 +16,25 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val scrollToBattery = intent.getBooleanExtra(EXTRA_SCROLL_TO_BATTERY, false)
         setContent {
             WeatherDetailTheme {
                 SettingsScreen(
                     viewModel = viewModel,
-                    onNavigateBack = { finish() }
+                    onNavigateBack = { finish() },
+                    scrollToBattery = scrollToBattery
                 )
             }
         }
+    }
+
+    companion object {
+        const val EXTRA_SCROLL_TO_BATTERY = "extra_scroll_to_battery"
+
+        fun buildScrollToBatteryIntent(context: Context): Intent =
+            Intent(context, SettingsActivity::class.java).apply {
+                putExtra(EXTRA_SCROLL_TO_BATTERY, true)
+            }
     }
 }
 

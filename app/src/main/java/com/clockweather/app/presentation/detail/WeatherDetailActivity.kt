@@ -26,6 +26,9 @@ class WeatherDetailActivity : AppCompatActivity() {
                     onNavigateBack = { finish() },
                     onNavigateToSettings = {
                         startActivity(Intent(this, SettingsActivity::class.java))
+                    },
+                    onFixBatteryClick = {
+                        startActivity(SettingsActivity.buildScrollToBatteryIntent(this))
                     }
                 )
             }

@@ -12,6 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -26,7 +28,8 @@ import kotlin.math.roundToInt
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    scrollToBattery: Boolean = false
 ) {
     val temperatureUnit  by viewModel.temperatureUnit.collectAsStateWithLifecycle()
     val speedUnit        by viewModel.speedUnit.collectAsStateWithLifecycle()
@@ -46,7 +49,18 @@ fun SettingsScreen(
     val forecastDayOptions by viewModel.availableForecastDayOptions.collectAsStateWithLifecycle()
 
     val context = androidx.compose.ui.platform.LocalContext.current
-    
+    val scrollState = rememberScrollState()
+    var batteryRowOffsetPx by remember { mutableIntStateOf(0) }
+
+    // Auto-scroll to the battery section when launched from the setup banner.
+    if (scrollToBattery) {
+        LaunchedEffect(batteryRowOffsetPx) {
+            if (batteryRowOffsetPx > 0) {
+                scrollState.animateScrollTo(batteryRowOffsetPx)
+            }
+        }
+    }
+
     // Refresh permission status when activity is resumed
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
         viewModel.refreshPermissionStatus()
@@ -68,7 +82,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
@@ -372,7 +386,12 @@ fun SettingsScreen(
             // "Unrestricted" primarily helps background weather refresh reliability.
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .onGloballyPositioned { coordinates ->
+                        batteryRowOffsetPx = coordinates.positionInParent().y.toInt()
+                    },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {

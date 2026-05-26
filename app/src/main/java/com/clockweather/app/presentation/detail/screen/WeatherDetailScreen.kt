@@ -57,7 +57,8 @@ internal fun selectWeatherDetailForecasts(
 fun WeatherDetailScreen(
     viewModel: WeatherDetailViewModel,
     onNavigateBack: () -> Unit,
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
+    onFixBatteryClick: () -> Unit = onNavigateToSettings
 ) {
     val locationPermissionState = com.google.accompanist.permissions.rememberMultiplePermissionsState(
         listOf(
@@ -136,7 +137,7 @@ fun WeatherDetailScreen(
             if (needsBattery) {
                 WidgetSetupBanner(
                     needsBattery = needsBattery,
-                    onSetupClick = onNavigateToSettings
+                    onSetupClick = onFixBatteryClick
                 )
             }
 
