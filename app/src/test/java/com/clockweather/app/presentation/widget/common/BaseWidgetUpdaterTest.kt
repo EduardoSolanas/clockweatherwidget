@@ -238,20 +238,16 @@ class BaseWidgetUpdaterTest {
     }
 
     @Test
-    fun `weather card and clock heights scale with font settings`() = runBlocking {
+    fun `clock heights scale with font settings`() = runBlocking {
         // getDimension(any()) returns 48f, fontScale=1.5, widgetTextScale=1.0
         // heightPx = 48 * 1.5 * 1.0 = 72
         val expectedHeight = 72f
 
         updater.updateWidget(widgetId)
 
-        verify(atLeast = 1) {
-            anyConstructed<RemoteViews>().setViewLayoutHeight(
-                R.id.weather_card,
-                expectedHeight,
-                android.util.TypedValue.COMPLEX_UNIT_PX,
-            )
-        }
+        // weather_card is no longer constrained to flip-tile height —
+        // it uses its natural height to avoid clipping location / temperature text.
+
         verify(atLeast = 1) {
             anyConstructed<RemoteViews>().setViewLayoutHeight(
                 R.id.clock_hour,

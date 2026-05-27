@@ -181,13 +181,8 @@ abstract class BaseWidgetUpdater(
                 views.setFloat(com.clockweather.app.R.id.clock_hour, "setLetterSpacing", letterSpacing)
                 views.setFloat(com.clockweather.app.R.id.clock_minute, "setLetterSpacing", letterSpacing)
 
-                if (android.os.Build.VERSION.SDK_INT >= 31) {
-                    views.setViewLayoutHeight(
-                        com.clockweather.app.R.id.weather_card,
-                        heightPx,
-                        android.util.TypedValue.COMPLEX_UNIT_PX,
-                    )
-                }
+                // Don't constrain weather_card to flip-tile height — it clips
+                // the location / temperature text. Let it use its natural height.
 
                 views.setTextViewTextSize(com.clockweather.app.R.id.colon, android.util.TypedValue.COMPLEX_UNIT_PX, colonSize)
                 val ampmSize = widgetTextPx(context.resources, WidgetTextRole.clockCaption(tileSize), widgetTextScale)
