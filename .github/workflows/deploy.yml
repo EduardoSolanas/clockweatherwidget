@@ -20,7 +20,7 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
-          distribution: zulu
+          distribution: temurin
           java-version: "21"
           cache: gradle
 
@@ -51,7 +51,7 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
-          distribution: zulu
+          distribution: temurin
           java-version: "21"
           cache: gradle
 
@@ -87,7 +87,7 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
-          distribution: zulu
+          distribution: temurin
           java-version: "21"
           cache: gradle
 
