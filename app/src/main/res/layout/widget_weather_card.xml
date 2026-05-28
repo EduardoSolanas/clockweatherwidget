@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Weather card: compact overlay; location/temp overlay on top of the icon. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/weather_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -16,7 +17,7 @@
         android:paddingBottom="10dp"
         android:contentDescription="@null"
         android:scaleType="fitCenter"
-        android:src="@drawable/ic_widget_weather_partly_cloudy_day" />
+        tools:src="@drawable/ic_widget_weather_partly_cloudy_day" />
 
     <!-- Location overlay (start) -->
     <LinearLayout

@@ -68,6 +68,7 @@ class WidgetDataBinderTest {
         every { views.setTextViewText(any(), any()) } just Runs
         every { views.setCharSequence(any<Int>(), any<String>(), any<CharSequence>()) } just Runs
         every { views.setImageViewResource(any(), any()) } just Runs
+        every { views.setImageViewBitmap(any(), any()) } just Runs
         every { views.setViewVisibility(any(), any()) } just Runs
     }
 
@@ -154,6 +155,54 @@ class WidgetDataBinderTest {
         verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "17°C") }
         verify(exactly = 1) { views.setTextViewText(R.id.high_low, "20°/11°") }
         verify(exactly = 1) { views.setViewVisibility(R.id.weather_card, View.VISIBLE) }
+    }
+
+    @Test
+    fun `bindWeatherViews renders weather icon as bitmap to survive launcher vector inflation`() {
+        val bitmap = mockk<android.graphics.Bitmap>()
+        val weatherData = sampleWeatherData()
+
+        WidgetDataBinder.bindWeatherViews(
+            context,
+            views,
+            weatherData,
+            TemperatureUnit.CELSIUS,
+            renderIcon = { _, _ -> bitmap },
+        )
+
+        verify(exactly = 1) { views.setImageViewBitmap(R.id.weather_icon, bitmap) }
+        verify(exactly = 0) { views.setImageViewResource(R.id.weather_icon, any()) }
+    }
+
+    @Test
+    fun `bindWeatherViews falls back to resource when bitmap rendering fails`() {
+        val weatherData = sampleWeatherData()
+
+        WidgetDataBinder.bindWeatherViews(
+            context,
+            views,
+            weatherData,
+            TemperatureUnit.CELSIUS,
+            renderIcon = { _, _ -> null },
+        )
+
+        verify(exactly = 1) {
+            views.setImageViewResource(R.id.weather_icon, R.drawable.ic_widget_weather_partly_cloudy_day)
+        }
+    }
+
+    @Test
+    fun `bindWeatherUnavailableViews renders icon as bitmap when rendering succeeds`() {
+        val bitmap = mockk<android.graphics.Bitmap>()
+
+        WidgetDataBinder.bindWeatherUnavailableViews(
+            context,
+            views,
+            renderIcon = { _, _ -> bitmap },
+        )
+
+        verify(exactly = 1) { views.setImageViewBitmap(R.id.weather_icon, bitmap) }
+        verify(exactly = 0) { views.setImageViewResource(R.id.weather_icon, any()) }
     }
 
     @Test
@@ -245,6 +294,38 @@ class WidgetDataBinderTest {
         verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Wed") }
         verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, "25°/15°") }
         verify(exactly = 1) { views.setViewVisibility(R.id.forecast_container, View.VISIBLE) }
+    }
+
+    @Test
+    fun `bindWeeklyForecastRows renders row icons as bitmaps when rendering succeeds`() {
+        val today = LocalDate.of(2026, 4, 3)
+        mockkObject(DateFormatter)
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
+        val bitmap = mockk<android.graphics.Bitmap>()
+
+        val weatherData = sampleWeatherData(
+            dailyForecasts = listOf(
+                sampleWeatherData().dailyForecasts.first().copy(date = today),
+                sampleWeatherData().dailyForecasts.first().copy(
+                    date = today.plusDays(1),
+                    weatherCondition = WeatherCondition.CLEAR_DAY,
+                    temperatureMax = 21.0,
+                    temperatureMin = 12.0,
+                ),
+            ),
+        )
+
+        WidgetDataBinder.bindWeeklyForecastRows(
+            context = context,
+            views = views,
+            weatherData = weatherData,
+            temperatureUnit = TemperatureUnit.CELSIUS,
+            today = today,
+            renderIcon = { _, _ -> bitmap },
+        )
+
+        verify(exactly = 1) { views.setImageViewBitmap(R.id.fday1_icon, bitmap) }
+        verify(exactly = 0) { views.setImageViewResource(R.id.fday1_icon, any()) }
     }
 
     @Test

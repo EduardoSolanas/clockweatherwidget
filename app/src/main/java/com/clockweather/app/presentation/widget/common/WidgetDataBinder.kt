@@ -3,8 +3,11 @@ package com.clockweather.app.presentation.widget.common
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.view.View
 import android.widget.RemoteViews
+import androidx.appcompat.content.res.AppCompatResources
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.TemperatureUnit
@@ -65,7 +68,8 @@ object WidgetDataBinder {
         views: RemoteViews,
         weatherData: WeatherData,
         temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
-        iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED
+        iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
+        renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
     ) {
         val current = weatherData.currentWeather
         val location = weatherData.location
@@ -73,9 +77,12 @@ object WidgetDataBinder {
 
         views.setTextViewText(R.id.city_name, resolveWidgetLocationLabel(location, WidgetLocationMaxChars))
         views.setTextViewText(R.id.condition_text, context.getString(current.weatherCondition.labelResId))
-        views.setImageViewResource(
+        setWidgetIcon(
+            views,
             R.id.weather_icon,
-            WeatherIconMapper.getDrawableResId(current.weatherCondition, iconStyle)
+            context,
+            WeatherIconMapper.getDrawableResId(current.weatherCondition, iconStyle),
+            renderIcon,
         )
         views.setTextViewText(
             R.id.current_temp,
@@ -96,12 +103,16 @@ object WidgetDataBinder {
         context: Context,
         views: RemoteViews,
         iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
+        renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
     ) {
         views.setTextViewText(R.id.city_name, context.getString(R.string.widget_weather_unavailable_title))
         views.setTextViewText(R.id.condition_text, context.getString(R.string.widget_weather_unavailable_condition))
-        views.setImageViewResource(
+        setWidgetIcon(
+            views,
             R.id.weather_icon,
-            WeatherIconMapper.getDrawableResId(com.clockweather.app.domain.model.WeatherCondition.PARTLY_CLOUDY_DAY, iconStyle)
+            context,
+            WeatherIconMapper.getDrawableResId(com.clockweather.app.domain.model.WeatherCondition.PARTLY_CLOUDY_DAY, iconStyle),
+            renderIcon,
         )
         views.setTextViewText(R.id.current_temp, context.getString(R.string.widget_weather_unavailable_temp))
         views.setTextViewText(R.id.high_low, "")
@@ -115,6 +126,7 @@ object WidgetDataBinder {
         temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
         today: LocalDate = LocalDate.now(),
         iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
+        renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
     ) {
         data class RowIds(val name: Int, val icon: Int, val high: Int)
         val rows = listOf(
@@ -138,7 +150,7 @@ object WidgetDataBinder {
                 views.setViewVisibility(r.high, View.VISIBLE)
                 val dayLabel = DateFormatter.formatDayName(forecast.date)
                 views.setTextViewText(r.name, dayLabel)
-                views.setImageViewResource(r.icon, WeatherIconMapper.getDrawableResId(forecast.weatherCondition, iconStyle))
+                setWidgetIcon(views, r.icon, context, WeatherIconMapper.getDrawableResId(forecast.weatherCondition, iconStyle), renderIcon)
                 val high = context.getString(tempFormat, forecast.temperatureMax)
                 val low = context.getString(tempFormat, forecast.temperatureMin)
                 views.setTextViewText(r.high, "$high/$low")
@@ -158,6 +170,49 @@ object WidgetDataBinder {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+    }
+}
+
+/**
+ * Sets a widget icon as a [Bitmap] rendered in our own process.
+ *
+ * Home-screen widgets are inflated in the launcher's process. Vector drawables with
+ * inline `aapt:attr` gradients (our weather icons) fail to inflate on some OEM / older
+ * launchers (notably MIUI on Android 10), surfacing as "Can't load widget". Pre-rendering
+ * to a bitmap sidesteps the launcher's vector inflater entirely. If rendering fails we fall
+ * back to [RemoteViews.setImageViewResource] so behaviour is unchanged on capable launchers.
+ */
+internal fun setWidgetIcon(
+    views: RemoteViews,
+    viewId: Int,
+    context: Context,
+    drawableResId: Int,
+    renderIcon: (Context, Int) -> Bitmap?,
+) {
+    val bitmap = renderIcon(context, drawableResId)
+    if (bitmap != null) {
+        views.setImageViewBitmap(viewId, bitmap)
+    } else {
+        views.setImageViewResource(viewId, drawableResId)
+    }
+}
+
+/** Renders a (possibly vector) drawable to a bitmap at its intrinsic size scaled by density. */
+internal fun renderWidgetIconBitmap(context: Context, drawableResId: Int): Bitmap? {
+    return try {
+        val drawable = AppCompatResources.getDrawable(context, drawableResId)?.mutate() ?: return null
+        val density = context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
+        val iw = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
+        val ih = drawable.intrinsicHeight.takeIf { it > 0 } ?: 96
+        val w = (iw * density).toInt().coerceAtLeast(1)
+        val h = (ih * density).toInt().coerceAtLeast(1)
+        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, w, h)
+        drawable.draw(canvas)
+        bitmap
+    } catch (e: Throwable) {
+        null
     }
 }
 
