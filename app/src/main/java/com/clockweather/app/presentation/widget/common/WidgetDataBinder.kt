@@ -12,10 +12,12 @@ import com.clockweather.app.R
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
+import com.clockweather.app.domain.model.currentHourTemperature
 import com.clockweather.app.presentation.detail.WeatherDetailActivity
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 object WidgetDataBinder {
     private const val WidgetLocationMaxChars = 18
@@ -70,10 +72,12 @@ object WidgetDataBinder {
         temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
         iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
         renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
+        referenceDateTime: LocalDateTime = LocalDateTime.now(),
     ) {
         val current = weatherData.currentWeather
         val location = weatherData.location
         val todayForecast = weatherData.dailyForecasts.firstOrNull()
+        val currentHourTemperature = weatherData.currentHourTemperature(referenceDateTime)
 
         views.setTextViewText(R.id.city_name, resolveWidgetLocationLabel(location, WidgetLocationMaxChars))
         views.setTextViewText(R.id.condition_text, context.getString(current.weatherCondition.labelResId))
@@ -86,7 +90,7 @@ object WidgetDataBinder {
         )
         views.setTextViewText(
             R.id.current_temp,
-            TemperatureFormatter.formatWithUnit(current.temperature, temperatureUnit)
+            TemperatureFormatter.formatWithUnit(currentHourTemperature, temperatureUnit)
         )
         todayForecast?.let { forecast ->
             val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit

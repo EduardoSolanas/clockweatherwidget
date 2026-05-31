@@ -42,10 +42,13 @@ import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
+import com.clockweather.app.domain.model.currentHourWeather
+import com.clockweather.app.domain.model.currentHourTemperature
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
 import com.clockweather.app.util.WindSpeedFormatter
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -123,6 +126,20 @@ internal fun forecastDayCompactTextSizes(
     }
     return baseSizes.scaled(forecastDayDensityTextScale(densityDpi))
 }
+
+internal fun currentTemperatureDisplay(
+    weatherData: WeatherData,
+    temperatureUnit: TemperatureUnit,
+    referenceDateTime: LocalDateTime = LocalDateTime.now()
+): String = TemperatureFormatter.formatWithUnit(
+    weatherData.currentHourTemperature(referenceDateTime),
+    temperatureUnit
+)
+
+internal fun currentWeatherForDisplay(
+    weatherData: WeatherData,
+    referenceDateTime: LocalDateTime = LocalDateTime.now()
+) = weatherData.currentHourWeather(referenceDateTime)
 
 // ─── Debug: all conditions in cycle order ─────────────────────────────────────
 private val DEBUG_CONDITIONS = WeatherCondition.entries.toList()
@@ -214,7 +231,7 @@ private fun HeroWeatherCard(
     temperatureUnit: TemperatureUnit,
     selectedDayIndex: Int
 ) {
-    val current = weatherData.currentWeather
+    val current = if (selectedDayIndex == 0) currentWeatherForDisplay(weatherData) else weatherData.currentWeather
     val forecasts = weatherData.dailyForecasts
     val selectedForecast = forecasts.getOrNull(selectedDayIndex)
 
@@ -279,7 +296,7 @@ private fun HeroWeatherCard(
     val windSpeed = if (selectedDayIndex == 0) current.windSpeed.toInt() else selectedForecast?.windSpeedMax?.toInt() ?: 0
     val windDir = if (selectedDayIndex == 0) stringResource(current.windDirection.labelResId) else stringResource(selectedForecast?.windDirectionDominant?.labelResId ?: R.string.wind_n)
     val uv = if (selectedDayIndex == 0) current.uvIndex.toInt() else selectedForecast?.uvIndexMax?.toInt() ?: 0
-    val precipitationDisplay = stringResource(R.string.unit_percent, if (selectedDayIndex == 0) selectedForecast?.precipitationProbability ?: 0 else selectedForecast?.precipitationProbability ?: 0)
+    val precipitationDisplay = stringResource(R.string.unit_percent, if (selectedDayIndex == 0) current.precipitationProbability else selectedForecast?.precipitationProbability ?: 0)
 
     val debugLabel = if (debugIndex >= 0) "🐛 ${displayCondition.name}" else null
 
@@ -813,7 +830,7 @@ private fun SmallMetric(icon: String, value: String) {
 
 @Composable
 private fun MetricsGrid(weatherData: WeatherData, temperatureUnit: TemperatureUnit, speedUnit: SpeedUnit, selectedDayIndex: Int) {
-    val c = weatherData.currentWeather
+    val c = if (selectedDayIndex == 0) currentWeatherForDisplay(weatherData) else weatherData.currentWeather
     val f = weatherData.dailyForecasts.getOrNull(selectedDayIndex)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -993,4 +1010,3 @@ fun WeatherMetricRow(label: String, value: String) {
 @Composable
 fun WindDirectionIndicator(degrees: Float, modifier: Modifier = Modifier) {
 }
-
