@@ -7,7 +7,7 @@ import org.junit.Test
 class WidgetWeatherSectionLayoutTest {
 
     @Test
-    fun `real widget layouts include the shared weather card`() {
+    fun `real widget layouts include the shared top clock weather section`() {
         val layoutFiles = listOf(
             "widget_compact.xml",
             "widget_extended.xml",
@@ -17,10 +17,28 @@ class WidgetWeatherSectionLayoutTest {
         layoutFiles.forEach { layoutFile ->
             val xml = readLayout(layoutFile)
             assertTrue(
-                "$layoutFile should include @layout/widget_weather_card",
-                xml.contains("<include") && xml.contains("layout=\"@layout/widget_weather_card\""),
+                "$layoutFile should include @layout/widget_top_clock_weather",
+                xml.contains("<include") && xml.contains("layout=\"@layout/widget_top_clock_weather\""),
             )
         }
+    }
+
+    @Test
+    fun `shared top clock weather section includes clock date and weather card`() {
+        val xml = readLayout("widget_top_clock_weather.xml")
+
+        assertTrue(
+            "shared top section should include @layout/widget_clock_block",
+            xml.contains("<include") && xml.contains("layout=\"@layout/widget_clock_block\""),
+        )
+        assertTrue(
+            "shared top section should expose widget_date for binders",
+            xml.contains("android:id=\"@+id/widget_date\""),
+        )
+        assertTrue(
+            "shared top section should include @layout/widget_weather_card",
+            xml.contains("<include") && xml.contains("layout=\"@layout/widget_weather_card\""),
+        )
     }
 
     @Test

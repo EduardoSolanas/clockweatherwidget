@@ -10,47 +10,11 @@
     android:orientation="vertical"
     android:padding="10dp">
 
-    <!-- TOP CONTAINER: clock tiles + date + weather (location/temp) -->
-    <LinearLayout
+    <include
+        layout="@layout/widget_top_clock_weather"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="4"
-        android:background="@android:color/transparent"
-        android:clipChildren="false"
-        android:clipToPadding="false"
-        android:orientation="vertical"
-        android:paddingTop="10dp"
-        android:paddingBottom="4dp"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp">
-
-        <!-- CLOCK ROW -->
-        <include layout="@layout/widget_clock_block"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <!-- Date (left-aligned, sits just above the location in the weather card) -->
-        <TextView
-            android:id="@+id/widget_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:layout_marginTop="4dp"
-            android:layout_marginStart="0dp"
-            android:text="Mon, Mar 9"
-            android:textColor="@color/widget_text_primary"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.05" />
-
-        <!-- CURRENT WEATHER ROW (optional, hidden by default) grows to fill -->
-        <include
-            layout="@layout/widget_weather_card"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="4dp" />
-    </LinearLayout>
+        android:layout_weight="4" />
 
     <!-- 5-DAY FORECAST horizontal columns -->
     <LinearLayout
