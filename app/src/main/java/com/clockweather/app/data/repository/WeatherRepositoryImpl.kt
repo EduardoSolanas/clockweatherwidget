@@ -8,10 +8,12 @@ import com.clockweather.app.data.local.dao.HourlyForecastDao
 import com.clockweather.app.data.local.dao.LocationDao
 import com.clockweather.app.data.local.db.WeatherDatabase
 import com.clockweather.app.data.mapper.WeatherEntityMapper
+import com.clockweather.app.data.provider.WeatherDataProvider
 import com.clockweather.app.data.provider.WeatherDataProviderFactory
 import com.clockweather.app.data.provider.WeatherProviderPreferences
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
+import com.clockweather.app.domain.model.WeatherProviderType
 import com.clockweather.app.domain.model.normalizeDailyConditions
 import com.clockweather.app.domain.repository.WeatherRepository
 import androidx.room.withTransaction
@@ -62,26 +64,43 @@ class WeatherRepositoryImpl @Inject constructor(
             val providerType = WeatherProviderPreferences.resolve(
                 dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
             )
-            val provider = providerFactory.get(providerType)
-            val weatherData = try {
+            val weatherData = fetchWithFallback(providerType) { provider, actualProviderType ->
                 provider.fetchWeatherData(
                     location = location,
-                    forecastDays = forecastDays.coerceIn(1, providerType.maxForecastDays)
+                    forecastDays = forecastDays.coerceIn(1, actualProviderType.maxForecastDays)
                 )
-            } catch (error: Exception) {
-                if (providerType == com.clockweather.app.domain.model.WeatherProviderType.OPEN_METEO) {
-                    throw error
-                }
-                providerFactory.get(com.clockweather.app.domain.model.WeatherProviderType.OPEN_METEO)
-                    .fetchWeatherData(
-                        location = location,
-                        forecastDays = forecastDays.coerceIn(
-                            1,
-                            com.clockweather.app.domain.model.WeatherProviderType.OPEN_METEO.maxForecastDays
-                        )
-                    )
             }
             persistWeatherData(weatherData.normalizeDailyConditions(), location.id)
+        }
+    }
+
+    override suspend fun refreshWidgetWeatherData(location: Location) {
+        refreshMutex.withLock {
+            val providerType = WeatherProviderPreferences.resolve(
+                dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
+            )
+            val weatherData = fetchWithFallback(providerType) { provider, _ ->
+                provider.fetchWidgetWeatherData(location)
+            }
+            persistWeatherData(weatherData.normalizeDailyConditions(), location.id)
+        }
+    }
+
+    /**
+     * Tries the selected provider first. If it fails and a different default
+     * provider is configured, falls back to that one — all through the
+     * [WeatherDataProvider] interface, no hardcoded provider types.
+     */
+    private suspend fun fetchWithFallback(
+        providerType: WeatherProviderType,
+        fetch: suspend (WeatherDataProvider, WeatherProviderType) -> WeatherData
+    ): WeatherData {
+        return try {
+            fetch(providerFactory.get(providerType), providerType)
+        } catch (error: Exception) {
+            val fallbackType = WeatherProviderPreferences.defaultProvider()
+            if (fallbackType == providerType) throw error
+            fetch(providerFactory.get(fallbackType), fallbackType)
         }
     }
 

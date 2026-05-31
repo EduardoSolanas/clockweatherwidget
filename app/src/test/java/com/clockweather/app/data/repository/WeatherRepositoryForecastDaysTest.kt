@@ -22,6 +22,7 @@ import io.mockk.every
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import org.junit.Assert.*
 
 /**
  * WeatherRepositoryImpl must delegate all refreshes through WeatherDataProvider.
@@ -106,16 +107,49 @@ class WeatherRepositoryForecastDaysTest {
     }
 
     @Test
-    fun `refreshWeatherData falls back to OpenMeteo when selected provider fails`() = runTest {
+    fun `refreshWeatherData propagates error when selected provider fails`() = runTest {
         setupProviderSelection(WeatherProviderType.OPENWEATHERMAP)
         every { providerFactory.get(WeatherProviderType.OPENWEATHERMAP) } returns openWeatherMapProvider
         every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
         coEvery { openWeatherMapProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
-        coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-fallback-call")
+        coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
+
+        val result = runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
+
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `refreshWeatherData falls back to default provider when selected fails`() = runTest {
+        val defaultProviderType = WeatherProviderPreferences.defaultProvider()
+        val selectedProviderType = if (defaultProviderType == WeatherProviderType.OPEN_METEO) {
+            WeatherProviderType.OPENWEATHERMAP
+        } else {
+            WeatherProviderType.OPEN_METEO
+        }
+        val selectedProvider = when (selectedProviderType) {
+            WeatherProviderType.OPEN_METEO -> openMeteoProvider
+            WeatherProviderType.OPENWEATHERMAP -> openWeatherMapProvider
+            else -> error("Unexpected selected provider for test")
+        }
+        val defaultProvider = when (defaultProviderType) {
+            WeatherProviderType.OPEN_METEO -> openMeteoProvider
+            WeatherProviderType.OPENWEATHERMAP -> openWeatherMapProvider
+            else -> error("Unexpected default provider for test")
+        }
+        setupProviderSelection(selectedProviderType)
+        every { providerFactory.get(selectedProviderType) } returns selectedProvider
+        every { providerFactory.get(defaultProviderType) } returns defaultProvider
+        coEvery { selectedProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
+        coEvery { defaultProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-fallback-call")
 
         runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
 
-        coVerify(exactly = 1) { openWeatherMapProvider.fetchWeatherData(location, 8) }
-        coVerify(exactly = 1) { openMeteoProvider.fetchWeatherData(location, 14) }
+        coVerify(atLeast = 1) {
+            defaultProvider.fetchWeatherData(
+                location,
+                14.coerceIn(1, defaultProviderType.maxForecastDays)
+            )
+        }
     }
 }

@@ -7,6 +7,7 @@ import android.widget.RemoteViews
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.DailyForecast
+import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherCondition
@@ -155,6 +156,28 @@ class WidgetDataBinderTest {
         verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "17°C") }
         verify(exactly = 1) { views.setTextViewText(R.id.high_low, "20°/11°") }
         verify(exactly = 1) { views.setViewVisibility(R.id.weather_card, View.VISIBLE) }
+    }
+
+    @Test
+    fun `bindWeatherViews uses current hour forecast temperature for widget`() {
+        every { context.getString(R.string.unit_celsius, 18.0) } returns "18Â°"
+        val weatherData = sampleWeatherData(
+            hourlyForecasts = listOf(
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 9, 0), 14.0),
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 10, 0), 18.0),
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 11, 0), 19.0),
+            ),
+        )
+
+        WidgetDataBinder.bindWeatherViews(
+            context = context,
+            views = views,
+            weatherData = weatherData,
+            temperatureUnit = TemperatureUnit.CELSIUS,
+            referenceDateTime = LocalDateTime.of(2026, 4, 3, 10, 42),
+        )
+
+        verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "18\u00B0C") }
     }
 
     @Test
@@ -512,6 +535,7 @@ class WidgetDataBinderTest {
     private fun sampleWeatherData(
         locationName: String = "London",
         locationArea: String? = null,
+        hourlyForecasts: List<HourlyForecast> = emptyList(),
         dailyForecasts: List<DailyForecast> = listOf(
             DailyForecast(
                 date = LocalDate.of(2026, 4, 3),
@@ -562,8 +586,25 @@ class WidgetDataBinderTest {
                 cloudCover = 30,
                 lastUpdated = LocalDateTime.of(2026, 4, 3, 10, 15),
             ),
-            hourlyForecasts = emptyList(),
+            hourlyForecasts = hourlyForecasts,
             dailyForecasts = dailyForecasts,
         )
     }
+
+    private fun sampleHourlyForecast(dateTime: LocalDateTime, temperature: Double) = HourlyForecast(
+        dateTime = dateTime,
+        temperature = temperature,
+        feelsLike = temperature,
+        humidity = 60,
+        dewPoint = 9.0,
+        precipitationProbability = 0,
+        weatherCondition = WeatherCondition.PARTLY_CLOUDY_DAY,
+        isDay = true,
+        pressure = 1012.0,
+        windSpeed = 10.0,
+        windDirection = WindDirection.N,
+        windDirectionDegrees = 0,
+        visibility = 10_000.0,
+        uvIndex = 5.0,
+    )
 }

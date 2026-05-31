@@ -5,7 +5,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import androidx.compose.ui.graphics.Color
+import com.clockweather.app.domain.model.CurrentWeather
+import com.clockweather.app.domain.model.HourlyForecast
+import com.clockweather.app.domain.model.Location
+import com.clockweather.app.domain.model.TemperatureUnit
+import com.clockweather.app.domain.model.WeatherCondition
+import com.clockweather.app.domain.model.WeatherData
+import com.clockweather.app.domain.model.WindDirection
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class CurrentWeatherCardTest {
 
@@ -61,4 +69,116 @@ class CurrentWeatherCardTest {
         assertTrue(lowDensity.highSp < highDensity.highSp)
         assertTrue(lowDensity.daySp < highDensity.daySp)
     }
+
+    @Test
+    fun `hero current temperature display uses current hour forecast`() {
+        val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
+        val weatherData = sampleWeatherData(
+            hourlyForecasts = listOf(
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 9, 0), 14.0),
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 10, 0), 18.0),
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 11, 0), 19.0),
+            )
+        )
+
+        assertEquals(
+            "18\u00B0C",
+            currentTemperatureDisplay(weatherData, TemperatureUnit.CELSIUS, reference)
+        )
+    }
+
+    @Test
+    fun `weather page current display uses current hour readings for top card stats`() {
+        val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
+        val weatherData = sampleWeatherData(
+            hourlyForecasts = listOf(
+                sampleHourlyForecast(
+                    dateTime = LocalDateTime.of(2026, 4, 3, 10, 0),
+                    temperature = 18.0,
+                    feelsLike = 17.0,
+                    humidity = 74,
+                    precipitationProbability = 45,
+                    weatherCondition = WeatherCondition.RAIN_SLIGHT,
+                    windSpeed = 22.0,
+                    windDirection = WindDirection.SW,
+                    windDirectionDegrees = 225,
+                    uvIndex = 2.0,
+                ),
+            )
+        )
+
+        val current = currentWeatherForDisplay(weatherData, reference)
+
+        assertEquals(18.0, current.temperature, 0.0)
+        assertEquals(17.0, current.feelsLikeTemperature, 0.0)
+        assertEquals(74, current.humidity)
+        assertEquals(45, current.precipitationProbability)
+        assertEquals(WeatherCondition.RAIN_SLIGHT, current.weatherCondition)
+        assertEquals(22.0, current.windSpeed, 0.0)
+        assertEquals(WindDirection.SW, current.windDirection)
+        assertEquals(225, current.windDirectionDegrees)
+        assertEquals(2.0, current.uvIndex, 0.0)
+    }
+
+    private fun sampleWeatherData(
+        currentTemperature: Double = 17.0,
+        hourlyForecasts: List<HourlyForecast> = emptyList(),
+    ) = WeatherData(
+        location = Location(
+            id = 1L,
+            name = "London",
+            country = "UK",
+            latitude = 51.5072,
+            longitude = -0.1276,
+        ),
+        currentWeather = CurrentWeather(
+            temperature = currentTemperature,
+            feelsLikeTemperature = currentTemperature,
+            humidity = 60,
+            dewPoint = 9.0,
+            precipitation = 0.0,
+            precipitationProbability = 0,
+            weatherCondition = WeatherCondition.PARTLY_CLOUDY_DAY,
+            isDay = true,
+            pressure = 1012.0,
+            windSpeed = 10.0,
+            windDirection = WindDirection.N,
+            windDirectionDegrees = 0,
+            windGusts = 12.0,
+            visibility = 10_000.0,
+            uvIndex = 5.0,
+            cloudCover = 30,
+            lastUpdated = LocalDateTime.of(2026, 4, 3, 10, 15),
+        ),
+        hourlyForecasts = hourlyForecasts,
+        dailyForecasts = emptyList(),
+    )
+
+    private fun sampleHourlyForecast(
+        dateTime: LocalDateTime,
+        temperature: Double,
+        feelsLike: Double = temperature,
+        humidity: Int = 60,
+        precipitationProbability: Int = 0,
+        weatherCondition: WeatherCondition = WeatherCondition.PARTLY_CLOUDY_DAY,
+        windSpeed: Double = 10.0,
+        windDirection: WindDirection = WindDirection.N,
+        windDirectionDegrees: Int = 0,
+        uvIndex: Double = 5.0,
+    ) = HourlyForecast(
+        dateTime = dateTime,
+        temperature = temperature,
+        feelsLike = feelsLike,
+        humidity = humidity,
+        dewPoint = 9.0,
+        precipitationProbability = precipitationProbability,
+        weatherCondition = weatherCondition,
+        isDay = true,
+        pressure = 1012.0,
+        windSpeed = windSpeed,
+        windDirection = windDirection,
+        windDirectionDegrees = windDirectionDegrees,
+        visibility = 10_000.0,
+        uvIndex = uvIndex,
+    )
 }
