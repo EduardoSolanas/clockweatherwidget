@@ -201,15 +201,37 @@ internal fun setWidgetIcon(
     }
 }
 
-/** Renders a (possibly vector) drawable to a bitmap at its intrinsic size scaled by density. */
+/** Largest dimension (px) of a pre-rendered widget icon bitmap. Caps the RemoteViews payload
+ *  so six icons stay well under the launcher's ~1MB transaction budget on high-density devices. */
+internal const val WidgetIconMaxDimensionPx = 192
+
+/**
+ * Target bitmap dimensions for a widget icon, derived from a drawable's intrinsic size.
+ *
+ * [Drawable.getIntrinsicWidth] on a vector is ALREADY density-scaled (dp x screen density),
+ * so multiplying by density again produced multi-megabyte bitmaps (e.g. 726x682 from a 96dp
+ * icon on a 2.75x device). That blew MIUI's RemoteViews transaction budget and surfaced as
+ * "Can't load widget" on high-density Android 10 phones. We use the intrinsic pixel size
+ * directly and cap the largest dimension to [maxDimensionPx], preserving aspect ratio.
+ */
+internal fun widgetIconTargetSize(
+    intrinsicWidth: Int,
+    intrinsicHeight: Int,
+    maxDimensionPx: Int = WidgetIconMaxDimensionPx,
+): Pair<Int, Int> {
+    val w = intrinsicWidth.takeIf { it > 0 } ?: maxDimensionPx
+    val h = intrinsicHeight.takeIf { it > 0 } ?: maxDimensionPx
+    val largest = maxOf(w, h)
+    if (largest <= maxDimensionPx) return w to h
+    val scale = maxDimensionPx.toFloat() / largest
+    return (w * scale).toInt().coerceAtLeast(1) to (h * scale).toInt().coerceAtLeast(1)
+}
+
+/** Renders a (possibly vector) drawable to a bitmap sized by [widgetIconTargetSize]. */
 internal fun renderWidgetIconBitmap(context: Context, drawableResId: Int): Bitmap? {
     return try {
         val drawable = AppCompatResources.getDrawable(context, drawableResId)?.mutate() ?: return null
-        val density = context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
-        val iw = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
-        val ih = drawable.intrinsicHeight.takeIf { it > 0 } ?: 96
-        val w = (iw * density).toInt().coerceAtLeast(1)
-        val h = (ih * density).toInt().coerceAtLeast(1)
+        val (w, h) = widgetIconTargetSize(drawable.intrinsicWidth, drawable.intrinsicHeight)
         val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         drawable.setBounds(0, 0, w, h)
