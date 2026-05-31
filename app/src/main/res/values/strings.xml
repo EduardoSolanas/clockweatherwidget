@@ -226,6 +226,7 @@
     <string name="aq_low">Low</string>
     <string name="aq_high">High</string>
     <string name="aq_very_high">Very High</string>
+    <string name="aq_defra_line">UK Air Quality: %1$s (DEFRA %2$d)</string>
 
     <!-- Units -->
     <string name="unit_celsius">%1$.0f\u00B0</string>

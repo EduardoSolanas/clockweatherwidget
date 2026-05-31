@@ -972,7 +972,7 @@ private fun AirQualityCard(aq: AirQuality) {
             }
             // DEFRA index
             Text(
-                text = "UK Air Quality: ${aq.gbDefraLabel} (DEFRA ${aq.gbDefraIndex})",
+                text = stringResource(R.string.aq_defra_line, stringResource(aq.gbDefraLabelResId), aq.gbDefraIndex),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

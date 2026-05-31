@@ -29,7 +29,5 @@ data class AirQuality(
         else -> R.string.label_unknown
     }
 
-    val usEpaLabel: String get() = usEpaIndex.toString() // Fallback or remove if unused
-    val gbDefraLabel: String get() = gbDefraIndex.toString()
 }
 
