@@ -7,5 +7,6 @@ import kotlinx.coroutines.flow.Flow
 interface WeatherRepository {
     fun getWeatherData(location: Location): Flow<WeatherData?>
     suspend fun refreshWeatherData(location: Location, forecastDays: Int = 7)
+    suspend fun refreshWidgetWeatherData(location: Location)
 }
 

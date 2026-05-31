@@ -222,11 +222,7 @@ abstract class BaseWidgetUpdater(
                 var weather = weatherRepo.getWeatherData(location).first()
                 if (allowWeatherRefresh && shouldRefreshWeather(weather, LocalDate.now(), minimumFutureForecastDaysRequired)) {
                     try {
-                        val forecastDays = requiredForecastDaysForRefresh(
-                            prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_FORECAST_DAYS] ?: 7,
-                            minimumFutureForecastDaysRequired,
-                        )
-                        weatherRepo.refreshWeatherData(location, forecastDays)
+                        weatherRepo.refreshWidgetWeatherData(location)
                         weather = weatherRepo.getWeatherData(location).first()
                     } catch (e: Exception) { }
                 }
@@ -337,6 +333,9 @@ internal fun shouldRefreshWeather(
     minimumFutureForecastDaysRequired: Int = 0,
 ): Boolean {
     if (weather == null) return true
+    val now = java.time.LocalDateTime.now()
+    // Refresh if current weather is older than 30 minutes (prevents stale "average" readings)
+    if (weather.currentWeather.lastUpdated.isBefore(now.minusMinutes(30))) return true
     if (weather.currentWeather.lastUpdated.toLocalDate().isBefore(today)) return true
     if (weather.dailyForecasts.firstOrNull()?.date?.isBefore(today) == true) return true
     val futureDayCount = weather.dailyForecasts.count { it.date.isAfter(today) }

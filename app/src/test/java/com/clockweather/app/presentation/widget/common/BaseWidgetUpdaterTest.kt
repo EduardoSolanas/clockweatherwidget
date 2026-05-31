@@ -198,7 +198,7 @@ class BaseWidgetUpdaterTest {
 
         verify(exactly = 1) { locationRepo.getFallbackLocation() }
         coVerify(exactly = 1) { locationRepo.saveLocation(match { it.name == "London" }) }
-        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(match { it.name == "London" }, 7) }
+        coVerify(exactly = 1) { weatherRepo.refreshWidgetWeatherData(match { it.name == "London" }) }
     }
 
     @Test
@@ -302,7 +302,7 @@ class BaseWidgetUpdaterTest {
 
         updater.updateWidget(widgetId)
 
-        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(location, 7) }
+        coVerify(exactly = 1) { weatherRepo.refreshWidgetWeatherData(location) }
     }
 
     @Test
@@ -332,7 +332,7 @@ class BaseWidgetUpdaterTest {
 
         ForecastLikeWidgetUpdater(mockContext, appWidgetManager, entryPoint).updateWidget(widgetId)
 
-        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(location, 8) }
+        coVerify(exactly = 1) { weatherRepo.refreshWidgetWeatherData(location) }
     }
 
     @Test
@@ -355,7 +355,7 @@ class BaseWidgetUpdaterTest {
 
         updater.updateWidget(widgetId)
 
-        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(location, 7) }
+        coVerify(exactly = 1) { weatherRepo.refreshWidgetWeatherData(location) }
         verify(exactly = 1) {
             anyConstructed<RemoteViews>().setTextViewText(R.id.condition_text, "Updating weather")
         }
@@ -494,7 +494,7 @@ class BaseWidgetUpdaterTest {
 
         updater.updateWidget(widgetId)
 
-        coVerify(exactly = 1) { weatherRepo.refreshWeatherData(savedLocation, 7) }
+        coVerify(exactly = 1) { weatherRepo.refreshWidgetWeatherData(savedLocation) }
         verify(exactly = 2) { weatherRepo.getWeatherData(savedLocation) }
     }
 

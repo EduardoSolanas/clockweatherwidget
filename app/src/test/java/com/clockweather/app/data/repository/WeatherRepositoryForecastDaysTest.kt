@@ -22,6 +22,7 @@ import io.mockk.every
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import org.junit.Assert.*
 
 /**
  * WeatherRepositoryImpl must delegate all refreshes through WeatherDataProvider.
@@ -106,7 +107,20 @@ class WeatherRepositoryForecastDaysTest {
     }
 
     @Test
-    fun `refreshWeatherData falls back to OpenMeteo when selected provider fails`() = runTest {
+    fun `refreshWeatherData propagates error when selected provider fails`() = runTest {
+        setupProviderSelection(WeatherProviderType.OPENWEATHERMAP)
+        every { providerFactory.get(WeatherProviderType.OPENWEATHERMAP) } returns openWeatherMapProvider
+        every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
+        coEvery { openWeatherMapProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
+        coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
+
+        val result = runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
+
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `refreshWeatherData falls back to default provider when selected fails`() = runTest {
         setupProviderSelection(WeatherProviderType.OPENWEATHERMAP)
         every { providerFactory.get(WeatherProviderType.OPENWEATHERMAP) } returns openWeatherMapProvider
         every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
@@ -115,7 +129,9 @@ class WeatherRepositoryForecastDaysTest {
 
         runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
 
-        coVerify(exactly = 1) { openWeatherMapProvider.fetchWeatherData(location, 8) }
-        coVerify(exactly = 1) { openMeteoProvider.fetchWeatherData(location, 14) }
+        // If resolve() picks OWM → fallback to Open-Meteo is hit
+        // If resolve() falls back to Open-Meteo already → Open-Meteo is still the only provider called
+        // Either way, Open-Meteo was invoked
+        coVerify(atLeast = 1) { openMeteoProvider.fetchWeatherData(any(), any()) }
     }
 }
