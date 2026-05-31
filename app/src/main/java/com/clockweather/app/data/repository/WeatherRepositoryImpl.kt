@@ -64,10 +64,10 @@ class WeatherRepositoryImpl @Inject constructor(
             val providerType = WeatherProviderPreferences.resolve(
                 dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
             )
-            val weatherData = fetchWithFallback(providerType) { provider ->
+            val weatherData = fetchWithFallback(providerType) { provider, actualProviderType ->
                 provider.fetchWeatherData(
                     location = location,
-                    forecastDays = forecastDays.coerceIn(1, providerType.maxForecastDays)
+                    forecastDays = forecastDays.coerceIn(1, actualProviderType.maxForecastDays)
                 )
             }
             persistWeatherData(weatherData.normalizeDailyConditions(), location.id)
@@ -79,7 +79,7 @@ class WeatherRepositoryImpl @Inject constructor(
             val providerType = WeatherProviderPreferences.resolve(
                 dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
             )
-            val weatherData = fetchWithFallback(providerType) { provider ->
+            val weatherData = fetchWithFallback(providerType) { provider, _ ->
                 provider.fetchWidgetWeatherData(location)
             }
             persistWeatherData(weatherData.normalizeDailyConditions(), location.id)
@@ -93,14 +93,14 @@ class WeatherRepositoryImpl @Inject constructor(
      */
     private suspend fun fetchWithFallback(
         providerType: WeatherProviderType,
-        fetch: suspend (WeatherDataProvider) -> WeatherData
+        fetch: suspend (WeatherDataProvider, WeatherProviderType) -> WeatherData
     ): WeatherData {
         return try {
-            fetch(providerFactory.get(providerType))
+            fetch(providerFactory.get(providerType), providerType)
         } catch (error: Exception) {
             val fallbackType = WeatherProviderPreferences.defaultProvider()
             if (fallbackType == providerType) throw error
-            fetch(providerFactory.get(fallbackType))
+            fetch(providerFactory.get(fallbackType), fallbackType)
         }
     }
 

@@ -121,17 +121,35 @@ class WeatherRepositoryForecastDaysTest {
 
     @Test
     fun `refreshWeatherData falls back to default provider when selected fails`() = runTest {
-        setupProviderSelection(WeatherProviderType.OPENWEATHERMAP)
-        every { providerFactory.get(WeatherProviderType.OPENWEATHERMAP) } returns openWeatherMapProvider
-        every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
-        coEvery { openWeatherMapProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
-        coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-fallback-call")
+        val defaultProviderType = WeatherProviderPreferences.defaultProvider()
+        val selectedProviderType = if (defaultProviderType == WeatherProviderType.OPEN_METEO) {
+            WeatherProviderType.OPENWEATHERMAP
+        } else {
+            WeatherProviderType.OPEN_METEO
+        }
+        val selectedProvider = when (selectedProviderType) {
+            WeatherProviderType.OPEN_METEO -> openMeteoProvider
+            WeatherProviderType.OPENWEATHERMAP -> openWeatherMapProvider
+            else -> error("Unexpected selected provider for test")
+        }
+        val defaultProvider = when (defaultProviderType) {
+            WeatherProviderType.OPEN_METEO -> openMeteoProvider
+            WeatherProviderType.OPENWEATHERMAP -> openWeatherMapProvider
+            else -> error("Unexpected default provider for test")
+        }
+        setupProviderSelection(selectedProviderType)
+        every { providerFactory.get(selectedProviderType) } returns selectedProvider
+        every { providerFactory.get(defaultProviderType) } returns defaultProvider
+        coEvery { selectedProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
+        coEvery { defaultProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-fallback-call")
 
         runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
 
-        // If resolve() picks OWM → fallback to Open-Meteo is hit
-        // If resolve() falls back to Open-Meteo already → Open-Meteo is still the only provider called
-        // Either way, Open-Meteo was invoked
-        coVerify(atLeast = 1) { openMeteoProvider.fetchWeatherData(any(), any()) }
+        coVerify(atLeast = 1) {
+            defaultProvider.fetchWeatherData(
+                location,
+                14.coerceIn(1, defaultProviderType.maxForecastDays)
+            )
+        }
     }
 }
