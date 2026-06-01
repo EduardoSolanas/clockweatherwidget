@@ -16,9 +16,6 @@
          background weather fetches are not deferred excessively. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-    <!-- Background work -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
     <application
         android:name=".ClockWeatherApplication"
         android:allowBackup="true"

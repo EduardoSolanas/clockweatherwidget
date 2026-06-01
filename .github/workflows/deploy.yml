@@ -31,7 +31,6 @@ jobs:
       - name: Run Lint
         run: ./gradlew lintRelease
         env:
-          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
           OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
 
@@ -65,7 +64,6 @@ jobs:
       - name: Run Unit Tests
         run: ./gradlew :app:testReleaseUnitTest
         env:
-          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
           OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
 
@@ -118,7 +116,6 @@ jobs:
       - name: Build Release Bundle
         run: ./gradlew bundleRelease
         env:
-          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
           OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
           GITHUB_RUN_NUMBER: ${{ github.run_number }}

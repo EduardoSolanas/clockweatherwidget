@@ -159,6 +159,29 @@ class WidgetDataBinderTest {
     }
 
     @Test
+    fun `bindWeatherViews uses weather snapshot day for high low temperatures`() {
+        val weatherData = sampleWeatherData(
+            dailyForecasts = listOf(
+                sampleWeatherData().dailyForecasts.first().copy(
+                    date = LocalDate.of(2026, 4, 2),
+                    temperatureMax = 25.0,
+                    temperatureMin = 15.0,
+                ),
+                sampleWeatherData().dailyForecasts.first().copy(
+                    date = LocalDate.of(2026, 4, 3),
+                    temperatureMax = 20.0,
+                    temperatureMin = 11.0,
+                ),
+            ),
+        )
+
+        WidgetDataBinder.bindWeatherViews(context, views, weatherData, TemperatureUnit.CELSIUS)
+
+        verify(exactly = 1) { views.setTextViewText(R.id.high_low, "20°/11°") }
+        verify(exactly = 0) { views.setTextViewText(R.id.high_low, "25°/15°") }
+    }
+
+    @Test
     fun `bindWeatherViews uses current hour forecast temperature for widget`() {
         every { context.getString(R.string.unit_celsius, 18.0) } returns "18Â°"
         val weatherData = sampleWeatherData(

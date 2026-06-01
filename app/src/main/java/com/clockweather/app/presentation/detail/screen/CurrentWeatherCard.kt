@@ -994,19 +994,3 @@ private fun AqMetric(label: String, value: String, modifier: Modifier = Modifier
         Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
     }
 }
-
-// Keep for backward compat
-@Composable
-fun WeatherMetricRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Composable
-fun WindDirectionIndicator(degrees: Float, modifier: Modifier = Modifier) {
-}

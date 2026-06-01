@@ -31,8 +31,6 @@ class WidgetConfigActivity : AppCompatActivity() {
             return
         }
 
-        viewModel.setWidgetId(appWidgetId)
-
         setContent {
             WidgetConfigScreen(
                 viewModel = viewModel,

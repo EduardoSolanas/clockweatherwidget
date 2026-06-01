@@ -8,12 +8,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
-/**
- * TDD: RefreshWeatherUseCase must forward the forecastDays parameter to the repository.
- *
- * RED → these tests fail until RefreshWeatherUseCase.invoke accepts forecastDays
- *       and WeatherRepository.refreshWeatherData accepts forecastDays.
- */
 class RefreshWeatherUseCaseTest {
 
     private val repository: WeatherRepository = mockk()

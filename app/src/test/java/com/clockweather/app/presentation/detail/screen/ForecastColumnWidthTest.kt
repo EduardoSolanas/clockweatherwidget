@@ -3,18 +3,6 @@ package com.clockweather.app.presentation.detail.screen
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/**
- * TDD: The scrollable 14-day forecast row must use exactly the same
- * column width as the 7-day grid so the appearance is consistent.
- *
- * The 7-day grid distributes available width equally:
- *   columnWidth = (availableWidth - spacing * (itemsVisible - 1)) / itemsVisible
- *
- * The 14-day scrollable row must use the same formula for its fixed
- * per-column width so columns look identical when toggling the setting.
- *
- * RED → fails until forecastColumnWidth() is extracted from SevenDayForecastCard.
- */
 class ForecastColumnWidthTest {
 
     @Test

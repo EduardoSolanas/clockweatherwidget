@@ -62,6 +62,5 @@ class WeatherDetailActivity : AppCompatActivity() {
     companion object {
         private const val FIRST_INSTALL_PREFS = "first_install_prefs"
         private const val KEY_FIRST_INSTALL_DIALOG_SHOWN = "first_install_dialog_shown"
-        const val EXTRA_WIDGET_ID = "extra_widget_id"
     }
 }

@@ -6,7 +6,6 @@ import com.clockweather.app.data.remote.api.NominatimReverseGeocodingApi
 import com.clockweather.app.data.remote.api.OpenMeteoGeocodingApi
 import com.clockweather.app.data.remote.api.OpenMeteoWeatherApi
 import com.clockweather.app.data.remote.api.OpenWeatherMapApi
-import com.clockweather.app.data.remote.api.WeatherApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -81,16 +80,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    @Named("weatherapi")
-    fun provideWeatherApiRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit =
-        Retrofit.Builder()
-            .baseUrl(WeatherApi.BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-
-    @Provides
-    @Singleton
     @Named("openweathermap")
     fun provideOpenWeatherMapRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit =
         Retrofit.Builder()
@@ -113,16 +102,6 @@ object NetworkModule {
     @Singleton
     fun provideReverseGeocodingApi(@Named("reverseGeocoding") retrofit: Retrofit): NominatimReverseGeocodingApi =
         retrofit.create(NominatimReverseGeocodingApi::class.java)
-
-    @Provides
-    @Singleton
-    fun provideWeatherApi(@Named("weatherapi") retrofit: Retrofit): WeatherApi =
-        retrofit.create(WeatherApi::class.java)
-
-    @Provides
-    @Singleton
-    @Named("weatherApiKey")
-    fun provideWeatherApiKey(): String = BuildConfig.WEATHER_API_KEY
 
     @Provides
     @Singleton
@@ -154,4 +133,3 @@ object NetworkModule {
     @Named("openWeatherMapApiKey")
     fun provideOpenWeatherMapApiKey(): String = BuildConfig.OPENWEATHERMAP_API_KEY
 }
-
