@@ -5,7 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
+import com.clockweather.app.presentation.settings.SettingsViewModel
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
@@ -42,8 +42,7 @@ class WeatherUpdateSchedulerOnCreateTest {
 
     @Test
     fun `ensureScheduled uses stored interval from preferences`() = runTest {
-        val key = intPreferencesKey("update_interval_minutes")
-        dataStore.edit { it[key] = 45 }
+        dataStore.edit { it[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL] = 45 }
 
         WeatherUpdateScheduler.ensureScheduled(context, dataStore)
 

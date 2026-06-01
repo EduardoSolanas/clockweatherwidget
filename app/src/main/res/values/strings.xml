@@ -109,22 +109,6 @@
     <string name="label_metric_cloud_cover">☁️ Cloud Cover</string>
     <string name="label_metric_wind_gusts">💨 Wind Gusts</string>
 
-    <!-- DailyForecastDetailList -->
-    <string name="label_7_day_forecast_title">7-Day Forecast</string>
-    <string name="label_metric_wind_max">Wind max</string>
-    <string name="label_metric_uv_index_max">UV Index max</string>
-    <string name="label_metric_feels_like">Feels like</string>
-    <string name="label_metric_daylight">Daylight</string>
-
-    <!-- HourlyForecastList -->
-    <string name="label_72_hour_forecast">72-Hour Forecast</string>
-    <string name="label_metric_humidity_short">Humidity: %d%%</string>
-    <string name="label_metric_dew_short">Dew: %s°</string>
-    <string name="label_metric_uv_short">UV: %d</string>
-    <string name="label_metric_pressure_short">P: %d hPa</string>
-    <string name="label_precip_percent">💧 %d%%</string>
-    <string name="label_wind_speed_kmh">💨 %1$d km/h %2$s</string>
-
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings_temperature_unit">Temperature unit</string>
@@ -198,7 +182,6 @@
     <!-- Weather Providers -->
     <string name="weather_provider_open_meteo">Open-Meteo</string>
     <string name="weather_provider_google">Google Weather</string>
-    <string name="weather_provider_weather_api">WeatherAPI.com</string>
     <string name="weather_provider_openweathermap">OpenWeatherMap</string>
 
     <!-- Widget Config -->

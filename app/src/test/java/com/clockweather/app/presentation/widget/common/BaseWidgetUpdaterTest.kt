@@ -13,7 +13,6 @@ import android.widget.RemoteViews
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.preferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.clockweather.app.R
@@ -64,7 +63,6 @@ class BaseWidgetUpdaterTest {
         stringPreferencesKey("temperature_unit") to "CELSIUS",
         stringPreferencesKey("clock_theme") to "dark",
         stringPreferencesKey("clock_tile_size") to "MEDIUM",
-        floatPreferencesKey("date_font_size_sp") to 15f,
     )
 
     private class TestWidgetUpdater(
@@ -449,16 +447,9 @@ class BaseWidgetUpdaterTest {
 
     @Test
     fun `computeFlipTileHeightPx scales with font and widget settings`() {
-        // base=252px (96dp * 2.625), fontScale=1.3, widgetTextScale=1.15
-        // 252 * 1.3 * 1.15 = 376.74
-        assertEquals(376.74f, computeFlipTileHeightPx(252f, 1.3f, 1.15f), 0.01f)
-    }
-
-    @Test
-    fun `legacy date font size is converted to bounded widget text scale`() {
-        assertEquals(1f, widgetTextScaleFromLegacyDateSize(null), 0.01f)
-        assertEquals(0.8f, widgetTextScaleFromLegacyDateSize(12f), 0.01f)
-        assertEquals(1.15f, widgetTextScaleFromLegacyDateSize(22f), 0.01f)
+        // base=252px (96dp * 2.625), fontScale=1.3, widgetTextScale=1.05
+        // 252 * 1.3 * 1.05 = 343.98
+        assertEquals(343.98f, computeFlipTileHeightPx(252f, 1.3f, 1.05f), 0.01f)
     }
 
     @Test

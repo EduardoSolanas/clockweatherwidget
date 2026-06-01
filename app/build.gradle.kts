@@ -8,13 +8,6 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
-// Load local.properties or Env
-val weatherApiKey: String = System.getenv("WEATHER_API_KEY")
-    ?: Properties().also { props ->
-        val f = rootProject.file("local.properties")
-        if (f.exists()) props.load(f.inputStream())
-    }.getProperty("WEATHER_API_KEY", "")
-
 val googleWeatherApiKey: String = System.getenv("GOOGLE_WEATHER_API_KEY")
     ?: Properties().also { props ->
         val f = rootProject.file("local.properties")
@@ -50,7 +43,6 @@ android {
         versionName = "$vMajor.$vMinor.$vPatch"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "WEATHER_API_KEY", "\"$weatherApiKey\"")
         buildConfigField("String", "GOOGLE_WEATHER_API_KEY", "\"$googleWeatherApiKey\"")
         buildConfigField("String", "OPENWEATHERMAP_API_KEY", "\"$openWeatherMapApiKey\"")
         buildConfigField("String", "DEFAULT_WEATHER_PROVIDER", "\"$defaultWeatherProvider\"")

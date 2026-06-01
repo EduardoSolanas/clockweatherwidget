@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Geocoder
 import android.util.Log
+import com.clockweather.app.BuildConfig
 import com.clockweather.app.R
 import com.clockweather.app.data.local.dao.LocationDao
 import com.clockweather.app.data.mapper.WeatherDtoMapper
@@ -38,6 +39,12 @@ class LocationRepositoryImpl @Inject constructor(
         private const val GEO_DEBUG_TAG = "CW_GeoDebug"
     }
 
+    private inline fun logGeoDebug(message: () -> String) {
+        if (BuildConfig.DEBUG) {
+            Log.d(GEO_DEBUG_TAG, message())
+        }
+    }
+
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
     override fun getSavedLocations(): Flow<List<Location>> =
@@ -57,15 +64,14 @@ class LocationRepositoryImpl @Inject constructor(
     @SuppressLint("MissingPermission")
     override suspend fun getCurrentLocation(): Location? {
         return try {
-            Log.d(GEO_DEBUG_TAG, "getCurrentLocation() invoked")
+            logGeoDebug { "getCurrentLocation() invoked" }
 
             val lastKnown = fusedLocationClient.lastLocation.await()
             if (lastKnown != null && (System.currentTimeMillis() - lastKnown.time) < 15 * 60 * 1000) {
-                Log.d(
-                    GEO_DEBUG_TAG,
+                logGeoDebug {
                     "lastLocation=lat=${lastKnown.latitude}, lon=${lastKnown.longitude}, ageMs=${System.currentTimeMillis() - lastKnown.time}, accuracy=${lastKnown.accuracy}, provider=${lastKnown.provider}"
-                )
-                Log.d(GEO_DEBUG_TAG, "Using recent lastLocation")
+                }
+                logGeoDebug { "Using recent lastLocation" }
                 return mapToLocation(lastKnown)
             }
 
@@ -77,10 +83,9 @@ class LocationRepositoryImpl @Inject constructor(
                 ).await()
             }
 
-            Log.d(
-                GEO_DEBUG_TAG,
+            logGeoDebug {
                 "balancedPower result=${androidLocation?.let { "lat=${it.latitude}, lon=${it.longitude}, accuracy=${it.accuracy}, provider=${it.provider}" } ?: "null"}"
-            )
+            }
 
             if (androidLocation == null) {
                 androidLocation = withTimeoutOrNull(5_000L) {
@@ -90,16 +95,15 @@ class LocationRepositoryImpl @Inject constructor(
                     ).await()
                 }
 
-                Log.d(
-                    GEO_DEBUG_TAG,
+                logGeoDebug {
                     "highAccuracy result=${androidLocation?.let { "lat=${it.latitude}, lon=${it.longitude}, accuracy=${it.accuracy}, provider=${it.provider}" } ?: "null"}"
-                )
+                }
             }
 
             if (androidLocation != null) {
                 mapToLocation(androidLocation)
             } else {
-                Log.d(GEO_DEBUG_TAG, "No Android location fix; using saved location or fallback")
+                logGeoDebug { "No Android location fix; using saved location or fallback" }
                 locationDao.getCurrentLocation()?.let { entityMapper.mapLocationToDomain(it) }
                     ?: getFallbackLocation()
             }
@@ -111,28 +115,27 @@ class LocationRepositoryImpl @Inject constructor(
     }
 
     private suspend fun mapToLocation(androidLocation: android.location.Location): Location {
-        Log.d(
-            GEO_DEBUG_TAG,
+        logGeoDebug {
             "mapToLocation lat=${androidLocation.latitude}, lon=${androidLocation.longitude}, provider=${androidLocation.provider}, accuracy=${androidLocation.accuracy}"
-        )
+        }
 
         val androidReverse = reverseGeocode(androidLocation.latitude, androidLocation.longitude)
         if (androidReverse?.isSpecificName == true) {
-            Log.d(GEO_DEBUG_TAG, "Using Android Geocoder result name='${androidReverse.name}', country='${androidReverse.country}'")
+            logGeoDebug { "Using Android Geocoder result name='${androidReverse.name}', country='${androidReverse.country}'" }
             return androidReverse.toLocation(androidLocation)
         }
 
         if (androidReverse != null) {
-            Log.d(GEO_DEBUG_TAG, "Android Geocoder result deemed broad: '${androidReverse.name}' -> trying reverse geocode fallback")
+            logGeoDebug { "Android Geocoder result deemed broad: '${androidReverse.name}' -> trying reverse geocode fallback" }
         }
 
         reverseGeocodeOnline(androidLocation.latitude, androidLocation.longitude)?.let { reverse ->
-            Log.d(GEO_DEBUG_TAG, "Using reverse geocode fallback name='${reverse.name}', country='${reverse.country}'")
+            logGeoDebug { "Using reverse geocode fallback name='${reverse.name}', country='${reverse.country}'" }
             return reverse.toLocation(androidLocation)
         }
 
         androidReverse?.let {
-            Log.d(GEO_DEBUG_TAG, "Falling back to broad Android Geocoder result='${it.name}'")
+            logGeoDebug { "Falling back to broad Android Geocoder result='${it.name}'" }
             return it.toLocation(androidLocation)
         }
 
@@ -163,10 +166,9 @@ class LocationRepositoryImpl @Inject constructor(
             val country = address.countryCode?.takeIf { it.isNotBlank() }
                 ?: address.countryName.orEmpty()
 
-            Log.d(
-                GEO_DEBUG_TAG,
+            logGeoDebug {
                 "Android Geocoder raw lat=$latitude, lon=$longitude, feature='${address.featureName}', locality='${address.locality}', subLocality='${address.subLocality}', subAdmin='${address.subAdminArea}', admin='${address.adminArea}', thoroughfare='${address.thoroughfare}', subThoroughfare='${address.subThoroughfare}', postalCode='${address.postalCode}', countryCode='${address.countryCode}', countryName='${address.countryName}', addressLine0='${address.getAddressLine(0)}', resolved='${resolvedName}'"
-            )
+            }
 
             ReverseGeocodeResult(
                 name = resolvedName.value,
@@ -198,10 +200,9 @@ class LocationRepositoryImpl @Inject constructor(
             val country = address.countryCode?.uppercase(Locale.ROOT)?.takeIf { it.isNotBlank() }
                 ?: address.country.orEmpty()
 
-            Log.d(
-                GEO_DEBUG_TAG,
+            logGeoDebug {
                 "Reverse geocode fallback lat=$latitude, lon=$longitude, cityDistrict='${address.cityDistrict}', suburb='${address.suburb}', neighbourhood='${address.neighbourhood}', city='${address.city}', county='${address.county}', state='${address.state}', resolved='${resolvedName}'"
-            )
+            }
 
             ReverseGeocodeResult(
                 name = resolvedName.value,
@@ -224,7 +225,7 @@ class LocationRepositoryImpl @Inject constructor(
             longitude = -0.1278,
             isCurrentLocation = true
         ).also {
-            Log.d(GEO_DEBUG_TAG, "Falling back to generic label='${it.name}'")
+            logGeoDebug { "Falling back to generic label='${it.name}'" }
         }
     }
 

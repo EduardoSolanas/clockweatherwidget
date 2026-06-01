@@ -179,38 +179,5 @@ enum class WeatherCondition(
             else -> if (isDay) MAINLY_CLEAR_DAY else MAINLY_CLEAR_NIGHT
         }
 
-        /** Map WeatherAPI.com condition codes → domain WeatherCondition */
-        fun fromWeatherApiCode(code: Int, isDay: Boolean = true): WeatherCondition = when (code) {
-            1000 -> if (isDay) CLEAR_DAY else CLEAR_NIGHT
-            1003 -> if (isDay) PARTLY_CLOUDY_DAY else PARTLY_CLOUDY_NIGHT
-            1006 -> OVERCAST
-            1009 -> OVERCAST
-            1030, 1135 -> FOG
-            1147 -> DEPOSITING_RIME_FOG
-            1063, 1180, 1183 -> RAIN_SLIGHT
-            1186, 1189 -> RAIN_MODERATE
-            1192, 1195 -> RAIN_HEAVY
-            1072, 1168 -> FREEZING_DRIZZLE_LIGHT
-            1171 -> FREEZING_DRIZZLE_HEAVY
-            1150, 1153 -> DRIZZLE_LIGHT
-            1159 -> DRIZZLE_MODERATE
-            1162 -> DRIZZLE_DENSE
-            1198 -> FREEZING_RAIN_LIGHT
-            1201 -> FREEZING_RAIN_HEAVY
-            1066, 1210, 1213 -> SNOW_SLIGHT
-            1216, 1219 -> SNOW_MODERATE
-            1222, 1225 -> SNOW_HEAVY
-            1069, 1204, 1207 -> SNOW_GRAINS
-            1114, 1117 -> SNOW_HEAVY
-            1240 -> RAIN_SHOWER_SLIGHT
-            1243 -> RAIN_SHOWER_MODERATE
-            1246 -> RAIN_SHOWER_VIOLENT
-            1255 -> SNOW_SHOWER_SLIGHT
-            1258 -> SNOW_SHOWER_HEAVY
-            1087, 1273, 1276 -> THUNDERSTORM
-            1279, 1282 -> THUNDERSTORM_HEAVY_HAIL
-            else -> if (isDay) MAINLY_CLEAR_DAY else MAINLY_CLEAR_NIGHT
-        }
     }
 }
-

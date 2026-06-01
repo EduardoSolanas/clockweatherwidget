@@ -180,8 +180,8 @@ fun SettingsScreen(
                     Slider(
                         value         = widgetTextScale,
                         onValueChange = { viewModel.setWidgetTextScale(it) },
-                        valueRange    = 0.75f..1.15f,
-                        steps         = 7,
+                        valueRange    = 1f..SettingsViewModel.MAX_WIDGET_TEXT_SCALE,
+                        steps         = 0,
                         modifier      = Modifier.weight(1f)
                     )
                 }

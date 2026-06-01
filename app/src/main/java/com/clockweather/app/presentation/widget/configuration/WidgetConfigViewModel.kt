@@ -20,8 +20,6 @@ class WidgetConfigViewModel @Inject constructor(
     private val getCurrentLocationUseCase: GetCurrentLocationUseCase
 ) : ViewModel() {
 
-    private var widgetId: Int = -1
-
     private val _searchResults = MutableStateFlow<UiState<List<Location>>>(UiState.Success(emptyList()))
     val searchResults: StateFlow<UiState<List<Location>>> = _searchResults.asStateFlow()
 
@@ -33,8 +31,6 @@ class WidgetConfigViewModel @Inject constructor(
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-
-    fun setWidgetId(id: Int) { widgetId = id }
 
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query

@@ -27,6 +27,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import android.content.Context
+import android.util.Log
 import com.clockweather.app.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -148,7 +149,7 @@ class WeatherDetailViewModel @Inject constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    // Network failed — continue with cache
+                    Log.w(TAG, "Initial weather refresh failed; continuing with cache", e)
                 }
 
                 getWeatherDataUseCase(location)
@@ -215,8 +216,10 @@ class WeatherDetailViewModel @Inject constructor(
                 } else {
                     refreshWeatherAndWidgets(resolvedLocation, forecastDays.value)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                // ignore
+                Log.w(TAG, "Manual weather refresh failed", e)
             } finally {
                 _isRefreshing.value = false
             }
@@ -233,6 +236,7 @@ class WeatherDetailViewModel @Inject constructor(
     }
 
     companion object {
+        private const val TAG = "WeatherDetailViewModel"
         const val REFRESH_THROTTLE_MS = 5 * 60 * 1000L
     }
 }

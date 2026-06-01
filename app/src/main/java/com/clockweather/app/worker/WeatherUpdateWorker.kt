@@ -1,6 +1,7 @@
 package com.clockweather.app.worker
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.hilt.work.HiltWorker
@@ -38,11 +39,13 @@ class WeatherUpdateWorker @AssistedInject constructor(
             
             Result.success()
         } catch (e: Exception) {
+            Log.w(TAG, "Background weather update failed", e)
             if (runAttemptCount < 3) Result.retry() else Result.failure()
         }
     }
 
     companion object {
+        private const val TAG = "WeatherUpdateWorker"
         const val WORK_NAME = "weather_update_work"
     }
 }

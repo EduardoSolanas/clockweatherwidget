@@ -12,8 +12,7 @@ class SettingsScreenProviderRowsTest {
             listOf(
                 WeatherProviderType.OPENWEATHERMAP,
                 WeatherProviderType.OPEN_METEO,
-                WeatherProviderType.GOOGLE,
-                WeatherProviderType.WEATHER_API
+                WeatherProviderType.GOOGLE
             ),
             maxItemsPerRow = 2
         )
@@ -21,7 +20,7 @@ class SettingsScreenProviderRowsTest {
         assertEquals(
             listOf(
                 listOf(WeatherProviderType.OPENWEATHERMAP, WeatherProviderType.OPEN_METEO),
-                listOf(WeatherProviderType.GOOGLE, WeatherProviderType.WEATHER_API)
+                listOf(WeatherProviderType.GOOGLE)
             ),
             rows
         )

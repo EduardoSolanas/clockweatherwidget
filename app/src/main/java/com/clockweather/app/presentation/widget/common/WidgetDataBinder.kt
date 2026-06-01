@@ -76,7 +76,9 @@ object WidgetDataBinder {
     ) {
         val current = weatherData.currentWeather
         val location = weatherData.location
-        val todayForecast = weatherData.dailyForecasts.firstOrNull()
+        val forecastAnchorDate = current.lastUpdated.toLocalDate()
+        val todayForecast = weatherData.dailyForecasts.firstOrNull { it.date == forecastAnchorDate }
+            ?: weatherData.dailyForecasts.firstOrNull()
         val currentHourTemperature = weatherData.currentHourTemperature(referenceDateTime)
 
         views.setTextViewText(R.id.city_name, resolveWidgetLocationLabel(location, WidgetLocationMaxChars))
@@ -166,7 +168,6 @@ object WidgetDataBinder {
     fun buildDetailPendingIntent(context: Context, appWidgetId: Int): PendingIntent {
         val intent = Intent(context, WeatherDetailActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra(WeatherDetailActivity.EXTRA_WIDGET_ID, appWidgetId)
         }
         return PendingIntent.getActivity(
             context,

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import com.clockweather.app.util.dataStore
-import androidx.datastore.preferences.core.intPreferencesKey
+import com.clockweather.app.presentation.settings.SettingsViewModel
 
 class BootCompletedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -24,8 +24,11 @@ class BootCompletedReceiver : BroadcastReceiver() {
                     withTimeout(15_000) {
                         // Read stored interval pref so the worker respects the user's setting.
                         val intervalMinutes = try {
-                            context.dataStore.data.first()[intPreferencesKey("update_interval_minutes")] ?: 30
-                        } catch (_: Exception) { 30 }
+                            context.dataStore.data.first()[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]
+                                ?: SettingsViewModel.DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES
+                        } catch (_: Exception) {
+                            SettingsViewModel.DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES
+                        }
                         WeatherUpdateScheduler.schedule(context, intervalMinutes)
                     }
                 } finally {

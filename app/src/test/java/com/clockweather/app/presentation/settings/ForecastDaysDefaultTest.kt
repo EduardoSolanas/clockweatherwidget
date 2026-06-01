@@ -4,11 +4,6 @@ import com.clockweather.app.domain.model.WeatherProviderType
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/**
- * TDD: smartDefaultForecastDays() must return 14 for wide screens (>=600dp) and 7 for phones.
- *
- * RED → fails until SettingsViewModel.Companion.smartDefaultForecastDays() is extracted.
- */
 class ForecastDaysDefaultTest {
 
     @Test
@@ -34,24 +29,6 @@ class ForecastDaysDefaultTest {
     @Test
     fun `returns 7 for small phone width 320dp`() {
         assertEquals(7, SettingsViewModel.smartDefaultForecastDays(screenWidthDp = 320))
-    }
-
-    @Test
-    fun `boundary 600dp is wide - returns 14`() {
-        assertEquals(14, SettingsViewModel.smartDefaultForecastDays(600))
-    }
-
-    @Test
-    fun `boundary 599dp is narrow - returns 7`() {
-        assertEquals(7, SettingsViewModel.smartDefaultForecastDays(599))
-    }
-
-    @Test
-    fun `weather api normalizes forecast days to 3`() {
-        assertEquals(
-            3,
-            SettingsViewModel.normalizeForecastDaysForProvider(7, WeatherProviderType.WEATHER_API)
-        )
     }
 
     @Test

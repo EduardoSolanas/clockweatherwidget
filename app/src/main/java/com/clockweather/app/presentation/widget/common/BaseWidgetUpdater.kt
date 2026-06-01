@@ -67,11 +67,10 @@ abstract class BaseWidgetUpdater(
                         ?: com.clockweather.app.presentation.settings.SettingsViewModel.ICON_STYLE_GLASS
                 )
                 val widgetTextScale = (
-                    prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_WIDGET_TEXT_SCALE]
-                        ?: widgetTextScaleFromLegacyDateSize(
-                            prefs[floatPreferencesKey("date_font_size_sp")]
-                        )
-                    ).coerceIn(0.75f, 1.15f)
+                    com.clockweather.app.presentation.settings.SettingsViewModel.normalizeWidgetTextScale(
+                        prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_WIDGET_TEXT_SCALE]
+                    )
+                )
 
                 val clockThemeName = prefs[stringPreferencesKey("clock_theme")] ?: "light"
                 val theme = WidgetThemeSelector.getTheme(clockThemeName)
@@ -224,7 +223,9 @@ abstract class BaseWidgetUpdater(
                     try {
                         weatherRepo.refreshWidgetWeatherData(location)
                         weather = weatherRepo.getWeatherData(location).first()
-                    } catch (e: Exception) { }
+                    } catch (e: Exception) {
+                        Log.w(tag, "Widget weather refresh failed for widget $appWidgetId; using cached weather", e)
+                    }
                 }
 
                 if (weather != null) {
@@ -398,9 +399,6 @@ internal fun widgetTextPx(
     role: WidgetTextRole,
     settingsScale: Float = 1f,
 ): Float = widgetSystemBaseTextPx(resources) * role.multiplier * settingsScale
-
-internal fun widgetTextScaleFromLegacyDateSize(legacyDateSizeSp: Float?): Float =
-    ((legacyDateSizeSp ?: 15f) / 15f).coerceIn(0.75f, 1.15f)
 
 internal fun widgetDigitOffsetPx(
     resources: Resources,
