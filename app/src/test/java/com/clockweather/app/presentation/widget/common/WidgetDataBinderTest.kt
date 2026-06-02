@@ -30,6 +30,8 @@ import org.robolectric.RobolectricTestRunner
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.TextStyle
+import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
 class WidgetDataBinderTest {
@@ -53,6 +55,7 @@ class WidgetDataBinderTest {
         every { context.getString(R.string.widget_weather_unavailable_condition) } returns "Updating weather"
         every { context.getString(R.string.widget_weather_unavailable_temp) } returns "--°"
         every { context.getString(R.string.label_today) } returns "Today"
+        every { context.getString(R.string.unit_celsius, 10.0) } returns "10°"
         every { context.getString(R.string.unit_celsius, 11.0) } returns "11°"
         every { context.getString(R.string.unit_celsius, 12.0) } returns "12°"
         every { context.getString(R.string.unit_celsius, 13.0) } returns "13°"
@@ -77,6 +80,13 @@ class WidgetDataBinderTest {
     @After
     fun teardown() {
         unmockkAll()
+    }
+
+    private fun mockEnglishDayNames() {
+        mockkObject(DateFormatter)
+        every { DateFormatter.formatDayName(any()) } answers {
+            (invocation.args[0] as LocalDate).dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
+        }
     }
 
     @Test
@@ -313,9 +323,7 @@ class WidgetDataBinderTest {
     @Test
     fun `bindWeeklyForecastRows includes current day and starts from today`() {
         val today = LocalDate.of(2026, 4, 3)
-        mockkObject(DateFormatter)
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 3)) } returns "Fri"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 7)) } returns "Tue"
+        mockEnglishDayNames()
 
         val weatherData = sampleWeatherData(
             dailyForecasts = (0..7).map { offset ->
@@ -360,9 +368,7 @@ class WidgetDataBinderTest {
     @Test
     fun `bindWeeklyForecastRows renders row icons as bitmaps when rendering succeeds`() {
         val today = LocalDate.of(2026, 4, 3)
-        mockkObject(DateFormatter)
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 3)) } returns "Fri"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
+        mockEnglishDayNames()
         val bitmap = mockk<android.graphics.Bitmap>()
 
         val weatherData = sampleWeatherData(
@@ -393,9 +399,7 @@ class WidgetDataBinderTest {
     @Test
     fun `bindWeeklyForecastRows uses selected icon style`() {
         val today = LocalDate.of(2026, 4, 3)
-        mockkObject(DateFormatter)
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 3)) } returns "Fri"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
+        mockEnglishDayNames()
 
         val weatherData = sampleWeatherData(
             dailyForecasts = listOf(
@@ -432,9 +436,7 @@ class WidgetDataBinderTest {
     fun `bindWeeklyForecastRows anchors from weather snapshot day when location is ahead of device`() {
         val deviceToday = LocalDate.of(2026, 4, 3)
         val weatherToday = LocalDate.of(2026, 4, 4)
-        mockkObject(DateFormatter)
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 8)) } returns "Wed"
+        mockEnglishDayNames()
 
         val weatherData = sampleWeatherData(
             dailyForecasts = (0..7).map { offset ->
@@ -482,9 +484,7 @@ class WidgetDataBinderTest {
     fun `bindWeeklyForecastRows anchors from weather snapshot day when location is behind device`() {
         val deviceToday = LocalDate.of(2026, 4, 5)
         val weatherToday = LocalDate.of(2026, 4, 4)
-        mockkObject(DateFormatter)
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 8)) } returns "Wed"
+        mockEnglishDayNames()
 
         val weatherData = sampleWeatherData(
             dailyForecasts = (0..7).map { offset ->
@@ -531,10 +531,7 @@ class WidgetDataBinderTest {
     @Test
     fun `bindWeeklyForecastRows hides unused rows when provider returns fewer forecast days`() {
         val today = LocalDate.of(2026, 4, 3)
-        mockkObject(DateFormatter)
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 3)) } returns "Fri"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 5)) } returns "Sun"
+        mockEnglishDayNames()
 
         val weatherData = sampleWeatherData(
             dailyForecasts = (0..2).map { offset ->
