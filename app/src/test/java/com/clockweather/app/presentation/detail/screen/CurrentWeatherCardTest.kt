@@ -6,6 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import androidx.compose.ui.graphics.Color
 import com.clockweather.app.domain.model.CurrentWeather
+import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.TemperatureUnit
@@ -14,6 +15,7 @@ import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WindDirection
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 class CurrentWeatherCardTest {
 
@@ -88,7 +90,7 @@ class CurrentWeatherCardTest {
     }
 
     @Test
-    fun `weather page current display uses current hour readings for top card stats`() {
+    fun `weather page current display uses current hour readings when daily forecast differs`() {
         val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
         val weatherData = sampleWeatherData(
             hourlyForecasts = listOf(
@@ -104,7 +106,16 @@ class CurrentWeatherCardTest {
                     windDirectionDegrees = 225,
                     uvIndex = 2.0,
                 ),
-            )
+            ),
+            dailyForecasts = listOf(
+                sampleDailyForecast(
+                    date = LocalDate.of(2026, 4, 3),
+                    weatherCondition = WeatherCondition.CLEAR_DAY,
+                    temperatureMax = 24.0,
+                    temperatureMin = 9.0,
+                    precipitationProbability = 0,
+                ),
+            ),
         )
 
         val current = currentWeatherForDisplay(weatherData, reference)
@@ -123,6 +134,7 @@ class CurrentWeatherCardTest {
     private fun sampleWeatherData(
         currentTemperature: Double = 17.0,
         hourlyForecasts: List<HourlyForecast> = emptyList(),
+        dailyForecasts: List<DailyForecast> = emptyList(),
     ) = WeatherData(
         location = Location(
             id = 1L,
@@ -151,7 +163,7 @@ class CurrentWeatherCardTest {
             lastUpdated = LocalDateTime.of(2026, 4, 3, 10, 15),
         ),
         hourlyForecasts = hourlyForecasts,
-        dailyForecasts = emptyList(),
+        dailyForecasts = dailyForecasts,
     )
 
     private fun sampleHourlyForecast(
@@ -180,5 +192,31 @@ class CurrentWeatherCardTest {
         windDirectionDegrees = windDirectionDegrees,
         visibility = 10_000.0,
         uvIndex = uvIndex,
+    )
+
+    private fun sampleDailyForecast(
+        date: LocalDate,
+        weatherCondition: WeatherCondition,
+        temperatureMax: Double,
+        temperatureMin: Double,
+        precipitationProbability: Int,
+    ) = DailyForecast(
+        date = date,
+        weatherCondition = weatherCondition,
+        temperatureMax = temperatureMax,
+        temperatureMin = temperatureMin,
+        feelsLikeMax = temperatureMax,
+        feelsLikeMin = temperatureMin,
+        sunrise = LocalTime.of(6, 0),
+        sunset = LocalTime.of(19, 0),
+        daylightDurationSeconds = 36000.0,
+        precipitationSum = 0.0,
+        precipitationProbability = precipitationProbability,
+        windSpeedMax = 10.0,
+        windDirectionDominant = WindDirection.N,
+        windDirectionDegrees = 0,
+        uvIndexMax = 5.0,
+        averageHumidity = 60,
+        averagePressure = 1012.0,
     )
 }

@@ -1,6 +1,7 @@
 package com.clockweather.app.presentation.detail.screen
 
 import com.clockweather.app.domain.model.HourlyForecast
+import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WindDirection
 import org.junit.Assert.assertEquals
@@ -178,6 +179,62 @@ class HourlyWeatherGraphTest {
         assertEquals(3, resolveCurrentHourIndex(hours, nowHour = 0))
     }
 
+    @Test
+    fun `linkCurrentHourForecastToWeather uses shared current weather for matching slice only`() {
+        val today = LocalDate.of(2026, 4, 10)
+        val hours = buildForecasts(today, 3, startHour = 9)
+        val currentWeather = buildCurrentWeather(
+            temperature = 18.0,
+            weatherCondition = WeatherCondition.RAIN_MODERATE,
+            precipitationProbability = 45,
+            windSpeed = 22.0,
+            windDirection = WindDirection.SW,
+            windDirectionDegrees = 225,
+        )
+
+        val linked = linkCurrentHourForecastToWeather(
+            hours = hours,
+            currentWeather = currentWeather,
+            referenceDateTime = LocalDateTime.of(today, java.time.LocalTime.of(10, 42)),
+        )
+
+        assertEquals(hours[0], linked[0])
+        assertEquals(18.0, linked[1].temperature, 0.0)
+        assertEquals(WeatherCondition.RAIN_MODERATE, linked[1].weatherCondition)
+        assertEquals(45, linked[1].precipitationProbability)
+        assertEquals(22.0, linked[1].windSpeed, 0.0)
+        assertEquals(WindDirection.SW, linked[1].windDirection)
+        assertEquals(225, linked[1].windDirectionDegrees)
+        assertEquals(hours[2], linked[2])
+    }
+
+    @Test
+    fun `linkCurrentHourForecastToWeather uses shared current weather for fallback current slice`() {
+        val today = LocalDate.of(2026, 4, 10)
+        val hours = listOf(
+            buildForecast(today, 11),
+            buildForecast(today, 12),
+        )
+        val currentWeather = buildCurrentWeather(
+            temperature = 18.0,
+            weatherCondition = WeatherCondition.RAIN_MODERATE,
+            precipitationProbability = 45,
+            windSpeed = 22.0,
+            windDirection = WindDirection.SW,
+            windDirectionDegrees = 225,
+        )
+
+        val linked = linkCurrentHourForecastToWeather(
+            hours = hours,
+            currentWeather = currentWeather,
+            referenceDateTime = LocalDateTime.of(today, java.time.LocalTime.of(10, 42)),
+        )
+
+        assertEquals(18.0, linked[0].temperature, 0.0)
+        assertEquals(WeatherCondition.RAIN_MODERATE, linked[0].weatherCondition)
+        assertEquals(hours[1], linked[1])
+    }
+
     private fun buildForecasts(date: LocalDate, count: Int, startHour: Int = 0): List<HourlyForecast> =
         (0 until count).map { i ->
             buildForecast(date, (startHour + i) % 24)
@@ -200,8 +257,34 @@ class HourlyWeatherGraphTest {
             visibility = 10_000.0,
             uvIndex = 3.0
         )
+
+    private fun buildCurrentWeather(
+        temperature: Double,
+        weatherCondition: WeatherCondition,
+        precipitationProbability: Int,
+        windSpeed: Double,
+        windDirection: WindDirection,
+        windDirectionDegrees: Int,
+    ): CurrentWeather =
+        CurrentWeather(
+            temperature = temperature,
+            feelsLikeTemperature = temperature,
+            humidity = 72,
+            dewPoint = 8.0,
+            precipitation = 0.0,
+            precipitationProbability = precipitationProbability,
+            weatherCondition = weatherCondition,
+            isDay = true,
+            pressure = 1008.0,
+            windSpeed = windSpeed,
+            windDirection = windDirection,
+            windDirectionDegrees = windDirectionDegrees,
+            windGusts = 30.0,
+            visibility = 9_000.0,
+            uvIndex = 2.0,
+            cloudCover = 90,
+            lastUpdated = LocalDateTime.of(2026, 4, 10, 10, 15),
+        )
 }
-
-
 
 

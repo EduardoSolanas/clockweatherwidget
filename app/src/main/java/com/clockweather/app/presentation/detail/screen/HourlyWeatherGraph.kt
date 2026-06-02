@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clockweather.app.R
+import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
@@ -111,6 +112,41 @@ private val CurrentHourBorderWidth  = 2.dp
 internal fun resolveCurrentHourIndex(hours: List<HourlyForecast>, nowHour: Int): Int =
     hours.indexOfFirst { it.dateTime.hour == nowHour }.coerceAtLeast(0)
 
+internal fun linkCurrentHourForecastToWeather(
+    hours: List<HourlyForecast>,
+    currentWeather: CurrentWeather?,
+    referenceDateTime: LocalDateTime
+): List<HourlyForecast> {
+    if (currentWeather == null || hours.isEmpty()) return hours
+
+    val referenceHour = referenceDateTime.withMinute(0).withSecond(0).withNano(0)
+    val matchingIndex = hours.indexOfFirst { hour ->
+        hour.dateTime.withMinute(0).withSecond(0).withNano(0) == referenceHour
+    }
+    val currentDisplayIndex = matchingIndex.coerceAtLeast(0)
+    return hours.mapIndexed { index, hour ->
+        if (index != currentDisplayIndex) {
+            hour
+        } else {
+            hour.copy(
+                temperature = currentWeather.temperature,
+                feelsLike = currentWeather.feelsLikeTemperature,
+                humidity = currentWeather.humidity,
+                dewPoint = currentWeather.dewPoint,
+                precipitationProbability = currentWeather.precipitationProbability,
+                weatherCondition = currentWeather.weatherCondition,
+                isDay = currentWeather.isDay,
+                pressure = currentWeather.pressure,
+                windSpeed = currentWeather.windSpeed,
+                windDirection = currentWeather.windDirection,
+                windDirectionDegrees = currentWeather.windDirectionDegrees,
+                visibility = currentWeather.visibility,
+                uvIndex = currentWeather.uvIndex,
+            )
+        }
+    }
+}
+
 // ── Public composable ─────────────────────────────────────────────────────────
 
 @Composable
@@ -119,11 +155,13 @@ fun HourlyWeatherGraph(
     temperatureUnit: TemperatureUnit,
     speedUnit: SpeedUnit = SpeedUnit.KMH,
     modifier: Modifier = Modifier,
-    selectedDate: LocalDate? = null
+    selectedDate: LocalDate? = null,
+    currentWeather: CurrentWeather? = null
 ) {
-    val (hours, referenceDateTime) = remember(hourlyForecasts, selectedDate) {
+    val (hours, referenceDateTime) = remember(hourlyForecasts, selectedDate, currentWeather) {
         val ref = LocalDateTime.now()
-        scopedHourlyForecasts(hourlyForecasts, selectedDate, ref) to ref
+        val scoped = scopedHourlyForecasts(hourlyForecasts, selectedDate, ref)
+        linkCurrentHourForecastToWeather(scoped, currentWeather, ref) to ref
     }
     if (hours.size < 2) return
 

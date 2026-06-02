@@ -48,6 +48,7 @@ class WidgetDataBinderTest {
         views = mockk(relaxed = true)
 
         every { context.getString(WeatherCondition.PARTLY_CLOUDY_DAY.labelResId) } returns "Partly cloudy"
+        every { context.getString(WeatherCondition.RAIN_MODERATE.labelResId) } returns "Moderate rain"
         every { context.getString(R.string.widget_weather_unavailable_title) } returns "Weather"
         every { context.getString(R.string.widget_weather_unavailable_condition) } returns "Updating weather"
         every { context.getString(R.string.widget_weather_unavailable_temp) } returns "--°"
@@ -182,13 +183,24 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindWeatherViews uses current hour forecast temperature for widget`() {
+    fun `bindWeatherViews uses current hour forecast weather when daily forecast differs`() {
         every { context.getString(R.string.unit_celsius, 18.0) } returns "18Â°"
         val weatherData = sampleWeatherData(
             hourlyForecasts = listOf(
                 sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 9, 0), 14.0),
-                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 10, 0), 18.0),
+                sampleHourlyForecast(
+                    dateTime = LocalDateTime.of(2026, 4, 3, 10, 0),
+                    temperature = 18.0,
+                    weatherCondition = WeatherCondition.RAIN_MODERATE,
+                ),
                 sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 11, 0), 19.0),
+            ),
+            dailyForecasts = listOf(
+                sampleWeatherData().dailyForecasts.first().copy(
+                    weatherCondition = WeatherCondition.CLEAR_DAY,
+                    temperatureMax = 20.0,
+                    temperatureMin = 11.0,
+                ),
             ),
         )
 
@@ -201,6 +213,9 @@ class WidgetDataBinderTest {
         )
 
         verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "18\u00B0C") }
+        verify(exactly = 1) { views.setTextViewText(R.id.condition_text, "Moderate rain") }
+        verify(exactly = 1) { views.setImageViewResource(R.id.weather_icon, R.drawable.ic_widget_weather_rain) }
+        verify(exactly = 1) { views.setTextViewText(R.id.high_low, "20°/11°") }
     }
 
     @Test
@@ -296,11 +311,11 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindWeeklyForecastRows skips current day and starts from tomorrow`() {
+    fun `bindWeeklyForecastRows includes current day and starts from today`() {
         val today = LocalDate.of(2026, 4, 3)
         mockkObject(DateFormatter)
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 8)) } returns "Wed"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 3)) } returns "Fri"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 7)) } returns "Tue"
 
         val weatherData = sampleWeatherData(
             dailyForecasts = (0..7).map { offset ->
@@ -334,11 +349,11 @@ class WidgetDataBinderTest {
             today = today,
         )
 
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sat") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Fri") }
         verify(exactly = 1) { views.setImageViewResource(R.id.fday1_icon, R.drawable.ic_widget_weather_clear_day) }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, "21°/11°") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Wed") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, "25°/15°") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, "20°/10°") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Tue") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, "24°/14°") }
         verify(exactly = 1) { views.setViewVisibility(R.id.forecast_container, View.VISIBLE) }
     }
 
@@ -346,6 +361,7 @@ class WidgetDataBinderTest {
     fun `bindWeeklyForecastRows renders row icons as bitmaps when rendering succeeds`() {
         val today = LocalDate.of(2026, 4, 3)
         mockkObject(DateFormatter)
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 3)) } returns "Fri"
         every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
         val bitmap = mockk<android.graphics.Bitmap>()
 
@@ -378,14 +394,20 @@ class WidgetDataBinderTest {
     fun `bindWeeklyForecastRows uses selected icon style`() {
         val today = LocalDate.of(2026, 4, 3)
         mockkObject(DateFormatter)
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 3)) } returns "Fri"
         every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
 
         val weatherData = sampleWeatherData(
             dailyForecasts = listOf(
-                sampleWeatherData().dailyForecasts.first().copy(date = today),
+                sampleWeatherData().dailyForecasts.first().copy(
+                    date = today,
+                    weatherCondition = WeatherCondition.THUNDERSTORM,
+                    temperatureMax = 20.0,
+                    temperatureMin = 11.0,
+                ),
                 sampleWeatherData().dailyForecasts.first().copy(
                     date = today.plusDays(1),
-                    weatherCondition = WeatherCondition.THUNDERSTORM,
+                    weatherCondition = WeatherCondition.CLEAR_DAY,
                     temperatureMax = 21.0,
                     temperatureMin = 12.0,
                 ),
@@ -411,8 +433,8 @@ class WidgetDataBinderTest {
         val deviceToday = LocalDate.of(2026, 4, 3)
         val weatherToday = LocalDate.of(2026, 4, 4)
         mockkObject(DateFormatter)
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 5)) } returns "Sun"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 9)) } returns "Thu"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 8)) } returns "Wed"
 
         val weatherData = sampleWeatherData(
             dailyForecasts = (0..7).map { offset ->
@@ -450,10 +472,10 @@ class WidgetDataBinderTest {
             today = deviceToday,
         )
 
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sun") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, match { it.toString().contains("21") }) }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Thu") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, match { it.toString().contains("25") }) }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sat") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, match { it.toString().contains("20") }) }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Wed") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, match { it.toString().contains("24") }) }
     }
 
     @Test
@@ -461,8 +483,8 @@ class WidgetDataBinderTest {
         val deviceToday = LocalDate.of(2026, 4, 5)
         val weatherToday = LocalDate.of(2026, 4, 4)
         mockkObject(DateFormatter)
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 5)) } returns "Sun"
-        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 9)) } returns "Thu"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 8)) } returns "Wed"
 
         val weatherData = sampleWeatherData(
             dailyForecasts = (0..7).map { offset ->
@@ -500,16 +522,17 @@ class WidgetDataBinderTest {
             today = deviceToday,
         )
 
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sun") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, match { it.toString().contains("21") }) }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Thu") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, match { it.toString().contains("25") }) }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sat") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, match { it.toString().contains("20") }) }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Wed") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, match { it.toString().contains("24") }) }
     }
 
     @Test
-    fun `bindWeeklyForecastRows hides unused rows when provider returns fewer future days`() {
+    fun `bindWeeklyForecastRows hides unused rows when provider returns fewer forecast days`() {
         val today = LocalDate.of(2026, 4, 3)
         mockkObject(DateFormatter)
+        every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 3)) } returns "Fri"
         every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 4)) } returns "Sat"
         every { DateFormatter.formatDayName(LocalDate.of(2026, 4, 5)) } returns "Sun"
 
@@ -547,9 +570,12 @@ class WidgetDataBinderTest {
 
         verify(exactly = 1) { views.setViewVisibility(R.id.fday1_name, View.VISIBLE) }
         verify(exactly = 1) { views.setViewVisibility(R.id.fday2_name, View.VISIBLE) }
-        verify(exactly = 1) { views.setViewVisibility(R.id.fday3_name, View.GONE) }
-        verify(exactly = 1) { views.setViewVisibility(R.id.fday3_icon, View.GONE) }
-        verify(exactly = 1) { views.setViewVisibility(R.id.fday3_high, View.GONE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday3_name, View.VISIBLE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday3_icon, View.VISIBLE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday3_high, View.VISIBLE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday4_name, View.GONE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday4_icon, View.GONE) }
+        verify(exactly = 1) { views.setViewVisibility(R.id.fday4_high, View.GONE) }
         verify(exactly = 1) { views.setViewVisibility(R.id.fday5_name, View.GONE) }
         verify(exactly = 1) { views.setViewVisibility(R.id.fday5_icon, View.GONE) }
         verify(exactly = 1) { views.setViewVisibility(R.id.fday5_high, View.GONE) }
@@ -614,14 +640,18 @@ class WidgetDataBinderTest {
         )
     }
 
-    private fun sampleHourlyForecast(dateTime: LocalDateTime, temperature: Double) = HourlyForecast(
+    private fun sampleHourlyForecast(
+        dateTime: LocalDateTime,
+        temperature: Double,
+        weatherCondition: WeatherCondition = WeatherCondition.PARTLY_CLOUDY_DAY,
+    ) = HourlyForecast(
         dateTime = dateTime,
         temperature = temperature,
         feelsLike = temperature,
         humidity = 60,
         dewPoint = 9.0,
         precipitationProbability = 0,
-        weatherCondition = WeatherCondition.PARTLY_CLOUDY_DAY,
+        weatherCondition = weatherCondition,
         isDay = true,
         pressure = 1012.0,
         windSpeed = 10.0,

@@ -33,14 +33,33 @@ fun WeatherData.currentHourForecast(
         }
 }
 
-fun WeatherData.currentHourTemperature(
+fun WeatherData.currentDayForecast(
     referenceDateTime: LocalDateTime = LocalDateTime.now()
-): Double = currentHourForecast(referenceDateTime)?.temperature ?: currentWeather.temperature
+): DailyForecast? {
+    val referenceDate = referenceDateTime.toLocalDate()
+    return dailyForecasts
+        .sortedBy { it.date }
+        .firstOrNull { forecast -> forecast.date == referenceDate }
+}
 
-fun WeatherData.currentHourWeather(
+fun WeatherData.currentDisplayWeather(
     referenceDateTime: LocalDateTime = LocalDateTime.now()
 ): CurrentWeather {
-    val hour = currentHourForecast(referenceDateTime) ?: return currentWeather
+    val hour = currentHourForecast(referenceDateTime)
+    if (hour == null) {
+        val day = currentDayForecast(referenceDateTime) ?: return currentWeather
+        return currentWeather.copy(
+            humidity = day.averageHumidity,
+            precipitationProbability = day.precipitationProbability,
+            weatherCondition = day.weatherCondition,
+            pressure = day.averagePressure,
+            windSpeed = day.windSpeedMax,
+            windDirection = day.windDirectionDominant,
+            windDirectionDegrees = day.windDirectionDegrees,
+            uvIndex = day.uvIndexMax,
+        )
+    }
+
     return currentWeather.copy(
         temperature = hour.temperature,
         feelsLikeTemperature = hour.feelsLike,

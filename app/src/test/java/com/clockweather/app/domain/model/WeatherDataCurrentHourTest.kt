@@ -3,7 +3,9 @@ package com.clockweather.app.domain.model
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 class WeatherDataCurrentHourTest {
 
@@ -35,7 +37,7 @@ class WeatherDataCurrentHourTest {
     }
 
     @Test
-    fun `currentHourTemperature falls back to current weather when current hour is missing`() {
+    fun `currentDisplayWeather temperature falls back to current weather when current hour is missing`() {
         val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
         val weatherData = sampleWeatherData(
             currentTemperature = 17.0,
@@ -44,11 +46,11 @@ class WeatherDataCurrentHourTest {
             )
         )
 
-        assertEquals(17.0, weatherData.currentHourTemperature(reference), 0.0)
+        assertEquals(17.0, weatherData.currentDisplayWeather(reference).temperature, 0.0)
     }
 
     @Test
-    fun `currentHourWeather overlays hourly current readings onto current weather`() {
+    fun `currentDisplayWeather overlays hourly current readings onto current weather`() {
         val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
         val weatherData = sampleWeatherData(
             hourlyForecasts = listOf(
@@ -71,7 +73,7 @@ class WeatherDataCurrentHourTest {
             )
         )
 
-        val current = weatherData.currentHourWeather(reference)
+        val current = weatherData.currentDisplayWeather(reference)
 
         assertEquals(16.0, current.temperature, 0.0)
         assertEquals(15.0, current.feelsLikeTemperature, 0.0)
@@ -87,9 +89,46 @@ class WeatherDataCurrentHourTest {
         assertEquals(12.0, current.windGusts, 0.0)
     }
 
+    @Test
+    fun `currentDisplayWeather falls back to current day forecast weather when current hour is missing`() {
+        val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
+        val weatherData = sampleWeatherData(
+            currentTemperature = 17.0,
+            hourlyForecasts = listOf(
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 11, 0), temperature = 19.0),
+            ),
+            dailyForecasts = listOf(
+                sampleDailyForecast(
+                    date = LocalDate.of(2026, 4, 3),
+                    weatherCondition = WeatherCondition.RAIN_HEAVY,
+                    precipitationProbability = 80,
+                    windSpeedMax = 24.0,
+                    windDirectionDominant = WindDirection.SW,
+                    windDirectionDegrees = 225,
+                    uvIndexMax = 2.0,
+                    averageHumidity = 76,
+                    averagePressure = 1006.0,
+                ),
+            ),
+        )
+
+        val current = weatherData.currentDisplayWeather(reference)
+
+        assertEquals(17.0, current.temperature, 0.0)
+        assertEquals(WeatherCondition.RAIN_HEAVY, current.weatherCondition)
+        assertEquals(80, current.precipitationProbability)
+        assertEquals(24.0, current.windSpeed, 0.0)
+        assertEquals(WindDirection.SW, current.windDirection)
+        assertEquals(225, current.windDirectionDegrees)
+        assertEquals(2.0, current.uvIndex, 0.0)
+        assertEquals(76, current.humidity)
+        assertEquals(1006.0, current.pressure, 0.0)
+    }
+
     private fun sampleWeatherData(
         currentTemperature: Double = 15.0,
         hourlyForecasts: List<HourlyForecast> = emptyList(),
+        dailyForecasts: List<DailyForecast> = emptyList(),
     ) = WeatherData(
         location = Location(
             id = 1L,
@@ -118,7 +157,7 @@ class WeatherDataCurrentHourTest {
             lastUpdated = LocalDateTime.of(2026, 4, 3, 10, 15),
         ),
         hourlyForecasts = hourlyForecasts,
-        dailyForecasts = emptyList(),
+        dailyForecasts = dailyForecasts,
     )
 
     private fun sampleHourlyForecast(
@@ -151,5 +190,35 @@ class WeatherDataCurrentHourTest {
         windDirectionDegrees = windDirectionDegrees,
         visibility = visibility,
         uvIndex = uvIndex,
+    )
+
+    private fun sampleDailyForecast(
+        date: LocalDate,
+        weatherCondition: WeatherCondition,
+        precipitationProbability: Int,
+        windSpeedMax: Double,
+        windDirectionDominant: WindDirection,
+        windDirectionDegrees: Int,
+        uvIndexMax: Double,
+        averageHumidity: Int,
+        averagePressure: Double,
+    ) = DailyForecast(
+        date = date,
+        weatherCondition = weatherCondition,
+        temperatureMax = 20.0,
+        temperatureMin = 11.0,
+        feelsLikeMax = 20.0,
+        feelsLikeMin = 11.0,
+        sunrise = LocalTime.of(6, 0),
+        sunset = LocalTime.of(19, 0),
+        daylightDurationSeconds = 36000.0,
+        precipitationSum = 5.0,
+        precipitationProbability = precipitationProbability,
+        windSpeedMax = windSpeedMax,
+        windDirectionDominant = windDirectionDominant,
+        windDirectionDegrees = windDirectionDegrees,
+        uvIndexMax = uvIndexMax,
+        averageHumidity = averageHumidity,
+        averagePressure = averagePressure,
     )
 }

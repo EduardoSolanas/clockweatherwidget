@@ -12,7 +12,7 @@ import com.clockweather.app.R
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
-import com.clockweather.app.domain.model.currentHourTemperature
+import com.clockweather.app.domain.model.currentDisplayWeather
 import com.clockweather.app.presentation.detail.WeatherDetailActivity
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
@@ -74,25 +74,25 @@ object WidgetDataBinder {
         renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
         referenceDateTime: LocalDateTime = LocalDateTime.now(),
     ) {
-        val current = weatherData.currentWeather
+        val currentSnapshot = weatherData.currentWeather
+        val currentDisplayWeather = weatherData.currentDisplayWeather(referenceDateTime)
         val location = weatherData.location
-        val forecastAnchorDate = current.lastUpdated.toLocalDate()
+        val forecastAnchorDate = currentSnapshot.lastUpdated.toLocalDate()
         val todayForecast = weatherData.dailyForecasts.firstOrNull { it.date == forecastAnchorDate }
             ?: weatherData.dailyForecasts.firstOrNull()
-        val currentHourTemperature = weatherData.currentHourTemperature(referenceDateTime)
 
         views.setTextViewText(R.id.city_name, resolveWidgetLocationLabel(location, WidgetLocationMaxChars))
-        views.setTextViewText(R.id.condition_text, context.getString(current.weatherCondition.labelResId))
+        views.setTextViewText(R.id.condition_text, context.getString(currentDisplayWeather.weatherCondition.labelResId))
         setWidgetIcon(
             views,
             R.id.weather_icon,
             context,
-            WeatherIconMapper.getDrawableResId(current.weatherCondition, iconStyle),
+            WeatherIconMapper.getDrawableResId(currentDisplayWeather.weatherCondition, iconStyle),
             renderIcon,
         )
         views.setTextViewText(
             R.id.current_temp,
-            TemperatureFormatter.formatWithUnit(currentHourTemperature, temperatureUnit)
+            TemperatureFormatter.formatWithUnit(currentDisplayWeather.temperature, temperatureUnit)
         )
         todayForecast?.let { forecast ->
             val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit
@@ -143,9 +143,9 @@ object WidgetDataBinder {
             RowIds(R.id.fday5_name, R.id.fday5_icon, R.id.fday5_high),
         )
         val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit
-        val futureDays = selectForecastWidgetDays(weatherData)
+        val forecastDays = selectForecastWidgetDays(weatherData)
         rows.forEachIndexed { i, r ->
-            val forecast = futureDays.getOrNull(i)
+            val forecast = forecastDays.getOrNull(i)
             if (forecast == null) {
                 views.setViewVisibility(r.name, View.GONE)
                 views.setViewVisibility(r.icon, View.GONE)
@@ -260,6 +260,6 @@ internal fun selectForecastWidgetDays(weatherData: WeatherData): List<com.clockw
     val forecastAnchorDate = weatherData.currentWeather.lastUpdated.toLocalDate()
     return weatherData.dailyForecasts
         .sortedBy { it.date }
-        .filter { it.date.isAfter(forecastAnchorDate) }
+        .filter { !it.date.isBefore(forecastAnchorDate) }
         .take(5)
 }

@@ -37,13 +37,13 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.AirQuality
+import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
-import com.clockweather.app.domain.model.currentHourWeather
-import com.clockweather.app.domain.model.currentHourTemperature
+import com.clockweather.app.domain.model.currentDisplayWeather
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
 import com.clockweather.app.util.WindSpeedFormatter
@@ -132,14 +132,14 @@ internal fun currentTemperatureDisplay(
     temperatureUnit: TemperatureUnit,
     referenceDateTime: LocalDateTime = LocalDateTime.now()
 ): String = TemperatureFormatter.formatWithUnit(
-    weatherData.currentHourTemperature(referenceDateTime),
+    currentWeatherForDisplay(weatherData, referenceDateTime).temperature,
     temperatureUnit
 )
 
 internal fun currentWeatherForDisplay(
     weatherData: WeatherData,
     referenceDateTime: LocalDateTime = LocalDateTime.now()
-) = weatherData.currentHourWeather(referenceDateTime)
+) = weatherData.currentDisplayWeather(referenceDateTime)
 
 // ─── Debug: all conditions in cycle order ─────────────────────────────────────
 private val DEBUG_CONDITIONS = WeatherCondition.entries.toList()
@@ -158,6 +158,7 @@ fun WeatherDetailContent(
     val forecasts = selectWeatherDetailForecasts(weatherData.dailyForecasts, forecastDays)
     val selectedForecast = forecasts.getOrNull(selectedDayIndex) ?: forecasts.firstOrNull()
     val displayWeatherData = weatherData.copy(dailyForecasts = forecasts)
+    val currentDisplayWeather = currentWeatherForDisplay(displayWeatherData)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -169,6 +170,7 @@ fun WeatherDetailContent(
         // ── Hero card ──────────────────────────────────────────────────────
         HeroWeatherCard(
             weatherData = displayWeatherData,
+            currentDisplayWeather = currentDisplayWeather,
             temperatureUnit = temperatureUnit,
             selectedDayIndex = selectedDayIndex
         )
@@ -178,7 +180,8 @@ fun WeatherDetailContent(
             hourlyForecasts = weatherData.hourlyForecasts,
             temperatureUnit = temperatureUnit,
             speedUnit = speedUnit,
-            selectedDate = selectedForecast?.date
+            selectedDate = selectedForecast?.date,
+            currentWeather = currentDisplayWeather
         )
 
         // ── 7-Day Forecast ─────────────────────────────────────────────────
@@ -228,10 +231,11 @@ fun WeatherDetailContent(
 @Composable
 private fun HeroWeatherCard(
     weatherData: WeatherData,
+    currentDisplayWeather: CurrentWeather,
     temperatureUnit: TemperatureUnit,
     selectedDayIndex: Int
 ) {
-    val current = if (selectedDayIndex == 0) currentWeatherForDisplay(weatherData) else weatherData.currentWeather
+    val current = if (selectedDayIndex == 0) currentDisplayWeather else weatherData.currentWeather
     val forecasts = weatherData.dailyForecasts
     val selectedForecast = forecasts.getOrNull(selectedDayIndex)
 
