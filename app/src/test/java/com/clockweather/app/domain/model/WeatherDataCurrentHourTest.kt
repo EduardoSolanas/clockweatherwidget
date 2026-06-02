@@ -1,13 +1,29 @@
 package com.clockweather.app.domain.model
 
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Test
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.TimeZone
 
 class WeatherDataCurrentHourTest {
+
+    private lateinit var originalTimeZone: TimeZone
+
+    @Before
+    fun setUp() {
+        originalTimeZone = TimeZone.getDefault()
+    }
+
+    @After
+    fun tearDown() {
+        TimeZone.setDefault(originalTimeZone)
+    }
 
     @Test
     fun `currentHourForecast returns forecast matching exact current date and hour`() {
@@ -125,8 +141,29 @@ class WeatherDataCurrentHourTest {
         assertEquals(1006.0, current.pressure, 0.0)
     }
 
+    @Test
+    fun `locationReferenceDateTime uses weather location timezone when device timezone differs`() {
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"))
+
+        val weatherData = sampleWeatherData(
+            locationTimezone = "Europe/London",
+            hourlyForecasts = listOf(
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 12, 0), temperature = 12.0),
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 20, 0), temperature = 20.0),
+            ),
+        )
+
+        val reference = weatherData.locationReferenceDateTime(
+            currentInstant = Instant.parse("2026-04-03T19:42:00Z")
+        )
+
+        assertEquals(LocalDateTime.of(2026, 4, 3, 20, 42), reference)
+        assertEquals(20.0, weatherData.currentHourForecast(reference)?.temperature)
+    }
+
     private fun sampleWeatherData(
         currentTemperature: Double = 15.0,
+        locationTimezone: String = "auto",
         hourlyForecasts: List<HourlyForecast> = emptyList(),
         dailyForecasts: List<DailyForecast> = emptyList(),
     ) = WeatherData(
@@ -136,6 +173,7 @@ class WeatherDataCurrentHourTest {
             country = "UK",
             latitude = 51.5072,
             longitude = -0.1276,
+            timezone = locationTimezone,
         ),
         currentWeather = CurrentWeather(
             temperature = currentTemperature,

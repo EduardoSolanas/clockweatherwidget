@@ -2,7 +2,9 @@ package com.clockweather.app.domain.model
 
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import java.time.Instant
 
 data class WeatherData(
     val location: Location,
@@ -12,8 +14,18 @@ data class WeatherData(
     val airQuality: AirQuality? = null
 )
 
+fun WeatherData.locationZoneId(): ZoneId =
+    location.timezone
+        .takeUnless { it.isBlank() || it.equals("auto", ignoreCase = true) }
+        ?.let { timezone -> runCatching { ZoneId.of(timezone) }.getOrNull() }
+        ?: ZoneId.systemDefault()
+
+fun WeatherData.locationReferenceDateTime(
+    currentInstant: Instant = Instant.now()
+): LocalDateTime = LocalDateTime.ofInstant(currentInstant, locationZoneId())
+
 fun WeatherData.normalizeDailyConditions(): WeatherData {
-    val today = LocalDate.now()
+    val today = locationReferenceDateTime().toLocalDate()
     return copy(
         dailyForecasts = dailyForecasts.map { forecast ->
             if (forecast.date == today) forecast.copy(weatherCondition = currentWeather.weatherCondition)
@@ -23,7 +35,7 @@ fun WeatherData.normalizeDailyConditions(): WeatherData {
 }
 
 fun WeatherData.currentHourForecast(
-    referenceDateTime: LocalDateTime = LocalDateTime.now()
+    referenceDateTime: LocalDateTime = locationReferenceDateTime()
 ): HourlyForecast? {
     val referenceHour = referenceDateTime.truncatedTo(ChronoUnit.HOURS)
     return hourlyForecasts
@@ -34,7 +46,7 @@ fun WeatherData.currentHourForecast(
 }
 
 fun WeatherData.currentDayForecast(
-    referenceDateTime: LocalDateTime = LocalDateTime.now()
+    referenceDateTime: LocalDateTime = locationReferenceDateTime()
 ): DailyForecast? {
     val referenceDate = referenceDateTime.toLocalDate()
     return dailyForecasts
@@ -43,7 +55,7 @@ fun WeatherData.currentDayForecast(
 }
 
 fun WeatherData.currentDisplayWeather(
-    referenceDateTime: LocalDateTime = LocalDateTime.now()
+    referenceDateTime: LocalDateTime = locationReferenceDateTime()
 ): CurrentWeather {
     val hour = currentHourForecast(referenceDateTime)
     if (hour == null) {

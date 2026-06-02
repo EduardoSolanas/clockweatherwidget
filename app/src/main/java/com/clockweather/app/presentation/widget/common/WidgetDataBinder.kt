@@ -13,6 +13,7 @@ import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.currentDisplayWeather
+import com.clockweather.app.domain.model.locationReferenceDateTime
 import com.clockweather.app.presentation.detail.WeatherDetailActivity
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
@@ -72,7 +73,7 @@ object WidgetDataBinder {
         temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
         iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
         renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
-        referenceDateTime: LocalDateTime = LocalDateTime.now(),
+        referenceDateTime: LocalDateTime = weatherData.locationReferenceDateTime(),
     ) {
         val currentSnapshot = weatherData.currentWeather
         val currentDisplayWeather = weatherData.currentDisplayWeather(referenceDateTime)

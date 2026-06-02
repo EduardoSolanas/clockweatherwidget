@@ -131,6 +131,56 @@ class CurrentWeatherCardTest {
         assertEquals(2.0, current.uvIndex, 0.0)
     }
 
+    @Test
+    fun `shared reference date time keeps hero weather and hourly graph on the same current slice`() {
+        val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
+        val weatherData = sampleWeatherData(
+            hourlyForecasts = listOf(
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 9, 0), 14.0),
+                sampleHourlyForecast(
+                    dateTime = LocalDateTime.of(2026, 4, 3, 10, 0),
+                    temperature = 18.0,
+                    feelsLike = 17.0,
+                    humidity = 74,
+                    precipitationProbability = 45,
+                    weatherCondition = WeatherCondition.RAIN_SLIGHT,
+                    windSpeed = 22.0,
+                    windDirection = WindDirection.SW,
+                    windDirectionDegrees = 225,
+                    uvIndex = 2.0,
+                ),
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 11, 0), 19.0),
+            ),
+            dailyForecasts = listOf(
+                sampleDailyForecast(
+                    date = LocalDate.of(2026, 4, 3),
+                    weatherCondition = WeatherCondition.CLEAR_DAY,
+                    temperatureMax = 24.0,
+                    temperatureMin = 9.0,
+                    precipitationProbability = 0,
+                ),
+            ),
+        )
+
+        val current = currentWeatherForDisplay(weatherData, reference)
+        val scoped = scopedHourlyForecasts(
+            hourlyForecasts = weatherData.hourlyForecasts,
+            selectedDate = LocalDate.of(2026, 4, 3),
+            referenceDateTime = reference,
+        )
+        val linked = linkCurrentHourForecastToWeather(
+            hours = scoped,
+            currentWeather = current,
+            referenceDateTime = reference,
+        )
+        val currentIdx = resolveCurrentHourIndex(linked, reference)
+
+        assertEquals(0, currentIdx)
+        assertEquals(current.temperature, linked[currentIdx!!].temperature, 0.0)
+        assertEquals(current.weatherCondition, linked[currentIdx].weatherCondition)
+        assertEquals(current.windSpeed, linked[currentIdx].windSpeed, 0.0)
+    }
+
     private fun sampleWeatherData(
         currentTemperature: Double = 17.0,
         hourlyForecasts: List<HourlyForecast> = emptyList(),

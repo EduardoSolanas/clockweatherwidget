@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.SpeedUnit
+import com.clockweather.app.domain.model.locationReferenceDateTime
 import com.clockweather.app.presentation.common.UiState
 import com.clockweather.app.presentation.detail.WeatherDetailViewModel
 import java.time.LocalDate
@@ -93,13 +94,15 @@ fun WeatherDetailScreen(
     }
 
     val locationName = (uiState as? UiState.Success)?.data?.location?.name ?: stringResource(R.string.label_weather_fallback_title)
+    val activeReferenceDateTime = (uiState as? UiState.Success)?.data?.locationReferenceDateTime()
+    val activeReferenceDate = activeReferenceDateTime?.toLocalDate() ?: LocalDate.now()
 
     // Lift selected day index here so TopAppBar can react to it
     var selectedDayIndex by remember { mutableIntStateOf(0) }
     val forecasts = (uiState as? UiState.Success)
         ?.data
         ?.dailyForecasts
-        ?.let { selectWeatherDetailForecasts(it, forecastDays) }
+        ?.let { selectWeatherDetailForecasts(it, forecastDays, today = activeReferenceDate) }
         ?: emptyList()
     selectedDayIndex = normalizeSelectedDayIndex(selectedDayIndex, forecasts.size)
 
@@ -201,7 +204,8 @@ fun WeatherDetailScreen(
                             speedUnit = speedUnit,
                             selectedDayIndex = selectedDayIndex,
                             onDaySelected = { selectedDayIndex = it },
-                            forecastDays = forecastDays
+                            forecastDays = forecastDays,
+                            referenceDateTime = activeReferenceDateTime ?: state.data.locationReferenceDateTime()
                         )
                     }
                 }

@@ -109,8 +109,15 @@ private val CurrentHourBorderWidth  = 2.dp
 
 // ── Current-hour index helper (kept internal for tests) ──────────────────────
 
-internal fun resolveCurrentHourIndex(hours: List<HourlyForecast>, nowHour: Int): Int =
-    hours.indexOfFirst { it.dateTime.hour == nowHour }.coerceAtLeast(0)
+internal fun resolveCurrentHourIndex(
+    hours: List<HourlyForecast>,
+    referenceDateTime: LocalDateTime
+): Int? {
+    val referenceHour = referenceDateTime.withMinute(0).withSecond(0).withNano(0)
+    return hours.indexOfFirst { hour ->
+        hour.dateTime.withMinute(0).withSecond(0).withNano(0) == referenceHour
+    }.takeIf { it >= 0 }
+}
 
 internal fun linkCurrentHourForecastToWeather(
     hours: List<HourlyForecast>,
@@ -123,9 +130,10 @@ internal fun linkCurrentHourForecastToWeather(
     val matchingIndex = hours.indexOfFirst { hour ->
         hour.dateTime.withMinute(0).withSecond(0).withNano(0) == referenceHour
     }
-    val currentDisplayIndex = matchingIndex.coerceAtLeast(0)
+    if (matchingIndex < 0) return hours
+
     return hours.mapIndexed { index, hour ->
-        if (index != currentDisplayIndex) {
+        if (index != matchingIndex) {
             hour
         } else {
             hour.copy(
@@ -156,12 +164,12 @@ fun HourlyWeatherGraph(
     speedUnit: SpeedUnit = SpeedUnit.KMH,
     modifier: Modifier = Modifier,
     selectedDate: LocalDate? = null,
-    currentWeather: CurrentWeather? = null
+    currentWeather: CurrentWeather? = null,
+    referenceDateTime: LocalDateTime = LocalDateTime.now()
 ) {
-    val (hours, referenceDateTime) = remember(hourlyForecasts, selectedDate, currentWeather) {
-        val ref = LocalDateTime.now()
-        val scoped = scopedHourlyForecasts(hourlyForecasts, selectedDate, ref)
-        linkCurrentHourForecastToWeather(scoped, currentWeather, ref) to ref
+    val hours = remember(hourlyForecasts, selectedDate, currentWeather, referenceDateTime) {
+        val scoped = scopedHourlyForecasts(hourlyForecasts, selectedDate, referenceDateTime)
+        linkCurrentHourForecastToWeather(scoped, currentWeather, referenceDateTime)
     }
     if (hours.size < 2) return
 
@@ -197,11 +205,11 @@ fun HourlyWeatherGraph(
 
     // Auto-scroll: bring current hour into view (today only)
     val currentIdx = remember(hours, isTodayView) {
-        if (!isTodayView) 0
-        else resolveCurrentHourIndex(hours, referenceDateTime.toLocalTime().hour)
+        if (!isTodayView) null
+        else resolveCurrentHourIndex(hours, referenceDateTime)
     }
     LaunchedEffect(currentIdx, hours.size, isTodayView) {
-        val targetPx = ((currentIdx - 1).coerceAtLeast(0) * layoutMetrics.columnWidthPx)
+        val targetPx = (((currentIdx ?: 0) - 1).coerceAtLeast(0) * layoutMetrics.columnWidthPx)
         scrollState.scrollTo(targetPx)
     }
 
@@ -211,12 +219,14 @@ fun HourlyWeatherGraph(
     val textMeasurer     = rememberTextMeasurer()
     val selectionHorizontalInsetPx = with(density) { CurrentHourSelectionHorizontalInset.roundToPx() }
     val selectionOverlayMetrics = remember(hours.size, currentIdx, isTodayView, layoutMetrics, selectionHorizontalInsetPx) {
-        currentHourSelectionOverlayMetrics(
-            currentIdx = currentIdx,
-            hoursCount = hours.size,
-            columnWidthPx = layoutMetrics.columnWidthPx,
-            horizontalInsetPx = selectionHorizontalInsetPx
-        )
+        currentIdx?.let {
+            currentHourSelectionOverlayMetrics(
+                currentIdx = it,
+                hoursCount = hours.size,
+                columnWidthPx = layoutMetrics.columnWidthPx,
+                horizontalInsetPx = selectionHorizontalInsetPx
+            )
+        }
     }
 
     Card(
@@ -294,7 +304,7 @@ fun HourlyWeatherGraph(
                             }
 
                             for (index in 1 until hours.size) {
-                                if (isTodayView && currentIdx in hours.indices && (index == currentIdx || index == currentIdx + 1)) {
+                                if (isTodayView && currentIdx != null && (index == currentIdx || index == currentIdx + 1)) {
                                     continue
                                 }
                                 val x = layoutMetrics.leftPx(index)
@@ -318,7 +328,7 @@ fun HourlyWeatherGraph(
                                         hour = hour,
                                         columnWidth = layoutMetrics.columnWidthDp,
                                         showDayMarker = index == 0 || hour.dateTime.toLocalDate() != hours[index - 1].dateTime.toLocalDate(),
-                                        isCurrent = isTodayView && index == currentIdx,
+                                        isCurrent = isTodayView && currentIdx != null && index == currentIdx,
                                         onSurface = onSurface,
                                         onSurfaceVariant = onSurfaceVariant
                                     )
@@ -382,7 +392,7 @@ fun HourlyWeatherGraph(
                                 )
 
                                 pts.forEachIndexed { index, pt ->
-                                    val isCurrent = isTodayView && index == currentIdx
+                                    val isCurrent = isTodayView && currentIdx != null && index == currentIdx
                                     drawCircle(
                                         color = CurveColor,
                                         radius = if (isCurrent) 5.dp.toPx() else 3.5.dp.toPx(),
@@ -396,7 +406,7 @@ fun HourlyWeatherGraph(
                                 }
 
                                 convertedTemps.forEachIndexed { index, temp ->
-                                    val isCurrent = isTodayView && index == currentIdx
+                                    val isCurrent = isTodayView && currentIdx != null && index == currentIdx
                                     val label = textMeasurer.measure(
                                         text = "${temp.roundToInt()}°",
                                         style = TextStyle(
@@ -421,7 +431,7 @@ fun HourlyWeatherGraph(
                                         hour = hour,
                                         columnWidth = layoutMetrics.columnWidthDp,
                                         speedUnit = speedUnit,
-                                        isCurrent = isTodayView && index == currentIdx,
+                                        isCurrent = isTodayView && currentIdx != null && index == currentIdx,
                                         onSurface = onSurface,
                                         onSurfaceVariant = onSurfaceVariant
                                     )

@@ -40,12 +40,18 @@ object DateFormatter {
         return "${hours}h ${minutes}m"
     }
 
-    fun minutesAgo(dateTime: LocalDateTime): Int {
-        return ChronoUnit.MINUTES.between(dateTime, LocalDateTime.now()).toInt().coerceAtLeast(0)
+    fun minutesAgo(
+        dateTime: LocalDateTime,
+        referenceDateTime: LocalDateTime = LocalDateTime.now()
+    ): Int {
+        return ChronoUnit.MINUTES.between(dateTime, referenceDateTime).toInt().coerceAtLeast(0)
     }
 
-    fun formatLastUpdated(dateTime: LocalDateTime): String {
-        val minutes = minutesAgo(dateTime)
+    fun formatLastUpdated(
+        dateTime: LocalDateTime,
+        referenceDateTime: LocalDateTime = LocalDateTime.now()
+    ): String {
+        val minutes = minutesAgo(dateTime, referenceDateTime)
         return when {
             minutes < 1 -> "just now"
             minutes == 1 -> "1 minute ago"

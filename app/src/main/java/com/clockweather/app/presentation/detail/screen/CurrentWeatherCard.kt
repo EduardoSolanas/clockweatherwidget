@@ -44,6 +44,7 @@ import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.currentDisplayWeather
+import com.clockweather.app.domain.model.locationReferenceDateTime
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
 import com.clockweather.app.util.WindSpeedFormatter
@@ -130,7 +131,7 @@ internal fun forecastDayCompactTextSizes(
 internal fun currentTemperatureDisplay(
     weatherData: WeatherData,
     temperatureUnit: TemperatureUnit,
-    referenceDateTime: LocalDateTime = LocalDateTime.now()
+    referenceDateTime: LocalDateTime = weatherData.locationReferenceDateTime()
 ): String = TemperatureFormatter.formatWithUnit(
     currentWeatherForDisplay(weatherData, referenceDateTime).temperature,
     temperatureUnit
@@ -138,7 +139,7 @@ internal fun currentTemperatureDisplay(
 
 internal fun currentWeatherForDisplay(
     weatherData: WeatherData,
-    referenceDateTime: LocalDateTime = LocalDateTime.now()
+    referenceDateTime: LocalDateTime = weatherData.locationReferenceDateTime()
 ) = weatherData.currentDisplayWeather(referenceDateTime)
 
 // ─── Debug: all conditions in cycle order ─────────────────────────────────────
@@ -153,12 +154,17 @@ fun WeatherDetailContent(
     speedUnit: SpeedUnit = SpeedUnit.KMH,
     selectedDayIndex: Int = 0,
     onDaySelected: (Int) -> Unit = {},
-    forecastDays: Int = 7
+    forecastDays: Int = 7,
+    referenceDateTime: LocalDateTime = weatherData.locationReferenceDateTime()
 ) {
-    val forecasts = selectWeatherDetailForecasts(weatherData.dailyForecasts, forecastDays)
+    val forecasts = selectWeatherDetailForecasts(
+        dailyForecasts = weatherData.dailyForecasts,
+        forecastDays = forecastDays,
+        today = referenceDateTime.toLocalDate()
+    )
     val selectedForecast = forecasts.getOrNull(selectedDayIndex) ?: forecasts.firstOrNull()
     val displayWeatherData = weatherData.copy(dailyForecasts = forecasts)
-    val currentDisplayWeather = currentWeatherForDisplay(displayWeatherData)
+    val currentDisplayWeather = currentWeatherForDisplay(displayWeatherData, referenceDateTime)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -181,7 +187,8 @@ fun WeatherDetailContent(
             temperatureUnit = temperatureUnit,
             speedUnit = speedUnit,
             selectedDate = selectedForecast?.date,
-            currentWeather = currentDisplayWeather
+            currentWeather = currentDisplayWeather,
+            referenceDateTime = referenceDateTime
         )
 
         // ── 7-Day Forecast ─────────────────────────────────────────────────
@@ -194,7 +201,13 @@ fun WeatherDetailContent(
         )
 
         // ── Detail metrics grid ─────────────────────────────────────────────
-        MetricsGrid(weatherData = displayWeatherData, temperatureUnit = temperatureUnit, speedUnit = speedUnit, selectedDayIndex = selectedDayIndex)
+        MetricsGrid(
+            weatherData = displayWeatherData,
+            temperatureUnit = temperatureUnit,
+            speedUnit = speedUnit,
+            selectedDayIndex = selectedDayIndex,
+            referenceDateTime = referenceDateTime
+        )
 
         // ── Sunrise / Sunset ────────────────────────────────────────────────
         val shownForecast = selectedForecast
@@ -207,7 +220,7 @@ fun WeatherDetailContent(
 
         // ── Last updated ────────────────────────────────────────────────────
         val lastUpdated = weatherData.currentWeather.lastUpdated
-        val minutes = DateFormatter.minutesAgo(lastUpdated)
+        val minutes = DateFormatter.minutesAgo(lastUpdated, referenceDateTime)
         val timeString = when {
             minutes < 1 -> stringResource(R.string.label_just_now)
             minutes < 60 -> pluralStringResource(R.plurals.label_minutes_ago, minutes, minutes)
@@ -833,8 +846,14 @@ private fun SmallMetric(icon: String, value: String) {
 // ─── Metrics grid ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun MetricsGrid(weatherData: WeatherData, temperatureUnit: TemperatureUnit, speedUnit: SpeedUnit, selectedDayIndex: Int) {
-    val c = if (selectedDayIndex == 0) currentWeatherForDisplay(weatherData) else weatherData.currentWeather
+private fun MetricsGrid(
+    weatherData: WeatherData,
+    temperatureUnit: TemperatureUnit,
+    speedUnit: SpeedUnit,
+    selectedDayIndex: Int,
+    referenceDateTime: LocalDateTime
+) {
+    val c = if (selectedDayIndex == 0) currentWeatherForDisplay(weatherData, referenceDateTime) else weatherData.currentWeather
     val f = weatherData.dailyForecasts.getOrNull(selectedDayIndex)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

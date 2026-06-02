@@ -145,19 +145,31 @@ class HourlyWeatherGraphTest {
     // ── resolveCurrentHourIndex ───────────────────────────────────────────────
 
     @Test
-    fun `resolveCurrentHourIndex returns index of first matching hour`() {
+    fun `resolveCurrentHourIndex returns index of matching date hour`() {
         val today = LocalDate.of(2026, 4, 10)
         val hours = buildForecasts(today, 6, startHour = 10)  // hours 10..15
 
-        assertEquals(2, resolveCurrentHourIndex(hours, nowHour = 12))
+        assertEquals(
+            2,
+            resolveCurrentHourIndex(
+                hours,
+                referenceDateTime = LocalDateTime.of(today, java.time.LocalTime.of(12, 42))
+            )
+        )
     }
 
     @Test
-    fun `resolveCurrentHourIndex returns 0 when no hour matches`() {
+    fun `resolveCurrentHourIndex returns null when current date hour is missing`() {
         val today = LocalDate.of(2026, 4, 10)
         val hours = buildForecasts(today, 4, startHour = 10)  // hours 10..13
 
-        assertEquals(0, resolveCurrentHourIndex(hours, nowHour = 5))
+        assertEquals(
+            null,
+            resolveCurrentHourIndex(
+                hours,
+                referenceDateTime = LocalDateTime.of(today, java.time.LocalTime.of(20, 11))
+            )
+        )
     }
 
     @Test
@@ -165,18 +177,45 @@ class HourlyWeatherGraphTest {
         val today = LocalDate.of(2026, 4, 10)
         val hours = buildForecasts(today, 8, startHour = 0)  // hours 0..7
 
-        assertEquals(0, resolveCurrentHourIndex(hours, nowHour = 0))
+        assertEquals(
+            0,
+            resolveCurrentHourIndex(
+                hours,
+                referenceDateTime = LocalDateTime.of(today, java.time.LocalTime.of(0, 15))
+            )
+        )
     }
 
     @Test
     fun `resolveCurrentHourIndex handles midnight rollover (hour 0 after 23)`() {
         val today = LocalDate.of(2026, 4, 10)
         val tomorrow = today.plusDays(1)
-        val hours = buildForecasts(today, 4, startHour = 21) +  // 21,22,23
+        val hours = buildForecasts(today, 3, startHour = 21) +  // 21,22,23
             buildForecasts(tomorrow, 4, startHour = 0)          // 0,1,2,3
 
         // nowHour=0 belongs to tomorrow's first slot (index 3)
-        assertEquals(3, resolveCurrentHourIndex(hours, nowHour = 0))
+        assertEquals(
+            3,
+            resolveCurrentHourIndex(
+                hours,
+                referenceDateTime = LocalDateTime.of(tomorrow, java.time.LocalTime.of(0, 10))
+            )
+        )
+    }
+
+    @Test
+    fun `resolveCurrentHourIndex does not select midnight from next day when current hour is absent`() {
+        val today = LocalDate.of(2026, 4, 10)
+        val tomorrow = today.plusDays(1)
+        val hours = buildForecasts(today, 3, startHour = 21) + buildForecasts(tomorrow, 3, startHour = 0)
+
+        assertEquals(
+            null,
+            resolveCurrentHourIndex(
+                hours,
+                referenceDateTime = LocalDateTime.of(today, java.time.LocalTime.of(20, 11))
+            )
+        )
     }
 
     @Test
@@ -209,7 +248,7 @@ class HourlyWeatherGraphTest {
     }
 
     @Test
-    fun `linkCurrentHourForecastToWeather uses shared current weather for fallback current slice`() {
+    fun `linkCurrentHourForecastToWeather leaves hours unchanged when current hour is absent`() {
         val today = LocalDate.of(2026, 4, 10)
         val hours = listOf(
             buildForecast(today, 11),
@@ -230,8 +269,7 @@ class HourlyWeatherGraphTest {
             referenceDateTime = LocalDateTime.of(today, java.time.LocalTime.of(10, 42)),
         )
 
-        assertEquals(18.0, linked[0].temperature, 0.0)
-        assertEquals(WeatherCondition.RAIN_MODERATE, linked[0].weatherCondition)
+        assertEquals(hours[0], linked[0])
         assertEquals(hours[1], linked[1])
     }
 
@@ -286,5 +324,3 @@ class HourlyWeatherGraphTest {
             lastUpdated = LocalDateTime.of(2026, 4, 10, 10, 15),
         )
 }
-
-
