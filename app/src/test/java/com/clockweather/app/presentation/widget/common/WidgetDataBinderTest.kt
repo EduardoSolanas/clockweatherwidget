@@ -23,6 +23,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -170,7 +171,7 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindWeatherViews uses weather snapshot day for high low temperatures`() {
+    fun `bindWeatherViews uses location today for high low temperatures`() {
         val weatherData = sampleWeatherData(
             dailyForecasts = listOf(
                 sampleWeatherData().dailyForecasts.first().copy(
@@ -186,7 +187,13 @@ class WidgetDataBinderTest {
             ),
         )
 
-        WidgetDataBinder.bindWeatherViews(context, views, weatherData, TemperatureUnit.CELSIUS)
+        WidgetDataBinder.bindWeatherViews(
+            context = context,
+            views = views,
+            weatherData = weatherData,
+            temperatureUnit = TemperatureUnit.CELSIUS,
+            referenceDateTime = LocalDateTime.of(2026, 4, 3, 10, 42),
+        )
 
         verify(exactly = 1) { views.setTextViewText(R.id.high_low, "20°/11°") }
         verify(exactly = 0) { views.setTextViewText(R.id.high_low, "25°/15°") }
@@ -433,80 +440,16 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindWeeklyForecastRows anchors from weather snapshot day when location is ahead of device`() {
-        val deviceToday = LocalDate.of(2026, 4, 3)
-        val weatherToday = LocalDate.of(2026, 4, 4)
+    fun `bindWeeklyForecastRows anchors on provided today and drops earlier days`() {
+        // Forecast data spans Apr 4..Apr 11; the weather snapshot day (lastUpdated) is Apr 4,
+        // but "today" at the location has already rolled to Apr 5. The leading Apr 4 column
+        // must be dropped so the widget matches the detail page.
+        val today = LocalDate.of(2026, 4, 5) // Sunday
         mockEnglishDayNames()
 
         val weatherData = sampleWeatherData(
             dailyForecasts = (0..7).map { offset ->
-                DailyForecast(
-                    date = weatherToday.plusDays(offset.toLong()),
-                    weatherCondition = WeatherCondition.CLEAR_DAY,
-                    temperatureMax = 20.0 + offset,
-                    temperatureMin = 10.0 + offset,
-                    feelsLikeMax = 20.0 + offset,
-                    feelsLikeMin = 10.0 + offset,
-                    sunrise = LocalTime.of(6, 0),
-                    sunset = LocalTime.of(19, 0),
-                    daylightDurationSeconds = 36000.0,
-                    precipitationSum = 0.0,
-                    precipitationProbability = 0,
-                    windSpeedMax = 10.0,
-                    windDirectionDominant = WindDirection.N,
-                    windDirectionDegrees = 0,
-                    uvIndexMax = 5.0,
-                    averageHumidity = 60,
-                    averagePressure = 1012.0,
-                )
-            },
-        ).copy(
-            currentWeather = sampleWeatherData().currentWeather.copy(
-                lastUpdated = LocalDateTime.of(2026, 4, 4, 0, 15),
-            ),
-        )
-
-        WidgetDataBinder.bindWeeklyForecastRows(
-            context = context,
-            views = views,
-            weatherData = weatherData,
-            temperatureUnit = TemperatureUnit.CELSIUS,
-            today = deviceToday,
-        )
-
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sat") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, match { it.toString().contains("20") }) }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Wed") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, match { it.toString().contains("24") }) }
-    }
-
-    @Test
-    fun `bindWeeklyForecastRows anchors from weather snapshot day when location is behind device`() {
-        val deviceToday = LocalDate.of(2026, 4, 5)
-        val weatherToday = LocalDate.of(2026, 4, 4)
-        mockEnglishDayNames()
-
-        val weatherData = sampleWeatherData(
-            dailyForecasts = (0..7).map { offset ->
-                DailyForecast(
-                    date = weatherToday.plusDays(offset.toLong()),
-                    weatherCondition = WeatherCondition.CLEAR_DAY,
-                    temperatureMax = 20.0 + offset,
-                    temperatureMin = 10.0 + offset,
-                    feelsLikeMax = 20.0 + offset,
-                    feelsLikeMin = 10.0 + offset,
-                    sunrise = LocalTime.of(6, 0),
-                    sunset = LocalTime.of(19, 0),
-                    daylightDurationSeconds = 36000.0,
-                    precipitationSum = 0.0,
-                    precipitationProbability = 0,
-                    windSpeedMax = 10.0,
-                    windDirectionDominant = WindDirection.N,
-                    windDirectionDegrees = 0,
-                    uvIndexMax = 5.0,
-                    averageHumidity = 60,
-                    averagePressure = 1012.0,
-                )
+                dailyForecastOn(LocalDate.of(2026, 4, 4).plusDays(offset.toLong()), tempMax = 20.0 + offset)
             },
         ).copy(
             currentWeather = sampleWeatherData().currentWeather.copy(
@@ -519,13 +462,27 @@ class WidgetDataBinderTest {
             views = views,
             weatherData = weatherData,
             temperatureUnit = TemperatureUnit.CELSIUS,
-            today = deviceToday,
+            today = today,
         )
 
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sat") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, match { it.toString().contains("20") }) }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Wed") }
-        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, match { it.toString().contains("24") }) }
+        // Apr 5 (Sun, max 21) is day 1; Apr 4 is dropped. Apr 9 (Thu, max 25) is day 5.
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Sun") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, match { it.toString().contains("21") }) }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Thu") }
+        verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, match { it.toString().contains("25") }) }
+    }
+
+    @Test
+    fun `selectForecastWidgetDays anchors on provided today not data snapshot day`() {
+        // lastUpdated default is Apr 3; anchoring on the snapshot would keep Apr 3..Apr 5.
+        val weatherData = sampleWeatherData(
+            dailyForecasts = (3..10).map { day -> dailyForecastOn(LocalDate.of(2026, 4, day)) },
+        )
+
+        val days = selectForecastWidgetDays(weatherData, today = LocalDate.of(2026, 4, 6))
+
+        assertEquals(LocalDate.of(2026, 4, 6), days.first().date)
+        assertEquals(5, days.size)
     }
 
     @Test
@@ -636,6 +593,17 @@ class WidgetDataBinderTest {
             dailyForecasts = dailyForecasts,
         )
     }
+
+    private fun dailyForecastOn(
+        date: LocalDate,
+        tempMax: Double = 20.0,
+    ): DailyForecast = sampleWeatherData().dailyForecasts.first().copy(
+        date = date,
+        temperatureMax = tempMax,
+        temperatureMin = tempMax - 10.0,
+        feelsLikeMax = tempMax,
+        feelsLikeMin = tempMax - 10.0,
+    )
 
     private fun sampleHourlyForecast(
         dateTime: LocalDateTime,

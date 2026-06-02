@@ -142,6 +142,20 @@ class WeatherDataCurrentHourTest {
     }
 
     @Test
+    fun `weatherToday derives today from weather location timezone not device timezone`() {
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"))
+
+        val weatherData = sampleWeatherData(locationTimezone = "Pacific/Auckland")
+
+        // At this instant it is still Apr 3 in Los Angeles but already Apr 4 in Auckland.
+        val today = weatherData.weatherToday(
+            currentInstant = Instant.parse("2026-04-03T20:00:00Z")
+        )
+
+        assertEquals(LocalDate.of(2026, 4, 4), today)
+    }
+
+    @Test
     fun `locationReferenceDateTime uses weather location timezone when device timezone differs`() {
         TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"))
 

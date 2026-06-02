@@ -55,10 +55,6 @@ class WeatherDetailActivity : AppCompatActivity() {
             .show()
     }
 
-    // NOTE: Activity → home clock sync is handled globally by
-    // ClockWeatherApplication.ActivityLifecycleCallbacks.onActivityStopped()
-    // and ProcessLifecycleOwner.onStop(). No per-activity override needed.
-
     companion object {
         private const val FIRST_INSTALL_PREFS = "first_install_prefs"
         private const val KEY_FIRST_INSTALL_DIALOG_SHOWN = "first_install_dialog_shown"

@@ -14,6 +14,7 @@ import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.currentDisplayWeather
 import com.clockweather.app.domain.model.locationReferenceDateTime
+import com.clockweather.app.domain.model.weatherToday
 import com.clockweather.app.presentation.detail.WeatherDetailActivity
 import com.clockweather.app.util.DateFormatter
 import com.clockweather.app.util.TemperatureFormatter
@@ -75,10 +76,9 @@ object WidgetDataBinder {
         renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
         referenceDateTime: LocalDateTime = weatherData.locationReferenceDateTime(),
     ) {
-        val currentSnapshot = weatherData.currentWeather
         val currentDisplayWeather = weatherData.currentDisplayWeather(referenceDateTime)
         val location = weatherData.location
-        val forecastAnchorDate = currentSnapshot.lastUpdated.toLocalDate()
+        val forecastAnchorDate = referenceDateTime.toLocalDate()
         val todayForecast = weatherData.dailyForecasts.firstOrNull { it.date == forecastAnchorDate }
             ?: weatherData.dailyForecasts.firstOrNull()
 
@@ -131,7 +131,7 @@ object WidgetDataBinder {
         views: RemoteViews,
         weatherData: WeatherData,
         temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
-        today: LocalDate = LocalDate.now(),
+        today: LocalDate = weatherData.weatherToday(),
         iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
         renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
     ) {
@@ -144,7 +144,7 @@ object WidgetDataBinder {
             RowIds(R.id.fday5_name, R.id.fday5_icon, R.id.fday5_high),
         )
         val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit
-        val forecastDays = selectForecastWidgetDays(weatherData)
+        val forecastDays = selectForecastWidgetDays(weatherData, today)
         rows.forEachIndexed { i, r ->
             val forecast = forecastDays.getOrNull(i)
             if (forecast == null) {
@@ -257,10 +257,12 @@ internal fun resolveWidgetLocationLabel(
     }
 }
 
-internal fun selectForecastWidgetDays(weatherData: WeatherData): List<com.clockweather.app.domain.model.DailyForecast> {
-    val forecastAnchorDate = weatherData.currentWeather.lastUpdated.toLocalDate()
+internal fun selectForecastWidgetDays(
+    weatherData: WeatherData,
+    today: LocalDate = weatherData.weatherToday(),
+): List<com.clockweather.app.domain.model.DailyForecast> {
     return weatherData.dailyForecasts
         .sortedBy { it.date }
-        .filter { !it.date.isBefore(forecastAnchorDate) }
+        .filter { !it.date.isBefore(today) }
         .take(5)
 }

@@ -16,6 +16,7 @@ import com.clockweather.app.di.WidgetEntryPoint
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.ClockTileSize
+import com.clockweather.app.domain.model.weatherToday
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -219,7 +220,8 @@ abstract class BaseWidgetUpdater(
                 }
 
                 var weather = weatherRepo.getWeatherData(location).first()
-                if (allowWeatherRefresh && shouldRefreshWeather(weather, LocalDate.now(), minimumFutureForecastDaysRequired)) {
+                val weatherToday = weather?.weatherToday() ?: LocalDate.now()
+                if (allowWeatherRefresh && shouldRefreshWeather(weather, weatherToday, minimumFutureForecastDaysRequired)) {
                     try {
                         weatherRepo.refreshWidgetWeatherData(location)
                         weather = weatherRepo.getWeatherData(location).first()

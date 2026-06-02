@@ -24,6 +24,19 @@ fun WeatherData.locationReferenceDateTime(
     currentInstant: Instant = Instant.now()
 ): LocalDateTime = LocalDateTime.ofInstant(currentInstant, locationZoneId())
 
+/**
+ * The single source of truth for "what day is it?" in weather logic: today at the
+ * weather location, by the real clock. Every weather-date decision (current-day
+ * selection, widget high/low anchor, forecast-day list, refresh staleness) derives
+ * from this so the widget and the detail screen never disagree.
+ *
+ * Intentionally independent of [CurrentWeather.lastUpdated] — how fresh the data is
+ * is a separate concern, owned by the refresh logic.
+ */
+fun WeatherData.weatherToday(
+    currentInstant: Instant = Instant.now()
+): LocalDate = locationReferenceDateTime(currentInstant).toLocalDate()
+
 fun WeatherData.normalizeDailyConditions(): WeatherData {
     val today = locationReferenceDateTime().toLocalDate()
     return copy(
