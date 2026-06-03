@@ -185,8 +185,9 @@ object WidgetDataBinder {
  * Home-screen widgets are inflated in the launcher's process. Vector drawables with
  * inline `aapt:attr` gradients (our weather icons) fail to inflate on some OEM / older
  * launchers (notably MIUI on Android 10), surfacing as "Can't load widget". Pre-rendering
- * to a bitmap sidesteps the launcher's vector inflater entirely. If rendering fails we fall
- * back to [RemoteViews.setImageViewResource] so behaviour is unchanged on capable launchers.
+ * to a bitmap sidesteps the launcher's vector inflater entirely. If rendering fails the icon
+ * is left empty — passing the raw vector resource ID to the launcher would re-trigger the same
+ * crash, so an empty icon is safer than a dead widget.
  */
 internal fun setWidgetIcon(
     views: RemoteViews,
@@ -199,7 +200,11 @@ internal fun setWidgetIcon(
     if (bitmap != null) {
         views.setImageViewBitmap(viewId, bitmap)
     } else {
-        views.setImageViewResource(viewId, drawableResId)
+        // Fallback to setImageViewResource is removed.
+        // If vector rendering fails (e.g. Xiaomi MIUI Android 10 failing to parse aapt:attr),
+        // passing the vector drawable ID to the launcher will cause the launcher's RemoteViews
+        // inflater to crash with the same error, resulting in a "Can't load widget" placeholder.
+        // It is safer to leave the icon empty than to crash the entire widget.
     }
 }
 

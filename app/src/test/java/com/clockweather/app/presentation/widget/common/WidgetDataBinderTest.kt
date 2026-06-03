@@ -164,7 +164,6 @@ class WidgetDataBinderTest {
 
         verify(exactly = 1) { views.setTextViewText(R.id.city_name, "London") }
         verify(exactly = 1) { views.setTextViewText(R.id.condition_text, "Partly cloudy") }
-        verify(exactly = 1) { views.setImageViewResource(R.id.weather_icon, R.drawable.ic_widget_weather_partly_cloudy_day) }
         verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "17°C") }
         verify(exactly = 1) { views.setTextViewText(R.id.high_low, "20°/11°") }
         verify(exactly = 1) { views.setViewVisibility(R.id.weather_card, View.VISIBLE) }
@@ -231,7 +230,6 @@ class WidgetDataBinderTest {
 
         verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "18\u00B0C") }
         verify(exactly = 1) { views.setTextViewText(R.id.condition_text, "Moderate rain") }
-        verify(exactly = 1) { views.setImageViewResource(R.id.weather_icon, R.drawable.ic_widget_weather_rain) }
         verify(exactly = 1) { views.setTextViewText(R.id.high_low, "20°/11°") }
     }
 
@@ -253,7 +251,7 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindWeatherViews falls back to resource when bitmap rendering fails`() {
+    fun `bindWeatherViews leaves icon empty when bitmap rendering fails`() {
         val weatherData = sampleWeatherData()
 
         WidgetDataBinder.bindWeatherViews(
@@ -264,9 +262,8 @@ class WidgetDataBinderTest {
             renderIcon = { _, _ -> null },
         )
 
-        verify(exactly = 1) {
-            views.setImageViewResource(R.id.weather_icon, R.drawable.ic_widget_weather_partly_cloudy_day)
-        }
+        verify(exactly = 0) { views.setImageViewResource(any(), any()) }
+        verify(exactly = 0) { views.setImageViewBitmap(any(), any()) }
     }
 
     @Test
@@ -321,7 +318,6 @@ class WidgetDataBinderTest {
 
         verify(exactly = 1) { views.setTextViewText(R.id.city_name, "Weather") }
         verify(exactly = 1) { views.setTextViewText(R.id.condition_text, "Updating weather") }
-        verify(exactly = 1) { views.setImageViewResource(R.id.weather_icon, R.drawable.ic_widget_weather_partly_cloudy_day) }
         verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "--°") }
         verify(exactly = 1) { views.setTextViewText(R.id.high_low, "") }
         verify(exactly = 1) { views.setViewVisibility(R.id.weather_card, View.VISIBLE) }
@@ -365,7 +361,6 @@ class WidgetDataBinderTest {
         )
 
         verify(exactly = 1) { views.setTextViewText(R.id.fday1_name, "Fri") }
-        verify(exactly = 1) { views.setImageViewResource(R.id.fday1_icon, R.drawable.ic_widget_weather_clear_day) }
         verify(exactly = 1) { views.setTextViewText(R.id.fday1_high, "20°/10°") }
         verify(exactly = 1) { views.setTextViewText(R.id.fday5_name, "Tue") }
         verify(exactly = 1) { views.setTextViewText(R.id.fday5_high, "24°/14°") }
@@ -425,6 +420,8 @@ class WidgetDataBinderTest {
             ),
         )
 
+        val capturedResIds = mutableListOf<Int>()
+
         WidgetDataBinder.bindWeeklyForecastRows(
             context = context,
             views = views,
@@ -432,11 +429,10 @@ class WidgetDataBinderTest {
             temperatureUnit = TemperatureUnit.CELSIUS,
             today = today,
             iconStyle = WeatherIconMapper.IconStyle.NEON_EDGE,
+            renderIcon = { _, resId -> capturedResIds.add(resId); null },
         )
 
-        verify(exactly = 1) {
-            views.setImageViewResource(R.id.fday1_icon, R.drawable.ic_weather_neon_edge_thunderstorm)
-        }
+        assertEquals(R.drawable.ic_weather_neon_edge_thunderstorm, capturedResIds.firstOrNull())
     }
 
     @Test
