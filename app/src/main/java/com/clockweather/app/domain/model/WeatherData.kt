@@ -14,11 +14,11 @@ data class WeatherData(
     val airQuality: AirQuality? = null
 )
 
-fun WeatherData.locationZoneId(): ZoneId =
-    location.timezone
-        .takeUnless { it.isBlank() || it.equals("auto", ignoreCase = true) }
-        ?.let { timezone -> runCatching { ZoneId.of(timezone) }.getOrNull() }
-        ?: ZoneId.systemDefault()
+// The phone's clock is the single source of truth for "now" everywhere (detail
+// screen, widget, current-hour selection). Forecast timestamps are requested from
+// the weather API in this same device timezone, so labels and "now" always agree —
+// even when the weather location sits in a different timezone than the phone.
+fun WeatherData.locationZoneId(): ZoneId = ZoneId.systemDefault()
 
 fun WeatherData.locationReferenceDateTime(
     currentInstant: Instant = Instant.now()

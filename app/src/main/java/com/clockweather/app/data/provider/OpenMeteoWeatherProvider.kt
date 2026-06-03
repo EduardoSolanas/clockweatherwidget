@@ -4,6 +4,7 @@ import com.clockweather.app.data.mapper.WeatherDtoMapper
 import com.clockweather.app.data.remote.api.OpenMeteoWeatherApi
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
+import java.util.TimeZone
 import javax.inject.Inject
 
 class OpenMeteoWeatherProvider @Inject constructor(
@@ -15,6 +16,7 @@ class OpenMeteoWeatherProvider @Inject constructor(
         val response = openMeteoWeatherApi.getWeatherForecast(
             latitude = location.latitude,
             longitude = location.longitude,
+            timezone = TimeZone.getDefault().id,
             forecastDays = forecastDays.coerceIn(1, 16)
         )
         return mapper.mapToWeatherData(response, location)
