@@ -5,7 +5,9 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.clockweather.app.presentation.settings.SettingsViewModel
@@ -16,6 +18,7 @@ object WeatherUpdateScheduler {
 
     /** WorkManager enforces a minimum repeat interval of 15 minutes. */
     private const val MIN_INTERVAL_MINUTES = 15L
+    private const val IMMEDIATE_WORK_NAME = "weather_update_immediate_work"
 
     /**
      * Enqueue (or update) the periodic weather-fetch worker.
@@ -60,10 +63,14 @@ object WeatherUpdateScheduler {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val workRequest = androidx.work.OneTimeWorkRequestBuilder<WeatherUpdateWorker>()
+        val workRequest = OneTimeWorkRequestBuilder<WeatherUpdateWorker>()
             .setConstraints(constraints)
             .build()
 
-        WorkManager.getInstance(context).enqueue(workRequest)
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            IMMEDIATE_WORK_NAME,
+            ExistingWorkPolicy.KEEP,
+            workRequest
+        )
     }
 }

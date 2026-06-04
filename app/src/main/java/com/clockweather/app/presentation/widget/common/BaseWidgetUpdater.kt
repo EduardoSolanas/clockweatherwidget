@@ -16,7 +16,9 @@ import com.clockweather.app.di.WidgetEntryPoint
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.ClockTileSize
-import com.clockweather.app.domain.model.weatherToday
+import com.clockweather.app.domain.model.isWeatherDataFresh
+import com.clockweather.app.domain.model.locationReferenceDateTime
+import com.clockweather.app.worker.WeatherUpdateScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -49,10 +51,7 @@ abstract class BaseWidgetUpdater(
     /** Called after weather data is available. Subclasses apply their specific bindings. */
     abstract fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences)
 
-    suspend fun updateWidget(
-        appWidgetId: Int,
-        allowWeatherRefresh: Boolean = true
-    ) {
+    suspend fun updateWidget(appWidgetId: Int) {
         withContext(Dispatchers.IO) {
             try {
                 Log.d(tag, "updateWidget id=$appWidgetId")
@@ -219,15 +218,14 @@ abstract class BaseWidgetUpdater(
                     if (candidate.id == 0L) candidate.copy(id = savedId) else candidate
                 }
 
-                var weather = weatherRepo.getWeatherData(location).first()
-                val weatherToday = weather?.weatherToday() ?: LocalDate.now()
-                if (allowWeatherRefresh && shouldRefreshWeather(weather, weatherToday, minimumFutureForecastDaysRequired)) {
-                    try {
-                        weatherRepo.refreshWidgetWeatherData(location)
-                        weather = weatherRepo.getWeatherData(location).first()
-                    } catch (e: Exception) {
-                        Log.w(tag, "Widget weather refresh failed for widget $appWidgetId; using cached weather", e)
-                    }
+                val weather = weatherRepo.getWeatherData(location).first()
+                val referenceDateTime = weather?.locationReferenceDateTime() ?: java.time.LocalDateTime.now()
+                val requiredForecastDays = requiredForecastDaysForRefresh(
+                    requestedForecastDays = 7,
+                    minimumFutureForecastDaysRequired = minimumFutureForecastDaysRequired,
+                )
+                if (!isWeatherDataFresh(weather, referenceDateTime, requiredForecastDays)) {
+                    WeatherUpdateScheduler.scheduleImmediateRefresh(context)
                 }
 
                 if (weather != null) {

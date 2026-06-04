@@ -29,7 +29,7 @@ class SettingsProviderChangeRefreshTest {
         every { locationRepository.getSavedLocations() } returns flowOf(listOf(location))
         coEvery { locationRepository.getCurrentLocation() } returns null
         every { locationRepository.getFallbackLocation() } returns location
-        coEvery { weatherRepository.refreshWeatherData(any(), any()) } returns Unit
+        coEvery { weatherRepository.forceRefreshWeatherData(any(), any()) } returns Unit
 
         refreshWeatherForProviderChange(
             locationRepository = locationRepository,
@@ -37,6 +37,6 @@ class SettingsProviderChangeRefreshTest {
             forecastDays = 7
         )
 
-        coVerify(exactly = 1) { weatherRepository.refreshWeatherData(location, 7) }
+        coVerify(exactly = 1) { weatherRepository.forceRefreshWeatherData(location, 7) }
     }
 }

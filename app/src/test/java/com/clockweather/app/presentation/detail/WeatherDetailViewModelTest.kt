@@ -87,7 +87,8 @@ class WeatherDetailViewModelTest {
         every { locationRepository.getSavedLocations() } returns flowOf(listOf(location))
         coEvery { locationRepository.getCurrentLocation() } returns null
         every { getWeatherDataUseCase(location) } returns flowOf(sampleWeatherData(location))
-        coEvery { refreshWeatherUseCase(location, forecastDays = 7) } just runs
+        coEvery { refreshWeatherUseCase.ensureFresh(location, forecastDays = 7) } just runs
+        coEvery { refreshWeatherUseCase.forceRefresh(location, forecastDays = 7) } just runs
         coEvery { app.refreshAllWidgets(app) } just runs
     }
 
@@ -108,7 +109,7 @@ class WeatherDetailViewModelTest {
 
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { refreshWeatherUseCase(location, forecastDays = 7) }
+        coVerify(exactly = 1) { refreshWeatherUseCase.ensureFresh(location, forecastDays = 7) }
         coVerify(exactly = 1) { app.refreshAllWidgets(app) }
     }
 
@@ -129,8 +130,8 @@ class WeatherDetailViewModelTest {
         viewModel.refresh()
         advanceUntilIdle() // second manual refresh within 5 min — throttled
 
-        // Only 2 calls total: 1 initial + 1 manual; second manual must be suppressed
-        coVerify(exactly = 2) { refreshWeatherUseCase(location, forecastDays = 7) }
+        coVerify(exactly = 1) { refreshWeatherUseCase.ensureFresh(location, forecastDays = 7) }
+        coVerify(exactly = 1) { refreshWeatherUseCase.forceRefresh(location, forecastDays = 7) }
         coVerify(exactly = 2) { app.refreshAllWidgets(app) }
     }
 
@@ -154,7 +155,8 @@ class WeatherDetailViewModelTest {
         viewModel.refresh()
         advanceUntilIdle()
 
-        coVerify(exactly = 3) { refreshWeatherUseCase(location, forecastDays = 7) }
+        coVerify(exactly = 1) { refreshWeatherUseCase.ensureFresh(location, forecastDays = 7) }
+        coVerify(exactly = 2) { refreshWeatherUseCase.forceRefresh(location, forecastDays = 7) }
     }
 
     @Test
@@ -171,7 +173,8 @@ class WeatherDetailViewModelTest {
         viewModel.refresh()
         advanceUntilIdle()
 
-        coVerify(exactly = 2) { refreshWeatherUseCase(location, forecastDays = 7) }
+        coVerify(exactly = 1) { refreshWeatherUseCase.ensureFresh(location, forecastDays = 7) }
+        coVerify(exactly = 1) { refreshWeatherUseCase.forceRefresh(location, forecastDays = 7) }
         coVerify(exactly = 2) { app.refreshAllWidgets(app) }
     }
 

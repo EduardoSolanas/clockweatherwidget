@@ -14,6 +14,8 @@ import com.clockweather.app.data.provider.WeatherProviderPreferences
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WeatherProviderType
+import com.clockweather.app.domain.model.isWeatherDataFresh
+import com.clockweather.app.domain.model.locationReferenceDateTime
 import com.clockweather.app.domain.model.normalizeDailyConditions
 import com.clockweather.app.domain.repository.WeatherRepository
 import androidx.room.withTransaction
@@ -59,30 +61,19 @@ class WeatherRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun refreshWeatherData(location: Location, forecastDays: Int) {
+    override suspend fun ensureFreshWeatherData(location: Location, forecastDays: Int) {
         refreshMutex.withLock {
-            val providerType = WeatherProviderPreferences.resolve(
-                dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
-            )
-            val weatherData = fetchWithFallback(providerType) { provider, actualProviderType ->
-                provider.fetchWeatherData(
-                    location = location,
-                    forecastDays = forecastDays.coerceIn(1, actualProviderType.maxForecastDays)
-                )
-            }
-            persistWeatherData(weatherData.normalizeDailyConditions(), location.id)
+            val cached = getWeatherData(location).first()
+            val referenceDateTime = cached?.locationReferenceDateTime() ?: java.time.LocalDateTime.now()
+            if (isWeatherDataFresh(cached, referenceDateTime, forecastDays)) return
+
+            refreshAndPersist(location, forecastDays)
         }
     }
 
-    override suspend fun refreshWidgetWeatherData(location: Location) {
+    override suspend fun forceRefreshWeatherData(location: Location, forecastDays: Int) {
         refreshMutex.withLock {
-            val providerType = WeatherProviderPreferences.resolve(
-                dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
-            )
-            val weatherData = fetchWithFallback(providerType) { provider, _ ->
-                provider.fetchWidgetWeatherData(location)
-            }
-            persistWeatherData(weatherData.normalizeDailyConditions(), location.id)
+            refreshAndPersist(location, forecastDays)
         }
     }
 
@@ -102,6 +93,19 @@ class WeatherRepositoryImpl @Inject constructor(
             if (fallbackType == providerType) throw error
             fetch(providerFactory.get(fallbackType), fallbackType)
         }
+    }
+
+    private suspend fun refreshAndPersist(location: Location, forecastDays: Int) {
+        val providerType = WeatherProviderPreferences.resolve(
+            dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
+        )
+        val weatherData = fetchWithFallback(providerType) { provider, actualProviderType ->
+            provider.fetchWeatherData(
+                location = location,
+                forecastDays = forecastDays.coerceIn(1, actualProviderType.maxForecastDays)
+            )
+        }
+        persistWeatherData(weatherData.normalizeDailyConditions(), location.id)
     }
 
     private suspend fun persistWeatherData(data: WeatherData, locationId: Long) {

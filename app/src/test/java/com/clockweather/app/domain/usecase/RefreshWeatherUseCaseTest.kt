@@ -21,30 +21,30 @@ class RefreshWeatherUseCaseTest {
     )
 
     @Test
-    fun `invoke passes forecastDays 14 to repository`() = runTest {
-        coJustRun { repository.refreshWeatherData(location, 14) }
+    fun `forceRefresh passes forecastDays 14 to repository`() = runTest {
+        coJustRun { repository.forceRefreshWeatherData(location, 14) }
 
-        useCase(location, forecastDays = 14)
+        useCase.forceRefresh(location, forecastDays = 14)
 
-        coVerify(exactly = 1) { repository.refreshWeatherData(location, 14) }
+        coVerify(exactly = 1) { repository.forceRefreshWeatherData(location, 14) }
     }
 
     @Test
-    fun `invoke defaults to 7 forecast days when not specified`() = runTest {
-        coJustRun { repository.refreshWeatherData(location, 7) }
+    fun `ensureFresh defaults to 7 forecast days when not specified`() = runTest {
+        coJustRun { repository.ensureFreshWeatherData(location, 7) }
 
-        useCase(location)
+        useCase.ensureFresh(location)
 
-        coVerify(exactly = 1) { repository.refreshWeatherData(location, 7) }
+        coVerify(exactly = 1) { repository.ensureFreshWeatherData(location, 7) }
     }
 
     @Test
-    fun `invoke passes forecastDays 1 to repository`() = runTest {
-        coJustRun { repository.refreshWeatherData(location, 1) }
+    fun `forceRefresh passes forecastDays 1 to repository`() = runTest {
+        coJustRun { repository.forceRefreshWeatherData(location, 1) }
 
-        useCase(location, forecastDays = 1)
+        useCase.forceRefresh(location, forecastDays = 1)
 
-        coVerify(exactly = 1) { repository.refreshWeatherData(location, 1) }
+        coVerify(exactly = 1) { repository.forceRefreshWeatherData(location, 1) }
     }
 }
 

@@ -71,29 +71,29 @@ class WeatherRepositoryForecastDaysTest {
     }
 
     @Test
-    fun `refreshWeatherData passes forecastDays 14 to selected provider`() = runTest {
+    fun `forceRefreshWeatherData passes forecastDays 14 to selected provider`() = runTest {
         setupProviderSelection(WeatherProviderType.OPEN_METEO)
         every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
         coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-provider-call")
 
-        runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
+        runCatching { repository.forceRefreshWeatherData(location, forecastDays = 14) }
 
         coVerify(exactly = 1) { openMeteoProvider.fetchWeatherData(location, 14) }
     }
 
     @Test
-    fun `refreshWeatherData passes forecastDays 7 without hardcoding another value`() = runTest {
+    fun `forceRefreshWeatherData passes forecastDays 7 without hardcoding another value`() = runTest {
         setupProviderSelection(WeatherProviderType.OPEN_METEO)
         every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
         coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-provider-call")
 
-        runCatching { repository.refreshWeatherData(location, forecastDays = 7) }
+        runCatching { repository.forceRefreshWeatherData(location, forecastDays = 7) }
 
         coVerify(exactly = 1) { openMeteoProvider.fetchWeatherData(location, 7) }
     }
 
     @Test
-    fun `refreshWeatherData falls back to configured default provider when preference missing`() = runTest {
+    fun `forceRefreshWeatherData falls back to configured default provider when preference missing`() = runTest {
         val defaultProvider = WeatherProviderPreferences.defaultProvider()
         val expectedForecastDays = 14.coerceIn(1, defaultProvider.maxForecastDays)
         val defaultDataProvider: WeatherDataProvider = mockk()
@@ -101,26 +101,26 @@ class WeatherRepositoryForecastDaysTest {
         every { providerFactory.get(defaultProvider) } returns defaultDataProvider
         coEvery { defaultDataProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-provider-call")
 
-        runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
+        runCatching { repository.forceRefreshWeatherData(location, forecastDays = 14) }
 
         coVerify(exactly = 1) { defaultDataProvider.fetchWeatherData(location, expectedForecastDays) }
     }
 
     @Test
-    fun `refreshWeatherData propagates error when selected provider fails`() = runTest {
+    fun `forceRefreshWeatherData propagates error when selected provider fails`() = runTest {
         setupProviderSelection(WeatherProviderType.OPENWEATHERMAP)
         every { providerFactory.get(WeatherProviderType.OPENWEATHERMAP) } returns openWeatherMapProvider
         every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
         coEvery { openWeatherMapProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
         coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
 
-        val result = runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
+        val result = runCatching { repository.forceRefreshWeatherData(location, forecastDays = 14) }
 
         assertTrue(result.isFailure)
     }
 
     @Test
-    fun `refreshWeatherData falls back to default provider when selected fails`() = runTest {
+    fun `forceRefreshWeatherData falls back to default provider when selected fails`() = runTest {
         val defaultProviderType = WeatherProviderPreferences.defaultProvider()
         val selectedProviderType = if (defaultProviderType == WeatherProviderType.OPEN_METEO) {
             WeatherProviderType.OPENWEATHERMAP
@@ -143,7 +143,7 @@ class WeatherRepositoryForecastDaysTest {
         coEvery { selectedProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
         coEvery { defaultProvider.fetchWeatherData(any(), any()) } throws RuntimeException("stop-after-fallback-call")
 
-        runCatching { repository.refreshWeatherData(location, forecastDays = 14) }
+        runCatching { repository.forceRefreshWeatherData(location, forecastDays = 14) }
 
         coVerify(atLeast = 1) {
             defaultProvider.fetchWeatherData(

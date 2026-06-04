@@ -66,25 +66,6 @@ class GoogleWeatherProviderTest {
         }
     }
 
-    @Test
-    fun `fetchWidgetWeatherData does not request hourly forecast`() = runTest {
-        coEvery {
-            googleWeatherApi.getCurrentConditions(any(), any(), any(), any(), any())
-        } returns currentDto
-        coEvery {
-            googleWeatherApi.getDailyForecast(any(), any(), any(), any(), any(), any())
-        } returns dailyDto
-        every {
-            mapper.mapToWeatherData(currentDto, null, dailyDto, location)
-        } returns fakeWeatherData
-
-        provider.fetchWidgetWeatherData(location)
-
-        coVerify(exactly = 0) {
-            googleWeatherApi.getHourlyForecast(any(), any(), any(), any(), any(), any())
-        }
-    }
-
     private fun stubApiAndMapper() {
         coEvery {
             googleWeatherApi.getCurrentConditions(any(), any(), any(), any(), any())

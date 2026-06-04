@@ -87,7 +87,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                 android.util.Log.d("ClockWeatherApp", "Checking provider ${component.shortClassName}: found ${ids.size} IDs")
                 if (ids.isNotEmpty()) {
                     val updater = provider.getUpdater(context.applicationContext, mgr, entryPoint)
-                    ids.forEach { id -> updater.updateWidget(id, allowWeatherRefresh = false) }
+                    ids.forEach { id -> updater.updateWidget(id) }
                 }
             }
         } catch (e: Exception) {

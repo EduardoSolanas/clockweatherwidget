@@ -352,5 +352,5 @@ internal suspend fun refreshWeatherForProviderChange(
     val location = locationRepository.getSavedLocations().first().firstOrNull()
         ?: locationRepository.getCurrentLocation()
         ?: locationRepository.getFallbackLocation()
-    weatherRepository.refreshWeatherData(location, forecastDays)
+    weatherRepository.forceRefreshWeatherData(location, forecastDays)
 }

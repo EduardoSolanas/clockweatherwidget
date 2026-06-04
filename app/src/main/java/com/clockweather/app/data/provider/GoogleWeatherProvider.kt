@@ -47,28 +47,4 @@ class GoogleWeatherProvider @Inject constructor(
             )
         }
 
-    /**
-     * Widget-optimised fetch: 2 parallel requests instead of 3.
-     * Skips hourly forecast (widgets don't display hourly data) and
-     * requests exactly 8 days to fill the forecast strip.
-     */
-    override suspend fun fetchWidgetWeatherData(location: Location): WeatherData =
-        coroutineScope {
-            val lat = location.latitude
-            val lon = location.longitude
-
-            val currentDeferred = async {
-                googleWeatherApi.getCurrentConditions(apiKey, lat, lon)
-            }
-            val dailyDeferred = async {
-                googleWeatherApi.getDailyForecast(apiKey, lat, lon, pageSize = 8)
-            }
-
-            mapper.mapToWeatherData(
-                current  = currentDeferred.await(),
-                hourly   = null,
-                daily    = dailyDeferred.await(),
-                location = location
-            )
-        }
 }

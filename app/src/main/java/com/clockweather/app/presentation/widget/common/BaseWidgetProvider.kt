@@ -68,7 +68,7 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
             try {
                 val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
                 val updater = getUpdater(context, appWidgetManager, entryPoint)
-                updater.updateWidget(appWidgetId, allowWeatherRefresh = false)
+                updater.updateWidget(appWidgetId)
             } catch (e: Throwable) {
                 Log.e("ClockWeatherApp", "onAppWidgetOptionsChanged failed for ${this@BaseWidgetProvider::class.simpleName}", e)
                 try {

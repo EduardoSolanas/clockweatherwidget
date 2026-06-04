@@ -22,7 +22,5 @@ class OpenMeteoWeatherProvider @Inject constructor(
         return mapper.mapToWeatherData(response, location)
     }
 
-    override suspend fun fetchWidgetWeatherData(location: Location): WeatherData =
-        fetchWeatherData(location, forecastDays = 7)
 }
 

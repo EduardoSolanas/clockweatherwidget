@@ -12,11 +12,4 @@ import com.clockweather.app.domain.model.WeatherData
  */
 interface WeatherDataProvider {
     suspend fun fetchWeatherData(location: Location, forecastDays: Int): WeatherData
-
-    /**
-     * Fetches a lightweight snapshot suitable for widget display.
-     * Providers may omit hourly data or reduce forecast days to minimise
-     * network usage — widgets only need current conditions + daily forecasts.
-     */
-    suspend fun fetchWidgetWeatherData(location: Location): WeatherData
 }

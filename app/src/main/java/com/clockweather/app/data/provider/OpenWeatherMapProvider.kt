@@ -26,14 +26,4 @@ class OpenWeatherMapProvider @Inject constructor(
         }
     }
 
-    override suspend fun fetchWidgetWeatherData(location: Location): WeatherData {
-        val response = api.getOneCall(
-            latitude = location.latitude,
-            longitude = location.longitude,
-            apiKey = apiKey,
-            units = "metric",
-            exclude = "minutely,alerts"
-        )
-        return mapper.mapToWeatherData(response, location)
-    }
 }

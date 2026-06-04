@@ -26,6 +26,7 @@ import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WindDirection
 import com.clockweather.app.domain.repository.LocationRepository
 import com.clockweather.app.domain.repository.WeatherRepository
+import com.clockweather.app.worker.WeatherUpdateScheduler
 import io.mockk.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -173,6 +174,9 @@ class BaseWidgetUpdaterTest {
         mockkStatic(PendingIntent::class)
         every { PendingIntent.getActivity(any(), any(), any(), any()) } returns mockk()
 
+        mockkObject(WeatherUpdateScheduler)
+        every { WeatherUpdateScheduler.scheduleImmediateRefresh(any()) } just Runs
+
         updater = TestWidgetUpdater(mockContext, appWidgetManager, entryPoint)
     }
 
@@ -196,7 +200,7 @@ class BaseWidgetUpdaterTest {
 
         verify(exactly = 1) { locationRepo.getFallbackLocation() }
         coVerify(exactly = 1) { locationRepo.saveLocation(match { it.name == "London" }) }
-        coVerify(exactly = 1) { weatherRepo.refreshWidgetWeatherData(match { it.name == "London" }) }
+        verify(exactly = 1) { WeatherUpdateScheduler.scheduleImmediateRefresh(mockContext) }
     }
 
     @Test
@@ -300,7 +304,7 @@ class BaseWidgetUpdaterTest {
 
         updater.updateWidget(widgetId)
 
-        coVerify(exactly = 1) { weatherRepo.refreshWidgetWeatherData(location) }
+        verify(exactly = 1) { WeatherUpdateScheduler.scheduleImmediateRefresh(mockContext) }
     }
 
     @Test
@@ -330,7 +334,7 @@ class BaseWidgetUpdaterTest {
 
         ForecastLikeWidgetUpdater(mockContext, appWidgetManager, entryPoint).updateWidget(widgetId)
 
-        coVerify(exactly = 1) { weatherRepo.refreshWidgetWeatherData(location) }
+        verify(exactly = 1) { WeatherUpdateScheduler.scheduleImmediateRefresh(mockContext) }
     }
 
     @Test
@@ -353,7 +357,7 @@ class BaseWidgetUpdaterTest {
 
         updater.updateWidget(widgetId)
 
-        coVerify(exactly = 1) { weatherRepo.refreshWidgetWeatherData(location) }
+        verify(exactly = 1) { WeatherUpdateScheduler.scheduleImmediateRefresh(mockContext) }
         verify(exactly = 1) {
             anyConstructed<RemoteViews>().setTextViewText(R.id.condition_text, "Updating weather")
         }
@@ -485,8 +489,8 @@ class BaseWidgetUpdaterTest {
 
         updater.updateWidget(widgetId)
 
-        coVerify(exactly = 1) { weatherRepo.refreshWidgetWeatherData(savedLocation) }
-        verify(exactly = 2) { weatherRepo.getWeatherData(savedLocation) }
+        verify(exactly = 1) { WeatherUpdateScheduler.scheduleImmediateRefresh(mockContext) }
+        verify(exactly = 1) { weatherRepo.getWeatherData(savedLocation) }
     }
 
     private fun sampleWeatherData(

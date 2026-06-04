@@ -31,7 +31,7 @@ class WeatherUpdateWorker @AssistedInject constructor(
 
             val locations = locationRepository.getSavedLocations().first()
             locations.forEach { location ->
-                weatherRepository.refreshWeatherData(location, forecastDays)
+                weatherRepository.forceRefreshWeatherData(location, forecastDays)
             }
             // Notify widgets to update via centralized helper
             val app = applicationContext as? ClockWeatherApplication

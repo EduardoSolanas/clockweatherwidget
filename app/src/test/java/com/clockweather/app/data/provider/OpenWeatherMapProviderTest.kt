@@ -135,30 +135,4 @@ class OpenWeatherMapProviderTest {
         confirmVerified(api)
     }
 
-    @Test
-    fun `fetchWidgetWeatherData includes hourly for accurate current-hour display`() = runTest {
-        coEvery {
-            api.getOneCall(
-                latitude = location.latitude,
-                longitude = location.longitude,
-                apiKey = "test-key",
-                units = "metric",
-                exclude = "minutely,alerts"
-            )
-        } returns fakeResponse
-        every { mapper.mapToWeatherData(fakeResponse, location) } returns fakeWeatherData
-
-        provider.fetchWidgetWeatherData(location)
-
-        coVerify(exactly = 1) {
-            api.getOneCall(
-                latitude = location.latitude,
-                longitude = location.longitude,
-                apiKey = "test-key",
-                units = "metric",
-                exclude = "minutely,alerts"
-            )
-        }
-        confirmVerified(api)
-    }
 }
