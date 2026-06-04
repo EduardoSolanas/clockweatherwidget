@@ -32,7 +32,7 @@ class OpenWeatherMapProvider @Inject constructor(
             longitude = location.longitude,
             apiKey = apiKey,
             units = "metric",
-            exclude = "minutely,hourly,alerts"
+            exclude = "minutely,alerts"
         )
         return mapper.mapToWeatherData(response, location)
     }
