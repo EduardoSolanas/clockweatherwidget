@@ -8,6 +8,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.clockweather.app.ClockWeatherApplication
+import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.repository.LocationRepository
 import com.clockweather.app.domain.repository.WeatherRepository
 import com.clockweather.app.presentation.settings.SettingsViewModel
@@ -25,23 +26,32 @@ class WeatherUpdateWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
-        return try {
-            val prefs = dataStore.data.first()
-            val forecastDays = prefs[SettingsViewModel.KEY_FORECAST_DAYS] ?: 7
-
-            val locations = locationRepository.getSavedLocations().first()
-            locations.forEach { location ->
-                weatherRepository.forceRefreshWeatherData(location, forecastDays)
-            }
-            // Notify widgets to update via centralized helper
-            val app = applicationContext as? ClockWeatherApplication
-            app?.refreshAllWidgets(applicationContext)
-            
-            Result.success()
+        val prefs: Preferences
+        val locations: List<Location>
+        try {
+            prefs = dataStore.data.first()
+            locations = locationRepository.getSavedLocations().first()
         } catch (e: Exception) {
-            Log.w(TAG, "Background weather update failed", e)
-            if (runAttemptCount < 3) Result.retry() else Result.failure()
+            Log.w(TAG, "Failed to read prefs or locations, scheduling retry", e)
+            return if (runAttemptCount < 3) Result.retry() else Result.failure()
         }
+
+        val forecastDays = prefs[SettingsViewModel.KEY_FORECAST_DAYS] ?: 7
+        var anyFailure = false
+        locations.forEach { location ->
+            try {
+                weatherRepository.ensureFreshWeatherData(location, forecastDays)
+            } catch (e: Exception) {
+                Log.w(TAG, "Refresh failed for ${location.id}", e)
+                anyFailure = true
+            }
+        }
+        // Always redraw widgets from cache, even on partial failure.
+        val app = applicationContext as? ClockWeatherApplication
+        app?.refreshAllWidgets(applicationContext)
+
+        return if (!anyFailure) Result.success()
+        else if (runAttemptCount < 3) Result.retry() else Result.failure()
     }
 
     companion object {

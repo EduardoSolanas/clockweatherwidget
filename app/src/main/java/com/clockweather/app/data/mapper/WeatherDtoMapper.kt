@@ -28,7 +28,10 @@ class WeatherDtoMapper @Inject constructor() {
         response: WeatherResponseDto,
         location: Location
     ): WeatherData {
-        val currentWeather = mapCurrentWeather(requireNotNull(response.current) { "current weather is null" })
+        // Stamp fetch time so the 10-min TTL is relative to when we fetched, not the API model slot
+        // (Open-Meteo's current.time can be 15+ min behind actual fetch time).
+        val fetchTime = LocalDateTime.now()
+        val currentWeather = mapCurrentWeather(requireNotNull(response.current) { "current weather is null" }, fetchTime)
         val hourlyForecasts = response.hourly?.let { mapHourlyForecasts(it) } ?: emptyList()
         val dailyForecasts = response.daily?.let { mapDailyForecasts(it, hourlyForecasts) } ?: emptyList()
 
@@ -40,7 +43,7 @@ class WeatherDtoMapper @Inject constructor() {
         )
     }
 
-    private fun mapCurrentWeather(dto: CurrentWeatherDto): CurrentWeather {
+    private fun mapCurrentWeather(dto: CurrentWeatherDto, fetchTime: LocalDateTime): CurrentWeather {
         val isDay = dto.isDay == 1
         return CurrentWeather(
             temperature = dto.temperature,
@@ -59,7 +62,7 @@ class WeatherDtoMapper @Inject constructor() {
             visibility = dto.visibility,
             uvIndex = dto.uvIndex,
             cloudCover = dto.cloudCover,
-            lastUpdated = LocalDateTime.parse(dto.time, dateTimeFormatter)
+            lastUpdated = fetchTime
         )
     }
 

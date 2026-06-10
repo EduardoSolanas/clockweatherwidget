@@ -65,7 +65,10 @@ class WeatherRepositoryImpl @Inject constructor(
         refreshMutex.withLock {
             val cached = getWeatherData(location).first()
             val referenceDateTime = cached?.locationReferenceDateTime() ?: java.time.LocalDateTime.now()
-            if (isWeatherDataFresh(cached, referenceDateTime, forecastDays)) return
+            val providerType = WeatherProviderPreferences.resolve(
+                dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
+            )
+            if (isWeatherDataFresh(cached, referenceDateTime, forecastDays, providerType.currentMaxAgeMinutes)) return
 
             refreshAndPersist(location, forecastDays)
         }

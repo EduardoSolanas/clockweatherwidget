@@ -9,25 +9,30 @@ enum class WeatherProviderType(
     val storageValue: String,
     val labelResId: Int,
     val maxForecastDays: Int,
-    val supportedForecastDays: List<Int>
+    val supportedForecastDays: List<Int>,
+    /** How often the provider's current-conditions model updates; refetching sooner returns identical data. */
+    val currentMaxAgeMinutes: Long
 ) {
     OPEN_METEO(
         storageValue = "open_meteo",
         labelResId = R.string.weather_provider_open_meteo,
         maxForecastDays = 16,
-        supportedForecastDays = listOf(7, 14)
+        supportedForecastDays = listOf(7, 14),
+        currentMaxAgeMinutes = 15
     ),
     GOOGLE(
         storageValue = "google",
         labelResId = R.string.weather_provider_google,
         maxForecastDays = 10,
-        supportedForecastDays = listOf(7, 10)
+        supportedForecastDays = listOf(7, 10),
+        currentMaxAgeMinutes = 10
     ),
     OPENWEATHERMAP(
         storageValue = "openweathermap",
         labelResId = R.string.weather_provider_openweathermap,
         maxForecastDays = 8,
-        supportedForecastDays = listOf(7, 8)
+        supportedForecastDays = listOf(7, 8),
+        currentMaxAgeMinutes = 10
     );
 
     companion object {

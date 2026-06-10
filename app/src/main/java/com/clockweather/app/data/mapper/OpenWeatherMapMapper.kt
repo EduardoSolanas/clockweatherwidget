@@ -62,7 +62,8 @@ class OpenWeatherMapMapper @Inject constructor() {
             visibility = (current.visibility ?: 10000).toDouble(),
             uvIndex = current.uvi,
             cloudCover = current.clouds,
-            lastUpdated = toLocalDateTime(current.dt, zoneId)
+            // Stamp fetch time (not current.dt) so the 10-min TTL is relative to when we fetched.
+            lastUpdated = LocalDateTime.now(zoneId)
         )
     }
 

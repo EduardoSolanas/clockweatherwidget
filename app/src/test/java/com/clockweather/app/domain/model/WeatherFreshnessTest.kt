@@ -36,6 +36,32 @@ class WeatherFreshnessTest {
     }
 
     @Test
+    fun `weather is fresh at 9 minutes old`() {
+        val weather = sampleWeatherData(lastUpdated = referenceDateTime.minusMinutes(9))
+
+        assertTrue(
+            isWeatherDataFresh(
+                weather = weather,
+                referenceDateTime = referenceDateTime,
+                requiredForecastDays = 3,
+            )
+        )
+    }
+
+    @Test
+    fun `weather is not fresh at 11 minutes old`() {
+        val weather = sampleWeatherData(lastUpdated = referenceDateTime.minusMinutes(11))
+
+        assertFalse(
+            isWeatherDataFresh(
+                weather = weather,
+                referenceDateTime = referenceDateTime,
+                requiredForecastDays = 3,
+            )
+        )
+    }
+
+    @Test
     fun `weather is not fresh when current weather is older than max age`() {
         val weather = sampleWeatherData(
             lastUpdated = referenceDateTime.minusMinutes(31),
@@ -96,8 +122,53 @@ class WeatherFreshnessTest {
         )
     }
 
+    @Test
+    fun `weather is not fresh when hour has rolled over since last update`() {
+        // Data was fetched at 09:55, cached hourly starts at 09:00; now it is 10:00 — current hour missing.
+        val fetchTime = LocalDateTime.of(2026, 4, 3, 9, 55)
+        val now = LocalDateTime.of(2026, 4, 3, 10, 5)
+        val weather = sampleWeatherData(
+            lastUpdated = fetchTime,
+            hourlyForecasts = hourlyForecastsFrom(fetchTime, count = 24),
+        )
+
+        assertFalse(
+            isWeatherDataFresh(
+                weather = weather,
+                referenceDateTime = now,
+                requiredForecastDays = 3,
+            )
+        )
+    }
+
+    @Test
+    fun `weather is not fresh when day has rolled over in a different timezone`() {
+        // Simulate a location in UTC+10 where it is already the next day even though
+        // the device (or test reference) is still at the previous date.
+        // We do this by setting referenceDateTime to midnight (day boundary) and
+        // lastUpdated to the previous day.
+        val previousDay = LocalDate.of(2026, 4, 3)
+        val today = LocalDate.of(2026, 4, 4)
+        val referenceAtMidnight = LocalDateTime.of(today, LocalTime.of(0, 5))
+
+        val weather = sampleWeatherData(
+            lastUpdated = LocalDateTime.of(previousDay, LocalTime.of(23, 55)),
+            // hourly starts from previous day — current-hour slot for today is missing
+            hourlyForecasts = hourlyForecastsFrom(LocalDateTime.of(previousDay, LocalTime.of(0, 0)), count = 24),
+            dailyForecasts = dailyForecastsFrom(previousDay, count = 3),
+        )
+
+        assertFalse(
+            isWeatherDataFresh(
+                weather = weather,
+                referenceDateTime = referenceAtMidnight,
+                requiredForecastDays = 3,
+            )
+        )
+    }
+
     private fun sampleWeatherData(
-        lastUpdated: LocalDateTime = referenceDateTime.minusMinutes(10),
+        lastUpdated: LocalDateTime = referenceDateTime.minusMinutes(5),
         hourlyForecasts: List<HourlyForecast> = hourlyForecastsFrom(referenceDateTime, count = 24),
         dailyForecasts: List<DailyForecast> = dailyForecastsFrom(referenceDateTime.toLocalDate(), count = 3),
     ) = WeatherData(

@@ -3,6 +3,7 @@ package com.clockweather.app.worker
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
@@ -38,6 +39,7 @@ object WeatherUpdateScheduler {
             clampedInterval, TimeUnit.MINUTES
         )
             .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
 
         // UPDATE: adjusts interval on existing work without cancelling any in-progress run
@@ -58,6 +60,11 @@ object WeatherUpdateScheduler {
         WorkManager.getInstance(context).cancelUniqueWork(WeatherUpdateWorker.WORK_NAME)
     }
 
+    /**
+     * Enqueue a one-time freshness-gated refresh (e.g. on widget add or boot).
+     * Uses [ensureFreshWeatherData] internally, so no network call is made when cached data
+     * is still within [com.clockweather.app.domain.model.CURRENT_MAX_AGE_MINUTES].
+     */
     fun scheduleImmediateRefresh(context: Context) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -65,6 +72,7 @@ object WeatherUpdateScheduler {
 
         val workRequest = OneTimeWorkRequestBuilder<WeatherUpdateWorker>()
             .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
 
         WorkManager.getInstance(context).enqueueUniqueWork(

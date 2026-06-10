@@ -152,7 +152,7 @@ Also handle:
 1. Extend `WeatherDataProvider` with `supportsSectionedFetch` + `fetchSections` (defaults as shown — no changes to OpenMeteo/Google).
 2. `WeatherRepositoryImpl.ensureFreshWeatherData`: compute stale sections via Phase 1; sectioned fetch when supported; persist only fetched sections (current upsert; hourly/daily delete+insert only when that section was fetched); stamp metadata for fetched sections only.
 3. Fallback semantics: if the selected provider fails mid-sections, the fallback provider does a **full** fetch (it doesn't support sections) — that's fine, stamp all sections with the fallback provider name.
-4. Switch `WeatherUpdateWorker` to `ensureFreshWeatherData`. Keep `forceRefresh` for user-initiated refresh in Settings/detail screen.
+4. Switch `WeatherUpdateWorker` to `ensureFreshWeatherData`. Keep `forceRefresh` for user-initiated refresh in Settings/detail screen. Also apply the worker hardening described in `2026-06-10-onecall-3-call-reduction.md` Step 2b (per-location failure isolation, cancel periodic work when last weather widget is removed, explicit backoff) — those changes are API-version-independent.
 5. Tests: repository test that only stale sections hit the provider; worker no longer forces (update existing worker test if any); force path still refreshes everything.
 
 ### Phase 4 — OWM 4.0 provider

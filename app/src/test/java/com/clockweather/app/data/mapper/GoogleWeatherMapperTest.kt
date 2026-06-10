@@ -5,18 +5,15 @@ import com.clockweather.app.data.remote.dto.google.GoogleDailyForecastResponseDt
 import com.clockweather.app.data.remote.dto.google.GoogleTemperatureDto
 import com.clockweather.app.data.remote.dto.google.GoogleTimeZoneDto
 import com.clockweather.app.domain.model.Location
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Before
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDateTime
-import java.util.TimeZone
+import java.time.temporal.ChronoUnit
 
 class GoogleWeatherMapperTest {
 
     private val mapper = GoogleWeatherMapper()
-
-    private lateinit var originalTimeZone: TimeZone
 
     private val location = Location(
         id = 1L,
@@ -26,23 +23,17 @@ class GoogleWeatherMapperTest {
         longitude = 2.35
     )
 
-    @Before
-    fun setUp() {
-        originalTimeZone = TimeZone.getDefault()
-    }
-
-    @After
-    fun tearDown() {
-        TimeZone.setDefault(originalTimeZone)
-    }
-
+    /**
+     * lastUpdated is now stamped at fetch time (LocalDateTime.now()), not converted from
+     * the API's currentTime field. Verify it is close to now (within 5 seconds) regardless
+     * of the timezone embedded in the DTO.
+     */
     @Test
-    fun `lastUpdated is converted to device local time, not UTC`() {
-        // UTC+2 (Europe/Paris during CEST summer time)
-        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Paris"))
+    fun `lastUpdated is close to now regardless of DTO currentTime`() {
+        val before = LocalDateTime.now()
 
         val currentDto = GoogleCurrentConditionsDto(
-            currentTime = "2024-06-15T10:00:00Z",  // UTC 10:00 → local 12:00 in UTC+2
+            currentTime = "2024-06-15T10:00:00Z",  // arbitrary past UTC time — must be ignored
             timeZone = GoogleTimeZoneDto(id = "Europe/Paris"),
             temperature = GoogleTemperatureDto(degrees = 22.0),
             feelsLikeTemperature = GoogleTemperatureDto(degrees = 21.0)
@@ -55,47 +46,25 @@ class GoogleWeatherMapperTest {
             location = location
         )
 
-        assertEquals(
-            "lastUpdated should be local time (12:00), not UTC (10:00)",
-            LocalDateTime.of(2024, 6, 15, 12, 0, 0),
-            result.currentWeather.lastUpdated
+        val after = LocalDateTime.now()
+        val lastUpdated = result.currentWeather.lastUpdated
+
+        assertFalse(
+            "lastUpdated should not be before the test started",
+            lastUpdated.isBefore(before.minusSeconds(1))
+        )
+        assertFalse(
+            "lastUpdated should not be after the test ended",
+            lastUpdated.isAfter(after.plusSeconds(1))
         )
     }
 
     @Test
-    fun `lastUpdated is correct across DST boundary (UTC+1 to UTC+2)`() {
-        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Paris"))
+    fun `lastUpdated is close to now for large UTC offset location`() {
+        val before = LocalDateTime.now()
 
         val currentDto = GoogleCurrentConditionsDto(
-            currentTime = "2024-03-31T12:00:00Z",  // UTC 12:00 → local 14:00 (UTC+2 after DST)
-            timeZone = GoogleTimeZoneDto(id = "Europe/Paris"),
-            temperature = GoogleTemperatureDto(degrees = 15.0),
-            feelsLikeTemperature = GoogleTemperatureDto(degrees = 14.0)
-        )
-
-        val result = mapper.mapToWeatherData(
-            current = currentDto,
-            hourly = null,
-            daily = GoogleDailyForecastResponseDto(),
-            location = location
-        )
-
-        assertEquals(
-            "lastUpdated after DST change should be UTC+2 (14:00), not UTC (12:00)",
-            LocalDateTime.of(2024, 3, 31, 14, 0, 0),
-            result.currentWeather.lastUpdated
-        )
-    }
-
-    @Test
-    fun `lastUpdated is correct for large UTC offset (UTC+12)`() {
-        // Reproduces the ~12h discrepancy seen on device:
-        // storing UTC time as LocalDateTime and comparing with LocalDateTime.now() (local)
-        // produces a gap equal to the full timezone offset
-        TimeZone.setDefault(TimeZone.getTimeZone("Pacific/Auckland"))  // UTC+12
-
-        val currentDto = GoogleCurrentConditionsDto(
-            currentTime = "2024-06-15T02:00:00Z",  // UTC 02:00 → local 14:00 (UTC+12)
+            currentTime = "2024-06-15T02:00:00Z",  // arbitrary past UTC time — must be ignored
             timeZone = GoogleTimeZoneDto(id = "Pacific/Auckland"),
             temperature = GoogleTemperatureDto(degrees = 10.0),
             feelsLikeTemperature = GoogleTemperatureDto(degrees = 9.0)
@@ -108,10 +77,12 @@ class GoogleWeatherMapperTest {
             location = location
         )
 
-        assertEquals(
-            "lastUpdated should be local time 14:00, not UTC 02:00",
-            LocalDateTime.of(2024, 6, 15, 14, 0, 0),
-            result.currentWeather.lastUpdated
+        val after = LocalDateTime.now()
+        val secondsDiff = ChronoUnit.SECONDS.between(result.currentWeather.lastUpdated, after)
+
+        assertTrue(
+            "lastUpdated should be within 5 seconds of now, but was $secondsDiff seconds ago",
+            secondsDiff in 0..5
         )
     }
 }

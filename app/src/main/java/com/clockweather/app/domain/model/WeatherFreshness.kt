@@ -3,11 +3,14 @@ package com.clockweather.app.domain.model
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
+/** Fallback TTL; callers should pass the provider-specific [WeatherProviderType.currentMaxAgeMinutes]. */
+internal const val CURRENT_MAX_AGE_MINUTES = 10L
+
 internal fun isWeatherDataFresh(
     weather: WeatherData?,
     referenceDateTime: LocalDateTime,
     requiredForecastDays: Int,
-    maxAgeMinutes: Long = 30,
+    maxAgeMinutes: Long = CURRENT_MAX_AGE_MINUTES,
 ): Boolean {
     if (weather == null) return false
 
