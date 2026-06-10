@@ -4,7 +4,6 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.res.Resources
 import android.util.Log
-import android.view.Gravity
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
@@ -127,7 +126,6 @@ abstract class BaseWidgetUpdater(
                         views.setViewLayoutHeight(id, heightPx, android.util.TypedValue.COMPLEX_UNIT_PX)
                     }
 
-                    views.setInt(id, "setGravity", Gravity.CENTER)
                     views.setTextColor(id, digitColor)
                     views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, clockTextPx)
                 }
@@ -141,7 +139,6 @@ abstract class BaseWidgetUpdater(
                     if (android.os.Build.VERSION.SDK_INT >= 31) {
                         views.setViewLayoutHeight(id, heightPx, android.util.TypedValue.COMPLEX_UNIT_PX)
                     }
-                    views.setInt(id, "setGravity", Gravity.CENTER)
                     views.setTextColor(id, digitColor)
                     views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, clockTextPx)
                 }
@@ -177,8 +174,10 @@ abstract class BaseWidgetUpdater(
                 val letterSpacing = computeFlipClockLetterSpacing(
                     pairWidthPx, gapPx, glyphAdvancePx, clockTextPx,
                 )
-                views.setFloat(com.clockweather.app.R.id.clock_hour, "setLetterSpacing", letterSpacing)
-                views.setFloat(com.clockweather.app.R.id.clock_minute, "setLetterSpacing", letterSpacing)
+                if (android.os.Build.VERSION.SDK_INT >= 31) {
+                    views.setFloat(com.clockweather.app.R.id.clock_hour, "setLetterSpacing", letterSpacing)
+                    views.setFloat(com.clockweather.app.R.id.clock_minute, "setLetterSpacing", letterSpacing)
+                }
 
                 // Don't constrain weather_card to flip-tile height — it clips
                 // the location / temperature text. Let it use its natural height.

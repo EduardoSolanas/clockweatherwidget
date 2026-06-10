@@ -50,7 +50,9 @@
       "Bash(./gradlew installDebug)",
       "Bash(gemini --yolo \"/icon ''cloudy weather sprite, cartoon style, white and light gray fluffy clouds with soft shadows, pixel art friendly, transparent background, clean vector look, no text''\")",
       "Bash(xargs grep *)",
-      "Bash(./gradlew.bat assembleDebug)"
+      "Bash(./gradlew.bat assembleDebug)",
+      "PowerShell($javaExe = Get-Command java -ErrorAction SilentlyContinue; if \\($javaExe\\) { $javaExe.Source } else { \"not in PATH\" }; Get-ChildItem \"C:\\\\Program Files\\\\Eclipse Adoptium\", \"C:\\\\Program Files\\\\Java\", \"C:\\\\Program Files\\\\Microsoft\", \"$env:LOCALAPPDATA\\\\Programs\" -ErrorAction SilentlyContinue | Select-Object FullName | Select-Object -First 20)",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\" -Directory | Where-Object { $_.Name -match \"jdk|jre|java|adoptium|corretto|zulu|microsoft\" -or \\(Test-Path \"$\\($_.FullName\\)\\\\bin\\\\java.exe\"\\) } | Select-Object FullName)"
     ]
   }
 }
