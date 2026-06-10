@@ -177,6 +177,17 @@ abstract class BaseWidgetUpdater(
                 if (android.os.Build.VERSION.SDK_INT >= 31) {
                     views.setFloat(com.clockweather.app.R.id.clock_hour, "setLetterSpacing", letterSpacing)
                     views.setFloat(com.clockweather.app.R.id.clock_minute, "setLetterSpacing", letterSpacing)
+                } else {
+                    // setLetterSpacing isn't remotable pre-12, so per-tile digit placement
+                    // can't be done. Render each pair as a single flip card instead:
+                    // hide the two digit tiles, give the TextClock the tile background,
+                    // and show the full-width hinge.
+                    views.setViewVisibility(com.clockweather.app.R.id.hour_tiles, View.GONE)
+                    views.setViewVisibility(com.clockweather.app.R.id.minute_tiles, View.GONE)
+                    views.setViewVisibility(com.clockweather.app.R.id.hour_pair_hinge, View.VISIBLE)
+                    views.setViewVisibility(com.clockweather.app.R.id.minute_pair_hinge, View.VISIBLE)
+                    views.setInt(com.clockweather.app.R.id.clock_hour, "setBackgroundResource", tileBgRes)
+                    views.setInt(com.clockweather.app.R.id.clock_minute, "setBackgroundResource", tileBgRes)
                 }
 
                 // Don't constrain weather_card to flip-tile height — it clips

@@ -16,6 +16,7 @@
         android:layout_weight="2">
 
         <LinearLayout
+            android:id="@+id/hour_tiles"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
@@ -74,10 +75,10 @@
             </FrameLayout>
         </LinearLayout>
 
-        <!-- letterSpacing spreads the two digits so each sits over its own tile.
-             On Android 12+ the updater overrides this with an exact value computed
-             from the widget width; pre-12 RemoteViews can't call setLetterSpacing,
-             so this static approximation is what those devices render. -->
+        <!-- On Android 12+ the updater spreads the two digits over their tiles with a
+             computed setLetterSpacing (not remotable pre-12). Pre-12 the updater instead
+             hides the two tiles, gives this TextClock the tile background, and shows the
+             pair hinge — rendering the pair as a single flip card. -->
         <TextClock
             android:id="@+id/clock_hour"
             android:layout_width="match_parent"
@@ -88,12 +89,22 @@
             android:format24Hour="HH"
             android:gravity="center"
             android:includeFontPadding="false"
-            android:letterSpacing="0.35"
+            android:letterSpacing="0.08"
             android:maxLines="1"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:singleLine="true"
             android:textColor="@color/flip_digit_text_light"
             android:textSize="48sp"
             android:textStyle="bold" />
+
+        <FrameLayout
+            android:id="@+id/hour_pair_hinge"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/flip_hinge_line"
+            android:visibility="gone" />
     </FrameLayout>
 
     <TextView
@@ -116,6 +127,7 @@
         android:layout_weight="2">
 
         <LinearLayout
+            android:id="@+id/minute_tiles"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
@@ -184,12 +196,22 @@
             android:format24Hour="mm"
             android:gravity="center"
             android:includeFontPadding="false"
-            android:letterSpacing="0.35"
+            android:letterSpacing="0.08"
             android:maxLines="1"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:singleLine="true"
             android:textColor="@color/flip_digit_text_light"
             android:textSize="48sp"
             android:textStyle="bold" />
+
+        <FrameLayout
+            android:id="@+id/minute_pair_hinge"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/flip_hinge_line"
+            android:visibility="gone" />
     </FrameLayout>
 
     <TextClock
