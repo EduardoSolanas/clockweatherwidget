@@ -74,6 +74,10 @@
             </FrameLayout>
         </LinearLayout>
 
+        <!-- letterSpacing spreads the two digits so each sits over its own tile.
+             On Android 12+ the updater overrides this with an exact value computed
+             from the widget width; pre-12 RemoteViews can't call setLetterSpacing,
+             so this static approximation is what those devices render. -->
         <TextClock
             android:id="@+id/clock_hour"
             android:layout_width="match_parent"
@@ -84,6 +88,7 @@
             android:format24Hour="HH"
             android:gravity="center"
             android:includeFontPadding="false"
+            android:letterSpacing="0.35"
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/flip_digit_text_light"
@@ -179,6 +184,7 @@
             android:format24Hour="mm"
             android:gravity="center"
             android:includeFontPadding="false"
+            android:letterSpacing="0.35"
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/flip_digit_text_light"
