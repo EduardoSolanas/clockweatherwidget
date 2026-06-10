@@ -124,10 +124,10 @@ abstract class BaseWidgetUpdater(
 
                     if (android.os.Build.VERSION.SDK_INT >= 31) {
                         views.setViewLayoutHeight(id, heightPx, android.util.TypedValue.COMPLEX_UNIT_PX)
+                        views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, clockTextPx)
                     }
 
                     views.setTextColor(id, digitColor)
-                    views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, clockTextPx)
                 }
                 listOf(
                     com.clockweather.app.R.id.clock_hour,
@@ -138,64 +138,82 @@ abstract class BaseWidgetUpdater(
                     } catch (e: Exception) { /* ignore */ }
                     if (android.os.Build.VERSION.SDK_INT >= 31) {
                         views.setViewLayoutHeight(id, heightPx, android.util.TypedValue.COMPLEX_UNIT_PX)
+                        views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, clockTextPx)
                     }
                     views.setTextColor(id, digitColor)
-                    views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, clockTextPx)
                 }
 
-                val colonSize = clockTextPx * 0.8f
-                val paint = android.graphics.Paint().apply {
-                    typeface = android.graphics.Typeface.MONOSPACE
-                    textSize = clockTextPx
-                    isFakeBoldText = true
-                }
-                val glyphAdvancePx = paint.measureText("0")
-                val colonPaint = android.graphics.Paint().apply {
-                    typeface = android.graphics.Typeface.MONOSPACE
-                    textSize = colonSize
-                    isFakeBoldText = true
-                }
-                val colonGlyphPx = colonPaint.measureText(":")
-                val colonMarginPx = gapPx * 2
-                val density = context.resources.displayMetrics.density
-                val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
-                val widgetWidthDp = options.getInt(
-                    AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0
-                ).toFloat()
-                val widgetWidthPx = if (widgetWidthDp > 0) {
-                    widgetWidthDp * density
-                } else {
-                    context.resources.displayMetrics.widthPixels * 0.9f
-                }
-                val widgetPaddingPx = widgetPaddingDp * density * 2
-                val ampmMarginPx = 6f * density
-                val clockBlockWidthPx = widgetWidthPx - widgetPaddingPx - ampmMarginPx
-                val pairWidthPx = (clockBlockWidthPx - colonGlyphPx - colonMarginPx) / 2f
-                val letterSpacing = computeFlipClockLetterSpacing(
-                    pairWidthPx, gapPx, glyphAdvancePx, clockTextPx,
-                )
                 if (android.os.Build.VERSION.SDK_INT >= 31) {
+                    val colonSize = clockTextPx * 0.8f
+                    val paint = android.graphics.Paint().apply {
+                        typeface = android.graphics.Typeface.MONOSPACE
+                        textSize = clockTextPx
+                        isFakeBoldText = true
+                    }
+                    val glyphAdvancePx = paint.measureText("0")
+                    val colonPaint = android.graphics.Paint().apply {
+                        typeface = android.graphics.Typeface.MONOSPACE
+                        textSize = colonSize
+                        isFakeBoldText = true
+                    }
+                    val colonGlyphPx = colonPaint.measureText(":")
+                    val colonMarginPx = gapPx * 2
+                    val density = context.resources.displayMetrics.density
+                    val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+                    val widgetWidthDp = options.getInt(
+                        AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0
+                    ).toFloat()
+                    val widgetWidthPx = if (widgetWidthDp > 0) {
+                        widgetWidthDp * density
+                    } else {
+                        context.resources.displayMetrics.widthPixels * 0.9f
+                    }
+                    val widgetPaddingPx = widgetPaddingDp * density * 2
+                    val ampmMarginPx = 6f * density
+                    val clockBlockWidthPx = widgetWidthPx - widgetPaddingPx - ampmMarginPx
+                    val pairWidthPx = (clockBlockWidthPx - colonGlyphPx - colonMarginPx) / 2f
+                    val letterSpacing = computeFlipClockLetterSpacing(
+                        pairWidthPx, gapPx, glyphAdvancePx, clockTextPx,
+                    )
                     views.setFloat(com.clockweather.app.R.id.clock_hour, "setLetterSpacing", letterSpacing)
                     views.setFloat(com.clockweather.app.R.id.clock_minute, "setLetterSpacing", letterSpacing)
+                    views.setTextViewTextSize(com.clockweather.app.R.id.colon, android.util.TypedValue.COMPLEX_UNIT_PX, colonSize)
+                    val ampmSize = widgetTextPx(context.resources, WidgetTextRole.clockCaption(tileSize), widgetTextScale)
+                    views.setTextViewTextSize(com.clockweather.app.R.id.ampm, android.util.TypedValue.COMPLEX_UNIT_PX, ampmSize)
                 } else {
-                    // setLetterSpacing isn't remotable pre-12, so per-tile digit placement
-                    // can't be done. Render each pair as a single flip card instead:
-                    // hide the two digit tiles, give the TextClock the tile background,
-                    // and show the full-width hinge.
-                    views.setViewVisibility(com.clockweather.app.R.id.hour_tiles, View.GONE)
-                    views.setViewVisibility(com.clockweather.app.R.id.minute_tiles, View.GONE)
-                    views.setViewVisibility(com.clockweather.app.R.id.hour_pair_hinge, View.VISIBLE)
-                    views.setViewVisibility(com.clockweather.app.R.id.minute_pair_hinge, View.VISIBLE)
-                    views.setInt(com.clockweather.app.R.id.clock_hour, "setBackgroundResource", tileBgRes)
-                    views.setInt(com.clockweather.app.R.id.clock_minute, "setBackgroundResource", tileBgRes)
+                    // setLetterSpacing isn't remotable pre-12, so the spanning TextClock
+                    // can't place a digit over each tile. Use the per-tile TextClocks
+                    // instead: each is exactly one monospace glyph wide and clips the
+                    // other digit (gravity left shows the first, right shows the second).
+                    // Clock geometry stays at the fixed dp values from the layout, so the
+                    // tile-size and text-scale preferences don't apply on these devices.
+                    views.setViewVisibility(com.clockweather.app.R.id.clock_hour, View.GONE)
+                    views.setViewVisibility(com.clockweather.app.R.id.clock_minute, View.GONE)
+                    val hourFormat = if (is24h) "HH" else "hh"
+                    listOf(
+                        com.clockweather.app.R.id.tile_clock_h1,
+                        com.clockweather.app.R.id.tile_clock_h2,
+                    ).forEach { id ->
+                        views.setCharSequence(id, "setFormat12Hour", hourFormat)
+                        views.setCharSequence(id, "setFormat24Hour", hourFormat)
+                    }
+                    listOf(
+                        com.clockweather.app.R.id.tile_clock_h1,
+                        com.clockweather.app.R.id.tile_clock_h2,
+                        com.clockweather.app.R.id.tile_clock_m1,
+                        com.clockweather.app.R.id.tile_clock_m2,
+                    ).forEach { id ->
+                        views.setTextColor(id, digitColor)
+                        views.setViewVisibility(id, View.VISIBLE)
+                        try {
+                            views.setOnClickPendingIntent(id, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
+                        } catch (e: Exception) { /* ignore */ }
+                    }
                 }
 
                 // Don't constrain weather_card to flip-tile height — it clips
                 // the location / temperature text. Let it use its natural height.
 
-                views.setTextViewTextSize(com.clockweather.app.R.id.colon, android.util.TypedValue.COMPLEX_UNIT_PX, colonSize)
-                val ampmSize = widgetTextPx(context.resources, WidgetTextRole.clockCaption(tileSize), widgetTextScale)
-                views.setTextViewTextSize(com.clockweather.app.R.id.ampm, android.util.TypedValue.COMPLEX_UNIT_PX, ampmSize)
                 views.setTextColor(com.clockweather.app.R.id.colon, digitColor)
                 views.setTextColor(com.clockweather.app.R.id.ampm, digitColor)
 
@@ -238,11 +256,22 @@ abstract class BaseWidgetUpdater(
                     WeatherUpdateScheduler.scheduleImmediateRefresh(context)
                 }
 
+                // Pre-12 the widget host is usually taller than the card needs, leaving
+                // the bottom-anchored icon floating low. Use the top-anchored variant
+                // there so the icon overlaps the clock row like on modern hosts.
+                val weatherIconViewId = if (android.os.Build.VERSION.SDK_INT >= 31) {
+                    com.clockweather.app.R.id.weather_icon
+                } else {
+                    views.setViewVisibility(com.clockweather.app.R.id.weather_icon, View.GONE)
+                    views.setViewVisibility(com.clockweather.app.R.id.weather_icon_top, View.VISIBLE)
+                    com.clockweather.app.R.id.weather_icon_top
+                }
+
                 if (weather != null) {
-                    WidgetDataBinder.bindWeatherViews(context, views, weather, tempUnit, weatherIconStyle)
+                    WidgetDataBinder.bindWeatherViews(context, views, weather, tempUnit, weatherIconStyle, iconViewId = weatherIconViewId)
                     bindExtra(views, weather, tempUnit, prefs)
                 } else {
-                    WidgetDataBinder.bindWeatherUnavailableViews(context, views, weatherIconStyle)
+                    WidgetDataBinder.bindWeatherUnavailableViews(context, views, weatherIconStyle, iconViewId = weatherIconViewId)
                 }
                 applyWeatherTextSizing(views, widgetTextScale)
 

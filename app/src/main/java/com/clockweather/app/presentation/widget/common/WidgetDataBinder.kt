@@ -75,6 +75,7 @@ object WidgetDataBinder {
         iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
         renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
         referenceDateTime: LocalDateTime = weatherData.locationReferenceDateTime(),
+        iconViewId: Int = R.id.weather_icon,
     ) {
         val currentDisplayWeather = weatherData.currentDisplayWeather(referenceDateTime)
         val location = weatherData.location
@@ -86,7 +87,7 @@ object WidgetDataBinder {
         views.setTextViewText(R.id.condition_text, context.getString(currentDisplayWeather.weatherCondition.labelResId))
         setWidgetIcon(
             views,
-            R.id.weather_icon,
+            iconViewId,
             context,
             WeatherIconMapper.getDrawableResId(currentDisplayWeather.weatherCondition, iconStyle),
             renderIcon,
@@ -111,12 +112,13 @@ object WidgetDataBinder {
         views: RemoteViews,
         iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
         renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
+        iconViewId: Int = R.id.weather_icon,
     ) {
         views.setTextViewText(R.id.city_name, context.getString(R.string.widget_weather_unavailable_title))
         views.setTextViewText(R.id.condition_text, context.getString(R.string.widget_weather_unavailable_condition))
         setWidgetIcon(
             views,
-            R.id.weather_icon,
+            iconViewId,
             context,
             WeatherIconMapper.getDrawableResId(com.clockweather.app.domain.model.WeatherCondition.PARTLY_CLOUDY_DAY, iconStyle),
             renderIcon,

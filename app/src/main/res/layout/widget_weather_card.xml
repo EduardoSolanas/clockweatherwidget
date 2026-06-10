@@ -7,6 +7,8 @@
     android:layout_height="wrap_content"
     android:minHeight="72dp"
     android:background="@android:color/transparent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:visibility="visible">
 
     <ImageView
@@ -17,6 +19,20 @@
         android:paddingBottom="10dp"
         android:contentDescription="@null"
         android:scaleType="fitCenter"
+        tools:src="@drawable/ic_widget_weather_partly_cloudy_day" />
+
+    <!-- Pre-12 icon variant: anchored to the card top with a negative margin so it
+         overlaps the clock row regardless of widget height (matches the look taller
+         hosts get naturally with the bottom-anchored icon). -->
+    <ImageView
+        android:id="@+id/weather_icon_top"
+        android:layout_width="196dp"
+        android:layout_height="126dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="-24dp"
+        android:contentDescription="@null"
+        android:scaleType="fitCenter"
+        android:visibility="gone"
         tools:src="@drawable/ic_widget_weather_partly_cloudy_day" />
 
     <!-- Location overlay (start) -->
