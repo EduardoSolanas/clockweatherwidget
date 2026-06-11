@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -16,6 +17,7 @@ import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
 import com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider
 import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
+import com.clockweather.app.receiver.ScreenWakeReceiver
 import com.clockweather.app.util.WidgetPrefsCache
 import com.clockweather.app.util.dataStore
 import com.clockweather.app.worker.WeatherUpdateScheduler
@@ -44,6 +46,21 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         WidgetPrefsCache.init(dataStore, appScope)
         WidgetPrefsCache.seedBlocking(dataStore)
         appScope.launch { WeatherUpdateScheduler.ensureScheduled(this@ClockWeatherApplication, dataStore) }
+        registerScreenWakeReceiver()
+    }
+
+    /**
+     * Screen-on/unlock catches the widget up after Doze has deferred periodic work.
+     * These actions are runtime-register-only; the receiver lives as long as the process,
+     * which WorkManager restarts on its next tick if the system kills it.
+     */
+    private fun registerScreenWakeReceiver() {
+        ContextCompat.registerReceiver(
+            this,
+            ScreenWakeReceiver(),
+            ScreenWakeReceiver.intentFilter(),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     private suspend fun recoverClockThemeAfterBrokenMigration() {
