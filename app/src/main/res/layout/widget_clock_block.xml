@@ -150,6 +150,8 @@
             android:textStyle="bold" />
     </FrameLayout>
 
+    <!-- The colon sits on the wallpaper (not on a tile), so it stays white
+         regardless of the clock theme to remain visible on dark backgrounds. -->
     <TextView
         android:id="@+id/colon"
         android:layout_width="wrap_content"
@@ -159,7 +161,7 @@
         android:fontFamily="monospace"
         android:gravity="center"
         android:text=":"
-        android:textColor="@color/flip_digit_text_light"
+        android:textColor="@android:color/white"
         android:textSize="44sp"
         android:textStyle="bold" />
 

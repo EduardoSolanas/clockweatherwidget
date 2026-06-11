@@ -214,8 +214,10 @@ abstract class BaseWidgetUpdater(
                 // Don't constrain weather_card to flip-tile height — it clips
                 // the location / temperature text. Let it use its natural height.
 
-                views.setTextColor(com.clockweather.app.R.id.colon, digitColor)
-                views.setTextColor(com.clockweather.app.R.id.ampm, digitColor)
+                // Colon and AM/PM render on the wallpaper, not on a tile — keep them
+                // white so they stay visible on dark backgrounds regardless of theme.
+                views.setTextColor(com.clockweather.app.R.id.colon, android.graphics.Color.WHITE)
+                views.setTextColor(com.clockweather.app.R.id.ampm, android.graphics.Color.WHITE)
 
                 if (showDate) {
                     val dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault()))

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- Static clock row for widget picker previews only.
      Uses fixed digit TextViews instead of TextClock overlays so each
      character centres perfectly inside its flip-card tile. -->
@@ -81,7 +81,7 @@
         android:fontFamily="monospace"
         android:gravity="center"
         android:text=":"
-        android:textColor="@color/flip_digit_text_light"
+        android:textColor="@android:color/white"
         android:textSize="44sp"
         android:textStyle="bold" />
 
