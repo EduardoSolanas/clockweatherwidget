@@ -1,119 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Transparent base -->
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#00000000" />
-        </shape>
-    </item>
+<!-- Pre-Android-12 picker preview. Must be a vector: launchers draw
+     previewImage scaled to thumbnail bounds, where layer-list dp insets break. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="230dp"
+    android:viewportWidth="320"
+    android:viewportHeight="230">
 
-    <!-- Clock + weather top section -->
-    <item
-        android:left="14dp"
-        android:top="10dp"
-        android:right="14dp"
-        android:bottom="116dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/weather_card_bg_color" />
-            <corners android:radius="18dp" />
-            <stroke
-                android:width="1dp"
-                android:color="@color/widget_glass_stroke" />
-        </shape>
-    </item>
+    <!-- Wallpaper-like backdrop -->
+    <path
+        android:fillColor="#FF46537A"
+        android:pathData="M20,0 h280 a20,20 0 0 1 20,20 v190 a20,20 0 0 1 -20,20 h-280 a20,20 0 0 1 -20,-20 v-190 a20,20 0 0 1 20,-20 z" />
 
-    <!-- Clock digit bar -->
-    <item
-        android:left="30dp"
-        android:top="24dp"
-        android:right="30dp"
-        android:bottom="134dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/widget_text_primary" />
-            <corners android:radius="9dp" />
-        </shape>
-    </item>
+    <!-- Flip-clock tiles and colon dots -->
+    <path
+        android:fillColor="#F2F2F2"
+        android:pathData="M46,14 h34 a10,10 0 0 1 10,10 v60 a10,10 0 0 1 -10,10 h-34 a10,10 0 0 1 -10,-10 v-60 a10,10 0 0 1 10,-10 z M104,14 h34 a10,10 0 0 1 10,10 v60 a10,10 0 0 1 -10,10 h-34 a10,10 0 0 1 -10,-10 v-60 a10,10 0 0 1 10,-10 z M184,14 h34 a10,10 0 0 1 10,10 v60 a10,10 0 0 1 -10,10 h-34 a10,10 0 0 1 -10,-10 v-60 a10,10 0 0 1 10,-10 z M242,14 h34 a10,10 0 0 1 10,10 v60 a10,10 0 0 1 -10,10 h-34 a10,10 0 0 1 -10,-10 v-60 a10,10 0 0 1 10,-10 z M157,40 a3,3 0 1 0 6,0 a3,3 0 1 0 -6,0 z M157,60 a3,3 0 1 0 6,0 a3,3 0 1 0 -6,0 z" />
 
-    <!-- Glass weather icon (overlapping clock and weather card) -->
-    <item
-        android:left="130dp"
-        android:top="50dp"
-        android:right="130dp"
-        android:bottom="118dp"
-        android:drawable="@drawable/ic_widget_weather_clear_day" />
+    <!-- Date placeholder and forecast day names -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M40,104 h62 a4,4 0 0 1 4,4 v2 a4,4 0 0 1 -4,4 h-62 a4,4 0 0 1 -4,-4 v-2 a4,4 0 0 1 4,-4 z M41,166 h18 a3,3 0 0 1 3,3 v1 a3,3 0 0 1 -3,3 h-18 a3,3 0 0 1 -3,-3 v-1 a3,3 0 0 1 3,-3 z M96,166 h18 a3,3 0 0 1 3,3 v1 a3,3 0 0 1 -3,3 h-18 a3,3 0 0 1 -3,-3 v-1 a3,3 0 0 1 3,-3 z M151,166 h18 a3,3 0 0 1 3,3 v1 a3,3 0 0 1 -3,3 h-18 a3,3 0 0 1 -3,-3 v-1 a3,3 0 0 1 3,-3 z M206,166 h18 a3,3 0 0 1 3,3 v1 a3,3 0 0 1 -3,3 h-18 a3,3 0 0 1 -3,-3 v-1 a3,3 0 0 1 3,-3 z M261,166 h18 a3,3 0 0 1 3,3 v1 a3,3 0 0 1 -3,3 h-18 a3,3 0 0 1 -3,-3 v-1 a3,3 0 0 1 3,-3 z" />
 
-    <!-- Weather card middle section -->
-    <item
-        android:left="14dp"
-        android:top="96dp"
-        android:right="14dp"
-        android:bottom="70dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/weather_card_bg_color" />
-            <corners android:radius="18dp" />
-            <stroke
-                android:width="1dp"
-                android:color="@color/widget_glass_stroke" />
-        </shape>
-    </item>
+    <!-- Location placeholder and forecast temps -->
+    <path
+        android:fillColor="#B3FFFFFF"
+        android:pathData="M40,124 h42 a4,4 0 0 1 4,4 v0 a4,4 0 0 1 -4,4 h-42 a4,4 0 0 1 -4,-4 v0 a4,4 0 0 1 4,-4 z M39,203 h22 a3,3 0 0 1 3,3 v1 a3,3 0 0 1 -3,3 h-22 a3,3 0 0 1 -3,-3 v-1 a3,3 0 0 1 3,-3 z M94,203 h22 a3,3 0 0 1 3,3 v1 a3,3 0 0 1 -3,3 h-22 a3,3 0 0 1 -3,-3 v-1 a3,3 0 0 1 3,-3 z M149,203 h22 a3,3 0 0 1 3,3 v1 a3,3 0 0 1 -3,3 h-22 a3,3 0 0 1 -3,-3 v-1 a3,3 0 0 1 3,-3 z M204,203 h22 a3,3 0 0 1 3,3 v1 a3,3 0 0 1 -3,3 h-22 a3,3 0 0 1 -3,-3 v-1 a3,3 0 0 1 3,-3 z M259,203 h22 a3,3 0 0 1 3,3 v1 a3,3 0 0 1 -3,3 h-22 a3,3 0 0 1 -3,-3 v-1 a3,3 0 0 1 3,-3 z" />
 
-    <!-- Forecast row background -->
-    <item
-        android:left="14dp"
-        android:top="138dp"
-        android:right="14dp"
-        android:bottom="14dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/weather_card_bg_color" />
-            <corners android:radius="18dp" />
-            <stroke
-                android:width="1dp"
-                android:color="@color/widget_glass_stroke" />
-        </shape>
-    </item>
+    <!-- Forecast condition dots -->
+    <path
+        android:fillColor="#CCFFFFFF"
+        android:pathData="M41,188 a9,9 0 1 0 18,0 a9,9 0 1 0 -18,0 z M96,188 a9,9 0 1 0 18,0 a9,9 0 1 0 -18,0 z M151,188 a9,9 0 1 0 18,0 a9,9 0 1 0 -18,0 z M206,188 a9,9 0 1 0 18,0 a9,9 0 1 0 -18,0 z M261,188 a9,9 0 1 0 18,0 a9,9 0 1 0 -18,0 z" />
 
-    <!-- Forecast day placeholders -->
-    <item
-        android:left="32dp"
-        android:top="154dp"
-        android:right="200dp"
-        android:bottom="34dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/widget_text_primary" />
-            <corners android:radius="5dp" />
-        </shape>
-    </item>
-
-    <item
-        android:left="214dp"
-        android:top="154dp"
-        android:right="156dp"
-        android:bottom="34dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/widget_text_secondary" />
-            <corners android:radius="5dp" />
-        </shape>
-    </item>
-
-    <item
-        android:left="286dp"
-        android:top="154dp"
-        android:right="98dp"
-        android:bottom="34dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/widget_text_secondary" />
-            <corners android:radius="5dp" />
-        </shape>
-    </item>
-
-    <item
-        android:left="358dp"
-        android:top="154dp"
-        android:right="40dp"
-        android:bottom="34dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/widget_text_secondary" />
-            <corners android:radius="5dp" />
-        </shape>
-    </item>
-</layer-list>
+    <!-- Sun -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M208,116 a20,20 0 1 0 40,0 a20,20 0 1 0 -40,0 z" />
+</vector>

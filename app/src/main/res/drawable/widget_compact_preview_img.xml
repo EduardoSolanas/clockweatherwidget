@@ -1,71 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Transparent base -->
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#00000000" />
-        </shape>
-    </item>
+<!-- Pre-Android-12 picker preview. Must be a vector: launchers draw
+     previewImage scaled to thumbnail bounds, where layer-list dp insets break. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="160dp"
+    android:viewportWidth="320"
+    android:viewportHeight="160">
 
-    <!-- Clock tile area -->
-    <item
-        android:left="18dp"
-        android:top="14dp"
-        android:right="18dp"
-        android:bottom="70dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/weather_card_bg_color" />
-            <corners android:radius="18dp" />
-            <stroke
-                android:width="1dp"
-                android:color="@color/widget_glass_stroke" />
-        </shape>
-    </item>
+    <!-- Wallpaper-like backdrop -->
+    <path
+        android:fillColor="#FF46537A"
+        android:pathData="M20,0 h280 a20,20 0 0 1 20,20 v120 a20,20 0 0 1 -20,20 h-280 a20,20 0 0 1 -20,-20 v-120 a20,20 0 0 1 20,-20 z" />
 
-    <!-- Clock digit bar -->
-    <item
-        android:left="36dp"
-        android:top="30dp"
-        android:right="36dp"
-        android:bottom="88dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/widget_text_primary" />
-            <corners android:radius="8dp" />
-        </shape>
-    </item>
+    <!-- Flip-clock tiles and colon dots -->
+    <path
+        android:fillColor="#F2F2F2"
+        android:pathData="M46,14 h34 a10,10 0 0 1 10,10 v56 a10,10 0 0 1 -10,10 h-34 a10,10 0 0 1 -10,-10 v-56 a10,10 0 0 1 10,-10 z M104,14 h34 a10,10 0 0 1 10,10 v56 a10,10 0 0 1 -10,10 h-34 a10,10 0 0 1 -10,-10 v-56 a10,10 0 0 1 10,-10 z M184,14 h34 a10,10 0 0 1 10,10 v56 a10,10 0 0 1 -10,10 h-34 a10,10 0 0 1 -10,-10 v-56 a10,10 0 0 1 10,-10 z M242,14 h34 a10,10 0 0 1 10,10 v56 a10,10 0 0 1 -10,10 h-34 a10,10 0 0 1 -10,-10 v-56 a10,10 0 0 1 10,-10 z M157,42 a3,3 0 1 0 6,0 a3,3 0 1 0 -6,0 z M157,62 a3,3 0 1 0 6,0 a3,3 0 1 0 -6,0 z" />
 
-    <!-- Weather card area -->
-    <item
-        android:left="18dp"
-        android:top="104dp"
-        android:right="18dp"
-        android:bottom="18dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/weather_card_bg_color" />
-            <corners android:radius="18dp" />
-            <stroke
-                android:width="1dp"
-                android:color="@color/widget_glass_stroke" />
-        </shape>
-    </item>
+    <!-- Date placeholder -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M40,102 h62 a4,4 0 0 1 4,4 v2 a4,4 0 0 1 -4,4 h-62 a4,4 0 0 1 -4,-4 v-2 a4,4 0 0 1 4,-4 z" />
 
-    <!-- Location text placeholder -->
-    <item
-        android:left="36dp"
-        android:top="126dp"
-        android:right="110dp"
-        android:bottom="40dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/widget_text_primary" />
-            <corners android:radius="6dp" />
-        </shape>
-    </item>
+    <!-- Location placeholder -->
+    <path
+        android:fillColor="#B3FFFFFF"
+        android:pathData="M40,122 h42 a4,4 0 0 1 4,4 v0 a4,4 0 0 1 -4,4 h-42 a4,4 0 0 1 -4,-4 v0 a4,4 0 0 1 4,-4 z" />
 
-    <!-- Glass weather icon -->
-    <item
-        android:left="80dp"
-        android:top="88dp"
-        android:right="80dp"
-        android:bottom="24dp"
-        android:drawable="@drawable/ic_widget_weather_clear_day" />
-</layer-list>
+    <!-- Sun -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M214,118 a18,18 0 1 0 36,0 a18,18 0 1 0 -36,0 z" />
+</vector>
