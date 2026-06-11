@@ -40,17 +40,17 @@
         android:strokeColor="#FF55B8F7"
         android:strokeWidth="1.5"
         android:strokeLineCap="round"
-        android:pathData="M10.9,16.8l-1,2.7M20.6,16.8l-1,2.7" />
+        android:pathData="M9.7,16.8l-1,2.7M19.4,16.8l-1,2.7" />
 
     <!-- lightning glow -->
     <path
         android:fillColor="#40FFE27A"
-        android:pathData="M16.4,14.4l-3,4.7h2.4l-1.5,3.9l4.1,-5.8h-2.3z" />
+        android:pathData="M15.15,14.4l-3,4.7h2.4l-1.5,3.9l4.1,-5.8h-2.3z" />
 
     <!-- lightning bolt -->
-    <path android:pathData="M16.1,15.1l-2.3,3.7h2l-1.1,3.2l3.2,-4.8h-1.8z">
+    <path android:pathData="M14.85,15.1l-2.3,3.7h2l-1.1,3.2l3.2,-4.8h-1.8z">
         <aapt:attr name="android:fillColor">
-            <gradient android:type="linear" android:startX="15.3" android:startY="15.1" android:endX="15.3" android:endY="22">
+            <gradient android:type="linear" android:startX="14.05" android:startY="15.1" android:endX="14.05" android:endY="22">
                 <item android:offset="0" android:color="#FFFFFFC0" />
                 <item android:offset="0.35" android:color="#FFFFF2A8" />
                 <item android:offset="0.65" android:color="#FFFFC83A" />
@@ -64,7 +64,7 @@
         android:strokeColor="#90FFFFFF"
         android:strokeWidth="0.4"
         android:strokeLineCap="round"
-        android:pathData="M16.1,15.1l-1.4,2.2" />
+        android:pathData="M14.85,15.1l-1.4,2.2" />
 
     </group>
 </vector>
