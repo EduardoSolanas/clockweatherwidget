@@ -66,12 +66,15 @@
             android:textSize="13sp" />
     </LinearLayout>
 
-    <!-- Temperature overlay (end) -->
+    <!-- Temperature overlay (end). The bottom margin shifts the centered block up by
+         half the location block's height, so the temp block's vertical middle lands
+         on the location text's top line instead of leaving dead space above it. -->
     <LinearLayout
         android:id="@+id/weather_overlay_temp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|center_vertical"
+        android:layout_marginBottom="36dp"
         android:orientation="vertical">
 
         <TextView
@@ -138,7 +141,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|top"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="-17dp"
         android:orientation="vertical"
         android:visibility="gone">
 
