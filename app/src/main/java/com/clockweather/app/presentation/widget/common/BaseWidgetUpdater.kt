@@ -258,6 +258,16 @@ abstract class BaseWidgetUpdater(
                     WeatherUpdateScheduler.scheduleImmediateRefresh(context)
                 }
 
+                // Always use the top-anchored text overlays: they position from the
+                // card top with explicit margins, so their geometry is independent of
+                // the card height. The centered variants either sink on tall hosts
+                // (pre-12) or get measure-squeezed on short ones (12+), dropping the
+                // high/low line.
+                views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_location, View.GONE)
+                views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_temp, View.GONE)
+                views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_location_top, View.VISIBLE)
+                views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_temp_top, View.VISIBLE)
+
                 // Pre-12 the widget host is usually taller than the card needs, leaving
                 // the bottom-anchored icon floating low. Use the top-anchored variant
                 // there so the icon overlaps the clock row like on modern hosts.
@@ -266,13 +276,6 @@ abstract class BaseWidgetUpdater(
                 } else {
                     views.setViewVisibility(com.clockweather.app.R.id.weather_icon, View.GONE)
                     views.setViewVisibility(com.clockweather.app.R.id.weather_icon_top, View.VISIBLE)
-                    // The card fills the leftover widget height, so the vertically
-                    // centered text overlays sink on tall hosts; swap to the
-                    // top-anchored clones that sit beside the icon.
-                    views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_location, View.GONE)
-                    views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_temp, View.GONE)
-                    views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_location_top, View.VISIBLE)
-                    views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_temp_top, View.VISIBLE)
                     com.clockweather.app.R.id.weather_icon_top
                 }
 
