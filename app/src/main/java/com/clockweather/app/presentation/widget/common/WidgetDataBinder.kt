@@ -83,8 +83,12 @@ object WidgetDataBinder {
         val todayForecast = weatherData.dailyForecasts.firstOrNull { it.date == forecastAnchorDate }
             ?: weatherData.dailyForecasts.firstOrNull()
 
-        views.setTextViewText(R.id.city_name, resolveWidgetLocationLabel(location, WidgetLocationMaxChars))
-        views.setTextViewText(R.id.condition_text, context.getString(currentDisplayWeather.weatherCondition.labelResId))
+        val cityLabel = resolveWidgetLocationLabel(location, WidgetLocationMaxChars)
+        val conditionLabel = context.getString(currentDisplayWeather.weatherCondition.labelResId)
+        views.setTextViewText(R.id.city_name, cityLabel)
+        views.setTextViewText(R.id.city_name_top, cityLabel)
+        views.setTextViewText(R.id.condition_text, conditionLabel)
+        views.setTextViewText(R.id.condition_text_top, conditionLabel)
         setWidgetIcon(
             views,
             iconViewId,
@@ -92,16 +96,14 @@ object WidgetDataBinder {
             WeatherIconMapper.getDrawableResId(currentDisplayWeather.weatherCondition, iconStyle),
             renderIcon,
         )
-        views.setTextViewText(
-            R.id.current_temp,
-            TemperatureFormatter.formatWithUnit(currentDisplayWeather.temperature, temperatureUnit)
-        )
+        val tempLabel = TemperatureFormatter.formatWithUnit(currentDisplayWeather.temperature, temperatureUnit)
+        views.setTextViewText(R.id.current_temp, tempLabel)
+        views.setTextViewText(R.id.current_temp_top, tempLabel)
         todayForecast?.let { forecast ->
             val tempFormat = if (temperatureUnit == TemperatureUnit.CELSIUS) R.string.unit_celsius else R.string.unit_fahrenheit
-            views.setTextViewText(
-                R.id.high_low,
-                context.getString(tempFormat, forecast.temperatureMax) + "/" + context.getString(tempFormat, forecast.temperatureMin)
-            )
+            val highLowLabel = context.getString(tempFormat, forecast.temperatureMax) + "/" + context.getString(tempFormat, forecast.temperatureMin)
+            views.setTextViewText(R.id.high_low, highLowLabel)
+            views.setTextViewText(R.id.high_low_top, highLowLabel)
         }
 
         views.setViewVisibility(R.id.weather_card, android.view.View.VISIBLE)
@@ -115,7 +117,9 @@ object WidgetDataBinder {
         iconViewId: Int = R.id.weather_icon,
     ) {
         views.setTextViewText(R.id.city_name, context.getString(R.string.widget_weather_unavailable_title))
+        views.setTextViewText(R.id.city_name_top, context.getString(R.string.widget_weather_unavailable_title))
         views.setTextViewText(R.id.condition_text, context.getString(R.string.widget_weather_unavailable_condition))
+        views.setTextViewText(R.id.condition_text_top, context.getString(R.string.widget_weather_unavailable_condition))
         setWidgetIcon(
             views,
             iconViewId,
@@ -124,7 +128,9 @@ object WidgetDataBinder {
             renderIcon,
         )
         views.setTextViewText(R.id.current_temp, context.getString(R.string.widget_weather_unavailable_temp))
+        views.setTextViewText(R.id.current_temp_top, context.getString(R.string.widget_weather_unavailable_temp))
         views.setTextViewText(R.id.high_low, "")
+        views.setTextViewText(R.id.high_low_top, "")
         views.setViewVisibility(R.id.weather_card, View.VISIBLE)
     }
 

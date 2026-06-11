@@ -37,6 +37,7 @@
 
     <!-- Location overlay (start) -->
     <LinearLayout
+        android:id="@+id/weather_overlay_location"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="start|center_vertical"
@@ -67,6 +68,7 @@
 
     <!-- Temperature overlay (end) -->
     <LinearLayout
+        android:id="@+id/weather_overlay_temp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|center_vertical"
@@ -85,6 +87,74 @@
 
         <TextView
             android:id="@+id/high_low"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="end"
+            android:includeFontPadding="false"
+            android:text="20° / 11°"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- Pre-12 overlay variants: the card fills all leftover widget height, so the
+         centered overlays sink far below the icon on tall hosts. These clones anchor
+         to the card top, next to the icon. The binder writes both sets; the updater
+         shows one pair per API level. -->
+    <LinearLayout
+        android:id="@+id/weather_overlay_location_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|top"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/city_name_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxWidth="132dp"
+            android:maxLines="1"
+            android:text="London"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/condition_text_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Partly cloudy"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/weather_overlay_temp_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/current_temp_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:includeFontPadding="false"
+            android:text="17°C"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/high_low_top"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"

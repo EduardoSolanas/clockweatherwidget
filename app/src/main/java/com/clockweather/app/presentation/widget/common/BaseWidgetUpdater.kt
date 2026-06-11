@@ -264,6 +264,13 @@ abstract class BaseWidgetUpdater(
                 } else {
                     views.setViewVisibility(com.clockweather.app.R.id.weather_icon, View.GONE)
                     views.setViewVisibility(com.clockweather.app.R.id.weather_icon_top, View.VISIBLE)
+                    // The card fills the leftover widget height, so the vertically
+                    // centered text overlays sink on tall hosts; swap to the
+                    // top-anchored clones that sit beside the icon.
+                    views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_location, View.GONE)
+                    views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_temp, View.GONE)
+                    views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_location_top, View.VISIBLE)
+                    views.setViewVisibility(com.clockweather.app.R.id.weather_overlay_temp_top, View.VISIBLE)
                     com.clockweather.app.R.id.weather_icon_top
                 }
 
@@ -284,10 +291,18 @@ abstract class BaseWidgetUpdater(
     }
 
     private fun applyWeatherTextSizing(views: RemoteViews, widgetTextScale: Float) {
-        views.setTextViewTextSize(com.clockweather.app.R.id.city_name, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.EMPHASIS, widgetTextScale))
-        views.setTextViewTextSize(com.clockweather.app.R.id.condition_text, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.SECONDARY, widgetTextScale))
-        views.setTextViewTextSize(com.clockweather.app.R.id.current_temp, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.TEMPERATURE, widgetTextScale))
-        views.setTextViewTextSize(com.clockweather.app.R.id.high_low, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.BODY, widgetTextScale))
+        listOf(com.clockweather.app.R.id.city_name, com.clockweather.app.R.id.city_name_top).forEach {
+            views.setTextViewTextSize(it, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.EMPHASIS, widgetTextScale))
+        }
+        listOf(com.clockweather.app.R.id.condition_text, com.clockweather.app.R.id.condition_text_top).forEach {
+            views.setTextViewTextSize(it, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.SECONDARY, widgetTextScale))
+        }
+        listOf(com.clockweather.app.R.id.current_temp, com.clockweather.app.R.id.current_temp_top).forEach {
+            views.setTextViewTextSize(it, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.TEMPERATURE, widgetTextScale))
+        }
+        listOf(com.clockweather.app.R.id.high_low, com.clockweather.app.R.id.high_low_top).forEach {
+            views.setTextViewTextSize(it, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.BODY, widgetTextScale))
+        }
 
         if (hasForecastViews) {
             listOf(
@@ -320,10 +335,14 @@ abstract class BaseWidgetUpdater(
                 add(dateViewId)
                 add(com.clockweather.app.R.id.weather_card)
                 add(com.clockweather.app.R.id.city_name)
+                add(com.clockweather.app.R.id.city_name_top)
                 add(com.clockweather.app.R.id.condition_text)
+                add(com.clockweather.app.R.id.condition_text_top)
                 add(com.clockweather.app.R.id.weather_icon)
                 add(com.clockweather.app.R.id.current_temp)
+                add(com.clockweather.app.R.id.current_temp_top)
                 add(com.clockweather.app.R.id.high_low)
+                add(com.clockweather.app.R.id.high_low_top)
                 if (hasForecastViews) {
                     add(com.clockweather.app.R.id.forecast_container)
                     add(com.clockweather.app.R.id.fday1_name)
