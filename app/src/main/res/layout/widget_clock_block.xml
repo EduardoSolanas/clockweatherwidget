@@ -48,26 +48,34 @@
                     android:layout_gravity="center_vertical"
                     android:background="@drawable/flip_hinge_line" />
 
-                <!-- Pre-12 digit: a TextClock exactly one monospace glyph wide (0.6em of
-                     48dp = ~28.8dp). gravity left shows the first digit; the second is
-                     clipped. left/right (not start/end) so RTL locales don't swap digits. -->
-                <TextClock
-                    android:id="@+id/tile_clock_h1"
+                <!-- Pre-12 digit: the clipper frame is one monospace glyph wide (0.6em of
+                     48dp ≈ 28.8dp) and the TextClock inside has an exact two-glyph width,
+                     so the frame clips one digit: layout_gravity left keeps the first
+                     digit, right keeps the second. The exact child width is what makes
+                     this safe — TextView never has to ellipsize or wrap. left/right (not
+                     start/end) so RTL locales don't swap digits. -->
+                <FrameLayout
                     android:layout_width="29dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:fontFamily="monospace"
-                    android:format12Hour="hh"
-                    android:format24Hour="HH"
-                    android:gravity="left"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:textColor="@color/flip_digit_text_light"
-                    android:textSize="48dp"
-                    android:textStyle="bold"
-                    android:visibility="gone"
-                    tools:ignore="RtlHardcoded,SpUsage" />
+                    android:layout_gravity="center">
+
+                    <TextClock
+                        android:id="@+id/tile_clock_h1"
+                        android:layout_width="58dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="left"
+                        android:fontFamily="monospace"
+                        android:format12Hour="hh"
+                        android:format24Hour="HH"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:textColor="@color/flip_digit_text_light"
+                        android:textSize="48dp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:ignore="RtlHardcoded,SpUsage" />
+                </FrameLayout>
             </FrameLayout>
 
             <FrameLayout
@@ -97,23 +105,28 @@
                     android:layout_gravity="center_vertical"
                     android:background="@drawable/flip_hinge_line" />
 
-                <TextClock
-                    android:id="@+id/tile_clock_h2"
+                <FrameLayout
                     android:layout_width="29dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:fontFamily="monospace"
-                    android:format12Hour="hh"
-                    android:format24Hour="HH"
-                    android:gravity="right"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:textColor="@color/flip_digit_text_light"
-                    android:textSize="48dp"
-                    android:textStyle="bold"
-                    android:visibility="gone"
-                    tools:ignore="RtlHardcoded,SpUsage" />
+                    android:layout_gravity="center">
+
+                    <TextClock
+                        android:id="@+id/tile_clock_h2"
+                        android:layout_width="58dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right"
+                        android:fontFamily="monospace"
+                        android:format12Hour="hh"
+                        android:format24Hour="HH"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:textColor="@color/flip_digit_text_light"
+                        android:textSize="48dp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:ignore="RtlHardcoded,SpUsage" />
+                </FrameLayout>
             </FrameLayout>
         </LinearLayout>
 
@@ -188,23 +201,28 @@
                     android:layout_gravity="center_vertical"
                     android:background="@drawable/flip_hinge_line" />
 
-                <TextClock
-                    android:id="@+id/tile_clock_m1"
+                <FrameLayout
                     android:layout_width="29dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:fontFamily="monospace"
-                    android:format12Hour="mm"
-                    android:format24Hour="mm"
-                    android:gravity="left"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:textColor="@color/flip_digit_text_light"
-                    android:textSize="48dp"
-                    android:textStyle="bold"
-                    android:visibility="gone"
-                    tools:ignore="RtlHardcoded,SpUsage" />
+                    android:layout_gravity="center">
+
+                    <TextClock
+                        android:id="@+id/tile_clock_m1"
+                        android:layout_width="58dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="left"
+                        android:fontFamily="monospace"
+                        android:format12Hour="mm"
+                        android:format24Hour="mm"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:textColor="@color/flip_digit_text_light"
+                        android:textSize="48dp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:ignore="RtlHardcoded,SpUsage" />
+                </FrameLayout>
             </FrameLayout>
 
             <FrameLayout
@@ -234,23 +252,28 @@
                     android:layout_gravity="center_vertical"
                     android:background="@drawable/flip_hinge_line" />
 
-                <TextClock
-                    android:id="@+id/tile_clock_m2"
+                <FrameLayout
                     android:layout_width="29dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:fontFamily="monospace"
-                    android:format12Hour="mm"
-                    android:format24Hour="mm"
-                    android:gravity="right"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:textColor="@color/flip_digit_text_light"
-                    android:textSize="48dp"
-                    android:textStyle="bold"
-                    android:visibility="gone"
-                    tools:ignore="RtlHardcoded,SpUsage" />
+                    android:layout_gravity="center">
+
+                    <TextClock
+                        android:id="@+id/tile_clock_m2"
+                        android:layout_width="58dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right"
+                        android:fontFamily="monospace"
+                        android:format12Hour="mm"
+                        android:format24Hour="mm"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:textColor="@color/flip_digit_text_light"
+                        android:textSize="48dp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:ignore="RtlHardcoded,SpUsage" />
+                </FrameLayout>
             </FrameLayout>
         </LinearLayout>
 
