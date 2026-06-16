@@ -32,7 +32,6 @@ object WeatherUpdateScheduler {
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
-            .setRequiresBatteryNotLow(true)
             .build()
 
         val workRequest = PeriodicWorkRequestBuilder<WeatherUpdateWorker>(
