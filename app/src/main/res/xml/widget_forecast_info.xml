@@ -9,7 +9,7 @@
     android:maxResizeWidth="650dp"
     android:maxResizeHeight="500dp"
     android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="0"
+    android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_forecast"
     android:previewImage="@drawable/widget_forecast_preview_img"
     android:previewLayout="@layout/widget_forecast_preview"
