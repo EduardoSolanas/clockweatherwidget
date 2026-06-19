@@ -432,22 +432,23 @@ fun MoonBackground(modifier: Modifier = Modifier) {
         )
 
         // Moon Body
+        // Use a slightly offset dark circle on top to create a clean, crisp crescent phase
+        // rather than a glowing halo that blends poorly.
         drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(Color.White, MoonCream, MoonShadow.copy(alpha = 0.4f)),
-                center = center,
-                radius = radius
-            ),
+            color = MoonCream,
             radius = radius * moonPulse,
             center = center
         )
 
-        // Detailed Craters
-        drawCircle(MoonShadow.copy(alpha = 0.25f), radius * 0.22f, center + Offset(-radius * 0.25f, -radius * 0.15f))
-        drawCircle(MoonShadow.copy(alpha = 0.15f), radius * 0.12f, center + Offset(-radius * 0.4f, -radius * 0.05f))
-        drawCircle(MoonShadow.copy(alpha = 0.2f), radius * 0.18f, center + Offset(radius * 0.2f, radius * 0.35f))
-        drawCircle(MoonShadow.copy(alpha = 0.1f), radius * 0.08f, center + Offset(radius * 0.4f, radius * 0.1f))
-        drawCircle(MoonShadow.copy(alpha = 0.12f), radius * 0.1f, center + Offset(-radius * 0.1f, radius * 0.4f))
+        // Subtly dark crescent shadow overlay to create the phase effect
+        drawCircle(
+            color = Color(0xFF1B2341), // Deep night sky blue
+            radius = radius * moonPulse * 0.95f,
+            center = center + Offset(radius * 0.35f, -radius * 0.15f)
+        )
+
+        // Remove the hard-coded solid craters since they look weird on a crescent phase.
+        // The above two circles perfectly simulate a high-quality crescent moon.
 
         // Crescent Mask
         drawCircle(
