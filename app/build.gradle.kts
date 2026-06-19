@@ -74,6 +74,12 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+
     lint {
         abortOnError = false  // Don't abort on errors, just warn
         warningsAsErrors = false  // Keep warnings as warnings

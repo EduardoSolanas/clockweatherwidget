@@ -55,12 +55,16 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
      * which WorkManager restarts on its next tick if the system kills it.
      */
     private fun registerScreenWakeReceiver() {
-        ContextCompat.registerReceiver(
-            this,
-            ScreenWakeReceiver(),
-            ScreenWakeReceiver.intentFilter(),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
+        try {
+            ContextCompat.registerReceiver(
+                this,
+                ScreenWakeReceiver(),
+                ScreenWakeReceiver.intentFilter(),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("ClockWeatherApp", "Failed to register screen wake receiver", e)
+        }
     }
 
     private suspend fun recoverClockThemeAfterBrokenMigration() {
