@@ -22,7 +22,7 @@ interface GoogleWeatherApi {
     ): GoogleCurrentConditionsDto
 
     /**
-     * Hourly forecast for up to 240 hours.
+     * Hourly forecast for up to 240 hours. Max pageSize is 24.
      */
     @GET("v1/forecast/hours:lookup")
     suspend fun getHourlyForecast(
@@ -30,6 +30,7 @@ interface GoogleWeatherApi {
         @Query("location.latitude") latitude: Double,
         @Query("location.longitude") longitude: Double,
         @Query("pageSize") pageSize: Int = 24,
+        @Query("pageToken") pageToken: String? = null,
         @Query("unitsSystem") unitsSystem: String = "METRIC",
         @Query("languageCode") languageCode: String = "en"
     ): GoogleHourlyForecastResponseDto

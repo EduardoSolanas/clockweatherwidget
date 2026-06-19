@@ -48,7 +48,7 @@ class GoogleWeatherProviderTest {
             googleWeatherApi.getDailyForecast("test-key", location.latitude, location.longitude, pageSize = 7)
         }
         coVerify(exactly = 1) {
-            googleWeatherApi.getHourlyForecast("test-key", location.latitude, location.longitude, pageSize = 168)
+            googleWeatherApi.getHourlyForecast("test-key", location.latitude, location.longitude, pageSize = 24, pageToken = null)
         }
     }
 
@@ -62,7 +62,7 @@ class GoogleWeatherProviderTest {
             googleWeatherApi.getDailyForecast("test-key", location.latitude, location.longitude, pageSize = 10)
         }
         coVerify(exactly = 1) {
-            googleWeatherApi.getHourlyForecast("test-key", location.latitude, location.longitude, pageSize = 240)
+            googleWeatherApi.getHourlyForecast("test-key", location.latitude, location.longitude, pageSize = 24, pageToken = null)
         }
     }
 
@@ -71,11 +71,18 @@ class GoogleWeatherProviderTest {
             googleWeatherApi.getCurrentConditions(any(), any(), any(), any(), any())
         } returns currentDto
         coEvery {
-            googleWeatherApi.getHourlyForecast(any(), any(), any(), any(), any(), any())
+            googleWeatherApi.getHourlyForecast(any(), any(), any(), any(), any(), any(), any())
         } returns hourlyDto
+        
+        every { hourlyDto.forecastHours } returns emptyList()
+        every { hourlyDto.nextPageToken } returns null
+        
         coEvery {
             googleWeatherApi.getDailyForecast(any(), any(), any(), any(), any(), any())
         } returns dailyDto
+        
+        every { dailyDto.forecastDays } returns emptyList()
+
         every {
             mapper.mapToWeatherData(currentDto, hourlyDto, dailyDto, location)
         } returns fakeWeatherData

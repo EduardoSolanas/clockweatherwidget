@@ -25,16 +25,38 @@ class GoogleWeatherProvider @Inject constructor(
     override suspend fun fetchWeatherData(location: Location, forecastDays: Int): WeatherData =
         coroutineScope {
             val days = forecastDays.coerceIn(1, 10)
-            val hourlyPageSize = (days * 24).coerceIn(24, 240)
+            val totalTargetHours = days * 24
             val lat = location.latitude
             val lon = location.longitude
 
             val currentDeferred = async {
                 googleWeatherApi.getCurrentConditions(apiKey, lat, lon)
             }
+            
             val hourlyDeferred = async {
-                googleWeatherApi.getHourlyForecast(apiKey, lat, lon, pageSize = hourlyPageSize)
+                val allHours = mutableListOf<com.clockweather.app.data.remote.dto.google.GoogleHourlyForecastDto>()
+                var pageToken: String? = null
+                
+                // Keep fetching until we hit our target or the API runs out of pages
+                while (allHours.size < totalTargetHours) {
+                    val response = googleWeatherApi.getHourlyForecast(
+                        apiKey = apiKey, 
+                        latitude = lat, 
+                        longitude = lon, 
+                        pageSize = 24,
+                        pageToken = pageToken
+                    )
+                    allHours.addAll(response.forecastHours)
+                    
+                    pageToken = response.nextPageToken
+                    if (pageToken.isNullOrBlank()) break
+                }
+                
+                com.clockweather.app.data.remote.dto.google.GoogleHourlyForecastResponseDto(
+                    forecastHours = allHours.take(totalTargetHours)
+                )
             }
+
             val dailyDeferred = async {
                 googleWeatherApi.getDailyForecast(apiKey, lat, lon, pageSize = days)
             }

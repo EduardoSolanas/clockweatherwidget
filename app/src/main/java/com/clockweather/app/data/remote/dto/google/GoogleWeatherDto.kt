@@ -142,7 +142,8 @@ data class GoogleHourlyForecastDto(
 
 @JsonClass(generateAdapter = true)
 data class GoogleHourlyForecastResponseDto(
-    val forecastHours: List<GoogleHourlyForecastDto> = emptyList()
+    val forecastHours: List<GoogleHourlyForecastDto> = emptyList(),
+    val nextPageToken: String? = null
 )
 
 // ─── Daily Forecast ───────────────────────────────────────────────────────────
