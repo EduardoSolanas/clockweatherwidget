@@ -412,9 +412,11 @@ fun MoonBackground(modifier: Modifier = Modifier) {
         }
 
         // Deep Moon Glow
+        // Use .copy(alpha = 0f) instead of Color.Transparent to prevent dirty gray halos 
+        // caused by interpolating to black-transparent (#00000000).
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(MoonCream.copy(alpha = 0.5f), Color.Transparent),
+                colors = listOf(MoonCream.copy(alpha = 0.5f), MoonCream.copy(alpha = 0f)),
                 center = center,
                 radius = radius * 2.5f
             ),
@@ -423,7 +425,7 @@ fun MoonBackground(modifier: Modifier = Modifier) {
         )
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(MoonShadow.copy(alpha = 0.25f), Color.Transparent),
+                colors = listOf(MoonShadow.copy(alpha = 0.25f), MoonShadow.copy(alpha = 0f)),
                 center = center,
                 radius = radius * 4f
             ),
