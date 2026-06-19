@@ -208,7 +208,7 @@ fun HourlyWeatherGraph(
         if (!isTodayView) null
         else resolveCurrentHourIndex(hours, referenceDateTime)
     }
-    LaunchedEffect(currentIdx, hours.size, isTodayView) {
+    LaunchedEffect(currentIdx, hours.size, isTodayView, selectedDate) {
         val targetPx = (((currentIdx ?: 0) - 1).coerceAtLeast(0) * layoutMetrics.columnWidthPx)
         scrollState.scrollTo(targetPx)
     }
