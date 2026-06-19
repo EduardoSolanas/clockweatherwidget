@@ -53,6 +53,11 @@
             android:exported="false"
             android:theme="@style/Theme.ClockWeatherWidget" />
 
+        <!-- Dummy Activity for Compose testing in Robolectric -->
+        <activity
+            android:name="androidx.activity.ComponentActivity"
+            android:exported="true" />
+
         <!-- Compact Widget Provider (Variant A) -->
         <receiver
             android:name=".presentation.widget.compact.CompactWidgetProvider"
