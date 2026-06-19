@@ -40,14 +40,13 @@ class HourlyWeatherGraphTest {
     }
 
     @Test
-    fun `missing selected date falls back to first 24 hours`() {
+    fun `missing selected date returns empty list instead of falling back to today`() {
         val baseDate = LocalDate.of(2026, 3, 26)
         val forecasts = (buildForecasts(baseDate.plusDays(1), 16) + buildForecasts(baseDate, 16)).shuffled()
 
         val scoped = scopedHourlyForecasts(forecasts, baseDate.plusDays(3))
 
-        assertEquals(24, scoped.size)
-        assertEquals(forecasts.sortedBy { it.dateTime }.take(24), scoped)
+        assertEquals(0, scoped.size)
     }
 
     @Test

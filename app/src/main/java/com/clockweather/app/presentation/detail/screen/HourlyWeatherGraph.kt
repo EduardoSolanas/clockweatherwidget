@@ -85,7 +85,7 @@ internal fun scopedHourlyForecasts(
     }
 
     if (filtered.isEmpty()) {
-        return orderedForecasts.take(24)
+        return emptyList()
     }
 
     val selectedStartIndex = orderedForecasts.indexOfFirst {
@@ -95,7 +95,7 @@ internal fun scopedHourlyForecasts(
     return if (selectedStartIndex >= 0) {
         orderedForecasts.drop(selectedStartIndex).take(24)
     } else {
-        orderedForecasts.take(24)
+        emptyList()
     }
 }
 
