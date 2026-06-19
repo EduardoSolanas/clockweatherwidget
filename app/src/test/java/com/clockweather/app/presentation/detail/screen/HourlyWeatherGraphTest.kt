@@ -50,7 +50,7 @@ class HourlyWeatherGraphTest {
     }
 
     @Test
-    fun `selected date with one remaining hour falls forward to next 24 hours`() {
+    fun `selected date with one remaining hour returns just that hour instead of falling forward`() {
         val baseDate = LocalDate.of(2026, 3, 26)
         val forecasts = buildForecasts(baseDate, 24) +
             listOf(buildForecast(baseDate.plusDays(1), 23)) +
@@ -62,11 +62,9 @@ class HourlyWeatherGraphTest {
             LocalDateTime.of(baseDate, java.time.LocalTime.of(12, 0))
         )
 
-        assertEquals(24, scoped.size)
+        assertEquals(1, scoped.size)
         assertEquals(baseDate.plusDays(1), scoped.first().dateTime.toLocalDate())
         assertEquals(23, scoped.first().dateTime.hour)
-        assertEquals(baseDate.plusDays(2), scoped.last().dateTime.toLocalDate())
-        assertEquals(22, scoped.last().dateTime.hour)
     }
 
     @Test

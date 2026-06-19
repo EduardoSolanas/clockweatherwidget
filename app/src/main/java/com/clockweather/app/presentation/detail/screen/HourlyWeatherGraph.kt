@@ -77,26 +77,11 @@ internal fun scopedHourlyForecasts(
     }
 
     val filtered = orderedForecasts.filter { it.dateTime.toLocalDate() == selectedDate }
-    // For non-today dates, keep the selected calendar day when possible. If fewer than 2
-    // points remain (e.g. sparse backend data or a late single-hour carry-over), fall
-    // forward to the next 24 hours so the graph is never hidden.
-    if (filtered.size >= 2) {
-        return filtered
-    }
-
-    if (filtered.isEmpty()) {
-        return emptyList()
-    }
-
-    val selectedStartIndex = orderedForecasts.indexOfFirst {
-        it.dateTime.toLocalDate() == selectedDate
-    }
-
-    return if (selectedStartIndex >= 0) {
-        orderedForecasts.drop(selectedStartIndex).take(24)
-    } else {
-        emptyList()
-    }
+    // For non-today dates, we strictly want exactly the 24 hours of that calendar day.
+    // If the backend didn't supply them (e.g. OWM limits), we return what we have (even if it's < 2) 
+    // or an empty list so the UI can gracefully hide the graph, instead of jumping to 
+    // a confusing rolling window from a different day.
+    return filtered
 }
 
 // ── Curve colour (warm amber — matches reference) ─────────────────────────────
