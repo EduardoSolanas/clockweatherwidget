@@ -36,19 +36,19 @@ fun WeatherAnimatedIcon(condition: WeatherCondition, modifier: Modifier = Modifi
             }
         )
         WeatherCondition.RAIN_SLIGHT, WeatherCondition.RAIN_MODERATE,
-        WeatherCondition.RAIN_SHOWER_SLIGHT, WeatherCondition.FREEZING_RAIN_LIGHT,
-        WeatherCondition.FREEZING_RAIN_HEAVY -> RainBackground(
+        WeatherCondition.RAIN_SHOWER_SLIGHT, WeatherCondition.RAIN_SHOWER_MODERATE,
+        WeatherCondition.FREEZING_RAIN_LIGHT, WeatherCondition.FREEZING_RAIN_HEAVY -> RainBackground(
             modifier = modifier,
             intensity = when (condition) {
                 WeatherCondition.RAIN_SLIGHT,
                 WeatherCondition.RAIN_SHOWER_SLIGHT,
                 WeatherCondition.FREEZING_RAIN_LIGHT -> 0.35f
                 WeatherCondition.RAIN_MODERATE -> 0.8f
+                WeatherCondition.RAIN_SHOWER_MODERATE -> 1.0f
                 else -> 1.3f
             }
         )
-        WeatherCondition.RAIN_HEAVY, WeatherCondition.RAIN_SHOWER_MODERATE,
-        WeatherCondition.RAIN_SHOWER_VIOLENT -> RainBackground(
+        WeatherCondition.RAIN_HEAVY, WeatherCondition.RAIN_SHOWER_VIOLENT -> RainBackground(
             modifier = modifier,
             intensity = if (condition == WeatherCondition.RAIN_HEAVY) 1.7f else 2.2f
         )
@@ -106,7 +106,6 @@ internal fun snowParticleCountForIntensity(intensity: Float): Int = when {
     intensity < 1.6f -> 48
     else -> 64
 }
-
 private fun DrawScope.drawCloud(center: Offset, size: Float, color: Color, alpha: Float = 1f) {
     val radius = size / 2
     val cloudColor = color.copy(alpha = alpha)
@@ -151,7 +150,7 @@ private fun DrawScope.drawCloud(center: Offset, size: Float, color: Color, alpha
         
         // 3. Silver Lining / Sun Bloom
         val bloomBrush = Brush.radialGradient(
-            colors = listOf(Color.White.copy(alpha = alpha * 0.4f), Color.Transparent),
+            colors = listOf(Color.White.copy(alpha = alpha * 0.4f), Color.White.copy(alpha = 0f)),
             center = Offset(radius * 0.8f, radius * 0.4f),
             radius = radius * 1.8f
         )
@@ -256,11 +255,11 @@ fun SunBackground(modifier: Modifier = Modifier) {
 
         // Intense Sun Bloom Corona
         drawCircle(
-            Brush.radialGradient(listOf(SunYellow.copy(alpha = 0.6f / coronaPulse), Color.Transparent), center, radius * 3.5f * coronaPulse),
+            Brush.radialGradient(listOf(SunYellow.copy(alpha = 0.6f / coronaPulse), SunYellow.copy(alpha = 0f)), center, radius * 3.5f * coronaPulse),
             radius * 3.5f * coronaPulse, center
         )
         drawCircle(
-            Brush.radialGradient(listOf(SunOrange.copy(alpha = 0.4f), Color.Transparent), center, radius * 5f),
+            Brush.radialGradient(listOf(SunOrange.copy(alpha = 0.4f), SunOrange.copy(alpha = 0f)), center, radius * 5f),
             radius * 5f, center
         )
 
@@ -275,7 +274,7 @@ fun SunBackground(modifier: Modifier = Modifier) {
                 rotate(angle, center) {
                     drawLine(
                         Brush.linearGradient(
-                            listOf(SunOrange.copy(alpha = 0.8f), Color.Transparent),
+                            listOf(SunOrange.copy(alpha = 0.8f), SunOrange.copy(alpha = 0f)),
                             start = Offset(center.x, center.y - radius * 1.1f),
                             end = Offset(center.x, center.y - length)
                         ),
@@ -338,25 +337,47 @@ fun MoonBackground(modifier: Modifier = Modifier) {
         val h = size.height
 
         // AAA Ultra HD Aurora Borealis Effect
-        val auroraShift = sin(time / 2500f) * 60f
-        val auroraShift2 = cos(time / 1800f) * 40f
+        val auroraPath1 = Path().apply {
+            moveTo(0f, 0f)
+            lineTo(w, 0f)
+            var x = w
+            while (x >= 0f) {
+                val wave = h * 0.45f + sin((time / 1500f) + (x / 100f)) * (h * 0.2f)
+                lineTo(x, wave)
+                x -= 40f
+            }
+            lineTo(0f, h * 0.45f + sin(time / 1500f) * (h * 0.2f))
+            close()
+        }
+        val auroraPath2 = Path().apply {
+            moveTo(0f, 0f)
+            lineTo(w, 0f)
+            var x = w
+            while (x >= 0f) {
+                val wave = h * 0.7f + cos((time / 2000f) + (x / 140f)) * (h * 0.25f)
+                lineTo(x, wave)
+                x -= 40f
+            }
+            lineTo(0f, h * 0.7f + cos(time / 2000f) * (h * 0.25f))
+            close()
+        }
         
-        drawRect(
+        drawPath(
+            path = auroraPath2,
             brush = Brush.verticalGradient(
-                colors = listOf(Color(0xFF00E676).copy(alpha = 0.15f), Color.Transparent),
-                startY = 0f,
-                endY = h * 0.65f + auroraShift
+                colors = listOf(Color(0xFFD500F9).copy(alpha = 0.15f), Color(0xFFD500F9).copy(alpha = 0f)),
+                startY = h * 0.1f,
+                endY = h * 0.8f
             ),
-            size = size,
             blendMode = BlendMode.Screen
         )
-        drawRect(
+        drawPath(
+            path = auroraPath1,
             brush = Brush.verticalGradient(
-                colors = listOf(Color(0xFFD500F9).copy(alpha = 0.1f), Color.Transparent),
-                startY = h * 0.1f,
-                endY = h * 0.8f + auroraShift2
+                colors = listOf(Color(0xFF00E676).copy(alpha = 0.2f), Color(0xFF00E676).copy(alpha = 0f)),
+                startY = 0f,
+                endY = h * 0.65f
             ),
-            size = size,
             blendMode = BlendMode.Screen
         )
 
@@ -399,7 +420,7 @@ fun MoonBackground(modifier: Modifier = Modifier) {
                 
                 drawLine(
                     brush = Brush.linearGradient(
-                        colors = listOf(Color.White, Color.Transparent),
+                        colors = listOf(Color.White, Color.White.copy(alpha = 0f)),
                         start = Offset(currentX, currentY),
                         end = Offset(currentX + 150f, currentY - 150f)
                     ),
@@ -483,7 +504,7 @@ fun PartlyCloudyBackground(modifier: Modifier = Modifier, isDay: Boolean = true)
             val sunRadius = h * 0.12f
             drawCircle(SunYellow, sunRadius, sunCenter)
             drawCircle(
-                Brush.radialGradient(listOf(SunYellow.copy(alpha = 0.4f), Color.Transparent), sunCenter, sunRadius * 2f),
+                Brush.radialGradient(listOf(SunYellow.copy(alpha = 0.4f), SunYellow.copy(alpha = 0f)), sunCenter, sunRadius * 2f),
                 sunRadius * 2f, sunCenter
             )
         } else {
@@ -754,9 +775,51 @@ fun ThunderstormBackground(modifier: Modifier = Modifier) {
     )
 
     val time by rememberTime()
-    val particles = rememberParticles(30, Size(1000f, 1000f))
+    val particles = rememberParticles(64, Size(1000f, 1000f))
+    var canvasSize by remember { mutableStateOf(Size.Zero) }
+    
+    // Dynamic Fractal Lightning
+    val cycle = (time / 5000L).toInt()
+    val lightningPath = remember(cycle, canvasSize) {
+        Path().apply {
+            if (canvasSize == Size.Zero) return@apply
+            val random = Random(cycle)
+            val w = canvasSize.width
+            val h = canvasSize.height
+            val startX = w / 2 - w * 0.15f + random.nextFloat() * w * 0.3f
+            val startY = h * 0.05f
+            moveTo(startX, startY)
+            var cx = startX
+            var cy = startY
+            
+            while (cy < h * 0.8f) {
+                val nextY = cy + h * (0.08f + random.nextFloat() * 0.08f)
+                val nextX = cx + (random.nextFloat() - 0.5f) * w * 0.3f
+                lineTo(nextX, nextY)
+                
+                // Random branch
+                if (random.nextFloat() > 0.6f) {
+                    var bx = cx
+                    var by = cy
+                    val branchDir = if (random.nextBoolean()) 1f else -1f
+                    for (i in 0..(1 + random.nextInt(2))) {
+                        val nbx = bx + branchDir * w * (0.08f + random.nextFloat() * 0.1f)
+                        val nby = by + h * (0.06f + random.nextFloat() * 0.08f)
+                        moveTo(bx, by)
+                        lineTo(nbx, nby)
+                        bx = nbx
+                        by = nby
+                    }
+                    moveTo(nextX, nextY)
+                }
+                cx = nextX
+                cy = nextY
+            }
+        }
+    }
 
     Canvas(modifier = modifier.fillMaxSize()) {
+        if (canvasSize != size) canvasSize = size
         val h = size.height
         val w = size.width
         val center = Offset(w / 2, h / 2)
@@ -767,65 +830,55 @@ fun ThunderstormBackground(modifier: Modifier = Modifier) {
         drawCloud(cloudCenter + Offset(w * 0.12f, h * 0.05f), cloudSize * 0.85f, CloudShadow, 0.7f)
         drawCloud(cloudCenter, cloudSize, CloudStorm, 1f)
         
-        // Rain particles constrained to cloud width
+        // Advanced Splash Rain (from RainBackground)
         val spawnWidth = cloudSize * 1.2f
         val spawnStartY = cloudCenter.y + h * 0.05f
         val spawnHeight = h - spawnStartY
+        val intensity = 1.8f
+        val rainSlant = (1.8f + intensity * 2.2f).coerceAtMost(6.5f)
 
         particles.forEach { p ->
-            val x = (p.x + (time / 10f) * 2f) % spawnWidth + (cloudCenter.x - spawnWidth / 2)
-            val y = (p.y + (time / 10f) * p.speed) % spawnHeight + spawnStartY
-            
+            val depth = p.z.coerceIn(0.45f, 1.6f)
+            val drift = (time / 10f) * (0.7f + intensity * 0.65f) * depth
+            val x = (p.x + drift) % spawnWidth + (cloudCenter.x - spawnWidth / 2)
+            val fallMultiplier = 0.42f + intensity * 0.58f
+            val y = (p.y + (time / 10f) * p.speed * fallMultiplier) % spawnHeight + spawnStartY
+            val streakLength = p.speed * (1.25f + intensity * 1.9f) * depth
+            val strokeWidth = (p.size * (0.55f + intensity * 0.25f) * depth).coerceIn(0.8f, 3.2f)
+            val end = Offset(x - rainSlant * depth, y + streakLength)
+            val alpha = (p.alpha * (0.38f + intensity * 0.16f) * depth).coerceIn(0.16f, 0.72f)
+
             drawLine(
-                color = RainBlue.copy(alpha = p.alpha),
+                color = RainBlue.copy(alpha = alpha),
                 start = Offset(x, y),
-                end = Offset(x - 2f * p.z, y + p.speed * 2f * p.z),
-                strokeWidth = p.size * p.z,
+                end = end,
+                strokeWidth = strokeWidth,
                 cap = StrokeCap.Round
             )
-        }
 
-        // AAA Multi-branch Lightning Strike
-        if (boltAlpha > 0f) {
-            val start = cloudCenter + Offset(0f, h * 0.05f)
-            val path = Path().apply {
-                // Main Trunk
-                moveTo(start.x, start.y)
-                lineTo(start.x - w * 0.05f, start.y + h * 0.15f)
-                lineTo(start.x + w * 0.03f, start.y + h * 0.25f)
-                lineTo(start.x - w * 0.08f, start.y + h * 0.45f)
-                
-                // Branch 1 (Left)
-                moveTo(start.x - w * 0.05f, start.y + h * 0.15f)
-                lineTo(start.x - w * 0.15f, start.y + h * 0.22f)
-                lineTo(start.x - w * 0.12f, start.y + h * 0.32f)
-
-                // Branch 2 (Right)
-                moveTo(start.x + w * 0.03f, start.y + h * 0.25f)
-                lineTo(start.x + w * 0.12f, start.y + h * 0.35f)
-                lineTo(start.x + w * 0.08f, start.y + h * 0.4f)
+            if (depth > 0.95f) {
+                drawLine(
+                    color = Color.White.copy(alpha = alpha * 0.32f),
+                    start = Offset(x + strokeWidth * 0.35f, y + streakLength * 0.12f),
+                    end = Offset(end.x + strokeWidth * 0.35f, end.y - streakLength * 0.18f),
+                    strokeWidth = (strokeWidth * 0.35f).coerceAtLeast(0.5f),
+                    cap = StrokeCap.Round
+                )
             }
-            
-            // Outer intense bloom
-            drawPath(
-                path = path,
-                color = LightningYellow.copy(alpha = boltAlpha * 0.5f),
-                style = Stroke(width = 25f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-            )
-            // Secondary glow
-            drawPath(
-                path = path,
-                color = LightningYellow.copy(alpha = boltAlpha * 0.8f),
-                style = Stroke(width = 12f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-            )
-            // Hot white core
-            drawPath(
-                path = path,
-                color = Color.White.copy(alpha = boltAlpha),
-                style = Stroke(width = 4f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-            )
+
+            val bottomLimit = spawnStartY + spawnHeight - 20f
+            if (y > bottomLimit && depth > 0.8f) {
+                val splashProgress = (y - bottomLimit) / 20f
+                val splashW = p.size * (3.5f + intensity * 3.2f) * splashProgress * depth
+                val splashH = p.size * (0.55f + intensity * 0.45f) * splashProgress
+                drawOval(
+                    color = Color.White.copy(alpha = p.alpha * (1f - splashProgress) * 0.42f),
+                    topLeft = Offset(x - splashW / 2, bottomLimit - splashH / 2),
+                    size = Size(splashW, splashH)
+                )
+            }
         }
-        
+
         // AAA High-contrast Screen Flash Blending
         if (boltAlpha > 0f) {
             drawRect(
@@ -837,6 +890,25 @@ fun ThunderstormBackground(modifier: Modifier = Modifier) {
                 color = LightningYellow.copy(alpha = boltAlpha * 0.25f),
                 size = size,
                 blendMode = BlendMode.Lighten
+            )
+            
+            // Outer intense bloom
+            drawPath(
+                path = lightningPath,
+                color = LightningYellow.copy(alpha = boltAlpha * 0.5f),
+                style = Stroke(width = 25f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+            // Secondary glow
+            drawPath(
+                path = lightningPath,
+                color = LightningYellow.copy(alpha = boltAlpha * 0.8f),
+                style = Stroke(width = 12f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+            // Hot white core
+            drawPath(
+                path = lightningPath,
+                color = Color.White.copy(alpha = boltAlpha),
+                style = Stroke(width = 4f, cap = StrokeCap.Round, join = StrokeJoin.Round)
             )
         }
     }
@@ -868,10 +940,10 @@ fun FogBackground(modifier: Modifier = Modifier) {
                 translate(drift - w * 0.75f, yPos)
             }) {
                 val fogBrush = Brush.horizontalGradient(
-                    0.0f to Color.Transparent,
+                    0.0f to FogGray.copy(alpha = 0f),
                     0.3f to FogGray.copy(alpha = layerAlpha),
                     0.7f to FogGray.copy(alpha = layerAlpha),
-                    1.0f to Color.Transparent,
+                    1.0f to FogGray.copy(alpha = 0f),
                     startX = 0f,
                     endX = w * 1.5f
                 )
