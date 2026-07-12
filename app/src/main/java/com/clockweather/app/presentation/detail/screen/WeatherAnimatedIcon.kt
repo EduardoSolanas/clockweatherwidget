@@ -364,23 +364,22 @@ fun MoonBackground(modifier: Modifier = Modifier) {
         
         drawPath(
             path = auroraPath2,
-            brush = Brush.verticalGradient(
-                colors = listOf(Color(0xFFD500F9).copy(alpha = 0.15f), Color(0xFFD500F9).copy(alpha = 0f)),
-                startY = h * 0.1f,
-                endY = h * 0.8f
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0xFFD500F9).copy(alpha = 0.2f), Color(0xFFD500F9).copy(alpha = 0f)),
+                center = Offset(w / 2, h * 0.7f),
+                radius = w * 0.5f
             ),
             blendMode = BlendMode.Screen
         )
         drawPath(
             path = auroraPath1,
-            brush = Brush.verticalGradient(
-                colors = listOf(Color(0xFF00E676).copy(alpha = 0.2f), Color(0xFF00E676).copy(alpha = 0f)),
-                startY = 0f,
-                endY = h * 0.65f
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0xFF00E676).copy(alpha = 0.25f), Color(0xFF00E676).copy(alpha = 0f)),
+                center = Offset(w / 2, h * 0.55f),
+                radius = w * 0.5f
             ),
             blendMode = BlendMode.Screen
         )
-
         // AAA Depth Stars
         val random = Random(42)
         for (i in 0 until 40) {
@@ -448,9 +447,9 @@ fun MoonBackground(modifier: Modifier = Modifier) {
             brush = Brush.radialGradient(
                 colors = listOf(MoonShadow.copy(alpha = 0.25f), MoonShadow.copy(alpha = 0f)),
                 center = center,
-                radius = radius * 4f
+                radius = radius * 3.1f
             ),
-            radius = radius * 4f,
+            radius = radius * 3.1f,
             center = center
         )
 

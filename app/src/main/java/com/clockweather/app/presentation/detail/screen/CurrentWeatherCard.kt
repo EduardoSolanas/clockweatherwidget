@@ -277,8 +277,7 @@ private fun HeroWeatherCard(
             weatherCondition.name.contains("RAIN") || 
             weatherCondition.name.contains("DRIZZLE") -> listOf(Color(0xFF455A64), Color(0xFF263238)) // Rainy Shadow
             
-            weatherCondition.name.contains("SNOW") -> listOf(Color(0xFFB3E5FC), Color(0xFF81D4FA)) // Snowy Light Blue
-            
+            weatherCondition.name.contains("SNOW") -> if (isDay) listOf(Color(0xFF78909C), Color(0xFF455A64)) else listOf(Color(0xFF1A237E), Color(0xFF000051)) // Snowy Blue Grey / Night            
             // Priority 2: Time of Day Fallback (for Clear/Partly Cloudy)
             isDay -> listOf(Color(0xFF4FC3F7), Color(0xFF0288D1)) // Bright Blue Day
             else -> listOf(Color(0xFF1A237E), Color(0xFF000051)) // Deep Midnight Night
