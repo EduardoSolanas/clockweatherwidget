@@ -6,7 +6,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface WeatherRepository {
     fun getWeatherData(location: Location): Flow<WeatherData?>
-    suspend fun ensureFreshWeatherData(location: Location, forecastDays: Int = 7)
+    suspend fun ensureFreshWeatherData(
+        location: Location,
+        forecastDays: Int = 7,
+        maxAgeMinutes: Long? = null,
+    )
     suspend fun forceRefreshWeatherData(location: Location, forecastDays: Int = 7)
 }
-

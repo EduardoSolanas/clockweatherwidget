@@ -116,8 +116,8 @@
     <string name="settings_weather_provider_desc">Elige el servicio usado por la pantalla del clima, los workers y los widgets</string>
     <string name="settings_wind_speed_unit">Unidad de viento</string>
     <string name="settings_weather_refresh_interval_label">Intervalo de actualización del clima</string>
-    <string name="settings_weather_refresh_interval_desc">Con qué frecuencia actualizar los datos de clima en minutos (5–1440)</string>
-    <string name="settings_weather_refresh_minutes">Minutos (5–1440)</string>
+    <string name="settings_weather_refresh_interval_desc">Con qué frecuencia actualizar los datos de clima en minutos (15–1440)</string>
+    <string name="settings_weather_refresh_minutes">Minutos (15–1440)</string>
     <string name="settings_update_frequency">Frecuencia de actualización</string>
     <string name="settings_manage_locations">Gestionar ubicaciones</string>
     <string name="settings_section_clock">Reloj</string>
@@ -244,4 +244,5 @@
     <string name="size_medium">Mediano</string>
     <string name="size_large">Grande</string>
     <string name="size_xl">XL</string>
+    <string name="widget_refresh_weather">Actualizar el tiempo</string>
 </resources>

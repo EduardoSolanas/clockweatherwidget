@@ -75,7 +75,7 @@ class SettingsWeatherRefreshIntervalTest {
         viewModel.setWeatherRefreshInterval(2)
         advanceUntilIdle()
 
-        verify(timeout = 1_000, exactly = 1) { WeatherUpdateScheduler.schedule(context, 5) }
-        assertEquals(5, dataStore.data.first()[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL])
+        verify(timeout = 1_000, exactly = 1) { WeatherUpdateScheduler.schedule(context, 15) }
+        assertEquals(15, dataStore.data.first()[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL])
     }
 }

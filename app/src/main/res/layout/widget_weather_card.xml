@@ -167,4 +167,15 @@
             android:textColor="@color/widget_text_secondary"
             android:textSize="16sp" />
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/widget_refresh"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="54dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/widget_refresh_weather"
+        android:padding="4dp"
+        android:src="@drawable/ic_widget_refresh" />
 </FrameLayout>

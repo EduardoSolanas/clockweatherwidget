@@ -17,7 +17,7 @@ internal fun isWeatherDataFresh(
     val referenceHour = referenceDateTime.truncatedTo(ChronoUnit.HOURS)
     val today = referenceDateTime.toLocalDate()
 
-    if (weather.currentWeather.lastUpdated.isBefore(referenceDateTime.minusMinutes(maxAgeMinutes))) {
+    if (!weather.currentWeather.lastUpdated.isAfter(referenceDateTime.minusMinutes(maxAgeMinutes))) {
         return false
     }
     if (weather.currentWeather.lastUpdated.toLocalDate().isBefore(today)) {

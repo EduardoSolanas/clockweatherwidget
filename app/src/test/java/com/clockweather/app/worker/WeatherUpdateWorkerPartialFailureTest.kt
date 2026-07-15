@@ -54,8 +54,8 @@ class WeatherUpdateWorkerPartialFailureTest {
     @Test
     fun `returns retry when one location fails on first attempt`() = runTest {
         coEvery { locationRepository.getSavedLocations() } returns flowOf(listOf(locationA, locationB))
-        coJustRun { weatherRepository.ensureFreshWeatherData(locationA, any()) }
-        coEvery { weatherRepository.ensureFreshWeatherData(locationB, any()) } throws RuntimeException("network error")
+        coJustRun { weatherRepository.ensureFreshWeatherData(locationA, any(), any()) }
+        coEvery { weatherRepository.ensureFreshWeatherData(locationB, any(), any()) } throws RuntimeException("network error")
 
         val result = buildWorker(runAttempt = 0).doWork()
 
@@ -65,8 +65,8 @@ class WeatherUpdateWorkerPartialFailureTest {
     @Test
     fun `returns failure when one location fails on third attempt`() = runTest {
         coEvery { locationRepository.getSavedLocations() } returns flowOf(listOf(locationA, locationB))
-        coJustRun { weatherRepository.ensureFreshWeatherData(locationA, any()) }
-        coEvery { weatherRepository.ensureFreshWeatherData(locationB, any()) } throws RuntimeException("network error")
+        coJustRun { weatherRepository.ensureFreshWeatherData(locationA, any(), any()) }
+        coEvery { weatherRepository.ensureFreshWeatherData(locationB, any(), any()) } throws RuntimeException("network error")
 
         val result = buildWorker(runAttempt = 3).doWork()
 
@@ -77,20 +77,20 @@ class WeatherUpdateWorkerPartialFailureTest {
     fun `still fetches locationA on retry even when locationA previously succeeded`() = runTest {
         coEvery { locationRepository.getSavedLocations() } returns flowOf(listOf(locationA, locationB))
         // On retry: locationA is now fresh (ensureFresh is a no-op), locationB still fails.
-        coJustRun { weatherRepository.ensureFreshWeatherData(locationA, any()) }
-        coEvery { weatherRepository.ensureFreshWeatherData(locationB, any()) } throws RuntimeException("still down")
+        coJustRun { weatherRepository.ensureFreshWeatherData(locationA, any(), any()) }
+        coEvery { weatherRepository.ensureFreshWeatherData(locationB, any(), any()) } throws RuntimeException("still down")
 
         val result = buildWorker(runAttempt = 1).doWork()
 
         // ensureFreshWeatherData for A is called (but skips network if data is fresh)
-        coVerify(exactly = 1) { weatherRepository.ensureFreshWeatherData(locationA, any()) }
+        coVerify(exactly = 1) { weatherRepository.ensureFreshWeatherData(locationA, any(), any()) }
         assertEquals(ListenableWorker.Result.retry(), result)
     }
 
     @Test
     fun `returns success when all locations succeed`() = runTest {
         coEvery { locationRepository.getSavedLocations() } returns flowOf(listOf(locationA, locationB))
-        coJustRun { weatherRepository.ensureFreshWeatherData(any(), any()) }
+        coJustRun { weatherRepository.ensureFreshWeatherData(any(), any(), any()) }
 
         val result = buildWorker().doWork()
 

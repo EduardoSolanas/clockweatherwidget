@@ -94,6 +94,10 @@
                 android:resource="@xml/widget_forecast_info" />
         </receiver>
 
+        <receiver
+            android:name=".presentation.widget.common.WidgetRefreshReceiver"
+            android:exported="false" />
+
 
         <!-- Boot Completed Receiver -->
         <receiver

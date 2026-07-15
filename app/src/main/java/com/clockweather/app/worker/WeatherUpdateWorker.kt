@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
+import androidx.work.Data
 import androidx.work.WorkerParameters
 import com.clockweather.app.ClockWeatherApplication
 import com.clockweather.app.domain.model.Location
@@ -37,12 +38,37 @@ class WeatherUpdateWorker @AssistedInject constructor(
         }
 
         val forecastDays = prefs[SettingsViewModel.KEY_FORECAST_DAYS] ?: 7
+        val refreshIntervalMinutes = SettingsViewModel.normalizeWeatherRefreshInterval(
+            prefs[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]
+        )
+        val refreshMode = weatherRefreshMode(inputData)
         var anyFailure = false
-        locations.forEach { location ->
+        locations.forEach { savedLocation ->
             try {
-                weatherRepository.ensureFreshWeatherData(location, forecastDays)
+                val refreshLocation = if (savedLocation.isCurrentLocation) {
+                    WeatherRefreshLocationResolver.resolve(
+                        savedLocation,
+                        locationRepository.getCurrentLocation(),
+                    ).also { refreshedLocation ->
+                        if (refreshedLocation != savedLocation) {
+                            locationRepository.saveLocation(refreshedLocation)
+                        }
+                    }
+                } else {
+                    savedLocation
+                }
+                when (refreshMode) {
+                    WeatherRefreshMode.FORCE ->
+                        weatherRepository.forceRefreshWeatherData(refreshLocation, forecastDays)
+                    WeatherRefreshMode.ENSURE_FRESH ->
+                        weatherRepository.ensureFreshWeatherData(
+                            refreshLocation,
+                            forecastDays,
+                            maxAgeMinutes = refreshIntervalMinutes.toLong(),
+                        )
+                }
             } catch (e: Exception) {
-                Log.w(TAG, "Refresh failed for ${location.id}", e)
+                Log.w(TAG, "Refresh failed for ${savedLocation.id}", e)
                 anyFailure = true
             }
         }
@@ -57,5 +83,26 @@ class WeatherUpdateWorker @AssistedInject constructor(
     companion object {
         private const val TAG = "WeatherUpdateWorker"
         const val WORK_NAME = "weather_update_work"
+        const val INPUT_FORCE_REFRESH = "force_refresh"
+    }
+}
+
+internal enum class WeatherRefreshMode { ENSURE_FRESH, FORCE }
+
+internal fun weatherRefreshMode(inputData: Data): WeatherRefreshMode =
+    if (inputData.getBoolean(WeatherUpdateWorker.INPUT_FORCE_REFRESH, false)) {
+        WeatherRefreshMode.FORCE
+    } else {
+        WeatherRefreshMode.ENSURE_FRESH
+    }
+
+internal object WeatherRefreshLocationResolver {
+    fun resolve(savedLocation: Location, detectedLocation: Location?): Location {
+        if (!savedLocation.isCurrentLocation || detectedLocation == null) return savedLocation
+
+        return detectedLocation.copy(
+            id = savedLocation.id,
+            isCurrentLocation = true,
+        )
     }
 }

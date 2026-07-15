@@ -15,19 +15,23 @@ class WidgetUpdatePeriodTest {
 
     @Test
     fun `all widget info XMLs declare a non-zero updatePeriodMillis`() {
-        val xmlDir = File("src/main/res/xml")
-        val widgetInfoFiles = xmlDir.listFiles { f ->
-            f.isFile && f.name.startsWith("widget_") && f.name.endsWith("_info.xml")
-        } ?: emptyArray()
+        val resDir = File("src/main/res")
+        val widgetInfoFiles = resDir.listFiles { file ->
+            file.isDirectory && (file.name == "xml" || file.name.startsWith("xml-"))
+        }.orEmpty().flatMap { xmlDir ->
+            xmlDir.listFiles { file ->
+                file.isFile && file.name.startsWith("widget_") && file.name.endsWith("_info.xml")
+            }.orEmpty().asList()
+        }
 
-        assertTrue("No widget info XML files found under ${xmlDir.absolutePath}", widgetInfoFiles.isNotEmpty())
+        assertTrue("No widget info XML files found under ${resDir.absolutePath}", widgetInfoFiles.isNotEmpty())
 
         widgetInfoFiles.forEach { file ->
             val match = Regex("""android:updatePeriodMillis="(\d+)"""")
                 .find(file.readText())
             val period = match?.groupValues?.get(1)?.toLongOrNull()
             assertTrue(
-                "${file.name}: updatePeriodMillis must be >= $minimumUpdatePeriodMillis (was $period)",
+                "${file.path}: updatePeriodMillis must be >= $minimumUpdatePeriodMillis (was $period)",
                 period != null && period >= minimumUpdatePeriodMillis
             )
         }

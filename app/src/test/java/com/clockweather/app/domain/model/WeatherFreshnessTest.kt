@@ -78,6 +78,22 @@ class WeatherFreshnessTest {
     }
 
     @Test
+    fun `weather is not fresh when current weather is exactly max age`() {
+        val weather = sampleWeatherData(
+            lastUpdated = referenceDateTime.minusMinutes(30),
+        )
+
+        assertFalse(
+            isWeatherDataFresh(
+                weather = weather,
+                referenceDateTime = referenceDateTime,
+                requiredForecastDays = 3,
+                maxAgeMinutes = 30,
+            )
+        )
+    }
+
+    @Test
     fun `weather is not fresh when current hour forecast is missing`() {
         val weather = sampleWeatherData(
             hourlyForecasts = hourlyForecastsFrom(referenceDateTime.plusHours(1), count = 24),

@@ -21,20 +21,25 @@ class BootCompletedReceiver : BroadcastReceiver() {
             val pendingResult = goAsync()
             CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
                 try {
-                    withTimeout(15_000) {
-                        // Read stored interval pref so the worker respects the user's setting.
-                        val intervalMinutes = try {
-                            context.dataStore.data.first()[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]
-                                ?: SettingsViewModel.DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES
-                        } catch (_: Exception) {
-                            SettingsViewModel.DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES
-                        }
-                        WeatherUpdateScheduler.schedule(context, intervalMinutes)
-                    }
+                    restoreWeatherUpdates(context)
                 } finally {
                     pendingResult.finish()
                 }
             }
+        }
+    }
+
+    internal suspend fun restoreWeatherUpdates(context: Context) {
+        withTimeout(15_000) {
+            // Read stored interval pref so the worker respects the user's setting.
+            val intervalMinutes = try {
+                context.dataStore.data.first()[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]
+                    ?: SettingsViewModel.DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES
+            } catch (_: Exception) {
+                SettingsViewModel.DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES
+            }
+            WeatherUpdateScheduler.schedule(context, intervalMinutes)
+            WeatherUpdateScheduler.scheduleImmediateRefresh(context)
         }
     }
 }

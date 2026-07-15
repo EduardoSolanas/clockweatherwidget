@@ -116,8 +116,8 @@
     <string name="settings_weather_provider_desc">Choose the backend used by the weather screen, workers, and widgets</string>
     <string name="settings_wind_speed_unit">Wind speed unit</string>
     <string name="settings_weather_refresh_interval_label">Weather refresh interval</string>
-    <string name="settings_weather_refresh_interval_desc">How often to refresh weather data in minutes (5–1440)</string>
-    <string name="settings_weather_refresh_minutes">Minutes (5–1440)</string>
+    <string name="settings_weather_refresh_interval_desc">How often to refresh weather data in minutes (15–1440)</string>
+    <string name="settings_weather_refresh_minutes">Minutes (15–1440)</string>
     <string name="settings_update_frequency">Update frequency</string>
     <string name="settings_manage_locations">Manage locations</string>
     <string name="settings_section_clock">Clock</string>
@@ -243,4 +243,5 @@
     <string name="size_medium">Medium</string>
     <string name="size_large">Large</string>
     <string name="size_xl">XL</string>
+    <string name="widget_refresh_weather">Refresh weather</string>
 </resources>

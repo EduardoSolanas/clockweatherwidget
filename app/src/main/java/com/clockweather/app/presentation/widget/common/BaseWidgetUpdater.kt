@@ -17,6 +17,7 @@ import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.ClockTileSize
 import com.clockweather.app.domain.model.isWeatherDataFresh
 import com.clockweather.app.domain.model.locationReferenceDateTime
+import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.worker.WeatherUpdateScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -57,6 +58,9 @@ abstract class BaseWidgetUpdater(
                 val snapshot = ClockSnapshot.now()
                 val now = snapshot.localTime
                 val prefs = entryPoint.dataStore().data.first()
+                val refreshIntervalMinutes = SettingsViewModel.normalizeWeatherRefreshInterval(
+                    prefs[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]
+                )
                 val is24h = prefs[booleanPreferencesKey("use_24h_clock")] ?: android.text.format.DateFormat.is24HourFormat(context)
                 val showDate = prefs[booleanPreferencesKey("show_date_in_widget")] ?: true
                 val tempUnitName = prefs[stringPreferencesKey("temperature_unit")] ?: TemperatureUnit.CELSIUS.name
@@ -99,6 +103,12 @@ abstract class BaseWidgetUpdater(
 
                 try {
                     views.setOnClickPendingIntent(rootViewId, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
+                } catch (e: Exception) { /* ignore */ }
+                try {
+                    views.setOnClickPendingIntent(
+                        com.clockweather.app.R.id.widget_refresh,
+                        WidgetRefreshReceiver.pendingIntent(context, appWidgetId),
+                    )
                 } catch (e: Exception) { /* ignore */ }
 
                 // TextClock handles live minute-by-minute updates automatically.
@@ -254,7 +264,13 @@ abstract class BaseWidgetUpdater(
                     requestedForecastDays = 7,
                     minimumFutureForecastDaysRequired = minimumFutureForecastDaysRequired,
                 )
-                if (!isWeatherDataFresh(weather, referenceDateTime, requiredForecastDays)) {
+                if (!isWeatherDataFresh(
+                        weather,
+                        referenceDateTime,
+                        requiredForecastDays,
+                        maxAgeMinutes = refreshIntervalMinutes.toLong(),
+                    )
+                ) {
                     WeatherUpdateScheduler.scheduleImmediateRefresh(context)
                 }
 

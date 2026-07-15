@@ -61,14 +61,19 @@ class WeatherRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun ensureFreshWeatherData(location: Location, forecastDays: Int) {
+    override suspend fun ensureFreshWeatherData(
+        location: Location,
+        forecastDays: Int,
+        maxAgeMinutes: Long?,
+    ) {
         refreshMutex.withLock {
             val cached = getWeatherData(location).first()
             val referenceDateTime = cached?.locationReferenceDateTime() ?: java.time.LocalDateTime.now()
             val providerType = WeatherProviderPreferences.resolve(
                 dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
             )
-            if (isWeatherDataFresh(cached, referenceDateTime, forecastDays, providerType.currentMaxAgeMinutes)) return
+            val effectiveMaxAgeMinutes = maxAgeMinutes ?: providerType.currentMaxAgeMinutes
+            if (isWeatherDataFresh(cached, referenceDateTime, forecastDays, effectiveMaxAgeMinutes)) return
 
             refreshAndPersist(location, forecastDays)
         }

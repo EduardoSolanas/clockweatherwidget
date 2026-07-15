@@ -57,6 +57,8 @@ class SettingsViewModel @Inject constructor(
         val KEY_FORECAST_DAYS = intPreferencesKey("forecast_days")
         const val DEFAULT_WIDGET_TEXT_SCALE = 1f
         const val MAX_WIDGET_TEXT_SCALE = 1.05f
+        const val MIN_WEATHER_REFRESH_INTERVAL_MINUTES = 15
+        const val MAX_WEATHER_REFRESH_INTERVAL_MINUTES = 1440
         const val DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES = 30
         const val CLOCK_THEME_DARK = "dark"
         const val CLOCK_THEME_LIGHT = "light"
@@ -81,6 +83,12 @@ class SettingsViewModel @Inject constructor(
 
         fun normalizeWidgetTextScale(scale: Float?): Float =
             (scale ?: DEFAULT_WIDGET_TEXT_SCALE).coerceIn(1f, MAX_WIDGET_TEXT_SCALE)
+
+        fun normalizeWeatherRefreshInterval(minutes: Int?): Int =
+            (minutes ?: DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES).coerceIn(
+                MIN_WEATHER_REFRESH_INTERVAL_MINUTES,
+                MAX_WEATHER_REFRESH_INTERVAL_MINUTES,
+            )
     }
 
     init {
@@ -169,7 +177,7 @@ class SettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "system")
 
     val weatherRefreshIntervalMinutes: StateFlow<Int> = dataStore.data
-        .map { prefs -> prefs[KEY_WEATHER_REFRESH_INTERVAL] ?: DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES }
+        .map { prefs -> normalizeWeatherRefreshInterval(prefs[KEY_WEATHER_REFRESH_INTERVAL]) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_WEATHER_REFRESH_INTERVAL_MINUTES)
 
     val forecastDays: StateFlow<Int> = dataStore.data
@@ -303,7 +311,7 @@ class SettingsViewModel @Inject constructor(
 
     fun setWeatherRefreshInterval(minutes: Int) {
         viewModelScope.launch {
-            val validMinutes = minutes.coerceIn(5, 1440)  // 5 min to 24 hours
+            val validMinutes = normalizeWeatherRefreshInterval(minutes)
             dataStore.edit { it[KEY_WEATHER_REFRESH_INTERVAL] = validMinutes }
             com.clockweather.app.worker.WeatherUpdateScheduler.schedule(context, validMinutes)
         }

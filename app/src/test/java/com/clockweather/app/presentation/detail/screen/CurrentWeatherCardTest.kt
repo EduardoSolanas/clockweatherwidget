@@ -73,7 +73,7 @@ class CurrentWeatherCardTest {
     }
 
     @Test
-    fun `hero current temperature display uses current hour forecast`() {
+    fun `hero current temperature display uses provider current weather`() {
         val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
         val weatherData = sampleWeatherData(
             hourlyForecasts = listOf(
@@ -84,13 +84,13 @@ class CurrentWeatherCardTest {
         )
 
         assertEquals(
-            "18\u00B0C",
+            "17\u00B0C",
             currentTemperatureDisplay(weatherData, TemperatureUnit.CELSIUS, reference)
         )
     }
 
     @Test
-    fun `weather page current display uses current hour readings when daily forecast differs`() {
+    fun `weather page current display uses provider readings when hourly and daily forecasts differ`() {
         val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
         val weatherData = sampleWeatherData(
             hourlyForecasts = listOf(
@@ -120,19 +120,11 @@ class CurrentWeatherCardTest {
 
         val current = currentWeatherForDisplay(weatherData, reference)
 
-        assertEquals(18.0, current.temperature, 0.0)
-        assertEquals(17.0, current.feelsLikeTemperature, 0.0)
-        assertEquals(74, current.humidity)
-        assertEquals(45, current.precipitationProbability)
-        assertEquals(WeatherCondition.RAIN_SLIGHT, current.weatherCondition)
-        assertEquals(22.0, current.windSpeed, 0.0)
-        assertEquals(WindDirection.SW, current.windDirection)
-        assertEquals(225, current.windDirectionDegrees)
-        assertEquals(2.0, current.uvIndex, 0.0)
+        assertEquals(weatherData.currentWeather, current)
     }
 
     @Test
-    fun `shared reference date time keeps hero weather and hourly graph on the same current slice`() {
+    fun `today restores provider current weather after viewing another date`() {
         val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
         val weatherData = sampleWeatherData(
             hourlyForecasts = listOf(
@@ -150,6 +142,7 @@ class CurrentWeatherCardTest {
                     uvIndex = 2.0,
                 ),
                 sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 11, 0), 19.0),
+                sampleHourlyForecast(LocalDateTime.of(2026, 4, 4, 10, 0), 23.0),
             ),
             dailyForecasts = listOf(
                 sampleDailyForecast(
@@ -162,23 +155,18 @@ class CurrentWeatherCardTest {
             ),
         )
 
-        val current = currentWeatherForDisplay(weatherData, reference)
-        val scoped = scopedHourlyForecasts(
+        val todayBeforeSelection = currentWeatherForDisplay(weatherData, reference)
+        val selectedDateHours = scopedHourlyForecasts(
             hourlyForecasts = weatherData.hourlyForecasts,
-            selectedDate = LocalDate.of(2026, 4, 3),
+            selectedDate = LocalDate.of(2026, 4, 4),
             referenceDateTime = reference,
         )
-        val linked = linkCurrentHourForecastToWeather(
-            hours = scoped,
-            currentWeather = current,
-            referenceDateTime = reference,
-        )
-        val currentIdx = resolveCurrentHourIndex(linked, reference)
+        val todayAfterSelection = currentWeatherForDisplay(weatherData, reference)
 
-        assertEquals(0, currentIdx)
-        assertEquals(current.temperature, linked[currentIdx!!].temperature, 0.0)
-        assertEquals(current.weatherCondition, linked[currentIdx].weatherCondition)
-        assertEquals(current.windSpeed, linked[currentIdx].windSpeed, 0.0)
+        assertEquals(17.0, todayBeforeSelection.temperature, 0.0)
+        assertEquals(LocalDate.of(2026, 4, 4), selectedDateHours.single().dateTime.toLocalDate())
+        assertEquals(23.0, selectedDateHours.single().temperature, 0.0)
+        assertEquals(weatherData.currentWeather, todayAfterSelection)
     }
 
     private fun sampleWeatherData(

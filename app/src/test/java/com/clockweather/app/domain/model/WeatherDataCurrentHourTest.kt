@@ -66,7 +66,7 @@ class WeatherDataCurrentHourTest {
     }
 
     @Test
-    fun `currentDisplayWeather overlays hourly current readings onto current weather`() {
+    fun `currentDisplayWeather keeps provider current weather when current hour forecast differs`() {
         val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
         val weatherData = sampleWeatherData(
             hourlyForecasts = listOf(
@@ -91,22 +91,11 @@ class WeatherDataCurrentHourTest {
 
         val current = weatherData.currentDisplayWeather(reference)
 
-        assertEquals(16.0, current.temperature, 0.0)
-        assertEquals(15.0, current.feelsLikeTemperature, 0.0)
-        assertEquals(72, current.humidity)
-        assertEquals(35, current.precipitationProbability)
-        assertEquals(WeatherCondition.RAIN_MODERATE, current.weatherCondition)
-        assertEquals(false, current.isDay)
-        assertEquals(21.0, current.windSpeed, 0.0)
-        assertEquals(WindDirection.SW, current.windDirection)
-        assertEquals(225, current.windDirectionDegrees)
-        assertEquals(1.0, current.uvIndex, 0.0)
-        assertEquals(30, current.cloudCover)
-        assertEquals(12.0, current.windGusts, 0.0)
+        assertEquals(weatherData.currentWeather, current)
     }
 
     @Test
-    fun `currentDisplayWeather falls back to current day forecast weather when current hour is missing`() {
+    fun `currentDisplayWeather keeps provider current weather when current hour is missing`() {
         val reference = LocalDateTime.of(2026, 4, 3, 10, 42)
         val weatherData = sampleWeatherData(
             currentTemperature = 17.0,
@@ -130,15 +119,7 @@ class WeatherDataCurrentHourTest {
 
         val current = weatherData.currentDisplayWeather(reference)
 
-        assertEquals(17.0, current.temperature, 0.0)
-        assertEquals(WeatherCondition.RAIN_HEAVY, current.weatherCondition)
-        assertEquals(80, current.precipitationProbability)
-        assertEquals(24.0, current.windSpeed, 0.0)
-        assertEquals(WindDirection.SW, current.windDirection)
-        assertEquals(225, current.windDirectionDegrees)
-        assertEquals(2.0, current.uvIndex, 0.0)
-        assertEquals(76, current.humidity)
-        assertEquals(1006.0, current.pressure, 0.0)
+        assertEquals(weatherData.currentWeather, current)
     }
 
     @Test

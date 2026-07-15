@@ -199,8 +199,7 @@ class WidgetDataBinderTest {
     }
 
     @Test
-    fun `bindWeatherViews uses current hour forecast weather when daily forecast differs`() {
-        every { context.getString(R.string.unit_celsius, 18.0) } returns "18Â°"
+    fun `bindWeatherViews uses provider current weather when hourly and daily forecasts differ`() {
         val weatherData = sampleWeatherData(
             hourlyForecasts = listOf(
                 sampleHourlyForecast(LocalDateTime.of(2026, 4, 3, 9, 0), 14.0),
@@ -228,8 +227,8 @@ class WidgetDataBinderTest {
             referenceDateTime = LocalDateTime.of(2026, 4, 3, 10, 42),
         )
 
-        verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "18\u00B0C") }
-        verify(exactly = 1) { views.setTextViewText(R.id.condition_text, "Moderate rain") }
+        verify(exactly = 1) { views.setTextViewText(R.id.current_temp, "17\u00B0C") }
+        verify(exactly = 1) { views.setTextViewText(R.id.condition_text, "Partly cloudy") }
         verify(exactly = 1) { views.setTextViewText(R.id.high_low, "20°/11°") }
     }
 

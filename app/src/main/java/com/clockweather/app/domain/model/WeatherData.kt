@@ -69,35 +69,4 @@ fun WeatherData.currentDayForecast(
 
 fun WeatherData.currentDisplayWeather(
     referenceDateTime: LocalDateTime = locationReferenceDateTime()
-): CurrentWeather {
-    val hour = currentHourForecast(referenceDateTime)
-    if (hour == null) {
-        val day = currentDayForecast(referenceDateTime) ?: return currentWeather
-        return currentWeather.copy(
-            humidity = day.averageHumidity,
-            precipitationProbability = day.precipitationProbability,
-            weatherCondition = day.weatherCondition,
-            pressure = day.averagePressure,
-            windSpeed = day.windSpeedMax,
-            windDirection = day.windDirectionDominant,
-            windDirectionDegrees = day.windDirectionDegrees,
-            uvIndex = day.uvIndexMax,
-        )
-    }
-
-    return currentWeather.copy(
-        temperature = hour.temperature,
-        feelsLikeTemperature = hour.feelsLike,
-        humidity = hour.humidity,
-        dewPoint = hour.dewPoint,
-        precipitationProbability = hour.precipitationProbability,
-        weatherCondition = hour.weatherCondition,
-        isDay = hour.isDay,
-        pressure = hour.pressure,
-        windSpeed = hour.windSpeed,
-        windDirection = hour.windDirection,
-        windDirectionDegrees = hour.windDirectionDegrees,
-        visibility = hour.visibility,
-        uvIndex = hour.uvIndex,
-    )
-}
+): CurrentWeather = currentWeather
