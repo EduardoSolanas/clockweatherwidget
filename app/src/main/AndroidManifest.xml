@@ -9,6 +9,10 @@
     <!-- Location -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- The widget's weather is fetched by a background worker. Without the
+         "all the time" grant, Android 10+ returns no fix there, so the widget
+         keeps showing whichever city was last seen with the app in front. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <!-- Widget updates -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />

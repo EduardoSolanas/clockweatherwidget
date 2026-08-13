@@ -13,7 +13,7 @@ import com.clockweather.app.data.remote.api.NominatimReverseGeocodingApi
 import com.clockweather.app.data.remote.api.OpenMeteoGeocodingApi
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.repository.LocationRepository
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,7 +32,8 @@ class LocationRepositoryImpl @Inject constructor(
     private val geocodingApi: OpenMeteoGeocodingApi,
     private val reverseGeocodingApi: NominatimReverseGeocodingApi,
     private val entityMapper: WeatherEntityMapper,
-    private val dtoMapper: WeatherDtoMapper
+    private val dtoMapper: WeatherDtoMapper,
+    private val fusedLocationClient: FusedLocationProviderClient
 ) : LocationRepository {
 
     companion object {
@@ -44,8 +45,6 @@ class LocationRepositoryImpl @Inject constructor(
             Log.d(GEO_DEBUG_TAG, message())
         }
     }
-
-    private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
     override fun getSavedLocations(): Flow<List<Location>> =
         locationDao.getAllLocations().map { entities ->
@@ -103,14 +102,15 @@ class LocationRepositoryImpl @Inject constructor(
             if (androidLocation != null) {
                 mapToLocation(androidLocation)
             } else {
-                logGeoDebug { "No Android location fix; using saved location or fallback" }
-                locationDao.getCurrentLocation()?.let { entityMapper.mapLocationToDomain(it) }
-                    ?: getFallbackLocation()
+                // Null means "we could not locate you", which callers answer with their
+                // own fallback. Returning the saved row here instead would make a failed
+                // fix look exactly like the user standing still.
+                logGeoDebug { "No Android location fix" }
+                null
             }
         } catch (e: Exception) {
-            Log.w(GEO_DEBUG_TAG, "getCurrentLocation() failed; using saved location or fallback", e)
-            locationDao.getCurrentLocation()?.let { entityMapper.mapLocationToDomain(it) }
-                ?: getFallbackLocation()
+            Log.w(GEO_DEBUG_TAG, "getCurrentLocation() failed; reporting no fix", e)
+            null
         }
     }
 

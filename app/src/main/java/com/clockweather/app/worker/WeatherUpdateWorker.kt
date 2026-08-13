@@ -16,6 +16,8 @@ import com.clockweather.app.presentation.settings.SettingsViewModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
+import kotlin.math.cos
+import kotlin.math.hypot
 
 @HiltWorker
 class WeatherUpdateWorker @AssistedInject constructor(
@@ -57,7 +59,16 @@ class WeatherUpdateWorker @AssistedInject constructor(
                 } else {
                     savedLocation
                 }
-                when (refreshMode) {
+                // Cached weather is keyed by the location row, so right after a move it
+                // still holds the city the user left. Refetch however recent it looks.
+                val effectiveMode = if (
+                    WeatherRefreshLocationResolver.hasMovedSignificantly(savedLocation, refreshLocation)
+                ) {
+                    WeatherRefreshMode.FORCE
+                } else {
+                    refreshMode
+                }
+                when (effectiveMode) {
                     WeatherRefreshMode.FORCE ->
                         weatherRepository.forceRefreshWeatherData(refreshLocation, forecastDays)
                     WeatherRefreshMode.ENSURE_FRESH ->
@@ -97,6 +108,15 @@ internal fun weatherRefreshMode(inputData: Data): WeatherRefreshMode =
     }
 
 internal object WeatherRefreshLocationResolver {
+
+    /**
+     * Weather is modelled on grids several kilometres wide and every fix jitters a
+     * little, so only a move of at least this distance puts the user somewhere the
+     * previously cached weather no longer describes.
+     */
+    private const val SIGNIFICANT_MOVE_METERS = 5_000.0
+    private const val EARTH_RADIUS_METERS = 6_371_000.0
+
     fun resolve(savedLocation: Location, detectedLocation: Location?): Location {
         if (!savedLocation.isCurrentLocation || detectedLocation == null) return savedLocation
 
@@ -104,5 +124,17 @@ internal object WeatherRefreshLocationResolver {
             id = savedLocation.id,
             isCurrentLocation = true,
         )
+    }
+
+    /** True when weather cached for [from] no longer describes [to]. */
+    fun hasMovedSignificantly(from: Location, to: Location): Boolean =
+        distanceMeters(from, to) >= SIGNIFICANT_MOVE_METERS
+
+    /** Equirectangular approximation — far below the threshold's precision needs. */
+    private fun distanceMeters(from: Location, to: Location): Double {
+        val meanLatitude = Math.toRadians((from.latitude + to.latitude) / 2)
+        val northSouth = Math.toRadians(to.latitude - from.latitude)
+        val eastWest = Math.toRadians(to.longitude - from.longitude) * cos(meanLatitude)
+        return EARTH_RADIUS_METERS * hypot(northSouth, eastWest)
     }
 }

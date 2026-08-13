@@ -1,10 +1,15 @@
 package com.clockweather.app.di
 
+import android.content.Context
 import com.clockweather.app.data.repository.LocationRepositoryImpl
 import com.clockweather.app.domain.repository.LocationRepository
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -15,5 +20,13 @@ abstract class LocationModule {
     @Binds
     @Singleton
     abstract fun bindLocationRepository(impl: LocationRepositoryImpl): LocationRepository
+
+    companion object {
+        @Provides
+        @Singleton
+        fun provideFusedLocationProviderClient(
+            @ApplicationContext context: Context
+        ): FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+    }
 }
 

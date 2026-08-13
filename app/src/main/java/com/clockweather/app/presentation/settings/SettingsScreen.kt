@@ -43,6 +43,7 @@ fun SettingsScreen(
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
     val weatherIconStyle by viewModel.weatherIconStyle.collectAsStateWithLifecycle()
     val isBatteryOptimizationExempt by viewModel.isBatteryOptimizationExempt.collectAsStateWithLifecycle()
+    val needsBackgroundLocation by viewModel.needsBackgroundLocation.collectAsStateWithLifecycle()
     var showBatteryHelpDialog by remember { mutableStateOf(false) }
     val weatherRefreshIntervalMinutes by viewModel.weatherRefreshIntervalMinutes.collectAsStateWithLifecycle()
     val forecastDays by viewModel.forecastDays.collectAsStateWithLifecycle()
@@ -379,6 +380,53 @@ fun SettingsScreen(
             // ⚙️  ADVANCED
             // ══════════════════════════════════════════════════════════
             SettingsSectionHeader(stringResource(R.string.settings_category_advanced))
+
+            // Location access — the widget's weather is fetched by a background
+            // worker, which gets no fix on Android 10+ without "Allow all the time".
+            // Android 11+ only accepts that choice from the system settings screen.
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.settings_background_location_title),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        stringResource(R.string.settings_background_location_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                if (needsBackgroundLocation) {
+                    Button(
+                        onClick = {
+                            runCatching {
+                                context.startActivity(
+                                    Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = android.net.Uri.parse("package:${context.packageName}")
+                                    }
+                                )
+                            }
+                        },
+                        modifier = Modifier.padding(start = 16.dp)
+                    ) {
+                        Text(stringResource(R.string.settings_background_location_button))
+                    }
+                } else {
+                    Text(
+                        stringResource(R.string.settings_background_location_granted),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+            }
 
             // Battery optimization — shown in Advanced section.
             // When the app is battery-optimized, Android can kill the process while

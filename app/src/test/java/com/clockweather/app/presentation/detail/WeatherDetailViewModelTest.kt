@@ -1,6 +1,7 @@
 package com.clockweather.app.presentation.detail
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.PowerManager
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -75,6 +76,8 @@ class WeatherDetailViewModelTest {
         every { context.applicationContext } returns app
         every { context.packageName } returns "com.clockweather.app"
         every { context.getSystemService(Context.POWER_SERVICE) } returns powerManager
+        // Location fully granted, so the setup banner state is not what these tests exercise.
+        every { context.checkSelfPermission(any()) } returns PackageManager.PERMISSION_GRANTED
         every { powerManager.isIgnoringBatteryOptimizations(any()) } returns true
 
         every { dataStore.data } returns flowOf(

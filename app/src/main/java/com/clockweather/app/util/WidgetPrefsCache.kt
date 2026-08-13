@@ -4,6 +4,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
@@ -26,6 +28,8 @@ object WidgetPrefsCache {
 
     private var initialized = false
 
+    private var collectorJob: Job? = null
+
     /**
      * Start observing the DataStore. Call once from [com.clockweather.app.ClockWeatherApplication.onCreate].
      */
@@ -33,7 +37,7 @@ object WidgetPrefsCache {
         if (initialized) return
         initialized = true
 
-        dataStore.data
+        collectorJob = dataStore.data
             .catch { emit(emptyPreferences()) }
             .onEach { snapshot = it }
             .launchIn(scope)
@@ -73,6 +77,11 @@ object WidgetPrefsCache {
 
     /** Only for use in tests to reset singleton state between test cases. */
     fun resetForTesting() {
+        // Stop the collector before clearing. A live one outlives the test that
+        // started it and would race the reset, re-seeding the snapshot from
+        // whichever DataStore that earlier test happened to boot.
+        runBlocking { collectorJob?.cancelAndJoin() }
+        collectorJob = null
         snapshot = null
         initialized = false
     }

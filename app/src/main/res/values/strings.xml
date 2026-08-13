@@ -157,11 +157,17 @@
     <string name="settings_battery_optimization_help_button_cd">Why this helps</string>
     <string name="settings_battery_optimization_help_title">Why battery exemption can help</string>
     <string name="settings_battery_optimization_help_message">Some phone vendors aggressively stop background work. Setting this app to Unrestricted can improve weather refresh reliability when the app is not open. It is optional.</string>
+
+    <string name="settings_background_location_title">Location access</string>
+    <string name="settings_background_location_desc">Choose \"Allow all the time\" so the widget updates the weather when you travel. With \"Only while using the app\" it keeps showing the last place you opened the app in.</string>
+    <string name="settings_background_location_button">Open settings</string>
+    <string name="settings_background_location_granted">All the time ✓</string>
     <string name="action_ok">OK</string>
 
     <!-- Widget setup banner (shown in WeatherDetailScreen until both are granted) -->
     <string name="setup_banner_title">Widget clock needs setup</string>
     <string name="setup_banner_bullet_battery">Battery: Unrestricted</string>
+    <string name="setup_banner_bullet_location">Location: Allow all the time</string>
     <string name="setup_banner_action">Fix</string>
 
     <!-- Forecast days setting -->

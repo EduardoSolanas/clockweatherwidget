@@ -192,6 +192,10 @@ class SettingsViewModel @Inject constructor(
     private val _isBatteryOptimizationExempt = MutableStateFlow(checkBatteryOptimizationExempt())
     val isBatteryOptimizationExempt = _isBatteryOptimizationExempt.asStateFlow()
 
+    private val _needsBackgroundLocation =
+        MutableStateFlow(com.clockweather.app.util.BackgroundLocationAccess.needsGrant(context))
+    val needsBackgroundLocation = _needsBackgroundLocation.asStateFlow()
+
     // ── Setters (all trigger a widget redraw) ──────────────────────────────────
 
     fun setLanguage(languageCode: String) {
@@ -327,6 +331,8 @@ class SettingsViewModel @Inject constructor(
 
     fun refreshPermissionStatus() {
         _isBatteryOptimizationExempt.value = checkBatteryOptimizationExempt()
+        _needsBackgroundLocation.value =
+            com.clockweather.app.util.BackgroundLocationAccess.needsGrant(context)
     }
 
     /**

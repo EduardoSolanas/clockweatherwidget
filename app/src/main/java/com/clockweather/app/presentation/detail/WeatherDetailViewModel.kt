@@ -12,6 +12,7 @@ import com.clockweather.app.domain.repository.LocationRepository
 import com.clockweather.app.domain.usecase.GetWeatherDataUseCase
 import com.clockweather.app.domain.usecase.RefreshWeatherUseCase
 import com.clockweather.app.presentation.common.UiState
+import com.clockweather.app.util.BackgroundLocationAccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -74,9 +75,14 @@ class WeatherDetailViewModel @Inject constructor(
     private val _needsBatteryExemption = MutableStateFlow(!checkBatteryOptimizationExempt())
     val needsBatteryExemption: StateFlow<Boolean> = _needsBatteryExemption.asStateFlow()
 
+    private val _needsBackgroundLocation =
+        MutableStateFlow(BackgroundLocationAccess.needsGrant(context))
+    val needsBackgroundLocation: StateFlow<Boolean> = _needsBackgroundLocation.asStateFlow()
+
     /** Call from ON_RESUME after the user returns from system settings. */
     fun refreshPermissions() {
         _needsBatteryExemption.value = !checkBatteryOptimizationExempt()
+        _needsBackgroundLocation.value = BackgroundLocationAccess.needsGrant(context)
     }
 
     private fun checkBatteryOptimizationExempt(): Boolean {

@@ -157,11 +157,17 @@
     <string name="settings_battery_optimization_help_button_cd">Por qué ayuda</string>
     <string name="settings_battery_optimization_help_title">Por qué puede ayudar excluir batería</string>
     <string name="settings_battery_optimization_help_message">Algunos fabricantes detienen el trabajo en segundo plano de forma agresiva. Poner esta app en Sin restricciones puede mejorar la fiabilidad de actualización del clima cuando la app está cerrada. Es opcional.</string>
+
+    <string name="settings_background_location_title">Acceso a la ubicación</string>
+    <string name="settings_background_location_desc">Elige \"Permitir siempre\" para que el widget actualice el clima cuando viajes. Con \"Solo mientras usas la app\" seguirá mostrando el último lugar donde la abriste.</string>
+    <string name="settings_background_location_button">Abrir ajustes</string>
+    <string name="settings_background_location_granted">Siempre ✓</string>
     <string name="action_ok">Aceptar</string>
 
     <!-- Widget setup banner -->
     <string name="setup_banner_title">El reloj del widget necesita configuración</string>
     <string name="setup_banner_bullet_battery">Batería: Sin restricciones</string>
+    <string name="setup_banner_bullet_location">Ubicación: Permitir siempre</string>
     <string name="setup_banner_action">Configurar</string>
 
     <!-- Forecast days setting -->
