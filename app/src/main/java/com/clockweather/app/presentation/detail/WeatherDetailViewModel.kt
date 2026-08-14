@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -82,7 +83,18 @@ class WeatherDetailViewModel @Inject constructor(
     /** Call from ON_RESUME after the user returns from system settings. */
     fun refreshPermissions() {
         _needsBatteryExemption.value = !checkBatteryOptimizationExempt()
-        _needsBackgroundLocation.value = BackgroundLocationAccess.needsGrant(context)
+
+        // Passive registration is skipped while the grant is missing, so it has to be
+        // retried once the user comes back having granted it. Only on that transition:
+        // re-registering on every resume is a binder call for no change.
+        val stillNeedsGrant = BackgroundLocationAccess.needsGrant(context)
+        val justGranted = _needsBackgroundLocation.value && !stillNeedsGrant
+        _needsBackgroundLocation.value = stillNeedsGrant
+        if (justGranted) {
+            viewModelScope.launch(Dispatchers.IO) {
+                com.clockweather.app.util.PassiveLocationManager.register(context)
+            }
+        }
     }
 
     private fun checkBatteryOptimizationExempt(): Boolean {

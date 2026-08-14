@@ -33,6 +33,7 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
      */
     override fun onEnabled(context: Context) {
         WeatherUpdateScheduler.scheduleImmediateRefresh(context)
+        com.clockweather.app.util.PassiveLocationManager.register(context)
         val entryPoint = EntryPointAccessors.fromApplication(
             context.applicationContext, WidgetEntryPoint::class.java
         )
@@ -52,6 +53,7 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
         }
         if (!anyWeatherWidgetRemains) {
             WeatherUpdateScheduler.cancel(context)
+            com.clockweather.app.util.PassiveLocationManager.unregister(context)
         }
     }
 

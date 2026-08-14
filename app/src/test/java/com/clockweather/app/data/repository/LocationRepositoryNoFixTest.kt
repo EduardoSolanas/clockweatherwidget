@@ -81,6 +81,35 @@ class LocationRepositoryNoFixTest {
         assertNull(repository().getCurrentLocation())
     }
 
+    @Test
+    fun `lastKnown older than 6 hours returns null when active fix times out`() = runTest {
+        val staleLocation = android.location.Location("fused").apply {
+            latitude = 50.8225
+            longitude = -0.1372
+            time = System.currentTimeMillis() - (7 * 60 * 60 * 1000L) // 7 hours old
+        }
+        every { fusedLocationClient.lastLocation } returns Tasks.forResult(staleLocation)
+        every { fusedLocationClient.getCurrentLocation(any<Int>(), any()) } returns Tasks.forResult(null)
+
+        assertNull(repository().getCurrentLocation())
+    }
+
+    @Test
+    fun `lastKnown within 6 hours is used when active fix times out`() = runTest {
+        val recentLocation = android.location.Location("fused").apply {
+            latitude = 50.8225
+            longitude = -0.1372
+            time = System.currentTimeMillis() - (30 * 60 * 1000L) // 30 minutes old
+        }
+        every { fusedLocationClient.lastLocation } returns Tasks.forResult(recentLocation)
+        every { fusedLocationClient.getCurrentLocation(any<Int>(), any()) } returns Tasks.forResult(null)
+
+        val result = repository().getCurrentLocation()
+        org.junit.Assert.assertNotNull(result)
+        org.junit.Assert.assertEquals(50.8225, result!!.latitude, 0.0001)
+        org.junit.Assert.assertEquals(-0.1372, result.longitude, 0.0001)
+    }
+
     private class FakeLocationDao(private val current: LocationEntity?) : LocationDao {
         override fun getAllLocations(): Flow<List<LocationEntity>> = flowOf(listOfNotNull(current))
         override fun getLocationById(id: Long): Flow<LocationEntity?> =

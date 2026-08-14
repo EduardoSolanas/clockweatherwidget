@@ -47,6 +47,9 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         WidgetPrefsCache.seedBlocking(dataStore)
         appScope.launch { WeatherUpdateScheduler.ensureScheduled(this@ClockWeatherApplication, dataStore) }
         registerScreenWakeReceiver()
+        // Off the main thread: this builds a Play Services client and makes a binder
+        // call, and onCreate runs on every widget-triggered process start.
+        appScope.launch { com.clockweather.app.util.PassiveLocationManager.register(this@ClockWeatherApplication) }
     }
 
     /**

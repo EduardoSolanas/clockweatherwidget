@@ -40,6 +40,7 @@ class BootCompletedReceiver : BroadcastReceiver() {
             }
             WeatherUpdateScheduler.schedule(context, intervalMinutes)
             WeatherUpdateScheduler.scheduleImmediateRefresh(context)
+            com.clockweather.app.util.PassiveLocationManager.register(context)
         }
     }
 }

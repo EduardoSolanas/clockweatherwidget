@@ -102,6 +102,11 @@
             android:name=".presentation.widget.common.WidgetRefreshReceiver"
             android:exported="false" />
 
+        <!-- Passive Location Updates Receiver -->
+        <receiver
+            android:name=".receiver.LocationUpdatesReceiver"
+            android:exported="false" />
+
 
         <!-- Boot Completed Receiver -->
         <receiver

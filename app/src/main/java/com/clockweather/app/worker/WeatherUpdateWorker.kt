@@ -114,7 +114,7 @@ internal object WeatherRefreshLocationResolver {
      * little, so only a move of at least this distance puts the user somewhere the
      * previously cached weather no longer describes.
      */
-    private const val SIGNIFICANT_MOVE_METERS = 5_000.0
+    const val SIGNIFICANT_MOVE_METERS = 5_000.0
     private const val EARTH_RADIUS_METERS = 6_371_000.0
 
     fun resolve(savedLocation: Location, detectedLocation: Location?): Location {
@@ -128,13 +128,16 @@ internal object WeatherRefreshLocationResolver {
 
     /** True when weather cached for [from] no longer describes [to]. */
     fun hasMovedSignificantly(from: Location, to: Location): Boolean =
-        distanceMeters(from, to) >= SIGNIFICANT_MOVE_METERS
+        hasMovedSignificantly(from.latitude, from.longitude, to.latitude, to.longitude)
+
+    fun hasMovedSignificantly(fromLat: Double, fromLon: Double, toLat: Double, toLon: Double): Boolean =
+        distanceMeters(fromLat, fromLon, toLat, toLon) >= SIGNIFICANT_MOVE_METERS
 
     /** Equirectangular approximation — far below the threshold's precision needs. */
-    private fun distanceMeters(from: Location, to: Location): Double {
-        val meanLatitude = Math.toRadians((from.latitude + to.latitude) / 2)
-        val northSouth = Math.toRadians(to.latitude - from.latitude)
-        val eastWest = Math.toRadians(to.longitude - from.longitude) * cos(meanLatitude)
+    private fun distanceMeters(fromLat: Double, fromLon: Double, toLat: Double, toLon: Double): Double {
+        val meanLatitude = Math.toRadians((fromLat + toLat) / 2)
+        val northSouth = Math.toRadians(toLat - fromLat)
+        val eastWest = Math.toRadians(toLon - fromLon) * cos(meanLatitude)
         return EARTH_RADIUS_METERS * hypot(northSouth, eastWest)
     }
 }

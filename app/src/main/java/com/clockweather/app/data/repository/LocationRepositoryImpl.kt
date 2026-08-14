@@ -38,6 +38,8 @@ class LocationRepositoryImpl @Inject constructor(
 
     companion object {
         private const val GEO_DEBUG_TAG = "CW_GeoDebug"
+        private const val RECENT_LAST_KNOWN_MAX_AGE_MS = 15 * 60 * 1000L
+        private const val FALLBACK_LAST_KNOWN_MAX_AGE_MS = 6 * 60 * 60 * 1000L
     }
 
     private inline fun logGeoDebug(message: () -> String) {
@@ -66,9 +68,10 @@ class LocationRepositoryImpl @Inject constructor(
             logGeoDebug { "getCurrentLocation() invoked" }
 
             val lastKnown = fusedLocationClient.lastLocation.await()
-            if (lastKnown != null && (System.currentTimeMillis() - lastKnown.time) < 15 * 60 * 1000) {
+            val nowMs = System.currentTimeMillis()
+            if (lastKnown != null && (nowMs - lastKnown.time) < RECENT_LAST_KNOWN_MAX_AGE_MS) {
                 logGeoDebug {
-                    "lastLocation=lat=${lastKnown.latitude}, lon=${lastKnown.longitude}, ageMs=${System.currentTimeMillis() - lastKnown.time}, accuracy=${lastKnown.accuracy}, provider=${lastKnown.provider}"
+                    "lastLocation=lat=${lastKnown.latitude}, lon=${lastKnown.longitude}, ageMs=${nowMs - lastKnown.time}, accuracy=${lastKnown.accuracy}, provider=${lastKnown.provider}"
                 }
                 logGeoDebug { "Using recent lastLocation" }
                 return mapToLocation(lastKnown)
@@ -101,10 +104,16 @@ class LocationRepositoryImpl @Inject constructor(
 
             if (androidLocation != null) {
                 mapToLocation(androidLocation)
+            } else if (lastKnown != null && (nowMs - lastKnown.time) < FALLBACK_LAST_KNOWN_MAX_AGE_MS) {
+                // If active requests time out (e.g. indoors in a new city), fall back to
+                // a real GPS fix from recent travel (within 6h) rather than failing silently.
+                logGeoDebug {
+                    "Active fix timed out; falling back to lastKnown fix (ageMs=${nowMs - lastKnown.time}, lat=${lastKnown.latitude}, lon=${lastKnown.longitude})"
+                }
+                mapToLocation(lastKnown)
             } else {
                 // Null means "we could not locate you", which callers answer with their
-                // own fallback. Returning the saved row here instead would make a failed
-                // fix look exactly like the user standing still.
+                // own fallback.
                 logGeoDebug { "No Android location fix" }
                 null
             }

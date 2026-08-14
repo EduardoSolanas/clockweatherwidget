@@ -331,8 +331,17 @@ class SettingsViewModel @Inject constructor(
 
     fun refreshPermissionStatus() {
         _isBatteryOptimizationExempt.value = checkBatteryOptimizationExempt()
-        _needsBackgroundLocation.value =
-            com.clockweather.app.util.BackgroundLocationAccess.needsGrant(context)
+
+        // This screen is where the grant is actually made, so it is the likeliest
+        // return point. Register only on the transition — see WeatherDetailViewModel.
+        val stillNeedsGrant = com.clockweather.app.util.BackgroundLocationAccess.needsGrant(context)
+        val justGranted = _needsBackgroundLocation.value && !stillNeedsGrant
+        _needsBackgroundLocation.value = stillNeedsGrant
+        if (justGranted) {
+            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                com.clockweather.app.util.PassiveLocationManager.register(context)
+            }
+        }
     }
 
     /**
