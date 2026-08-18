@@ -20,5 +20,6 @@ data class DailyForecast(
     val windDirectionDegrees: Int,
     val uvIndexMax: Double,
     val averageHumidity: Int,
-    val averagePressure: Double
+    val averagePressure: Double,
+    val pollen: PollenData? = null
 )

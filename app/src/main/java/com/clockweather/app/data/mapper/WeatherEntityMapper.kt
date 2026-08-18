@@ -9,6 +9,9 @@ import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.Location
+import com.clockweather.app.domain.model.PlantPollen
+import com.clockweather.app.domain.model.PollenData
+import com.clockweather.app.domain.model.PollenType
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WindDirection
 import java.time.LocalDate
@@ -147,25 +150,90 @@ class WeatherEntityMapper @Inject constructor() {
 
     // ── DailyForecast ─────────────────────────────────────────────────────────
 
-    fun mapDailyToDomain(entity: DailyForecastEntity): DailyForecast = DailyForecast(
-        date = LocalDate.parse(entity.date, DateTimeFormatter.ISO_LOCAL_DATE),
-        weatherCondition = WeatherCondition.fromCode(entity.weatherCode, isDay = true),
-        temperatureMax = entity.temperatureMax,
-        temperatureMin = entity.temperatureMin,
-        feelsLikeMax = entity.feelsLikeMax,
-        feelsLikeMin = entity.feelsLikeMin,
-        sunrise = LocalTime.parse(entity.sunrise, DateTimeFormatter.ofPattern("HH:mm")),
-        sunset = LocalTime.parse(entity.sunset, DateTimeFormatter.ofPattern("HH:mm")),
-        daylightDurationSeconds = entity.daylightDurationSeconds,
-        precipitationSum = entity.precipitationSum,
-        precipitationProbability = entity.precipitationProbability,
-        windSpeedMax = entity.windSpeedMax,
-        windDirectionDominant = WindDirection.fromDegrees(entity.windDirectionDegrees),
-        windDirectionDegrees = entity.windDirectionDegrees,
-        uvIndexMax = entity.uvIndexMax,
-        averageHumidity = entity.averageHumidity,
-        averagePressure = entity.averagePressure
-    )
+    fun mapDailyToDomain(entity: DailyForecastEntity): DailyForecast {
+        val hasPollenData = entity.pollenGrassIndex != null ||
+            entity.pollenTreeIndex != null ||
+            entity.pollenWeedIndex != null ||
+            !entity.pollenGrassCategory.isNullOrBlank() ||
+            !entity.pollenTreeCategory.isNullOrBlank() ||
+            !entity.pollenWeedCategory.isNullOrBlank() ||
+            !entity.pollenDominantPlants.isNullOrBlank() ||
+            !entity.pollenHealthRecommendations.isNullOrBlank()
+
+        val pollen = if (hasPollenData) {
+            val grass = if (entity.pollenGrassIndex != null || !entity.pollenGrassCategory.isNullOrBlank()) {
+                PollenType(
+                    code = "GRASS",
+                    displayName = "Grass",
+                    inSeason = (entity.pollenGrassIndex ?: 0) > 0,
+                    indexValue = entity.pollenGrassIndex,
+                    category = entity.pollenGrassCategory
+                )
+            } else null
+
+            val tree = if (entity.pollenTreeIndex != null || !entity.pollenTreeCategory.isNullOrBlank()) {
+                PollenType(
+                    code = "TREE",
+                    displayName = "Tree",
+                    inSeason = (entity.pollenTreeIndex ?: 0) > 0,
+                    indexValue = entity.pollenTreeIndex,
+                    category = entity.pollenTreeCategory
+                )
+            } else null
+
+            val weed = if (entity.pollenWeedIndex != null || !entity.pollenWeedCategory.isNullOrBlank()) {
+                PollenType(
+                    code = "WEED",
+                    displayName = "Weed",
+                    inSeason = (entity.pollenWeedIndex ?: 0) > 0,
+                    indexValue = entity.pollenWeedIndex,
+                    category = entity.pollenWeedCategory
+                )
+            } else null
+
+            val recommendations = entity.pollenHealthRecommendations
+                ?.split("||")
+                ?.map { it.trim() }
+                ?.filter { it.isNotBlank() }
+                ?: emptyList()
+
+            val plants = entity.pollenDominantPlants
+                ?.split("||")
+                ?.map { it.trim() }
+                ?.filter { it.isNotBlank() }
+                ?.map { name -> PlantPollen(code = name.uppercase(), displayName = name, inSeason = true) }
+                ?: emptyList()
+
+            PollenData(
+                grassPollen = grass,
+                treePollen = tree,
+                weedPollen = weed,
+                dominantPlants = plants,
+                healthRecommendations = recommendations
+            )
+        } else null
+
+        return DailyForecast(
+            date = LocalDate.parse(entity.date, DateTimeFormatter.ISO_LOCAL_DATE),
+            weatherCondition = WeatherCondition.fromCode(entity.weatherCode, isDay = true),
+            temperatureMax = entity.temperatureMax,
+            temperatureMin = entity.temperatureMin,
+            feelsLikeMax = entity.feelsLikeMax,
+            feelsLikeMin = entity.feelsLikeMin,
+            sunrise = LocalTime.parse(entity.sunrise, DateTimeFormatter.ofPattern("HH:mm")),
+            sunset = LocalTime.parse(entity.sunset, DateTimeFormatter.ofPattern("HH:mm")),
+            daylightDurationSeconds = entity.daylightDurationSeconds,
+            precipitationSum = entity.precipitationSum,
+            precipitationProbability = entity.precipitationProbability,
+            windSpeedMax = entity.windSpeedMax,
+            windDirectionDominant = WindDirection.fromDegrees(entity.windDirectionDegrees),
+            windDirectionDegrees = entity.windDirectionDegrees,
+            uvIndexMax = entity.uvIndexMax,
+            averageHumidity = entity.averageHumidity,
+            averagePressure = entity.averagePressure,
+            pollen = pollen
+        )
+    }
 
     fun mapDailyToEntity(domain: DailyForecast, locationId: Long): DailyForecastEntity =
         DailyForecastEntity(
@@ -185,7 +253,16 @@ class WeatherEntityMapper @Inject constructor() {
             windDirectionDegrees = domain.windDirectionDegrees,
             uvIndexMax = domain.uvIndexMax,
             averageHumidity = domain.averageHumidity,
-            averagePressure = domain.averagePressure
+            averagePressure = domain.averagePressure,
+            pollenGrassIndex = domain.pollen?.grassPollen?.indexValue,
+            pollenGrassCategory = domain.pollen?.grassPollen?.category,
+            pollenTreeIndex = domain.pollen?.treePollen?.indexValue,
+            pollenTreeCategory = domain.pollen?.treePollen?.category,
+            pollenWeedIndex = domain.pollen?.weedPollen?.indexValue,
+            pollenWeedCategory = domain.pollen?.weedPollen?.category,
+            pollenHealthRecommendations = domain.pollen?.healthRecommendations?.joinToString("||")?.takeIf { it.isNotBlank() },
+            pollenDominantPlants = domain.pollen?.dominantPlants?.map { it.displayName }?.joinToString("||")?.takeIf { it.isNotBlank() }
         )
 }
+
 

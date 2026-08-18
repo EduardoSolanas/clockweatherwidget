@@ -5,10 +5,16 @@ import com.clockweather.app.data.remote.dto.DailyWeatherDto
 import com.clockweather.app.data.remote.dto.GeoLocationDto
 import com.clockweather.app.data.remote.dto.HourlyWeatherDto
 import com.clockweather.app.data.remote.dto.WeatherResponseDto
+import com.clockweather.app.data.remote.dto.openmeteo.OpenMeteoAirQualityHourlyDto
+import com.clockweather.app.data.remote.dto.openmeteo.OpenMeteoAirQualityResponseDto
+import com.clockweather.app.domain.model.AirQuality
 import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.Location
+import com.clockweather.app.domain.model.PlantPollen
+import com.clockweather.app.domain.model.PollenData
+import com.clockweather.app.domain.model.PollenType
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WindDirection
@@ -26,20 +32,23 @@ class WeatherDtoMapper @Inject constructor() {
 
     fun mapToWeatherData(
         response: WeatherResponseDto,
-        location: Location
+        location: Location,
+        airQualityResponse: OpenMeteoAirQualityResponseDto? = null
     ): WeatherData {
         // Stamp fetch time so the 10-min TTL is relative to when we fetched, not the API model slot
         // (Open-Meteo's current.time can be 15+ min behind actual fetch time).
         val fetchTime = LocalDateTime.now()
         val currentWeather = mapCurrentWeather(requireNotNull(response.current) { "current weather is null" }, fetchTime)
         val hourlyForecasts = response.hourly?.let { mapHourlyForecasts(it) } ?: emptyList()
-        val dailyForecasts = response.daily?.let { mapDailyForecasts(it, hourlyForecasts) } ?: emptyList()
+        val dailyForecasts = response.daily?.let { mapDailyForecasts(it, hourlyForecasts, airQualityResponse) } ?: emptyList()
+        val airQuality = mapAirQuality(airQualityResponse)
 
         return WeatherData(
             location = location,
             currentWeather = currentWeather,
             hourlyForecasts = hourlyForecasts,
-            dailyForecasts = dailyForecasts
+            dailyForecasts = dailyForecasts,
+            airQuality = airQuality
         )
     }
 
@@ -90,8 +99,10 @@ class WeatherDtoMapper @Inject constructor() {
 
     private fun mapDailyForecasts(
         dto: DailyWeatherDto,
-        hourlyForecasts: List<HourlyForecast>
+        hourlyForecasts: List<HourlyForecast>,
+        airQualityResponse: OpenMeteoAirQualityResponseDto? = null
     ): List<DailyForecast> {
+        val hourlyAirQuality = airQualityResponse?.hourly
         return dto.time.indices.map { i ->
             val date = LocalDate.parse(dto.time[i], dateFormatter)
 
@@ -105,6 +116,8 @@ class WeatherDtoMapper @Inject constructor() {
                 .getOrElse { LocalTime.of(6, 0) }
             val sunset = runCatching { LocalDateTime.parse(sunsetStr, timeFormatter).toLocalTime() }
                 .getOrElse { LocalTime.of(18, 0) }
+
+            val pollen = mapOpenMeteoPollenForDate(date, hourlyAirQuality)
 
             DailyForecast(
                 date = date,
@@ -123,9 +136,133 @@ class WeatherDtoMapper @Inject constructor() {
                 windDirectionDegrees = dto.windDirectionDominant[i],
                 uvIndexMax = dto.uvIndexMax[i],
                 averageHumidity = avgHumidity,
-                averagePressure = avgPressure
+                averagePressure = avgPressure,
+                pollen = pollen
             )
         }
+    }
+
+    private fun mapAirQuality(dto: OpenMeteoAirQualityResponseDto?): AirQuality? {
+        val hourly = dto?.hourly ?: return null
+        if (hourly.time.isEmpty()) return null
+
+        val pm25 = hourly.pm25?.filterNotNull()?.maxOrNull() ?: 0.0
+        val pm10 = hourly.pm10?.filterNotNull()?.maxOrNull() ?: 0.0
+        val co = hourly.carbonMonoxide?.filterNotNull()?.maxOrNull() ?: 0.0
+        val no2 = hourly.nitrogenDioxide?.filterNotNull()?.maxOrNull() ?: 0.0
+        val so2 = hourly.sulphurDioxide?.filterNotNull()?.maxOrNull() ?: 0.0
+        val o3 = hourly.ozone?.filterNotNull()?.maxOrNull() ?: 0.0
+        val rawUsAqi = hourly.usAqi?.filterNotNull()?.maxOrNull() ?: 0
+        val rawDefra = hourly.europeanAqi?.filterNotNull()?.maxOrNull() ?: 1
+
+        if (pm25 == 0.0 && pm10 == 0.0 && co == 0.0 && no2 == 0.0 && so2 == 0.0 && o3 == 0.0 && rawUsAqi == 0) {
+            return null
+        }
+
+        val usEpaIndex = when {
+            rawUsAqi <= 50 -> 1   // Good
+            rawUsAqi <= 100 -> 2  // Moderate
+            rawUsAqi <= 150 -> 3  // Unhealthy for Sensitive
+            rawUsAqi <= 200 -> 4  // Unhealthy
+            rawUsAqi <= 300 -> 5  // Very Unhealthy
+            else -> 6             // Hazardous
+        }
+
+        return AirQuality(
+            co = co,
+            no2 = no2,
+            o3 = o3,
+            so2 = so2,
+            pm25 = pm25,
+            pm10 = pm10,
+            usEpaIndex = usEpaIndex,
+            gbDefraIndex = rawDefra.coerceIn(1, 10)
+        )
+    }
+
+    private fun mapOpenMeteoPollenForDate(
+        date: LocalDate,
+        hourly: OpenMeteoAirQualityHourlyDto?
+    ): PollenData? {
+        if (hourly == null || hourly.time.isEmpty()) return null
+
+        // Find hourly indices that correspond to this date
+        val dateIndices = hourly.time.indices.filter { idx ->
+            runCatching { LocalDate.parse(hourly.time[idx].substringBefore("T")) }.getOrNull() == date
+        }
+        if (dateIndices.isEmpty()) return null
+
+        fun peak(values: List<Double?>?): Double {
+            if (values == null) return 0.0
+            return dateIndices.mapNotNull { values.getOrNull(it) }.maxOrNull() ?: 0.0
+        }
+
+        val grassPeak = peak(hourly.grassPollen)
+        val birchPeak = peak(hourly.birchPollen)
+        val alderPeak = peak(hourly.alderPollen)
+        val olivePeak = peak(hourly.olivePollen)
+        val treePeak = maxOf(birchPeak, alderPeak, olivePeak)
+        val ragweedPeak = peak(hourly.ragweedPollen)
+        val mugwortPeak = peak(hourly.mugwortPollen)
+        val weedPeak = maxOf(ragweedPeak, mugwortPeak)
+
+        val totalPollen = grassPeak + treePeak + weedPeak
+        if (totalPollen <= 0.0) return null
+
+        val grassType = mapPollenTypeFromConcentration("GRASS", "Grass", grassPeak, isTree = false)
+        val treeType = mapPollenTypeFromConcentration("TREE", "Tree", treePeak, isTree = true)
+        val weedType = mapPollenTypeFromConcentration("WEED", "Weed", weedPeak, isTree = false)
+
+        val dominantPlants = mutableListOf<PlantPollen>()
+        if (birchPeak > 0) dominantPlants.add(PlantPollen("BIRCH", "Birch", inSeason = true))
+        if (alderPeak > 0) dominantPlants.add(PlantPollen("ALDER", "Alder", inSeason = true))
+        if (olivePeak > 0) dominantPlants.add(PlantPollen("OLIVE", "Olive", inSeason = true))
+        if (grassPeak > 0) dominantPlants.add(PlantPollen("GRASS", "Grass", inSeason = true))
+        if (ragweedPeak > 0) dominantPlants.add(PlantPollen("RAGWEED", "Ragweed", inSeason = true))
+        if (mugwortPeak > 0) dominantPlants.add(PlantPollen("MUGWORT", "Mugwort", inSeason = true))
+
+        val pollenData = PollenData(
+            grassPollen = grassType,
+            treePollen = treeType,
+            weedPollen = weedType,
+            dominantPlants = dominantPlants,
+            healthRecommendations = emptyList()
+        )
+
+        return if (pollenData.hasData) pollenData else null
+    }
+
+    private fun mapPollenTypeFromConcentration(
+        code: String,
+        displayName: String,
+        peakValue: Double,
+        isTree: Boolean
+    ): PollenType? {
+        if (peakValue <= 0.0) return null
+
+        val (indexValue, category) = if (isTree) {
+            when {
+                peakValue <= 10.0 -> 2 to "Low"
+                peakValue <= 100.0 -> 3 to "Moderate"
+                peakValue <= 1000.0 -> 4 to "High"
+                else -> 5 to "Very High"
+            }
+        } else {
+            when {
+                peakValue <= 10.0 -> 2 to "Low"
+                peakValue <= 50.0 -> 3 to "Moderate"
+                peakValue <= 200.0 -> 4 to "High"
+                else -> 5 to "Very High"
+            }
+        }
+
+        return PollenType(
+            code = code,
+            displayName = displayName,
+            inSeason = true,
+            indexValue = indexValue,
+            category = category
+        )
     }
 
     fun mapGeoLocation(dto: GeoLocationDto): Location {

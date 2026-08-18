@@ -1,8 +1,10 @@
 package com.clockweather.app.di
 
 import com.clockweather.app.BuildConfig
+import com.clockweather.app.data.remote.api.GooglePollenApi
 import com.clockweather.app.data.remote.api.GoogleWeatherApi
 import com.clockweather.app.data.remote.api.NominatimReverseGeocodingApi
+import com.clockweather.app.data.remote.api.OpenMeteoAirQualityApi
 import com.clockweather.app.data.remote.api.OpenMeteoGeocodingApi
 import com.clockweather.app.data.remote.api.OpenMeteoWeatherApi
 import com.clockweather.app.data.remote.api.OpenWeatherMapApi
@@ -57,6 +59,21 @@ object NetworkModule {
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
+
+    @Provides
+    @Singleton
+    @Named("openmeteoairquality")
+    fun provideOpenMeteoAirQualityRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(OpenMeteoAirQualityApi.BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideOpenMeteoAirQualityApi(@Named("openmeteoairquality") retrofit: Retrofit): OpenMeteoAirQualityApi =
+        retrofit.create(OpenMeteoAirQualityApi::class.java)
 
     @Provides
     @Singleton
@@ -117,6 +134,21 @@ object NetworkModule {
     @Singleton
     fun provideGoogleWeatherApi(@Named("googleweather") retrofit: Retrofit): GoogleWeatherApi =
         retrofit.create(GoogleWeatherApi::class.java)
+
+    @Provides
+    @Singleton
+    @Named("googlepollen")
+    fun provideGooglePollenRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(GooglePollenApi.BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideGooglePollenApi(@Named("googlepollen") retrofit: Retrofit): GooglePollenApi =
+        retrofit.create(GooglePollenApi::class.java)
 
     @Provides
     @Singleton

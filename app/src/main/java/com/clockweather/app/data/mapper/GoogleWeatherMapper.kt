@@ -5,11 +5,18 @@ import com.clockweather.app.data.remote.dto.google.GoogleDailyForecastDto
 import com.clockweather.app.data.remote.dto.google.GoogleDailyForecastResponseDto
 import com.clockweather.app.data.remote.dto.google.GoogleHourlyForecastDto
 import com.clockweather.app.data.remote.dto.google.GoogleHourlyForecastResponseDto
+import com.clockweather.app.data.remote.dto.google.GooglePollenDayInfoDto
+import com.clockweather.app.data.remote.dto.google.GooglePollenForecastResponseDto
+import com.clockweather.app.data.remote.dto.google.GooglePollenPlantInfoDto
+import com.clockweather.app.data.remote.dto.google.GooglePollenTypeInfoDto
 import com.clockweather.app.domain.model.AirQuality
 import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.Location
+import com.clockweather.app.domain.model.PlantPollen
+import com.clockweather.app.domain.model.PollenData
+import com.clockweather.app.domain.model.PollenType
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WindDirection
@@ -27,14 +34,21 @@ class GoogleWeatherMapper @Inject constructor() {
         current: GoogleCurrentConditionsDto,
         hourly: GoogleHourlyForecastResponseDto?,
         daily: GoogleDailyForecastResponseDto,
+        pollen: GooglePollenForecastResponseDto? = null,
         location: Location
     ): WeatherData {
         val timezone = current.timeZone?.id ?: "UTC"
+        val pollenByDate = mapPollenByDate(pollen)
+
         return WeatherData(
             location = location,
             currentWeather = mapCurrent(current),
             hourlyForecasts = hourly?.forecastHours?.map { mapHourly(it) } ?: emptyList(),
-            dailyForecasts = daily.forecastDays.map { mapDaily(it, timezone) },
+            dailyForecasts = daily.forecastDays.map { dto ->
+                val date = runCatching { LocalDate.of(dto.displayDate.year, dto.displayDate.month, dto.displayDate.day) }
+                    .getOrElse { LocalDate.now() }
+                mapDaily(dto, timezone, pollen = pollenByDate[date])
+            },
             airQuality = null  // Google Weather API does not provide AQI data
         )
     }
@@ -95,7 +109,7 @@ class GoogleWeatherMapper @Inject constructor() {
         )
     }
 
-    private fun mapDaily(dto: GoogleDailyForecastDto, timezone: String): DailyForecast {
+    private fun mapDaily(dto: GoogleDailyForecastDto, timezone: String, pollen: PollenData? = null): DailyForecast {
         val d = dto.displayDate
         val date = runCatching { LocalDate.of(d.year, d.month, d.day) }.getOrElse { LocalDate.now() }
 
@@ -133,9 +147,77 @@ class GoogleWeatherMapper @Inject constructor() {
             windDirectionDegrees = windDeg,
             uvIndexMax = dto.uvIndex?.toDouble() ?: 0.0,
             averageHumidity = (humidityMin + humidityMax) / 2,
-            averagePressure = 1013.25  // Google daily forecast does not include pressure
+            averagePressure = 1013.25, // Google daily forecast does not include pressure
+            pollen = pollen
         )
     }
+
+    private fun mapPollenByDate(pollenDto: GooglePollenForecastResponseDto?): Map<LocalDate, PollenData> {
+        if (pollenDto == null || pollenDto.dailyInfo.isEmpty()) return emptyMap()
+
+        return pollenDto.dailyInfo.mapNotNull { dayInfo ->
+            val dateDto = dayInfo.date
+            val date = runCatching { LocalDate.of(dateDto.year, dateDto.month, dateDto.day) }.getOrNull()
+                ?: return@mapNotNull null
+            val pollenData = mapDailyPollen(dayInfo) ?: return@mapNotNull null
+            date to pollenData
+        }.toMap()
+    }
+
+    private fun mapDailyPollen(dayInfo: GooglePollenDayInfoDto): PollenData? {
+        val types = dayInfo.pollenTypeInfo
+        val plants = dayInfo.plantInfo
+
+        if (types.isEmpty() && plants.isEmpty()) return null
+
+        var grass: PollenType? = null
+        var tree: PollenType? = null
+        var weed: PollenType? = null
+        val recommendations = mutableListOf<String>()
+
+        for (t in types) {
+            val mapped = mapPollenType(t)
+            when (t.code.uppercase()) {
+                "GRASS" -> grass = mapped
+                "TREE" -> tree = mapped
+                "WEED" -> weed = mapped
+            }
+            mapped.healthRecommendations.forEach { rec ->
+                if (rec.isNotBlank() && rec !in recommendations) {
+                    recommendations.add(rec)
+                }
+            }
+        }
+
+        val dominantPlants = plants.map { mapPlantPollen(it) }
+
+        val pollenData = PollenData(
+            grassPollen = grass,
+            treePollen = tree,
+            weedPollen = weed,
+            dominantPlants = dominantPlants,
+            healthRecommendations = recommendations
+        )
+
+        return if (pollenData.hasData) pollenData else null
+    }
+
+    private fun mapPollenType(dto: GooglePollenTypeInfoDto): PollenType = PollenType(
+        code = dto.code,
+        displayName = dto.displayName.ifBlank { dto.code.lowercase().replaceFirstChar { it.titlecase() } },
+        inSeason = dto.inSeason ?: false,
+        indexValue = dto.indexInfo?.value,
+        category = dto.indexInfo?.category,
+        healthRecommendations = dto.healthRecommendations.orEmpty()
+    )
+
+    private fun mapPlantPollen(dto: GooglePollenPlantInfoDto): PlantPollen = PlantPollen(
+        code = dto.code,
+        displayName = dto.displayName.ifBlank { dto.code.lowercase().replaceFirstChar { it.titlecase() } },
+        inSeason = dto.inSeason ?: false,
+        indexValue = dto.indexInfo?.value,
+        category = dto.indexInfo?.category
+    )
 
     private fun parseUtcToLocalTime(utcTimestamp: String?, zone: ZoneId): LocalTime? {
         utcTimestamp ?: return null
@@ -144,3 +226,4 @@ class GoogleWeatherMapper @Inject constructor() {
         }.getOrNull()
     }
 }
+

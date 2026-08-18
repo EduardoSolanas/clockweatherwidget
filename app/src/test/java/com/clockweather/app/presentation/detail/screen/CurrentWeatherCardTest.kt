@@ -9,6 +9,9 @@ import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.Location
+import com.clockweather.app.domain.model.PlantPollen
+import com.clockweather.app.domain.model.PollenData
+import com.clockweather.app.domain.model.PollenType
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
@@ -18,6 +21,27 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 class CurrentWeatherCardTest {
+
+    @Test
+    fun `pollenData calculates maxIndex and maxCategory correctly`() {
+        val pollen = PollenData(
+            grassPollen = PollenType("GRASS", "Grass", inSeason = true, indexValue = 4, category = "High"),
+            treePollen = PollenType("TREE", "Tree", inSeason = true, indexValue = 2, category = "Low"),
+            weedPollen = PollenType("WEED", "Weed", inSeason = false, indexValue = 0, category = "None")
+        )
+
+        assertEquals(4, pollen.maxIndex)
+        assertEquals("High", pollen.maxCategory)
+        assertTrue(pollen.hasData)
+    }
+
+    @Test
+    fun `empty pollenData reports hasData false`() {
+        val emptyPollen = PollenData()
+        assertFalse(emptyPollen.hasData)
+        assertEquals(null, emptyPollen.maxIndex)
+        assertEquals(null, emptyPollen.maxCategory)
+    }
 
     @Test
     fun `resolveForecastIsToday returns true when forecast date matches today`() {

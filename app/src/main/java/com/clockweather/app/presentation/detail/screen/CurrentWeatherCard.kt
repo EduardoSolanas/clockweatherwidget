@@ -35,10 +35,13 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.AirQuality
 import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.DailyForecast
+import com.clockweather.app.domain.model.PollenData
+import com.clockweather.app.domain.model.PollenType
 import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherCondition
@@ -216,6 +219,13 @@ fun WeatherDetailContent(
         // ── Air Quality (today only) ────────────────────────────────────────
         if (selectedDayIndex == 0) {
             weatherData.airQuality?.let { AirQualityCard(it) }
+        }
+
+        // ── Pollen & Allergy (shown when data is present for selected day) ──
+        selectedForecast?.pollen?.let { pollen ->
+            if (pollen.hasData) {
+                PollenCard(pollen = pollen)
+            }
         }
 
         // ── Last updated ────────────────────────────────────────────────────
@@ -1016,3 +1026,221 @@ private fun AqMetric(label: String, value: String, modifier: Modifier = Modifier
         Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
     }
 }
+
+// ─── Pollen & Allergy card ───────────────────────────────────────────────────
+
+@Composable
+fun PollenCard(pollen: PollenData, modifier: Modifier = Modifier) {
+    val maxIdx = pollen.maxIndex ?: 0
+    val headerColor = when {
+        maxIdx >= 5 -> Color(0xFF9C27B0) // Very High - purple
+        maxIdx == 4 -> Color(0xFFF44336) // High - red
+        maxIdx == 3 -> Color(0xFFFF9800) // Moderate - orange
+        maxIdx == 2 -> Color(0xFFFFEB3B) // Low - amber/yellow
+        maxIdx == 1 -> Color(0xFF8BC34A) // Very Low - light green
+        else -> Color(0xFF4CAF50)        // None - green
+    }
+
+    val summaryCategory = pollen.maxCategory ?: stringResource(
+        when (maxIdx) {
+            0 -> R.string.pollen_none
+            1 -> R.string.pollen_very_low
+            2 -> R.string.pollen_low
+            3 -> R.string.pollen_moderate
+            4 -> R.string.pollen_high
+            else -> R.string.pollen_very_high
+        }
+    )
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("PollenCard"),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // Header Row
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.label_pollen_allergy),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.2.sp
+                )
+                Spacer(Modifier.weight(1f))
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = headerColor.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_pollen_upi_format, maxIdx, summaryCategory.uppercase()),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = headerColor,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            // 3-Metric Column: Tree, Grass, Weed
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                PollenMetricColumn(
+                    icon = "🌳",
+                    title = stringResource(R.string.label_pollen_tree),
+                    pollenType = pollen.treePollen,
+                    modifier = Modifier.weight(1f)
+                )
+                PollenMetricColumn(
+                    icon = "🌱",
+                    title = stringResource(R.string.label_pollen_grass),
+                    pollenType = pollen.grassPollen,
+                    modifier = Modifier.weight(1f)
+                )
+                PollenMetricColumn(
+                    icon = "🌿",
+                    title = stringResource(R.string.label_pollen_weed),
+                    pollenType = pollen.weedPollen,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Dominant plants if available
+            if (pollen.dominantPlants.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = stringResource(R.string.label_pollen_active_allergens),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        pollen.dominantPlants.take(3).forEach { plant ->
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.surface
+                            ) {
+                                Text(
+                                    text = "🍃 ${plant.displayName}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Health Recommendations Banner
+            val recommendation = pollen.healthRecommendations.firstOrNull()
+            if (!recommendation.isNullOrBlank()) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("🛡️", fontSize = 16.sp)
+                        Text(
+                            text = recommendation,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PollenMetricColumn(
+    icon: String,
+    title: String,
+    pollenType: PollenType?,
+    modifier: Modifier = Modifier
+) {
+    val index = pollenType?.indexValue ?: 0
+    val category = pollenType?.category ?: stringResource(R.string.pollen_none)
+    val isInSeason = pollenType?.inSeason == true
+
+    val meterColor = when {
+        index >= 5 -> Color(0xFF9C27B0)
+        index == 4 -> Color(0xFFF44336)
+        index == 3 -> Color(0xFFFF9800)
+        index == 2 -> Color(0xFFFFEB3B)
+        index == 1 -> Color(0xFF8BC34A)
+        else -> Color(0xFF4CAF50)
+    }
+
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(vertical = 10.dp, horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(icon, fontSize = 20.sp)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
+        )
+
+        // Visual 5-segment level indicator
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(vertical = 2.dp)
+        ) {
+            for (i in 1..5) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 6.dp, height = 4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(
+                            if (i <= index) meterColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                        )
+                )
+            }
+        }
+
+        Text(
+            text = category,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = meterColor,
+            maxLines = 1
+        )
+
+        Text(
+            text = if (isInSeason) stringResource(R.string.label_pollen_in_season) else stringResource(R.string.label_pollen_out_of_season),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isInSeason) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            fontSize = 9.sp,
+            maxLines = 1
+        )
+    }
+}
+

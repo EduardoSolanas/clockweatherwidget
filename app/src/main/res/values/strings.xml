@@ -217,6 +217,22 @@
     <string name="aq_very_high">Very High</string>
     <string name="aq_defra_line">UK Air Quality: %1$s (DEFRA %2$d)</string>
 
+    <!-- Pollen & Allergy -->
+    <string name="label_pollen_allergy">POLLEN &amp; ALLERGY</string>
+    <string name="label_pollen_tree">Tree</string>
+    <string name="label_pollen_grass">Grass</string>
+    <string name="label_pollen_weed">Weed</string>
+    <string name="label_pollen_active_allergens">ACTIVE ALLERGENS</string>
+    <string name="label_pollen_upi_format">UPI %1$d · %2$s</string>
+    <string name="label_pollen_in_season">In season</string>
+    <string name="label_pollen_out_of_season">Out of season</string>
+    <string name="pollen_none">None</string>
+    <string name="pollen_very_low">Very Low</string>
+    <string name="pollen_low">Low</string>
+    <string name="pollen_moderate">Moderate</string>
+    <string name="pollen_high">High</string>
+    <string name="pollen_very_high">Very High</string>
+
     <!-- Units -->
     <string name="unit_celsius">%1$.0f\u00B0</string>
     <string name="unit_fahrenheit">%1$.0f\u00B0</string>

@@ -20,7 +20,7 @@ import com.clockweather.app.data.local.entity.LocationEntity
         DailyForecastEntity::class,
         LocationEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class WeatherDatabase : RoomDatabase() {
@@ -48,6 +48,19 @@ abstract class WeatherDatabase : RoomDatabase() {
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE locations ADD COLUMN area TEXT")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE daily_forecast ADD COLUMN pollenGrassIndex INTEGER")
+                db.execSQL("ALTER TABLE daily_forecast ADD COLUMN pollenGrassCategory TEXT")
+                db.execSQL("ALTER TABLE daily_forecast ADD COLUMN pollenTreeIndex INTEGER")
+                db.execSQL("ALTER TABLE daily_forecast ADD COLUMN pollenTreeCategory TEXT")
+                db.execSQL("ALTER TABLE daily_forecast ADD COLUMN pollenWeedIndex INTEGER")
+                db.execSQL("ALTER TABLE daily_forecast ADD COLUMN pollenWeedCategory TEXT")
+                db.execSQL("ALTER TABLE daily_forecast ADD COLUMN pollenHealthRecommendations TEXT")
+                db.execSQL("ALTER TABLE daily_forecast ADD COLUMN pollenDominantPlants TEXT")
             }
         }
     }

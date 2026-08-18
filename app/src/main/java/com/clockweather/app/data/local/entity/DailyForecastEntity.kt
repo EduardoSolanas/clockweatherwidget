@@ -22,6 +22,13 @@ data class DailyForecastEntity(
     val windDirectionDegrees: Int,
     val uvIndexMax: Double,
     val averageHumidity: Int,
-    val averagePressure: Double
+    val averagePressure: Double,
+    val pollenGrassIndex: Int? = null,
+    val pollenGrassCategory: String? = null,
+    val pollenTreeIndex: Int? = null,
+    val pollenTreeCategory: String? = null,
+    val pollenWeedIndex: Int? = null,
+    val pollenWeedCategory: String? = null,
+    val pollenHealthRecommendations: String? = null,
+    val pollenDominantPlants: String? = null
 )
-
