@@ -251,4 +251,20 @@
     <string name="size_large">Grande</string>
     <string name="size_xl">XL</string>
     <string name="widget_refresh_weather">Actualizar el tiempo</string>
+
+    <!-- Pollen & Allergy -->
+    <string name="label_pollen_allergy">POLEN Y ALERGIAS</string>
+    <string name="label_pollen_tree">Árboles</string>
+    <string name="label_pollen_grass">Gramíneas</string>
+    <string name="label_pollen_weed">Maleza</string>
+    <string name="label_pollen_active_allergens">ALÉRGENOS ACTIVOS</string>
+    <string name="label_pollen_upi_format">UPI %1$d · %2$s</string>
+    <string name="label_pollen_in_season">En temporada</string>
+    <string name="label_pollen_out_of_season">Fuera de temporada</string>
+    <string name="pollen_none">Ninguno</string>
+    <string name="pollen_very_low">Muy Bajo</string>
+    <string name="pollen_low">Bajo</string>
+    <string name="pollen_moderate">Moderado</string>
+    <string name="pollen_high">Alto</string>
+    <string name="pollen_very_high">Muy Alto</string>
 </resources>
