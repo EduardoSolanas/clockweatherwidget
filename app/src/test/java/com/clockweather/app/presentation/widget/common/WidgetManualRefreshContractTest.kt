@@ -7,10 +7,7 @@ import java.io.File
 class WidgetManualRefreshContractTest {
 
     @Test
-    fun `all runtime widgets expose the shared manual refresh control`() {
-        val sharedCard = File("src/main/res/layout/widget_weather_card.xml").readText()
-        assertTrue(sharedCard.contains("android:id=\"@+id/widget_refresh\""))
-
+    fun `all runtime widgets include the shared top section and weather card`() {
         val topSection = File("src/main/res/layout/widget_top_clock_weather.xml").readText()
         assertTrue(topSection.contains("layout=\"@layout/widget_weather_card\""))
 

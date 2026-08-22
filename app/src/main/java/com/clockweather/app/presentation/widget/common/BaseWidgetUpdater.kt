@@ -104,12 +104,6 @@ abstract class BaseWidgetUpdater(
                 try {
                     views.setOnClickPendingIntent(rootViewId, WidgetDataBinder.buildDetailPendingIntent(context, appWidgetId))
                 } catch (e: Exception) { /* ignore */ }
-                try {
-                    views.setOnClickPendingIntent(
-                        com.clockweather.app.R.id.widget_refresh,
-                        WidgetRefreshReceiver.pendingIntent(context, appWidgetId),
-                    )
-                } catch (e: Exception) { /* ignore */ }
 
                 // TextClock handles live minute-by-minute updates automatically.
                 // This call sets the format strings and makes the TextClock views visible.
