@@ -29,7 +29,9 @@ jobs:
       - run: chmod +x gradlew
 
       - name: Lint and Test
-        run: ./gradlew :app:lintRelease :app:testReleaseUnitTest --build-cache --parallel
+        run: |
+          ./gradlew :app:lintRelease
+          ./gradlew :app:testReleaseUnitTest
         env:
           GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
           OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
@@ -81,7 +83,10 @@ jobs:
           echo "VERSION_NAME=$VERSION_MAJOR.$VERSION_MINOR.$new_patch" >> $GITHUB_ENV
 
       - name: Verify & Build Release Bundle
-        run: ./gradlew :app:lintRelease :app:testReleaseUnitTest :app:bundleRelease --build-cache --parallel
+        run: |
+          ./gradlew :app:lintRelease
+          ./gradlew :app:testReleaseUnitTest
+          ./gradlew :app:bundleRelease
         env:
           GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
           OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
