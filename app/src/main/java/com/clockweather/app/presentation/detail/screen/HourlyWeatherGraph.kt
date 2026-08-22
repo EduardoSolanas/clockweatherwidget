@@ -221,7 +221,7 @@ fun HourlyWeatherGraph(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
         )
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -612,7 +612,7 @@ private val GraphPanelCornerRadius = 22.dp
 private val CurrentHourSelectionCornerRadius = 12.dp
 private val CurrentHourSelectionHorizontalInset = 2.dp
 private val CurrentHourSelectionVerticalInset = 2.dp
-private val TimeRowH = 52.dp
-private val GraphH = 148.dp
-private val BottomSliceH = 150.dp
+private val TimeRowH = 50.dp
+private val GraphH = 144.dp
+private val BottomSliceH = 144.dp
 private val HourlyGraphPanelHeight = TimeRowH + GraphH + BottomSliceH

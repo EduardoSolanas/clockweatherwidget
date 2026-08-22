@@ -329,16 +329,16 @@ private fun HeroWeatherCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 360.dp)
-            .clip(RoundedCornerShape(32.dp))
+            .heightIn(min = 304.dp)
+            .clip(RoundedCornerShape(30.dp))
             .background(backgroundBrush)
             .clickable { debugIndex = (debugIndex + 1) % DEBUG_CONDITIONS.size }
     ) {
         // Animated weather sprite.
         Box(
             modifier = Modifier
-                .size(220.dp)
-                .padding(start = 24.dp, bottom = 20.dp)
+                .size(190.dp)
+                .padding(start = 20.dp, bottom = 14.dp)
                 .align(Alignment.BottomStart)
         ) {
             WeatherAnimatedIcon(
@@ -351,7 +351,7 @@ private fun HeroWeatherCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
+                .padding(22.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -418,17 +418,17 @@ private fun HeroWeatherCard(
 
                 Spacer(Modifier.width(16.dp))
 
-                // Stats Glass Card - Moved lower to avoid overlap
+                // Stats Glass Card
                 Column(
                     modifier = Modifier
-                        .padding(top = 40.dp)
-                        .width(100.dp)
-                        .clip(RoundedCornerShape(20.dp))
+                        .padding(top = 16.dp)
+                        .width(98.dp)
+                        .clip(RoundedCornerShape(18.dp))
                         .background(Color.White.copy(alpha = 0.15f))
-                        .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(18.dp))
                         .padding(vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     HeroStat("💧", humidity.toString() + "%")
                     HeroStat("🌧",  precipitationDisplay)
@@ -441,7 +441,7 @@ private fun HeroWeatherCard(
                 Surface(
                     color = Color.Black.copy(alpha = 0.6f),
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.align(Alignment.Start).padding(top = 16.dp)
+                    modifier = Modifier.align(Alignment.Start).padding(top = 14.dp)
                 ) {
                     Text(
                         text = debugLabel,
@@ -459,7 +459,7 @@ private fun HeroWeatherCard(
 @Composable
 private fun HeroStat(emoji: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(emoji, fontSize = 18.sp)
+        Text(emoji, fontSize = 17.sp)
         Text(
             value,
             style = MaterialTheme.typography.labelLarge,

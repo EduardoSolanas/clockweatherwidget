@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Compact Clock + Weather Widget Picker Preview (~4x2 cells) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,30 +9,31 @@
     android:clipToPadding="false"
     android:orientation="vertical"
     android:padding="12dp"
-    tools:ignore="HardcodedText,SmallSp">
+    tools:ignore="HardcodedText">
 
     <include
         layout="@layout/widget_clock_block_preview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <TextClock
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="start"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="2dp"
         android:layout_marginStart="0dp"
-        android:format12Hour="EEE, MMM d"
-        android:format24Hour="EEE, d MMM"
+        android:text="Mon, Mar 9"
         android:textColor="@color/widget_text_primary"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.05" />
 
     <include
         layout="@layout/widget_weather_card_preview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="4dp" />
+        android:layout_marginTop="2dp" />
 
 </LinearLayout>
+

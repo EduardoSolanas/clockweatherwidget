@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Extended Clock + Weather + 5-Day Forecast Widget Picker Preview (~4x4 cells) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/transparent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:orientation="vertical"
     android:padding="10dp"
     tools:ignore="HardcodedText,SmallSp,NestedWeights,DisableBaselineAlignment">
@@ -11,8 +14,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="3"
+        android:layout_weight="4"
         android:background="@android:color/transparent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:orientation="vertical">
 
         <include
@@ -20,14 +25,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <TextClock
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:format12Hour="EEE, MMM d"
-            android:format24Hour="EEE, MMM d"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="2dp"
             android:layout_marginStart="0dp"
+            android:text="Mon, Mar 9"
             android:textColor="@color/widget_text_primary"
             android:textSize="13sp"
             android:textStyle="bold"
@@ -38,7 +42,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="4dp" />
+            android:layout_marginTop="2dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -54,34 +58,35 @@
         android:paddingEnd="4dp">
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="Mon" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="Mon" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" android:shadowColor="#B3000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="3" />
             <ImageView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:src="@drawable/ic_widget_weather_clear_day" android:contentDescription="@null" android:padding="2dp" android:scaleType="fitCenter" />
-            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="17°/11°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="17°/11°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" android:shadowColor="#B3000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="3" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="Tue" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="Tue" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" android:shadowColor="#B3000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="3" />
             <ImageView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:src="@drawable/ic_widget_weather_partly_cloudy_day" android:contentDescription="@null" android:padding="2dp" android:scaleType="fitCenter" />
-            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="16°/10°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="16°/10°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" android:shadowColor="#B3000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="3" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="Wed" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="Wed" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" android:shadowColor="#B3000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="3" />
             <ImageView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:src="@drawable/ic_widget_weather_cloudy" android:contentDescription="@null" android:padding="2dp" android:scaleType="fitCenter" />
-            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="14°/9°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="14°/9°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" android:shadowColor="#B3000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="3" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="Thu" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="Thu" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" android:shadowColor="#B3000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="3" />
             <ImageView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:src="@drawable/ic_widget_weather_rain" android:contentDescription="@null" android:padding="2dp" android:scaleType="fitCenter" />
-            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="12°/7°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="12°/7°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" android:shadowColor="#B3000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="3" />
         </LinearLayout>
 
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="2dp">
-            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="Fri" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="Fri" android:textColor="@color/widget_text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="center" android:shadowColor="#B3000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="3" />
             <ImageView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="2dp" android:layout_marginBottom="2dp" android:src="@drawable/ic_widget_weather_partly_cloudy_day" android:contentDescription="@null" android:padding="2dp" android:scaleType="fitCenter" />
-            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="15°/10°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_height="wrap_content" android:text="15°/10°" android:textColor="@color/widget_text_primary" android:textSize="11sp" android:textStyle="bold" android:gravity="center" android:shadowColor="#B3000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="3" />
         </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>
+
