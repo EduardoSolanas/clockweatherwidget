@@ -177,10 +177,11 @@ class GoogleWeatherMapper @Inject constructor() {
 
         for (t in types) {
             val mapped = mapPollenType(t)
-            when (t.code.uppercase()) {
-                "GRASS" -> grass = mapped
-                "TREE" -> tree = mapped
-                "WEED" -> weed = mapped
+            val upperCode = t.code.uppercase()
+            when {
+                upperCode.contains("GRASS") -> grass = mapped
+                upperCode.contains("TREE") -> tree = mapped
+                upperCode.contains("WEED") -> weed = mapped
             }
             mapped.healthRecommendations.forEach { rec ->
                 if (rec.isNotBlank() && rec !in recommendations) {

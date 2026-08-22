@@ -62,7 +62,13 @@ class GoogleWeatherProviderTest {
             googlePollenApi.getPollenForecast("test-key", location.latitude, location.longitude, days = 5)
         }
         coVerify(exactly = 1) {
-            mapper.mapToWeatherData(currentDto, hourlyDto, dailyDto, pollenDto, location)
+            mapper.mapToWeatherData(
+                current = currentDto,
+                hourly = hourlyDto,
+                daily = dailyDto,
+                pollen = pollenDto,
+                location = location
+            )
         }
     }
 
@@ -90,15 +96,17 @@ class GoogleWeatherProviderTest {
             googlePollenApi.getPollenForecast(any(), any(), any(), any(), any(), any())
         } throws IOException("403 Forbidden - Pollen API not enabled")
 
-        every {
-            mapper.mapToWeatherData(currentDto, hourlyDto, dailyDto, null, location)
-        } returns fakeWeatherData
-
         val result = provider.fetchWeatherData(location, forecastDays = 7)
 
         assertEquals(fakeWeatherData, result)
         coVerify(exactly = 1) {
-            mapper.mapToWeatherData(currentDto, hourlyDto, dailyDto, null, location)
+            mapper.mapToWeatherData(
+                current = currentDto,
+                hourly = hourlyDto,
+                daily = dailyDto,
+                pollen = null,
+                location = location
+            )
         }
     }
 
@@ -124,7 +132,14 @@ class GoogleWeatherProviderTest {
         } returns pollenDto
 
         every {
-            mapper.mapToWeatherData(currentDto, hourlyDto, dailyDto, pollenDto, location)
+            mapper.mapToWeatherData(
+                current = any(),
+                hourly = any(),
+                daily = any(),
+                pollen = any(),
+                location = any()
+            )
         } returns fakeWeatherData
     }
 }
+
