@@ -135,6 +135,27 @@ class GoogleWeatherMapperTest {
     }
 
     @Test
+    fun `mapAirQuality maps uaqi index scale correctly`() {
+        val airQualityDto = com.clockweather.app.data.remote.dto.google.GoogleAirQualityResponseDto(
+            indexes = listOf(
+                com.clockweather.app.data.remote.dto.google.GoogleAirQualityIndexDto(
+                    code = "uaqi",
+                    aqi = 85
+                ),
+                com.clockweather.app.data.remote.dto.google.GoogleAirQualityIndexDto(
+                    code = "gbr_defra",
+                    aqi = 3
+                )
+            )
+        )
+
+        val domainAq = mapper.mapAirQuality(airQualityDto)
+        org.junit.Assert.assertNotNull(domainAq)
+        assertEquals(1, domainAq!!.usEpaIndex)
+        assertEquals(3, domainAq.gbDefraIndex)
+    }
+
+    @Test
     fun `mapAirQuality returns null when dto is null or empty`() {
         org.junit.Assert.assertNull(mapper.mapAirQuality(null))
         org.junit.Assert.assertNull(

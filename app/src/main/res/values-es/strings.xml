@@ -291,6 +291,24 @@
     <string name="onboarding_pref_clock_24h">24 Horas (14:30)</string>
     <string name="onboarding_pref_clock_12h">12 Horas (2:30 PM)</string>
     <string name="onboarding_pref_wind_speed">Velocidad del Viento</string>
+    <!-- Settings Descriptions -->
+    <string name="settings_temperature_unit_desc">Elige entre Celsius (°C) y Fahrenheit (°F)</string>
+    <string name="settings_wind_speed_unit_desc">Elige la unidad de medida para la velocidad del viento</string>
+    <string name="settings_language_desc">Elige el idioma de la aplicación</string>
+    <string name="label_version_format">Versión %1$s (%2$d)</string>
+
+    <!-- Errors -->
+    <string name="error_search_failed">Error en la búsqueda</string>
+    <string name="error_could_not_get_current_location">No se pudo obtener la ubicación actual</string>
+    <string name="error_location_general">Error de ubicación</string>
+
+    <!-- Onboarding Feature Highlights -->
+    <string name="onboarding_feature_flip_clock_title">Widgets de reloj de paletas</string>
+    <string name="onboarding_feature_flip_clock_desc">Estilos de reloj de paletas clásicos y modernos con actualizaciones fluidas.</string>
+    <string name="onboarding_feature_weather_title">Clima en vivo y pronósticos</string>
+    <string name="onboarding_feature_weather_desc">Predicciones por hora, UV, humedad, calidad del aire y tendencias de varios días.</string>
+    <string name="onboarding_battery_unrestricted_title">Batería sin restricciones</string>
+    <string name="onboarding_battery_unrestricted_desc">Evita que Android suspenda las tareas de actualización del widget.</string>
     <string name="onboarding_all_set_title">¡Todo Listo!</string>
     <string name="onboarding_all_set_desc">Mantén presionado un espacio vacío en tu pantalla de inicio y selecciona Reloj y Clima para agregar tu primer widget.</string>
     <string name="onboarding_finish_btn">Abrir Reloj y Clima</string>

@@ -51,7 +51,7 @@
             android:includeFontPadding="false"
             android:maxWidth="132dp"
             android:maxLines="1"
-            android:text="London"
+            android:text="@string/label_default_location"
             android:textColor="@color/widget_text_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -64,7 +64,7 @@
             android:includeFontPadding="false"
             android:layout_marginTop="1dp"
             android:maxLines="1"
-            android:text="Partly cloudy"
+            android:text="@string/condition_partly_cloudy"
             android:textColor="@color/widget_text_secondary"
             android:textSize="13sp" />
     </LinearLayout>
@@ -124,7 +124,7 @@
             android:includeFontPadding="false"
             android:maxWidth="132dp"
             android:maxLines="1"
-            android:text="London"
+            android:text="@string/label_default_location"
             android:textColor="@color/widget_text_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -137,7 +137,7 @@
             android:includeFontPadding="false"
             android:layout_marginTop="1dp"
             android:maxLines="1"
-            android:text="Partly cloudy"
+            android:text="@string/condition_partly_cloudy"
             android:textColor="@color/widget_text_secondary"
             android:textSize="13sp" />
     </LinearLayout>

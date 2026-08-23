@@ -11,7 +11,7 @@ data class GoogleAirQualityLocationDto(
 @JsonClass(generateAdapter = true)
 data class GoogleAirQualityRequestDto(
     val location: GoogleAirQualityLocationDto,
-    val extraComputations: List<String> = listOf("POLLUTANTS_CONCENTRATION", "LOCAL_AQI"),
+    val extraComputations: List<String> = listOf("POLLUTANT_CONCENTRATION", "LOCAL_AQI"),
     val languageCode: String = "en"
 )
 

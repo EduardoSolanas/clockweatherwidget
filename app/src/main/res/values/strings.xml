@@ -290,6 +290,24 @@
     <string name="onboarding_pref_clock_24h">24-Hour (14:30)</string>
     <string name="onboarding_pref_clock_12h">12-Hour (2:30 PM)</string>
     <string name="onboarding_pref_wind_speed">Wind Speed</string>
+    <!-- Settings Descriptions -->
+    <string name="settings_temperature_unit_desc">Choose between Celsius (°C) and Fahrenheit (°F)</string>
+    <string name="settings_wind_speed_unit_desc">Choose measurement unit for wind speed</string>
+    <string name="settings_language_desc">Choose application language</string>
+    <string name="label_version_format">Version %1$s (%2$d)</string>
+
+    <!-- Errors -->
+    <string name="error_search_failed">Search failed</string>
+    <string name="error_could_not_get_current_location">Could not get current location</string>
+    <string name="error_location_general">Location error</string>
+
+    <!-- Onboarding Feature Highlights -->
+    <string name="onboarding_feature_flip_clock_title">Flip Clock Widgets</string>
+    <string name="onboarding_feature_flip_clock_desc">Classic and modern flip clock styles with smooth updates.</string>
+    <string name="onboarding_feature_weather_title">Live Weather &amp; Forecasts</string>
+    <string name="onboarding_feature_weather_desc">Hourly radar predictions, UV, humidity, air quality, and multi-day trends.</string>
+    <string name="onboarding_battery_unrestricted_title">Unrestricted Battery</string>
+    <string name="onboarding_battery_unrestricted_desc">Prevents Android from putting widget update workers to sleep.</string>
     <string name="onboarding_all_set_title">You\'re All Set!</string>
     <string name="onboarding_all_set_desc">Long-press any empty space on your home screen and select Clock &amp; Weather to add your first widget.</string>
     <string name="onboarding_finish_btn">Open Weather &amp; Clock</string>

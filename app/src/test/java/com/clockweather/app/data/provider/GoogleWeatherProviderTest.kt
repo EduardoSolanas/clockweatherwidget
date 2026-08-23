@@ -18,8 +18,11 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 
+@RunWith(RobolectricTestRunner::class)
 class GoogleWeatherProviderTest {
 
     private val googleWeatherApi: GoogleWeatherApi = mockk()

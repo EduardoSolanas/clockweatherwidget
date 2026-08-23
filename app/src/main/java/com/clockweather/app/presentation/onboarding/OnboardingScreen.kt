@@ -179,14 +179,14 @@ private fun WelcomeStep(onGetStarted: () -> Unit) {
 
     FeatureHighlightCard(
         icon = Icons.Default.Schedule,
-        title = "Flip Clock Widgets",
-        desc = "Classic and modern flip clock styles with smooth updates."
+        title = stringResource(R.string.onboarding_feature_flip_clock_title),
+        desc = stringResource(R.string.onboarding_feature_flip_clock_desc)
     )
 
     FeatureHighlightCard(
         icon = Icons.Default.WbSunny,
-        title = "Live Weather & Forecasts",
-        desc = "Hourly radar predictions, UV, humidity, air quality, and multi-day trends."
+        title = stringResource(R.string.onboarding_feature_weather_title),
+        desc = stringResource(R.string.onboarding_feature_weather_desc)
     )
 
     Spacer(Modifier.height(12.dp))
@@ -308,8 +308,8 @@ private fun BatteryStep(
     Spacer(Modifier.height(8.dp))
 
     PermissionActionCard(
-        title = "Unrestricted Battery",
-        description = "Prevents Android from putting widget update workers to sleep.",
+        title = stringResource(R.string.onboarding_battery_unrestricted_title),
+        description = stringResource(R.string.onboarding_battery_unrestricted_desc),
         isGranted = isBatteryExempt,
         actionLabel = stringResource(R.string.onboarding_battery_action),
         onAction = {
@@ -360,7 +360,14 @@ private fun PreferencesStep(
                     FilterChip(
                         selected = unit == tempUnit,
                         onClick = { onSetTempUnit(unit) },
-                        label = { Text(if (unit == TemperatureUnit.CELSIUS) "Celsius (°C)" else "Fahrenheit (°F)") }
+                        label = {
+                            Text(
+                                when (unit) {
+                                    TemperatureUnit.CELSIUS -> stringResource(R.string.settings_temp_celsius)
+                                    TemperatureUnit.FAHRENHEIT -> stringResource(R.string.settings_temp_fahrenheit)
+                                }
+                            )
+                        }
                     )
                 }
             }

@@ -196,7 +196,7 @@ fun SettingsScreen(
 
             SettingsLabel(
                 label       = stringResource(R.string.settings_temperature_unit),
-                description = stringResource(R.string.settings_temperature_unit)
+                description = stringResource(R.string.settings_temperature_unit_desc)
             )
             Row(
                 modifier = Modifier
@@ -224,7 +224,7 @@ fun SettingsScreen(
 
             SettingsLabel(
                 label       = stringResource(R.string.settings_wind_speed_unit),
-                description = stringResource(R.string.settings_wind_speed_unit)
+                description = stringResource(R.string.settings_wind_speed_unit_desc)
             )
             Row(
                 modifier = Modifier
@@ -247,7 +247,7 @@ fun SettingsScreen(
             val selectedLanguage by viewModel.selectedLanguage.collectAsStateWithLifecycle()
             SettingsLabel(
                 label       = stringResource(R.string.settings_language),
-                description = stringResource(R.string.settings_language)
+                description = stringResource(R.string.settings_language_desc)
             )
             Row(
                 modifier = Modifier
@@ -524,7 +524,11 @@ fun SettingsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Version ${com.clockweather.app.BuildConfig.VERSION_NAME} (${com.clockweather.app.BuildConfig.VERSION_CODE})",
+                    text = stringResource(
+                        R.string.label_version_format,
+                        com.clockweather.app.BuildConfig.VERSION_NAME,
+                        com.clockweather.app.BuildConfig.VERSION_CODE
+                    ),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )

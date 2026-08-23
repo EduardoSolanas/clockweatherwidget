@@ -72,6 +72,8 @@ class GoogleWeatherProvider @Inject constructor(
                 runCatching {
                     val pollenDays = days.coerceIn(1, 5)
                     googlePollenApi.getPollenForecast(apiKey, lat, lon, days = pollenDays)
+                }.onFailure {
+                    android.util.Log.w("GoogleWeatherProvider", "Failed to fetch pollen data", it)
                 }.getOrNull()
             }
 
@@ -83,6 +85,8 @@ class GoogleWeatherProvider @Inject constructor(
                             location = GoogleAirQualityLocationDto(latitude = lat, longitude = lon)
                         )
                     )
+                }.onFailure {
+                    android.util.Log.w("GoogleWeatherProvider", "Failed to fetch air quality data", it)
                 }.getOrNull()
             }
 

@@ -61,23 +61,6 @@ class GoogleWeatherMapper @Inject constructor() {
 
         if (indexes.isEmpty() && pollutants.isEmpty()) return null
 
-        val usEpaAqi = indexes.firstOrNull { it.code.equals("usa_epa", ignoreCase = true) }?.aqi
-            ?: indexes.firstOrNull { it.code.equals("uaqi", ignoreCase = true) }?.aqi
-            ?: 0
-
-        val usEpaIndex = when {
-            usEpaAqi <= 50 -> 1
-            usEpaAqi <= 100 -> 2
-            usEpaAqi <= 150 -> 3
-            usEpaAqi <= 200 -> 4
-            usEpaAqi <= 300 -> 5
-            else -> 6
-        }
-
-        val gbDefraAqi = indexes.firstOrNull {
-            it.code.equals("gb_daqi", ignoreCase = true) || it.code.equals("gb_defra", ignoreCase = true)
-        }?.aqi ?: 1
-
         fun pollutantValue(code: String): Double {
             val pollutant = pollutants.firstOrNull { it.code.equals(code, ignoreCase = true) }
             val raw = pollutant?.concentration?.value ?: return 0.0
@@ -108,6 +91,50 @@ class GoogleWeatherMapper @Inject constructor() {
         val no2 = pollutantValue("no2")
         val so2 = pollutantValue("so2")
         val o3 = pollutantValue("o3")
+
+        val usaEpaAqi = indexes.firstOrNull { it.code.equals("usa_epa", ignoreCase = true) }?.aqi
+        val uaqiAqi = indexes.firstOrNull { it.code.equals("uaqi", ignoreCase = true) }?.aqi
+
+        val usEpaIndex = when {
+            usaEpaAqi != null -> when {
+                usaEpaAqi <= 50 -> 1
+                usaEpaAqi <= 100 -> 2
+                usaEpaAqi <= 150 -> 3
+                usaEpaAqi <= 200 -> 4
+                usaEpaAqi <= 300 -> 5
+                else -> 6
+            }
+            uaqiAqi != null -> when {
+                uaqiAqi >= 80 -> 1
+                uaqiAqi >= 60 -> 2
+                uaqiAqi >= 40 -> 3
+                uaqiAqi >= 20 -> 4
+                uaqiAqi >= 10 -> 5
+                else -> 6
+            }
+            pm25 > 0.0 || pm10 > 0.0 -> when {
+                pm25 <= 12.0 && pm10 <= 54.0 -> 1
+                pm25 <= 35.4 && pm10 <= 154.0 -> 2
+                pm25 <= 55.4 && pm10 <= 254.0 -> 3
+                pm25 <= 150.4 && pm10 <= 354.0 -> 4
+                pm25 <= 250.4 && pm10 <= 424.0 -> 5
+                else -> 6
+            }
+            else -> 1
+        }
+
+        val gbDefraAqi = indexes.firstOrNull {
+            it.code.equals("gb_daqi", ignoreCase = true) ||
+            it.code.equals("gb_defra", ignoreCase = true) ||
+            it.code.equals("gbr_defra", ignoreCase = true)
+        }?.aqi ?: when (usEpaIndex) {
+            1 -> 1
+            2 -> 4
+            3 -> 6
+            4 -> 7
+            5 -> 9
+            else -> 10
+        }
 
         return AirQuality(
             co = co,
