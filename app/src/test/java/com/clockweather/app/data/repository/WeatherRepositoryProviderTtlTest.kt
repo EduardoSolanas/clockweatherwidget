@@ -110,7 +110,7 @@ class WeatherRepositoryProviderTtlTest {
             preferencesOf(WeatherProviderPreferences.KEY_WEATHER_PROVIDER to providerType.storageValue)
         )
         every { providerFactory.get(any()) } returns provider
-        coEvery { provider.fetchWeatherData(any(), any()) } throws
+        coEvery { provider.fetchWeatherData(any(), any(), any()) } throws
             RuntimeException("stop-after-provider-call")
     }
 
@@ -121,7 +121,7 @@ class WeatherRepositoryProviderTtlTest {
 
         repository.ensureFreshWeatherData(location, forecastDays = 7)
 
-        coVerify(exactly = 0) { provider.fetchWeatherData(any(), any()) }
+        coVerify(exactly = 0) { provider.fetchWeatherData(any(), any(), any()) }
     }
 
     @Test
@@ -131,7 +131,7 @@ class WeatherRepositoryProviderTtlTest {
 
         runCatching { repository.ensureFreshWeatherData(location, forecastDays = 7) }
 
-        coVerify(atLeast = 1) { provider.fetchWeatherData(any(), any()) }
+        coVerify(atLeast = 1) { provider.fetchWeatherData(any(), any(), any()) }
     }
 
     @Test
@@ -141,7 +141,7 @@ class WeatherRepositoryProviderTtlTest {
 
         runCatching { repository.ensureFreshWeatherData(location, forecastDays = 7) }
 
-        coVerify(atLeast = 1) { provider.fetchWeatherData(any(), any()) }
+        coVerify(atLeast = 1) { provider.fetchWeatherData(any(), any(), any()) }
     }
 
     private fun sampleCurrentWeather(lastUpdated: LocalDateTime) = CurrentWeather(

@@ -104,13 +104,15 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     private suspend fun refreshAndPersist(location: Location, forecastDays: Int) {
+        val cached = getWeatherData(location).first()
         val providerType = WeatherProviderPreferences.resolve(
             dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
         )
         val weatherData = fetchWithFallback(providerType) { provider, actualProviderType ->
             provider.fetchWeatherData(
                 location = location,
-                forecastDays = forecastDays.coerceIn(1, actualProviderType.maxForecastDays)
+                forecastDays = forecastDays.coerceIn(1, actualProviderType.maxForecastDays),
+                cachedData = cached
             )
         }
         persistWeatherData(weatherData.normalizeDailyConditions(), location.id)

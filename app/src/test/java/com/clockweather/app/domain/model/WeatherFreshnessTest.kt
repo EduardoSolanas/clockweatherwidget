@@ -23,6 +23,46 @@ class WeatherFreshnessTest {
     }
 
     @Test
+    fun `air quality is fresh when within 60 minutes`() {
+        val aq = AirQuality(co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0, usEpaIndex = 1, gbDefraIndex = 1)
+        assertTrue(isAirQualityFresh(aq, referenceDateTime.minusMinutes(59), referenceDateTime))
+        assertFalse(isAirQualityFresh(aq, referenceDateTime.minusMinutes(61), referenceDateTime))
+        assertFalse(isAirQualityFresh(null, referenceDateTime.minusMinutes(10), referenceDateTime))
+    }
+
+    @Test
+    fun `pollen is fresh when within 360 minutes and covered days match`() {
+        val today = referenceDateTime.toLocalDate()
+        val pollen = PollenData(grassPollen = PollenType("GRASS", "Grass", true, 2, "Low"))
+        val daily = (0..4).map { i ->
+            DailyForecast(
+                date = today.plusDays(i.toLong()),
+                weatherCondition = WeatherCondition.CLEAR_DAY,
+                temperatureMax = 20.0,
+                temperatureMin = 10.0,
+                feelsLikeMax = 20.0,
+                feelsLikeMin = 10.0,
+                sunrise = LocalTime.of(6, 0),
+                sunset = LocalTime.of(18, 0),
+                daylightDurationSeconds = 43200.0,
+                precipitationSum = 0.0,
+                precipitationProbability = 0,
+                windSpeedMax = 10.0,
+                windDirectionDominant = WindDirection.N,
+                windDirectionDegrees = 0,
+                uvIndexMax = 3.0,
+                averageHumidity = 50,
+                averagePressure = 1013.25,
+                pollen = pollen
+            )
+        }
+
+        assertTrue(isPollenFresh(daily, referenceDateTime.minusMinutes(350), referenceDateTime, requiredDays = 5))
+        assertFalse(isPollenFresh(daily, referenceDateTime.minusMinutes(365), referenceDateTime, requiredDays = 5))
+        assertFalse(isPollenFresh(emptyList(), referenceDateTime.minusMinutes(10), referenceDateTime, requiredDays = 5))
+    }
+
+    @Test
     fun `weather is fresh when current hourly and daily coverage are sufficient`() {
         val weather = sampleWeatherData()
 

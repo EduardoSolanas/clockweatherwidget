@@ -33,15 +33,17 @@ class WeatherDtoMapper @Inject constructor() {
     fun mapToWeatherData(
         response: WeatherResponseDto,
         location: Location,
-        airQualityResponse: OpenMeteoAirQualityResponseDto? = null
+        airQualityResponse: OpenMeteoAirQualityResponseDto? = null,
+        cachedAirQuality: AirQuality? = null,
+        cachedPollenByDate: Map<LocalDate, PollenData?> = emptyMap()
     ): WeatherData {
         // Stamp fetch time so the 10-min TTL is relative to when we fetched, not the API model slot
         // (Open-Meteo's current.time can be 15+ min behind actual fetch time).
         val fetchTime = LocalDateTime.now()
         val currentWeather = mapCurrentWeather(requireNotNull(response.current) { "current weather is null" }, fetchTime)
         val hourlyForecasts = response.hourly?.let { mapHourlyForecasts(it) } ?: emptyList()
-        val dailyForecasts = response.daily?.let { mapDailyForecasts(it, hourlyForecasts, airQualityResponse) } ?: emptyList()
-        val airQuality = mapAirQuality(airQualityResponse)
+        val dailyForecasts = response.daily?.let { mapDailyForecasts(it, hourlyForecasts, airQualityResponse, cachedPollenByDate) } ?: emptyList()
+        val airQuality = mapAirQuality(airQualityResponse) ?: cachedAirQuality
 
         return WeatherData(
             location = location,
@@ -100,7 +102,8 @@ class WeatherDtoMapper @Inject constructor() {
     private fun mapDailyForecasts(
         dto: DailyWeatherDto,
         hourlyForecasts: List<HourlyForecast>,
-        airQualityResponse: OpenMeteoAirQualityResponseDto? = null
+        airQualityResponse: OpenMeteoAirQualityResponseDto? = null,
+        cachedPollenByDate: Map<LocalDate, PollenData?> = emptyMap()
     ): List<DailyForecast> {
         val hourlyAirQuality = airQualityResponse?.hourly
         return dto.time.indices.map { i ->
@@ -117,7 +120,7 @@ class WeatherDtoMapper @Inject constructor() {
             val sunset = runCatching { LocalDateTime.parse(sunsetStr, timeFormatter).toLocalTime() }
                 .getOrElse { LocalTime.of(18, 0) }
 
-            val pollen = mapOpenMeteoPollenForDate(date, hourlyAirQuality)
+            val pollen = mapOpenMeteoPollenForDate(date, hourlyAirQuality) ?: cachedPollenByDate[date]
 
             DailyForecast(
                 date = date,

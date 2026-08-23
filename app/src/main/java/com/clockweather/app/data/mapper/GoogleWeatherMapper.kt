@@ -36,7 +36,9 @@ class GoogleWeatherMapper @Inject constructor() {
         daily: GoogleDailyForecastResponseDto,
         pollen: GooglePollenForecastResponseDto? = null,
         openMeteoPollen: com.clockweather.app.data.remote.dto.openmeteo.OpenMeteoAirQualityResponseDto? = null,
+        cachedPollenByDate: Map<LocalDate, PollenData?> = emptyMap(),
         airQuality: com.clockweather.app.data.remote.dto.google.GoogleAirQualityResponseDto? = null,
+        cachedAirQuality: AirQuality? = null,
         location: Location
     ): WeatherData {
         val timezone = current.timeZone?.id ?: "UTC"
@@ -52,9 +54,10 @@ class GoogleWeatherMapper @Inject constructor() {
                     .getOrElse { LocalDate.now() }
                 val pollenForDate = googlePollenByDate[date]
                     ?: WeatherDtoMapper.mapOpenMeteoPollenForDate(date, openMeteoHourly)
+                    ?: cachedPollenByDate[date]
                 mapDaily(dto, timezone, pollen = pollenForDate)
             },
-            airQuality = mapAirQuality(airQuality)
+            airQuality = mapAirQuality(airQuality) ?: cachedAirQuality
         )
     }
 
