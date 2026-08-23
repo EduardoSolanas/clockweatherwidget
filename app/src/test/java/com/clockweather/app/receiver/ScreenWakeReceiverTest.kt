@@ -26,6 +26,7 @@ class ScreenWakeReceiverTest {
 
     @Before
     fun mockScheduler() {
+        ScreenWakeReceiver.lastScreenOnRedrawMillis = 0L
         mockkObject(WeatherUpdateScheduler)
         justRun { WeatherUpdateScheduler.scheduleImmediateRefresh(any()) }
         coEvery { application.refreshAllWidgets(any()) } returns Unit
@@ -43,15 +44,25 @@ class ScreenWakeReceiverTest {
     fun `screen on redraws cached widgets and enqueues freshness-gated refresh`() {
         receiver.onReceive(context, intentWithAction(Intent.ACTION_SCREEN_ON))
 
-        // Give the coroutine a moment to execute
         Thread.sleep(100)
 
-        coVerify(atLeast = 1) { application.refreshAllWidgets(context) }
+        coVerify(exactly = 1) { application.refreshAllWidgets(context) }
         verify(exactly = 1) { WeatherUpdateScheduler.scheduleImmediateRefresh(context) }
     }
 
     @Test
-    fun `unlock redraws cached widgets and enqueues freshness-gated refresh`() {
+    fun `rapid duplicate screen on events within 60s are throttled to single redraw`() {
+        receiver.onReceive(context, intentWithAction(Intent.ACTION_SCREEN_ON))
+        receiver.onReceive(context, intentWithAction(Intent.ACTION_SCREEN_ON))
+
+        Thread.sleep(100)
+
+        coVerify(exactly = 1) { application.refreshAllWidgets(context) }
+        verify(exactly = 2) { WeatherUpdateScheduler.scheduleImmediateRefresh(context) }
+    }
+
+    @Test
+    fun `unlock always redraws cached widgets and enqueues freshness-gated refresh`() {
         receiver.onReceive(context, intentWithAction(Intent.ACTION_USER_PRESENT))
 
         Thread.sleep(100)

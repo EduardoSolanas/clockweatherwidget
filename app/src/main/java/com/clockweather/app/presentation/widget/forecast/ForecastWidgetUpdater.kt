@@ -2,7 +2,6 @@ package com.clockweather.app.presentation.widget.forecast
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
-import android.os.Build
 import android.util.SizeF
 import android.widget.RemoteViews
 import androidx.datastore.preferences.core.Preferences
@@ -28,15 +27,9 @@ class ForecastWidgetUpdater(
     override val widgetPaddingDp = 10f
     override val hasForecastViews = true
 
-    override fun getResponsiveSizeBreakpoints(): List<SizeF> {
-        return if (Build.VERSION.SDK_INT >= 31) {
-            listOf(
-                SizeF(180f, 120f),
-                SizeF(250f, 160f),
-                SizeF(350f, 220f),
-            )
-        } else emptyList()
-    }
+    // Disabled pending size-differentiated layout variants and Binder parcel payload profiling.
+    // Prevents shipping 3x identical 6-icon layouts (~2.6MB) exceeding the 1MB Binder transaction limit.
+    override fun getResponsiveSizeBreakpoints(): List<SizeF> = emptyList()
 
     override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
         val iconStyle = WeatherIconMapper.fromPreferenceValue(

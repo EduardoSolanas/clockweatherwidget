@@ -310,20 +310,22 @@ abstract class BaseWidgetUpdater(
                     prefs[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]
                 )
 
-                val weather = renderSnapshot.weather
-                val referenceDateTime = weather?.locationReferenceDateTime() ?: java.time.LocalDateTime.now()
-                val requiredForecastDays = requiredForecastDaysForRefresh(
-                    requestedForecastDays = 7,
-                    minimumFutureForecastDaysRequired = minimumFutureForecastDaysRequired,
-                )
-                if (!isWeatherDataFresh(
-                        weather,
-                        referenceDateTime,
-                        requiredForecastDays,
-                        maxAgeMinutes = refreshIntervalMinutes.toLong(),
+                if (snapshot == null) {
+                    val weather = renderSnapshot.weather
+                    val referenceDateTime = weather?.locationReferenceDateTime() ?: java.time.LocalDateTime.now()
+                    val requiredForecastDays = requiredForecastDaysForRefresh(
+                        requestedForecastDays = 7,
+                        minimumFutureForecastDaysRequired = minimumFutureForecastDaysRequired,
                     )
-                ) {
-                    WeatherUpdateScheduler.scheduleImmediateRefresh(context)
+                    if (!isWeatherDataFresh(
+                            weather,
+                            referenceDateTime,
+                            requiredForecastDays,
+                            maxAgeMinutes = refreshIntervalMinutes.toLong(),
+                        )
+                    ) {
+                        WeatherUpdateScheduler.scheduleImmediateRefresh(context)
+                    }
                 }
 
                 val finalViews = if (android.os.Build.VERSION.SDK_INT >= 31) {
