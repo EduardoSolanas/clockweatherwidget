@@ -83,7 +83,7 @@ References:
 
 ## 4. Foundations
 
-Sections 4.1 and 4.3 record resolved decisions. Section 4.2 is the single unconditional next piece of work: a small wiring fix that needs no further decision and blocks nothing else. Note that section 5.1 (responsive layouts) does not depend on anything in this section and can proceed in parallel.
+Sections 4.1 and 4.3 record resolved decisions; 4.2 records shipped work. The only item still open in this section is the on-device watchdog measurement in 4.3.
 
 ### 4.1 Resolved Decision: Local-only now, per-widget weather location later
 
@@ -185,9 +185,9 @@ With both corrected, the measurement surfaced a live bug unrelated to responsive
 
 **Fix.** `WidgetForecastIconMaxDimensionPx = 128` caps row icons separately from the hero icon. Worst case drops to 484,156 bytes, a 46% reduction, with no visible change at their display size.
 
-**Responsive breakpoints: not adopted.** A breakpoint map parcels every mapped view into one transaction, so it only pays off if smaller sizes bind *less*. In these widgets the only content worth dropping is the five-day forecast row - the reason the widgets exist. Dropping it would have meant a widget named Forecast showing no forecast at its minimum resize height of 120dp. Keeping it means paying for duplicate identical views. Neither is worth a smoother resize animation, so  returns  and each widget ships one layout.
+**Responsive breakpoints: not adopted.** A breakpoint map parcels every mapped view into one transaction, so it only pays off if smaller sizes bind *less*. In these widgets the only content worth dropping is the five-day forecast row - the reason the widgets exist. Dropping it would have meant a widget named Forecast showing no forecast at its minimum resize height of 120dp. Keeping it means paying for duplicate identical views. Neither is worth a smoother resize animation, so `getResponsiveSizeBreakpoints()` returns `emptyList()` and each widget ships one layout.
 
-This is a decision, not an omission. If breakpoints are ever revisited,  must prove the **summed** transaction fits, and the smaller tier has to drop something the user genuinely does not need at that size.
+This is a decision, not an omission. If breakpoints are ever revisited, `WidgetPayloadBudgetTest` must prove the **summed** transaction fits, and the smaller tier has to drop something the user genuinely does not need at that size.
 
 Measured single-view payloads, worst-case CLAY_3D, against the ~1MB launcher budget:
 
