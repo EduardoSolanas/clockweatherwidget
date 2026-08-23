@@ -113,35 +113,26 @@ Because the clock stays device-local in phase 2, no timezone work is required fo
 
 **Design constraint for phase 1 work:** do not add code that assumes one global location. Where it is free to do so, thread `appWidgetId` through rather than resolving the location from a singleton, so phase 2 is an extension rather than a rewrite.
 
-### 4.2 Work: make screen wake redraw from cache before refreshing
+### 4.2 Implemented: Screen wake redraws from cache before refreshing (Delivered)
 
-**This is the one item to build next.** It is a wiring fix, not a new architectural layer.
+**Status:** Completed and merged in Phase 1 (with a 60s throttle on `ACTION_SCREEN_ON` and immediate redraw on `ACTION_USER_PRESENT`).
 
-The redraw path already exists. `ClockWeatherApplication.refreshAllWidgets()` loops `updater.updateWidget(id)` over every active widget, reading from the Room cache and DataStore. The timezone/date-change and package-replacement receivers already use it.
+The redraw path uses `ClockWeatherApplication.refreshAllWidgets()`, which loops `updater.updateWidget(id)` over every active widget, reading once from the Room cache and DataStore.
 
-The gap is `ScreenWakeReceiver`. On `ACTION_SCREEN_ON` / `ACTION_USER_PRESENT` it calls `WeatherUpdateScheduler.scheduleImmediateRefresh()` and nothing else. That work request carries a `NetworkType.CONNECTED` constraint, so on an offline or flaky wake the widget receives **no update at all** - not even a redraw of the data already sitting in cache. The user looks at a widget still showing whatever it rendered hours ago.
-
-Change the receiver to do both, in order:
-
-1. Redraw immediately from cached data.
-2. Then enqueue the existing freshness-gated refresh.
-
-Notes for implementation:
-
-- Keep the redraw off the main thread; `refreshAllWidgets()` is already `suspend`.
-- `BaseWidgetUpdater.updateWidget()` is not purely local on first run: when no locations are saved it calls `getCurrentLocation()` behind a 6s timeout and persists a fallback. That path is acceptable on wake but must not be treated as a guaranteed-offline operation.
-- Screen wake fires often. Rely on the existing freshness gate and the repository mutex rather than adding a second dedupe mechanism.
-- Do not render fallback or placeholder content on a routine wake redraw; a flash of empty state is worse than briefly stale data.
-
-Naming the two operations clearly keeps later triggers honest: **refresh weather** (network, freshness-gated, persists, then redraws) versus **redraw widgets** (renders from cache and preferences, issues no network request directly). The redraw path is not strictly cache-only in effect - `BaseWidgetUpdater` enqueues freshness work when the cached data is stale, and on first run may resolve a location - but it never blocks the render on a network response, so it always produces a visible update. Any future local-only trigger, such as sunrise/sunset day/night switching, redraws from cache first and goes to the network only when the data is actually stale.
+In `ScreenWakeReceiver`:
+1. **`ACTION_USER_PRESENT` (Unlock):** Redraws immediately from cached data off the main thread.
+2. **`ACTION_SCREEN_ON` (Ambient/Notification):** Throttled to minimum 60-second intervals to avoid waking on transient notifications.
+3. **Network Enqueue:** Enqueues the existing freshness-gated refresh via WorkManager (`scheduleImmediateRefresh`, deduplicated via `KEEP`).
 
 ### 4.3 Resolved Decision: Retain the redraw watchdog (keep `1800000`)
 
-**Decision:** We will keep `updatePeriodMillis="1800000"` on all widget providers alongside WorkManager.
+**Decision:** We keep `updatePeriodMillis="1800000"` on all widget providers alongside WorkManager.
 
-These are not two competing network schedulers. WorkManager is the primary periodic network-refresh mechanism. The provider callback is a **redraw and freshness watchdog**: it rebuilds the widget from cache, checks freshness, and enqueues refresh work only when the data is stale.
+These are not two competing network schedulers. WorkManager is the primary periodic network-refresh mechanism. The provider callback is a **redraw and freshness watchdog**: it rebuilds the widget from cache, checks freshness via `BaseWidgetUpdater.scheduleRefreshIfStale()`, and enqueues refresh work only when the data is stale.
 
 While Android explicitly recommends setting this to `0` when using WorkManager, real-world OEM battery killers (Samsung, Xiaomi, etc.) often aggressively defer WorkManager jobs. If a user keeps their screen on continuously (e.g., during navigation), WorkManager might stall, and screen-wake events won't fire, causing the widget to freeze.
+
+**Implementation note:** `onUpdate` uses `BaseWidgetUpdater.createRenderSnapshot()` to batch reads and delegates freshness scheduling to `scheduleRefreshIfStale()`. Formal battery/CPU measurement under continuous screen-on remains an open verification item.
 
 The 30-minute host callback is the OS-level safety net for that case. It is not free, and the document should not claim otherwise: every callback wakes the app, reads Room and DataStore, decodes and renders icon bitmaps, and parcels a full `RemoteViews` update for each widget instance. Android documents full widget updates as computationally expensive. Multiply that by every installed widget, twice an hour, indefinitely.
 
@@ -287,17 +278,18 @@ Reference: [Jetpack Glance](https://developer.android.com/develop/ui/compose/gla
 
 ## 6. Revised Priority Matrix
 
-| Work item | Priority | Complexity | Expected value | Dependency |
+| Work item | Priority | Complexity | Expected value | Status / Dependency |
 | :--- | :--- | :--- | :--- | :--- |
-| Screen wake: cached redraw before freshness-gated refresh | **P0 (build next)** | Low | Fixes the no-update-when-offline wake | None |
-| Reduce watchdog cost, then measure it | **P1** | Low-Medium | Cheaper 30-minute callback; evidence for any later change | Batching |
-| Gate background work on active-widget existence | **P1** | Low-Medium | Less background work with no widget installed | None |
-| Batch cache/prefs reads across a redraw | **P1** | Low | Fewer redundant Room/DataStore reads per update | None |
-| Android 12+ responsive layouts | **P1 (parallel)** | Medium | Smoother resizing and better size-specific UX | Reusable view builder only |
-| Local day/night display mapping | **P2** | Low-Medium | More timely visual state | Screen-wake redraw |
+| Screen wake: cached redraw before freshness-gated refresh | **P0** | Low | Fixes the no-update-when-offline wake | **Completed (Phase 1 Delivered)** |
+| Gate background work on active-widget existence | **P1** | Low-Medium | Less background work with no widget installed | **Completed (Phase 1 Delivered)** |
+| Batch cache/prefs reads across a redraw | **P1** | Low | Fewer redundant Room/DataStore reads per update | **Completed (Phase 1 Delivered)** |
+| Watchdog freshness & staleness check unification | **P1** | Low | Ensures 30-min callback and batch redraws schedule refresh if stale | **Completed (Phase 1 Delivered)** |
+| Local day/night display mapping | **P2** | Low-Medium | More timely visual state | **Completed (Phase 1 Delivered)** |
+| Tabular-number hint (`tnum`) | **P3** | Minimal | Small OEM typography defence | **Completed (Phase 1 Delivered)** |
+| Android 12+ responsive layouts | **P1** | Medium | Smoother resizing and better size-specific UX | **Withdrawn / Disabled in Phase 1** (protects 1MB Binder transaction budget until size-varying views & payload profiling are ready) |
+| Watchdog CPU/battery measurement | **P1 Verification** | Low-Medium | Evidence for any future watchdog changes | Open (post-batching verification) |
 | Pre-12 layout variants | **P2** | Medium-High | Older-device size customization | Device evidence |
 | Forecast-derived temperature fallback/interpolation | **P2/P3** | Medium | Cosmetic progression with accuracy trade-off | Screen-wake redraw and product policy |
-| Tabular-number hint | **P3** | Minimal | Small OEM typography defence | Reproduction evidence |
 | Bitmap LRU cache | **P3** | Low-Medium | Possible allocation reduction | Profiling evidence |
 | Glance migration | **Research** | High | Unknown until parity spike | Stable feature requirements |
 | Persist `appWidgetId -> locationId` | **Deferred - 4.1 phase 2** | Medium | Foundation for multi-city | Section 4.1 phase 2 |
