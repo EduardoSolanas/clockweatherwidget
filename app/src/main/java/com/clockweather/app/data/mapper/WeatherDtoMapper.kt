@@ -180,89 +180,91 @@ class WeatherDtoMapper @Inject constructor() {
         )
     }
 
-    private fun mapOpenMeteoPollenForDate(
-        date: LocalDate,
-        hourly: OpenMeteoAirQualityHourlyDto?
-    ): PollenData? {
-        if (hourly == null || hourly.time.isEmpty()) return null
+    companion object {
+        internal fun mapOpenMeteoPollenForDate(
+            date: LocalDate,
+            hourly: OpenMeteoAirQualityHourlyDto?
+        ): PollenData? {
+            if (hourly == null || hourly.time.isEmpty()) return null
 
-        // Find hourly indices that correspond to this date
-        val dateIndices = hourly.time.indices.filter { idx ->
-            runCatching { LocalDate.parse(hourly.time[idx].substringBefore("T")) }.getOrNull() == date
-        }
-        if (dateIndices.isEmpty()) return null
-
-        fun peak(values: List<Double?>?): Double {
-            if (values == null) return 0.0
-            return dateIndices.mapNotNull { values.getOrNull(it) }.maxOrNull() ?: 0.0
-        }
-
-        val grassPeak = peak(hourly.grassPollen)
-        val birchPeak = peak(hourly.birchPollen)
-        val alderPeak = peak(hourly.alderPollen)
-        val olivePeak = peak(hourly.olivePollen)
-        val treePeak = maxOf(birchPeak, alderPeak, olivePeak)
-        val ragweedPeak = peak(hourly.ragweedPollen)
-        val mugwortPeak = peak(hourly.mugwortPollen)
-        val weedPeak = maxOf(ragweedPeak, mugwortPeak)
-
-        val totalPollen = grassPeak + treePeak + weedPeak
-        if (totalPollen <= 0.0) return null
-
-        val grassType = mapPollenTypeFromConcentration("GRASS", "Grass", grassPeak, isTree = false)
-        val treeType = mapPollenTypeFromConcentration("TREE", "Tree", treePeak, isTree = true)
-        val weedType = mapPollenTypeFromConcentration("WEED", "Weed", weedPeak, isTree = false)
-
-        val dominantPlants = mutableListOf<PlantPollen>()
-        if (birchPeak > 0) dominantPlants.add(PlantPollen("BIRCH", "Birch", inSeason = true))
-        if (alderPeak > 0) dominantPlants.add(PlantPollen("ALDER", "Alder", inSeason = true))
-        if (olivePeak > 0) dominantPlants.add(PlantPollen("OLIVE", "Olive", inSeason = true))
-        if (grassPeak > 0) dominantPlants.add(PlantPollen("GRASS", "Grass", inSeason = true))
-        if (ragweedPeak > 0) dominantPlants.add(PlantPollen("RAGWEED", "Ragweed", inSeason = true))
-        if (mugwortPeak > 0) dominantPlants.add(PlantPollen("MUGWORT", "Mugwort", inSeason = true))
-
-        val pollenData = PollenData(
-            grassPollen = grassType,
-            treePollen = treeType,
-            weedPollen = weedType,
-            dominantPlants = dominantPlants,
-            healthRecommendations = emptyList()
-        )
-
-        return if (pollenData.hasData) pollenData else null
-    }
-
-    private fun mapPollenTypeFromConcentration(
-        code: String,
-        displayName: String,
-        peakValue: Double,
-        isTree: Boolean
-    ): PollenType? {
-        if (peakValue <= 0.0) return null
-
-        val (indexValue, category) = if (isTree) {
-            when {
-                peakValue <= 10.0 -> 2 to "Low"
-                peakValue <= 100.0 -> 3 to "Moderate"
-                peakValue <= 1000.0 -> 4 to "High"
-                else -> 5 to "Very High"
+            // Find hourly indices that correspond to this date
+            val dateIndices = hourly.time.indices.filter { idx ->
+                runCatching { LocalDate.parse(hourly.time[idx].substringBefore("T")) }.getOrNull() == date
             }
-        } else {
-            when {
-                peakValue <= 10.0 -> 2 to "Low"
-                peakValue <= 50.0 -> 3 to "Moderate"
-                peakValue <= 200.0 -> 4 to "High"
-                else -> 5 to "Very High"
+            if (dateIndices.isEmpty()) return null
+
+            fun peak(values: List<Double?>?): Double {
+                if (values == null) return 0.0
+                return dateIndices.mapNotNull { values.getOrNull(it) }.maxOrNull() ?: 0.0
             }
+
+            val grassPeak = peak(hourly.grassPollen)
+            val birchPeak = peak(hourly.birchPollen)
+            val alderPeak = peak(hourly.alderPollen)
+            val olivePeak = peak(hourly.olivePollen)
+            val treePeak = maxOf(birchPeak, alderPeak, olivePeak)
+            val ragweedPeak = peak(hourly.ragweedPollen)
+            val mugwortPeak = peak(hourly.mugwortPollen)
+            val weedPeak = maxOf(ragweedPeak, mugwortPeak)
+
+            val totalPollen = grassPeak + treePeak + weedPeak
+            if (totalPollen <= 0.0) return null
+
+            val grassType = mapPollenTypeFromConcentration("GRASS", "Grass", grassPeak, isTree = false)
+            val treeType = mapPollenTypeFromConcentration("TREE", "Tree", treePeak, isTree = true)
+            val weedType = mapPollenTypeFromConcentration("WEED", "Weed", weedPeak, isTree = false)
+
+            val dominantPlants = mutableListOf<PlantPollen>()
+            if (birchPeak > 0) dominantPlants.add(PlantPollen("BIRCH", "Birch", inSeason = true))
+            if (alderPeak > 0) dominantPlants.add(PlantPollen("ALDER", "Alder", inSeason = true))
+            if (olivePeak > 0) dominantPlants.add(PlantPollen("OLIVE", "Olive", inSeason = true))
+            if (grassPeak > 0) dominantPlants.add(PlantPollen("GRASS", "Grass", inSeason = true))
+            if (ragweedPeak > 0) dominantPlants.add(PlantPollen("RAGWEED", "Ragweed", inSeason = true))
+            if (mugwortPeak > 0) dominantPlants.add(PlantPollen("MUGWORT", "Mugwort", inSeason = true))
+
+            val pollenData = PollenData(
+                grassPollen = grassType,
+                treePollen = treeType,
+                weedPollen = weedType,
+                dominantPlants = dominantPlants,
+                healthRecommendations = emptyList()
+            )
+
+            return if (pollenData.hasData) pollenData else null
         }
 
-        return PollenType(
-            code = code,
-            displayName = displayName,
-            inSeason = true,
-            indexValue = indexValue,
-            category = category
-        )
+        internal fun mapPollenTypeFromConcentration(
+            code: String,
+            displayName: String,
+            peakValue: Double,
+            isTree: Boolean
+        ): PollenType? {
+            if (peakValue <= 0.0) return null
+
+            val (indexValue, category) = if (isTree) {
+                when {
+                    peakValue <= 10.0 -> 2 to "Low"
+                    peakValue <= 100.0 -> 3 to "Moderate"
+                    peakValue <= 1000.0 -> 4 to "High"
+                    else -> 5 to "Very High"
+                }
+            } else {
+                when {
+                    peakValue <= 10.0 -> 2 to "Low"
+                    peakValue <= 50.0 -> 3 to "Moderate"
+                    peakValue <= 200.0 -> 4 to "High"
+                    else -> 5 to "Very High"
+                }
+            }
+
+            return PollenType(
+                code = code,
+                displayName = displayName,
+                inSeason = true,
+                indexValue = indexValue,
+                category = category
+            )
+        }
     }
 
     fun mapGeoLocation(dto: GeoLocationDto): Location {

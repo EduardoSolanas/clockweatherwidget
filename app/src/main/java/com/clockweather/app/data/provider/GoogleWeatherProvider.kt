@@ -4,6 +4,7 @@ import com.clockweather.app.data.mapper.GoogleWeatherMapper
 import com.clockweather.app.data.remote.api.GoogleAirQualityApi
 import com.clockweather.app.data.remote.api.GooglePollenApi
 import com.clockweather.app.data.remote.api.GoogleWeatherApi
+import com.clockweather.app.data.remote.api.OpenMeteoAirQualityApi
 import com.clockweather.app.data.remote.dto.google.GoogleAirQualityLocationDto
 import com.clockweather.app.data.remote.dto.google.GoogleAirQualityRequestDto
 import com.clockweather.app.domain.model.Location
@@ -19,12 +20,14 @@ import javax.inject.Named
  * and merges them into a single [WeatherData] domain object.
  *
  * Google Weather API supports up to 10 forecast days; requests above that are capped.
- * Google Pollen API supports up to 5 forecast days.
+ * Google Pollen API supports up to 5 forecast days; when >5 days are requested, Open-Meteo Air Quality is used
+ * as a seamless fallback so days 6..10 retain complete allergy & pollen forecast data.
  */
 class GoogleWeatherProvider @Inject constructor(
     private val googleWeatherApi: GoogleWeatherApi,
     private val googlePollenApi: GooglePollenApi,
     private val googleAirQualityApi: GoogleAirQualityApi,
+    private val openMeteoAirQualityApi: OpenMeteoAirQualityApi,
     @Named("googleWeatherApiKey") private val apiKey: String,
     private val mapper: GoogleWeatherMapper
 ) : WeatherDataProvider {
@@ -70,12 +73,26 @@ class GoogleWeatherProvider @Inject constructor(
             }
 
             val pollenDeferred = async {
-                runCatching {
+                val googlePollen = runCatching {
                     val pollenDays = days.coerceIn(1, 5)
                     googlePollenApi.getPollenForecast(apiKey, lat, lon, days = pollenDays)
                 }.onFailure {
-                    android.util.Log.w("GoogleWeatherProvider", "Failed to fetch pollen data", it)
+                    android.util.Log.w("GoogleWeatherProvider", "Failed to fetch Google pollen data", it)
                 }.getOrNull()
+
+                val openMeteoPollen = if (days > 5 || googlePollen == null) {
+                    runCatching {
+                        openMeteoAirQualityApi.getAirQuality(
+                            latitude = lat,
+                            longitude = lon,
+                            forecastDays = days
+                        )
+                    }.onFailure {
+                        android.util.Log.w("GoogleWeatherProvider", "Failed to fetch Open-Meteo pollen fallback", it)
+                    }.getOrNull()
+                } else null
+
+                Pair(googlePollen, openMeteoPollen)
             }
 
             val airQualityDeferred = async {
@@ -91,16 +108,17 @@ class GoogleWeatherProvider @Inject constructor(
                 }.getOrNull()
             }
 
+            val pollenResult = pollenDeferred.await()
+
             mapper.mapToWeatherData(
                 current = currentDeferred.await(),
                 hourly  = hourlyDeferred.await(),
                 daily   = dailyDeferred.await(),
-                pollen  = pollenDeferred.await(),
+                pollen  = pollenResult.first,
+                openMeteoPollen = pollenResult.second,
                 airQuality = airQualityDeferred.await(),
                 location = location
             )
         }
 
 }
-
-
