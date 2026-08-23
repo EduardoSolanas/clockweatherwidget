@@ -29,6 +29,7 @@ interface GoogleWeatherApi {
         @Query("key") apiKey: String,
         @Query("location.latitude") latitude: Double,
         @Query("location.longitude") longitude: Double,
+        @Query("hours") hours: Int? = null,
         @Query("pageSize") pageSize: Int = 24,
         @Query("pageToken") pageToken: String? = null,
         @Query("unitsSystem") unitsSystem: String = "METRIC",
@@ -43,7 +44,8 @@ interface GoogleWeatherApi {
         @Query("key") apiKey: String,
         @Query("location.latitude") latitude: Double,
         @Query("location.longitude") longitude: Double,
-        @Query("pageSize") pageSize: Int = 7,
+        @Query("days") days: Int? = null,
+        @Query("pageSize") pageSize: Int? = null,
         @Query("unitsSystem") unitsSystem: String = "METRIC",
         @Query("languageCode") languageCode: String = "en"
     ): GoogleDailyForecastResponseDto

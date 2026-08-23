@@ -50,6 +50,7 @@ class GoogleWeatherProvider @Inject constructor(
                         apiKey = apiKey,
                         latitude = lat,
                         longitude = lon,
+                        hours = totalTargetHours,
                         pageSize = 24,
                         pageToken = pageToken
                     )
@@ -65,7 +66,7 @@ class GoogleWeatherProvider @Inject constructor(
             }
 
             val dailyDeferred = async {
-                googleWeatherApi.getDailyForecast(apiKey, lat, lon, pageSize = days)
+                googleWeatherApi.getDailyForecast(apiKey, lat, lon, days = days, pageSize = days)
             }
 
             val pollenDeferred = async {
