@@ -170,7 +170,7 @@ Reference: [Advanced widget update guidance](https://developer.android.com/devel
 
 ### 5.1 Android 12+ responsive `RemoteViews`
 
-**Status: re-enabled, on measured evidence. Two breakpoints per provider.**
+**Status: profiling done and acted on. Breakpoints deliberately not used.**
 
 The first attempt was withdrawn because `buildViews()` accepted `targetWidthDp` / `targetHeightDp` and never read either one. Every breakpoint produced a byte-identical `RemoteViews`, so the map multiplied the payload for no benefit. The test that shipped with it compared a hardcoded breakpoint list to itself and could not fail.
 
@@ -185,19 +185,17 @@ With both corrected, the measurement surfaced a live bug unrelated to responsive
 
 **Fix.** `WidgetForecastIconMaxDimensionPx = 128` caps row icons separately from the hero icon. Worst case drops to 484,156 bytes, a 46% reduction, with no visible change at their display size.
 
-**Responsive design that follows from the numbers.** `WidgetSizeClass` resolves `COMPACT` / `REGULAR` from rendered dp. Below `ForecastRowMinHeightDp` (150dp) the forecast row is **skipped, not hidden** - setting the container `GONE` would still parcel five bitmaps, which is the entire cost being avoided. `bindExtra` takes the size class and each updater honours it.
+**Responsive breakpoints: not adopted.** A breakpoint map parcels every mapped view into one transaction, so it only pays off if smaller sizes bind *less*. In these widgets the only content worth dropping is the five-day forecast row - the reason the widgets exist. Dropping it would have meant a widget named Forecast showing no forecast at its minimum resize height of 120dp. Keeping it means paying for duplicate identical views. Neither is worth a smoother resize animation, so  returns  and each widget ships one layout.
 
-Measured payloads, worst-case CLAY_3D, against a 700KB working ceiling:
+This is a decision, not an omission. If breakpoints are ever revisited,  must prove the **summed** transaction fits, and the smaller tier has to drop something the user genuinely does not need at that size.
 
-| Provider | Single view | Two breakpoints summed |
+Measured single-view payloads, worst-case CLAY_3D, against the ~1MB launcher budget:
+
+| Provider | Before row-icon cap | After |
 | :--- | ---: | ---: |
-| Compact | 153,504 | 306,952 |
-| Extended | 484,156 | 638,244 |
-| Forecast | 484,108 | 638,148 |
-
-**Two breakpoints per provider, not three.** A third full-content view would exceed the budget at CLAY_3D. That is a measured constraint, not a style preference - if content tiers are added later, the summed payload has to be re-measured.
-
-**Tests assert rendered output, never configuration:** that a compact breakpoint renders smaller than a regular one, that the compact tier drops more than 200KB of row icons (proving the rows are unbound rather than hidden), that a provider with no size-varying content renders identically at both sizes, and that the summed map fits the budget at every icon style.
+| Compact | 153,512 | 153,512 |
+| Extended | 893,764 | 484,164 |
+| Forecast | 893,716 | 484,116 |
 
 ### 5.2 Pre-12 clock size variants
 
@@ -305,9 +303,9 @@ Reference: [Jetpack Glance](https://developer.android.com/develop/ui/compose/gla
 | Watchdog freshness & staleness check unification | **P1** | Low | Ensures 30-min callback and batch redraws schedule refresh if stale | **Completed (Phase 1 Delivered)** |
 | Local day/night display mapping | **P2** | Low-Medium | More timely visual state | **Completed (Phase 1 Delivered)** |
 | Tabular-number hint (`tnum`) | **P3** | Minimal | Small OEM typography defence | **Completed (Phase 1 Delivered)** |
-| Android 12+ responsive layouts | **Done** (`c270725`) | Medium | Two measured breakpoints per provider; compact tier drops the forecast row | - |
-| Cap forecast row icons (128px) | **Done** (`c270725`) | Low | Worst-case update 894KB -> 484KB | - |
-| Payload + rasterisation measurement | **Done** (`c270725`) | Low | Budget test guards every icon style | - |
+| Android 12+ responsive layouts | **Not adopted** | Medium | Only pays off by dropping the forecast row; not worth it | See 5.1 |
+| Cap forecast row icons (128px) | **Done** | Low | Worst-case update 894KB -> 484KB, no visible change | - |
+| Payload + rasterisation measurement | **Done** | Low | Budget test guards every icon style | - |
 | Watchdog CPU/battery on-device | **P1 - open** | Low-Medium | Needs the OEM device that showed the deferral | Hardware |
 | Pre-12 layout variants | **P2** | Medium-High | Older-device size customization | Device evidence |
 | Forecast-derived temperature fallback/interpolation | **P2/P3** | Medium | Cosmetic progression with accuracy trade-off | Screen-wake redraw and product policy |

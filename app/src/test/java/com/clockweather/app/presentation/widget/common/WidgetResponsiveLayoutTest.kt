@@ -21,12 +21,13 @@ import org.robolectric.annotation.Config
 import java.time.LocalDateTime
 
 /**
- * Responsive layouts must change what is *bound*, not merely how it is styled.
+ * Responsive breakpoints are deliberately not used.
  *
- * The withdrawn first attempt passed size hints into `buildViews` that were never read, so every
- * breakpoint produced an identical view and the only effect was a multiplied payload. The test
- * that shipped alongside it asserted the hardcoded breakpoint list equalled the hardcoded
- * breakpoint list, so it could not fail. These tests assert on rendered output instead.
+ * A breakpoint map parcels every mapped view into one transaction, so it only pays off if smaller
+ * sizes bind *less*. The only content worth dropping in these widgets is the five-day forecast
+ * row — the reason the widgets exist — so the trade never came out in the user's favour. This
+ * test pins that decision: if breakpoints are ever re-introduced, the payload budget test must
+ * prove the summed transaction still fits.
  */
 @RunWith(RobolectricTestRunner::class)
 class WidgetResponsiveLayoutTest {
@@ -50,86 +51,12 @@ class WidgetResponsiveLayoutTest {
 
     @Test
     @Config(sdk = [31])
-    fun `a forecast-capable widget binds a smaller payload at its compact breakpoint`() {
-        listOf(
-            "extended" to ExtendedWidgetUpdater(context, appWidgetManager, entryPoint),
-            "forecast" to ForecastWidgetUpdater(context, appWidgetManager, entryPoint),
-        ).forEach { (name, updater) ->
-            val breakpoints = updater.getResponsiveSizeBreakpoints()
-            assertTrue("$name should declare breakpoints on API 31+", breakpoints.size >= 2)
-
-            val smallest = breakpoints.minByOrNull { it.height }!!
-            val largest = breakpoints.maxByOrNull { it.height }!!
-
-            val small = parcelSize(updater.buildViews(1, snapshot(), smallest.width, smallest.height))
-            val large = parcelSize(updater.buildViews(1, snapshot(), largest.width, largest.height))
-
-            assertTrue(
-                "$name renders $small bytes at ${smallest.height}dp and $large at " +
-                    "${largest.height}dp — the compact breakpoint must bind less, otherwise the " +
-                    "breakpoint map only multiplies the payload",
-                small < large
-            )
-        }
-    }
-
-    @Test
-    @Config(sdk = [31])
-    fun `the compact breakpoint drops the forecast row rather than hiding it`() {
-        val updater = ForecastWidgetUpdater(context, appWidgetManager, entryPoint)
-
-        val compact = parcelSize(updater.buildViews(1, snapshot(), 180f, 120f))
-        val regular = parcelSize(updater.buildViews(1, snapshot(), 350f, 220f))
-
-        // Five CLAY_3D row icons at the forecast cap are ~65KB each. Merely setting the container
-        // GONE would still parcel them, leaving the two sizes within noise of each other.
-        assertTrue(
-            "compact=$compact regular=$regular — the difference ($${regular - compact}) is too " +
-                "small to represent five unbound row icons",
-            regular - compact > 200_000
-        )
-    }
-
-    @Test
-    @Config(sdk = [31])
-    fun `a widget with no forecast row renders the same at both breakpoints`() {
-        val updater = CompactWidgetUpdater(context, appWidgetManager, entryPoint)
-        val breakpoints = updater.getResponsiveSizeBreakpoints()
-
-        val sizes = breakpoints.map {
-            parcelSize(updater.buildViews(1, snapshot(), it.width, it.height))
-        }.distinct()
-
-        assertEquals(
-            "compact has no size-varying content, so every breakpoint should render identically",
-            1, sizes.size
-        )
-    }
-
-    @Test
-    @Config(sdk = [29])
-    fun `pre-Android 12 declares no breakpoints and uses the single layout`() {
+    fun `no provider declares breakpoints, on any API level`() {
         listOf(
             CompactWidgetUpdater(context, appWidgetManager, entryPoint),
             ExtendedWidgetUpdater(context, appWidgetManager, entryPoint),
             ForecastWidgetUpdater(context, appWidgetManager, entryPoint),
         ).forEach { assertTrue(it.getResponsiveSizeBreakpoints().isEmpty()) }
-    }
-
-    @Test
-    @Config(sdk = [31])
-    fun `every declared breakpoint is at least the provider minimum resize size`() {
-        // Breakpoints below minResize would never be selected; above the provider minimum they
-        // would leave the smallest real size unmapped.
-        mapOf(
-            ExtendedWidgetUpdater(context, appWidgetManager, entryPoint) to (400f to 140f),
-            ForecastWidgetUpdater(context, appWidgetManager, entryPoint) to (180f to 120f),
-            CompactWidgetUpdater(context, appWidgetManager, entryPoint) to (180f to 110f),
-        ).forEach { (updater, minResize) ->
-            val smallest = updater.getResponsiveSizeBreakpoints().minByOrNull { it.width }!!
-            assertEquals(minResize.first, smallest.width, 0.1f)
-            assertEquals(minResize.second, smallest.height, 0.1f)
-        }
     }
 
     private fun parcelSize(views: RemoteViews): Int {
