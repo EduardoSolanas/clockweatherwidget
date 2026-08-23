@@ -96,6 +96,53 @@ abstract class BaseWidgetUpdater(
             val weather = weatherRepo.getWeatherData(location).first()
             return WidgetRenderSnapshot(prefs, location, weather, clockSnapshot)
         }
+
+        /**
+         * Whether [snapshot] is too old, or covers too few forecast days, for a widget that
+         * requires [minimumFutureForecastDaysRequired] future days.
+         *
+         * Pure so the decision can be tested without a scheduler; [scheduleRefreshIfStale]
+         * is the side-effecting wrapper.
+         */
+        internal fun shouldScheduleRefresh(
+            snapshot: WidgetRenderSnapshot,
+            minimumFutureForecastDaysRequired: Int,
+            currentInstant: java.time.Instant = java.time.Instant.now(),
+        ): Boolean {
+            val refreshIntervalMinutes = SettingsViewModel.normalizeWeatherRefreshInterval(
+                snapshot.prefs[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]
+            )
+            val weather = snapshot.weather
+            val referenceDateTime = weather?.locationReferenceDateTime(currentInstant)
+                ?: java.time.LocalDateTime.ofInstant(currentInstant, java.time.ZoneId.systemDefault())
+            val requiredForecastDays = requiredForecastDaysForRefresh(
+                requestedForecastDays = 7,
+                minimumFutureForecastDaysRequired = minimumFutureForecastDaysRequired,
+            )
+            return !isWeatherDataFresh(
+                weather,
+                referenceDateTime,
+                requiredForecastDays,
+                maxAgeMinutes = refreshIntervalMinutes.toLong(),
+            )
+        }
+
+        /**
+         * Enqueues a freshness-gated refresh when [snapshot] is stale.
+         *
+         * [updateWidget] only checks freshness when it builds its own snapshot, so every
+         * caller that passes a shared snapshot must call this once per batch. Skipping it
+         * leaves the widget redrawing stale data forever — the regression fixed in d252045.
+         */
+        internal fun scheduleRefreshIfStale(
+            context: Context,
+            snapshot: WidgetRenderSnapshot,
+            minimumFutureForecastDaysRequired: Int,
+        ) {
+            if (shouldScheduleRefresh(snapshot, minimumFutureForecastDaysRequired)) {
+                WeatherUpdateScheduler.scheduleImmediateRefresh(context)
+            }
+        }
     }
 
     /**
@@ -310,22 +357,10 @@ abstract class BaseWidgetUpdater(
                     prefs[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]
                 )
 
+                // Callers that pass a shared snapshot own the freshness check for the whole
+                // batch, so it is only performed here when this call built its own snapshot.
                 if (snapshot == null) {
-                    val weather = renderSnapshot.weather
-                    val referenceDateTime = weather?.locationReferenceDateTime() ?: java.time.LocalDateTime.now()
-                    val requiredForecastDays = requiredForecastDaysForRefresh(
-                        requestedForecastDays = 7,
-                        minimumFutureForecastDaysRequired = minimumFutureForecastDaysRequired,
-                    )
-                    if (!isWeatherDataFresh(
-                            weather,
-                            referenceDateTime,
-                            requiredForecastDays,
-                            maxAgeMinutes = refreshIntervalMinutes.toLong(),
-                        )
-                    ) {
-                        WeatherUpdateScheduler.scheduleImmediateRefresh(context)
-                    }
+                    scheduleRefreshIfStale(context, renderSnapshot, minimumFutureForecastDaysRequired)
                 }
 
                 val finalViews = if (android.os.Build.VERSION.SDK_INT >= 31) {

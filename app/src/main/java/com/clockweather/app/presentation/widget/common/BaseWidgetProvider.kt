@@ -1,4 +1,4 @@
-package com.clockweather.app.presentation.widget.common
+﻿package com.clockweather.app.presentation.widget.common
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -18,7 +18,7 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    /** All weather widget provider classes — used to check whether any weather widget remains placed. */
+    /** All weather widget provider classes â€” used to check whether any weather widget remains placed. */
     private val weatherProviderClasses = listOf(
         com.clockweather.app.presentation.widget.compact.CompactWidgetProvider::class.java,
         com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider::class.java,
@@ -77,6 +77,13 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
                 val updater = getUpdater(context, appWidgetManager, entryPoint)
                 val renderSnapshot = BaseWidgetUpdater.createRenderSnapshot(context, entryPoint)
                 appWidgetIds.forEach { updater.updateWidget(it, renderSnapshot) }
+                // This is the 30-minute host callback acting as freshness watchdog: the shared
+                // snapshot suppresses the per-widget check, so the batch must schedule here.
+                BaseWidgetUpdater.scheduleRefreshIfStale(
+                    context,
+                    renderSnapshot,
+                    updater.minimumFutureForecastDaysRequired,
+                )
             } catch (e: Throwable) {
                 Log.e("ClockWeatherApp", "onUpdate failed for ${this@BaseWidgetProvider::class.simpleName}", e)
                 appWidgetIds.forEach { id ->

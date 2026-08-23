@@ -17,10 +17,7 @@ import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
 import com.clockweather.app.presentation.widget.extended.ExtendedWidgetProvider
 import com.clockweather.app.presentation.widget.forecast.ForecastWidgetProvider
-import com.clockweather.app.domain.model.locationReferenceDateTime
-import com.clockweather.app.domain.model.isWeatherDataFresh
 import com.clockweather.app.presentation.widget.common.BaseWidgetUpdater
-import com.clockweather.app.presentation.widget.common.requiredForecastDaysForRefresh
 import com.clockweather.app.receiver.ScreenWakeReceiver
 import com.clockweather.app.util.WidgetPrefsCache
 import com.clockweather.app.util.dataStore
@@ -106,17 +103,15 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         val mgr = AppWidgetManager.getInstance(context)
         try {
             val entryPoint = EntryPointAccessors.fromApplication(context, WidgetEntryPoint::class.java)
-            val renderSnapshot = com.clockweather.app.presentation.widget.common.BaseWidgetUpdater.createRenderSnapshot(context, entryPoint)
+            val renderSnapshot = BaseWidgetUpdater.createRenderSnapshot(context, entryPoint)
             val providers = listOf(
                 CompactWidgetProvider(),
                 ExtendedWidgetProvider(),
                 ForecastWidgetProvider()
             )
-            var hasStaleData = false
-            val refreshIntervalMinutes = com.clockweather.app.presentation.settings.SettingsViewModel.normalizeWeatherRefreshInterval(
-                renderSnapshot.prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]
-            )
-            val referenceDateTime = renderSnapshot.weather?.locationReferenceDateTime() ?: java.time.LocalDateTime.now()
+            // Strictest forecast-day requirement among the providers that actually have
+            // widgets placed; null means none are placed, so nothing needs refreshing.
+            var forecastDaysRequired: Int? = null
 
             providers.forEach { provider ->
                 val component = ComponentName(context, provider::class.java)
@@ -125,26 +120,16 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                 if (ids.isNotEmpty()) {
                     val updater = provider.getUpdater(context.applicationContext, mgr, entryPoint)
                     ids.forEach { id -> updater.updateWidget(id, renderSnapshot) }
-                    if (!hasStaleData) {
-                        val requiredForecastDays = com.clockweather.app.presentation.widget.common.requiredForecastDaysForRefresh(
-                            requestedForecastDays = 7,
-                            minimumFutureForecastDaysRequired = updater.minimumFutureForecastDaysRequired,
-                        )
-                        if (!com.clockweather.app.domain.model.isWeatherDataFresh(
-                                renderSnapshot.weather,
-                                referenceDateTime,
-                                requiredForecastDays,
-                                maxAgeMinutes = refreshIntervalMinutes.toLong(),
-                            )
-                        ) {
-                            hasStaleData = true
-                        }
-                    }
+                    forecastDaysRequired = maxOf(
+                        forecastDaysRequired ?: 0,
+                        updater.minimumFutureForecastDaysRequired,
+                    )
                 }
             }
 
-            if (hasStaleData) {
-                com.clockweather.app.worker.WeatherUpdateScheduler.scheduleImmediateRefresh(context)
+            // The shared snapshot suppresses the per-widget check, so schedule once per batch.
+            forecastDaysRequired?.let { daysRequired ->
+                BaseWidgetUpdater.scheduleRefreshIfStale(context, renderSnapshot, daysRequired)
             }
         } catch (e: Exception) {
             android.util.Log.e("ClockWeatherApp", "Failed to refresh widgets", e)
