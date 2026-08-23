@@ -37,13 +37,37 @@ class WidgetIconTargetSizeTest {
         )
     }
 
+    /**
+     * The previous version of this test asserted six icons at the hero cap against a flat 1MB.
+     * With the 512x512 CLAY_3D source that is 884,736 bytes - under 1MB, so it passed, while the
+     * real Extended widget was shipping 893,764 bytes per update. It measured a hypothetical and
+     * called it safe. Real payloads are measured end to end in WidgetPayloadBudgetTest; this test
+     * now only guards the relationship between the two caps.
+     */
     @Test
-    fun `six icons stay under the 1MB RemoteViews transaction budget`() {
-        val (w, h) = widgetIconTargetSize(264, 248)
-        val bytesPerIcon = w * h * 4 // ARGB_8888
+    fun `row icons are capped well below the hero icon`() {
+        val (heroW, heroH) = widgetIconTargetSize(512, 512)
+        val (rowW, rowH) = widgetIconTargetSize(512, 512, WidgetForecastIconMaxDimensionPx)
+
+        val heroBytes = heroW * heroH * 4
+        val rowBytes = rowW * rowH * 4
+
         assertTrue(
-            "six icons ($bytesPerIcon bytes each) must fit the launcher budget",
-            bytesPerIcon * 6 < 1_000_000,
+            "row icons ($rowBytes bytes) must cost materially less than the hero icon ($heroBytes)",
+            rowBytes * 2 < heroBytes,
+        )
+    }
+
+    @Test
+    fun `a hero icon plus five row icons leaves headroom in the transaction budget`() {
+        val (heroW, heroH) = widgetIconTargetSize(512, 512)
+        val (rowW, rowH) = widgetIconTargetSize(512, 512, WidgetForecastIconMaxDimensionPx)
+
+        val total = heroW * heroH * 4 + 5 * rowW * rowH * 4
+        assertTrue(
+            "one hero plus five row icons is $total bytes; a single view should leave room for a " +
+                "second responsive breakpoint in the same transaction",
+            total * 2 < 1_000_000,
         )
     }
 }
