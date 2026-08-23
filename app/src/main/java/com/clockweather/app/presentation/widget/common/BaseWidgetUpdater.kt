@@ -66,8 +66,18 @@ abstract class BaseWidgetUpdater(
      */
     open fun getResponsiveSizeBreakpoints(): List<SizeF> = emptyList()
 
-    /** Called after weather data is available. Subclasses apply their specific bindings. */
-    abstract fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences)
+    /**
+     * Called after weather data is available. [sizeClass] tells the subclass how much to bind:
+     * a responsive breakpoint map parcels every mapped view together, so smaller sizes must bind
+     * less, not merely look different.
+     */
+    abstract fun bindExtra(
+        views: RemoteViews,
+        weather: WeatherData,
+        tempUnit: TemperatureUnit,
+        prefs: Preferences,
+        sizeClass: WidgetSizeClass,
+    )
 
     companion object {
         /**
@@ -191,6 +201,8 @@ abstract class BaseWidgetUpdater(
             context.resources.getDimension(dimHeight), fontScale, widgetTextScale,
         )
         val gapPx = context.resources.getDimension(com.clockweather.app.R.dimen.flip_digit_gap)
+
+        val sizeClass = WidgetSizeClass.forSize(targetWidthDp, targetHeightDp)
 
         val views = RemoteViews(context.packageName, layoutResId)
 
@@ -335,7 +347,7 @@ abstract class BaseWidgetUpdater(
         val weather = snapshot.weather
         if (weather != null) {
             WidgetDataBinder.bindWeatherViews(context, views, weather, tempUnit, weatherIconStyle, iconViewId = weatherIconViewId)
-            bindExtra(views, weather, tempUnit, prefs)
+            bindExtra(views, weather, tempUnit, prefs, sizeClass)
         } else {
             WidgetDataBinder.bindWeatherUnavailableViews(context, views, weatherIconStyle, iconViewId = weatherIconViewId)
         }
@@ -420,6 +432,27 @@ abstract class BaseWidgetUpdater(
                 views.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_PX, widgetTextPx(context.resources, WidgetTextRole.FORECAST_META, widgetTextScale))
             }
         }
+    }
+
+    /**
+     * Binds the weekly forecast row, or drops it entirely when the size class cannot show it.
+     *
+     * Skipping the bind is the point. Merely hiding the container would still parcel five icon
+     * bitmaps into the transaction — the cost this is here to avoid.
+     */
+    protected fun bindForecastRowForSize(
+        views: RemoteViews,
+        weather: WeatherData,
+        tempUnit: TemperatureUnit,
+        iconStyle: WeatherIconMapper.IconStyle,
+        sizeClass: WidgetSizeClass,
+    ) {
+        if (sizeClass == WidgetSizeClass.COMPACT) {
+            views.setViewVisibility(com.clockweather.app.R.id.forecast_container, View.GONE)
+            return
+        }
+        views.setViewVisibility(com.clockweather.app.R.id.forecast_container, View.VISIBLE)
+        WidgetDataBinder.bindWeeklyForecastRows(context, views, weather, tempUnit, iconStyle = iconStyle)
     }
 
     private fun bindAllClicks(views: RemoteViews, appWidgetId: Int) {

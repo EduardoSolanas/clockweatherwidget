@@ -80,6 +80,7 @@ class BaseWidgetUpdaterTest {
             weather: WeatherData,
             tempUnit: TemperatureUnit,
             prefs: Preferences,
+            sizeClass: WidgetSizeClass,
         ) {
         }
     }
@@ -99,6 +100,7 @@ class BaseWidgetUpdaterTest {
             weather: WeatherData,
             tempUnit: TemperatureUnit,
             prefs: Preferences,
+            sizeClass: WidgetSizeClass,
         ) {
         }
     }

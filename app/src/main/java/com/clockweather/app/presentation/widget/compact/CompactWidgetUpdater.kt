@@ -2,6 +2,7 @@ package com.clockweather.app.presentation.widget.compact
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.os.Build
 import android.util.SizeF
 import android.view.View
 import android.widget.RemoteViews
@@ -12,6 +13,7 @@ import com.clockweather.app.di.WidgetEntryPoint
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.presentation.widget.common.BaseWidgetUpdater
+import com.clockweather.app.presentation.widget.common.WidgetSizeClass
 
 class CompactWidgetUpdater(
     context: Context,
@@ -23,10 +25,24 @@ class CompactWidgetUpdater(
     override val rootViewId = R.id.widget_root
     override val dateViewId = R.id.widget_date
 
-    // Disabled pending size-differentiated layout variants and Binder parcel payload profiling.
-    override fun getResponsiveSizeBreakpoints(): List<SizeF> = emptyList()
+    // Compact has no forecast row, so both breakpoints bind the same content;
+    // the payload budget test proves the pair still fits one transaction.
+    override fun getResponsiveSizeBreakpoints(): List<SizeF> {
+        return if (Build.VERSION.SDK_INT >= 31) {
+            listOf(
+                SizeF(180f, 110f),
+                SizeF(250f, 180f),
+            )
+        } else emptyList()
+    }
 
-    override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
+    override fun bindExtra(
+        views: RemoteViews,
+        weather: WeatherData,
+        tempUnit: TemperatureUnit,
+        prefs: Preferences,
+        sizeClass: WidgetSizeClass,
+    ) {
         val showToday = prefs[booleanPreferencesKey("show_today_compact")] ?: true
         views.setViewVisibility(R.id.weather_card, if (showToday) View.VISIBLE else View.GONE)
     }

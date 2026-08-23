@@ -2,6 +2,7 @@ package com.clockweather.app.presentation.widget.forecast
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.os.Build
 import android.util.SizeF
 import android.widget.RemoteViews
 import androidx.datastore.preferences.core.Preferences
@@ -11,6 +12,7 @@ import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.presentation.widget.common.BaseWidgetUpdater
+import com.clockweather.app.presentation.widget.common.WidgetSizeClass
 import com.clockweather.app.presentation.widget.common.WeatherIconMapper
 import com.clockweather.app.presentation.widget.common.WidgetDataBinder
 
@@ -27,14 +29,27 @@ class ForecastWidgetUpdater(
     override val widgetPaddingDp = 10f
     override val hasForecastViews = true
 
-    // Disabled pending size-differentiated layout variants and Binder parcel payload profiling.
-    // Prevents shipping 3x identical 6-icon layouts (~2.6MB) exceeding the 1MB Binder transaction limit.
-    override fun getResponsiveSizeBreakpoints(): List<SizeF> = emptyList()
+    // Two breakpoints, not three: at CLAY_3D a third full-content view would
+    // exceed the transaction budget. See WidgetPayloadBudgetTest.
+    override fun getResponsiveSizeBreakpoints(): List<SizeF> {
+        return if (Build.VERSION.SDK_INT >= 31) {
+            listOf(
+                SizeF(180f, 120f),
+                SizeF(350f, 220f),
+            )
+        } else emptyList()
+    }
 
-    override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
+    override fun bindExtra(
+        views: RemoteViews,
+        weather: WeatherData,
+        tempUnit: TemperatureUnit,
+        prefs: Preferences,
+        sizeClass: WidgetSizeClass,
+    ) {
         val iconStyle = WeatherIconMapper.fromPreferenceValue(
             prefs[SettingsViewModel.KEY_WEATHER_ICON_STYLE] ?: SettingsViewModel.ICON_STYLE_GLASS
         )
-        WidgetDataBinder.bindWeeklyForecastRows(context, views, weather, tempUnit, iconStyle = iconStyle)
+        bindForecastRowForSize(views, weather, tempUnit, iconStyle, sizeClass)
     }
 }

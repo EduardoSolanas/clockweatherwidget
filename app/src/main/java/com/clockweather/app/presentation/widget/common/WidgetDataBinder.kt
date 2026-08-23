@@ -146,7 +146,10 @@ object WidgetDataBinder {
         temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
         today: LocalDate = weatherData.weatherToday(),
         iconStyle: WeatherIconMapper.IconStyle = WeatherIconMapper.IconStyle.GLASS_LAYERED,
-        renderIcon: (Context, Int) -> Bitmap? = ::renderWidgetIconBitmap,
+        // Row icons get their own, smaller cap — see [WidgetForecastIconMaxDimensionPx].
+        renderIcon: (Context, Int) -> Bitmap? = { ctx, resId ->
+            renderWidgetIconBitmap(ctx, resId, WidgetForecastIconMaxDimensionPx)
+        },
     ) {
         data class RowIds(val name: Int, val icon: Int, val high: Int)
         val rows = listOf(
@@ -247,11 +250,26 @@ internal fun widgetIconTargetSize(
     return (w * scale).toInt().coerceAtLeast(1) to (h * scale).toInt().coerceAtLeast(1)
 }
 
+/**
+ * Cap for the small day icons in a weekly forecast row.
+ *
+ * These render at a fraction of the hero icon's on-screen size, but without their own cap they
+ * were rasterised at [WidgetIconMaxDimensionPx] like everything else. With the 512x512 CLAY_3D
+ * source that is 147KB each, and six icons pushed an Extended widget to ~894KB per update —
+ * against a launcher transaction budget of roughly 1MB. Capping the row icons cuts that by more
+ * than half with no visible change at their display size.
+ */
+internal const val WidgetForecastIconMaxDimensionPx = 128
+
 /** Renders a (possibly vector) drawable to a bitmap sized by [widgetIconTargetSize]. */
-internal fun renderWidgetIconBitmap(context: Context, drawableResId: Int): Bitmap? {
+internal fun renderWidgetIconBitmap(
+    context: Context,
+    drawableResId: Int,
+    maxDimensionPx: Int = WidgetIconMaxDimensionPx,
+): Bitmap? {
     return try {
         val drawable = AppCompatResources.getDrawable(context, drawableResId)?.mutate() ?: return null
-        val (w, h) = widgetIconTargetSize(drawable.intrinsicWidth, drawable.intrinsicHeight)
+        val (w, h) = widgetIconTargetSize(drawable.intrinsicWidth, drawable.intrinsicHeight, maxDimensionPx)
         val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         drawable.setBounds(0, 0, w, h)

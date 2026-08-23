@@ -2,6 +2,7 @@ package com.clockweather.app.presentation.widget.extended
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.os.Build
 import android.util.SizeF
 import android.view.View
 import android.widget.RemoteViews
@@ -13,6 +14,7 @@ import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.presentation.widget.common.BaseWidgetUpdater
+import com.clockweather.app.presentation.widget.common.WidgetSizeClass
 import com.clockweather.app.presentation.widget.common.WeatherIconMapper
 import com.clockweather.app.presentation.widget.common.WidgetDataBinder
 
@@ -28,15 +30,29 @@ class ExtendedWidgetUpdater(
     override val widgetPaddingDp = 10f
     override val hasForecastViews = true
 
-    // Disabled pending size-differentiated layout variants and Binder parcel payload profiling.
-    override fun getResponsiveSizeBreakpoints(): List<SizeF> = emptyList()
+    // Below 150dp tall the forecast row is dropped rather than merely hidden,
+    // which is what keeps the summed payload inside the transaction budget.
+    override fun getResponsiveSizeBreakpoints(): List<SizeF> {
+        return if (Build.VERSION.SDK_INT >= 31) {
+            listOf(
+                SizeF(400f, 140f),
+                SizeF(520f, 180f),
+            )
+        } else emptyList()
+    }
 
-    override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
+    override fun bindExtra(
+        views: RemoteViews,
+        weather: WeatherData,
+        tempUnit: TemperatureUnit,
+        prefs: Preferences,
+        sizeClass: WidgetSizeClass,
+    ) {
         val showToday = prefs[booleanPreferencesKey("show_today_extended")] ?: false
         val iconStyle = WeatherIconMapper.fromPreferenceValue(
             prefs[SettingsViewModel.KEY_WEATHER_ICON_STYLE] ?: SettingsViewModel.ICON_STYLE_GLASS
         )
         views.setViewVisibility(R.id.weather_card, if (showToday) View.VISIBLE else View.GONE)
-        WidgetDataBinder.bindWeeklyForecastRows(context, views, weather, tempUnit, iconStyle = iconStyle)
+        bindForecastRowForSize(views, weather, tempUnit, iconStyle, sizeClass)
     }
 }
