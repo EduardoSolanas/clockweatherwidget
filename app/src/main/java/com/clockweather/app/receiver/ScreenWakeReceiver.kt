@@ -4,24 +4,47 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import com.clockweather.app.ClockWeatherApplication
 import com.clockweather.app.worker.WeatherUpdateScheduler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 /**
  * Catches the widget up right when the user is about to look at it.
  *
  * Periodic refreshes are suspended while the device sits in Doze, so widget data
  * can drift hours stale overnight. Screen-on/unlock is the earliest signal that
- * the home screen is about to be visible; the enqueued refresh is freshness-gated
- * (and deduplicated via KEEP), so repeated screen-ons with fresh data cost nothing.
+ * the home screen is about to be visible.
  *
- * SCREEN_ON and USER_PRESENT can only be received by a runtime-registered receiver,
- * so registration lives in Application.onCreate and lasts as long as the process.
+ * In order:
+ * 1. Redraws widgets immediately from local cache off the main thread so the user
+ *    sees immediate updates even while offline or on flaky connectivity.
+ * 2. Enqueues a freshness-gated network refresh via WorkManager (deduplicated via KEEP).
  */
 class ScreenWakeReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_SCREEN_ON || intent.action == Intent.ACTION_USER_PRESENT) {
-            WeatherUpdateScheduler.scheduleImmediateRefresh(context)
+            val pendingResult = runCatching { goAsync() }.getOrNull()
+            CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+                try {
+                    withTimeout(5_000L) {
+                        val app = context.applicationContext as? ClockWeatherApplication
+                        app?.refreshAllWidgets(context)
+                    }
+                } catch (_: Throwable) {
+                } finally {
+                    try {
+                        WeatherUpdateScheduler.scheduleImmediateRefresh(context)
+                    } catch (_: Throwable) {
+                    } finally {
+                        pendingResult?.finish()
+                    }
+                }
+            }
         }
     }
 

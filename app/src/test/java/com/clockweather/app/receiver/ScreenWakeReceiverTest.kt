@@ -2,7 +2,10 @@ package com.clockweather.app.receiver
 
 import android.content.Context
 import android.content.Intent
+import com.clockweather.app.ClockWeatherApplication
 import com.clockweather.app.worker.WeatherUpdateScheduler
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -15,13 +18,17 @@ import org.junit.Test
 
 class ScreenWakeReceiverTest {
 
-    private val context: Context = mockk()
+    private val application: ClockWeatherApplication = mockk(relaxed = true)
+    private val context: Context = mockk {
+        every { applicationContext } returns application
+    }
     private val receiver = ScreenWakeReceiver()
 
     @Before
     fun mockScheduler() {
         mockkObject(WeatherUpdateScheduler)
         justRun { WeatherUpdateScheduler.scheduleImmediateRefresh(any()) }
+        coEvery { application.refreshAllWidgets(any()) } returns Unit
     }
 
     @After
@@ -33,16 +40,23 @@ class ScreenWakeReceiverTest {
         mockk { every { this@mockk.action } returns action }
 
     @Test
-    fun `screen on enqueues a freshness-gated refresh`() {
+    fun `screen on redraws cached widgets and enqueues freshness-gated refresh`() {
         receiver.onReceive(context, intentWithAction(Intent.ACTION_SCREEN_ON))
 
+        // Give the coroutine a moment to execute
+        Thread.sleep(100)
+
+        coVerify(atLeast = 1) { application.refreshAllWidgets(context) }
         verify(exactly = 1) { WeatherUpdateScheduler.scheduleImmediateRefresh(context) }
     }
 
     @Test
-    fun `unlock enqueues a freshness-gated refresh`() {
+    fun `unlock redraws cached widgets and enqueues freshness-gated refresh`() {
         receiver.onReceive(context, intentWithAction(Intent.ACTION_USER_PRESENT))
 
+        Thread.sleep(100)
+
+        coVerify(atLeast = 1) { application.refreshAllWidgets(context) }
         verify(exactly = 1) { WeatherUpdateScheduler.scheduleImmediateRefresh(context) }
     }
 
@@ -50,6 +64,9 @@ class ScreenWakeReceiverTest {
     fun `unrelated action does nothing`() {
         receiver.onReceive(context, intentWithAction(Intent.ACTION_SCREEN_OFF))
 
+        Thread.sleep(50)
+
+        coVerify(exactly = 0) { application.refreshAllWidgets(any()) }
         verify(exactly = 0) { WeatherUpdateScheduler.scheduleImmediateRefresh(any()) }
     }
 
@@ -57,6 +74,9 @@ class ScreenWakeReceiverTest {
     fun `null action does nothing`() {
         receiver.onReceive(context, intentWithAction(null))
 
+        Thread.sleep(50)
+
+        coVerify(exactly = 0) { application.refreshAllWidgets(any()) }
         verify(exactly = 0) { WeatherUpdateScheduler.scheduleImmediateRefresh(any()) }
     }
 }

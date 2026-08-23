@@ -45,11 +45,13 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         // Initialise the in-memory preference cache so widget updates skip disk I/O.
         WidgetPrefsCache.init(dataStore, appScope)
         WidgetPrefsCache.seedBlocking(dataStore)
-        appScope.launch { WeatherUpdateScheduler.ensureScheduled(this@ClockWeatherApplication, dataStore) }
+        appScope.launch {
+            if (com.clockweather.app.util.ActiveWidgetDetector.hasActiveWidgets(this@ClockWeatherApplication)) {
+                WeatherUpdateScheduler.ensureScheduled(this@ClockWeatherApplication, dataStore)
+                com.clockweather.app.util.PassiveLocationManager.register(this@ClockWeatherApplication)
+            }
+        }
         registerScreenWakeReceiver()
-        // Off the main thread: this builds a Play Services client and makes a binder
-        // call, and onCreate runs on every widget-triggered process start.
-        appScope.launch { com.clockweather.app.util.PassiveLocationManager.register(this@ClockWeatherApplication) }
     }
 
     /**
@@ -100,6 +102,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
         val mgr = AppWidgetManager.getInstance(context)
         try {
             val entryPoint = EntryPointAccessors.fromApplication(context, WidgetEntryPoint::class.java)
+            val renderSnapshot = com.clockweather.app.presentation.widget.common.BaseWidgetUpdater.createRenderSnapshot(context, entryPoint)
             val providers = listOf(
                 CompactWidgetProvider(),
                 ExtendedWidgetProvider(),
@@ -111,7 +114,7 @@ class ClockWeatherApplication : Application(), Configuration.Provider {
                 android.util.Log.d("ClockWeatherApp", "Checking provider ${component.shortClassName}: found ${ids.size} IDs")
                 if (ids.isNotEmpty()) {
                     val updater = provider.getUpdater(context.applicationContext, mgr, entryPoint)
-                    ids.forEach { id -> updater.updateWidget(id) }
+                    ids.forEach { id -> updater.updateWidget(id, renderSnapshot) }
                 }
             }
         } catch (e: Exception) {

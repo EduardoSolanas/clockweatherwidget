@@ -2,6 +2,8 @@ package com.clockweather.app.presentation.widget.extended
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.os.Build
+import android.util.SizeF
 import android.view.View
 import android.widget.RemoteViews
 import androidx.datastore.preferences.core.Preferences
@@ -26,6 +28,15 @@ class ExtendedWidgetUpdater(
     override val dateViewId = R.id.widget_date
     override val widgetPaddingDp = 10f
     override val hasForecastViews = true
+
+    override fun getResponsiveSizeBreakpoints(): List<SizeF> {
+        return if (Build.VERSION.SDK_INT >= 31) {
+            listOf(
+                SizeF(400f, 140f),
+                SizeF(520f, 180f),
+            )
+        } else emptyList()
+    }
 
     override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
         val showToday = prefs[booleanPreferencesKey("show_today_extended")] ?: false

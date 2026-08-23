@@ -84,7 +84,12 @@ object WidgetDataBinder {
             ?: weatherData.dailyForecasts.firstOrNull()
 
         val cityLabel = resolveWidgetLocationLabel(location, WidgetLocationMaxChars)
-        val conditionLabel = context.getString(currentDisplayWeather.weatherCondition.labelResId)
+        val displayCondition = LocalDayNightDisplayMapper.mapCondition(
+            condition = currentDisplayWeather.weatherCondition,
+            currentTime = referenceDateTime.toLocalTime(),
+            todayForecast = todayForecast,
+        )
+        val conditionLabel = context.getString(displayCondition.labelResId)
         views.setTextViewText(R.id.city_name, cityLabel)
         views.setTextViewText(R.id.city_name_top, cityLabel)
         views.setTextViewText(R.id.condition_text, conditionLabel)
@@ -93,7 +98,7 @@ object WidgetDataBinder {
             views,
             iconViewId,
             context,
-            WeatherIconMapper.getDrawableResId(currentDisplayWeather.weatherCondition, iconStyle),
+            WeatherIconMapper.getDrawableResId(displayCondition, iconStyle),
             renderIcon,
         )
         val tempLabel = TemperatureFormatter.formatWithUnit(currentDisplayWeather.temperature, temperatureUnit)

@@ -2,6 +2,8 @@ package com.clockweather.app.presentation.widget.forecast
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.os.Build
+import android.util.SizeF
 import android.widget.RemoteViews
 import androidx.datastore.preferences.core.Preferences
 import com.clockweather.app.R
@@ -25,6 +27,16 @@ class ForecastWidgetUpdater(
     override val minimumFutureForecastDaysRequired = 7
     override val widgetPaddingDp = 10f
     override val hasForecastViews = true
+
+    override fun getResponsiveSizeBreakpoints(): List<SizeF> {
+        return if (Build.VERSION.SDK_INT >= 31) {
+            listOf(
+                SizeF(180f, 120f),
+                SizeF(250f, 160f),
+                SizeF(350f, 220f),
+            )
+        } else emptyList()
+    }
 
     override fun bindExtra(views: RemoteViews, weather: WeatherData, tempUnit: TemperatureUnit, prefs: Preferences) {
         val iconStyle = WeatherIconMapper.fromPreferenceValue(

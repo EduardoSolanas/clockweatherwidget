@@ -47,11 +47,7 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
      * If no weather widget of any type remains, cancels the periodic worker.
      */
     override fun onDisabled(context: Context) {
-        val manager = AppWidgetManager.getInstance(context)
-        val anyWeatherWidgetRemains = weatherProviderClasses.any { cls ->
-            manager.getAppWidgetIds(ComponentName(context, cls)).isNotEmpty()
-        }
-        if (!anyWeatherWidgetRemains) {
+        if (!com.clockweather.app.util.ActiveWidgetDetector.hasActiveWidgets(context)) {
             WeatherUpdateScheduler.cancel(context)
             com.clockweather.app.util.PassiveLocationManager.unregister(context)
         }
@@ -79,7 +75,8 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
             try {
                 val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
                 val updater = getUpdater(context, appWidgetManager, entryPoint)
-                appWidgetIds.forEach { updater.updateWidget(it) }
+                val renderSnapshot = BaseWidgetUpdater.createRenderSnapshot(context, entryPoint)
+                appWidgetIds.forEach { updater.updateWidget(it, renderSnapshot) }
             } catch (e: Throwable) {
                 Log.e("ClockWeatherApp", "onUpdate failed for ${this@BaseWidgetProvider::class.simpleName}", e)
                 appWidgetIds.forEach { id ->
