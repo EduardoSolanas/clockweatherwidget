@@ -189,7 +189,6 @@
     <!-- Weather Providers -->
     <string name="weather_provider_open_meteo">Open-Meteo</string>
     <string name="weather_provider_google">Google Weather</string>
-    <string name="weather_provider_openweathermap">OpenWeatherMap</string>
 
     <!-- Widget Config -->
     <string name="config_title">Configurar Widget</string>
@@ -267,4 +266,35 @@
     <string name="pollen_moderate">Moderado</string>
     <string name="pollen_high">Alto</string>
     <string name="pollen_very_high">Muy Alto</string>
+
+    <!-- Onboarding Wizard -->
+    <string name="onboarding_welcome_title">Bienvenido a Reloj y Clima</string>
+    <string name="onboarding_welcome_desc">Pronósticos meteorológicos en tiempo real, predicciones por hora y widgets de reloj personalizables en tu pantalla de inicio.</string>
+    <string name="onboarding_get_started">Empezar</string>
+    <string name="onboarding_location_title">Acceso a la Ubicación</string>
+    <string name="onboarding_location_desc">Para mostrar el tiempo local preciso y actualizar tus widgets cuando viajas, la app necesita permisos de ubicación.</string>
+    <string name="onboarding_location_precise_title">Ubicación Precisa</string>
+    <string name="onboarding_location_precise_desc">Permite obtener pronósticos del tiempo exactos para tu zona.</string>
+    <string name="onboarding_location_background_title">Ubicación en Segundo Plano (\"Permitir siempre\")</string>
+    <string name="onboarding_location_background_desc">Permite que los widgets de la pantalla de inicio se actualicen automáticamente sin abrir la app.</string>
+    <string name="onboarding_grant_location">Conceder Ubicación</string>
+    <string name="onboarding_grant_background_location">Permitir en Ajustes</string>
+    <string name="onboarding_granted">Concedido ✓</string>
+    <string name="onboarding_battery_title">Actualizaciones en Segundo Plano</string>
+    <string name="onboarding_battery_desc">Android restringe la actividad en segundo plano para ahorrar batería, lo que puede retrasar las actualizaciones del widget. Permitir uso sin restricciones asegura que los widgets siempre estén al día.</string>
+    <string name="onboarding_battery_action">Permitir Sin Restricciones</string>
+    <string name="onboarding_battery_granted">Optimizado ✓</string>
+    <string name="onboarding_preferences_title">Preferencias y Unidades</string>
+    <string name="onboarding_preferences_desc">Personaliza tus unidades de temperatura, formato de reloj y mediciones. Puedes cambiarlas en cualquier momento en Ajustes.</string>
+    <string name="onboarding_pref_temp_unit">Unidad de Temperatura</string>
+    <string name="onboarding_pref_clock_format">Formato del Reloj</string>
+    <string name="onboarding_pref_clock_24h">24 Horas (14:30)</string>
+    <string name="onboarding_pref_clock_12h">12 Horas (2:30 PM)</string>
+    <string name="onboarding_pref_wind_speed">Velocidad del Viento</string>
+    <string name="onboarding_all_set_title">¡Todo Listo!</string>
+    <string name="onboarding_all_set_desc">Mantén presionado un espacio vacío en tu pantalla de inicio y selecciona Reloj y Clima para agregar tu primer widget.</string>
+    <string name="onboarding_finish_btn">Abrir Reloj y Clima</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_skip">Omitir por ahora</string>
+    <string name="onboarding_back">Atrás</string>
 </resources>

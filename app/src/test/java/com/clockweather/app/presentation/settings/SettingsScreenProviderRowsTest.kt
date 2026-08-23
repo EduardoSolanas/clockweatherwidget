@@ -10,16 +10,15 @@ class SettingsScreenProviderRowsTest {
     fun `provider chips are split into multiple rows when providers exceed per-row limit`() {
         val rows = providerChipRows(
             listOf(
-                WeatherProviderType.OPENWEATHERMAP,
                 WeatherProviderType.OPEN_METEO,
                 WeatherProviderType.GOOGLE
             ),
-            maxItemsPerRow = 2
+            maxItemsPerRow = 1
         )
 
         assertEquals(
             listOf(
-                listOf(WeatherProviderType.OPENWEATHERMAP, WeatherProviderType.OPEN_METEO),
+                listOf(WeatherProviderType.OPEN_METEO),
                 listOf(WeatherProviderType.GOOGLE)
             ),
             rows

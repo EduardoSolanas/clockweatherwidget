@@ -125,8 +125,8 @@ class WeatherRepositoryProviderTtlTest {
     }
 
     @Test
-    fun `12-minute-old data is stale for OpenWeatherMap and triggers a fetch`() = runTest {
-        setupProviderSelection(WeatherProviderType.OPENWEATHERMAP)
+    fun `12-minute-old data is stale for Google and triggers a fetch`() = runTest {
+        setupProviderSelection(WeatherProviderType.GOOGLE)
         setupCachedWeather(ageMinutes = 12)
 
         runCatching { repository.ensureFreshWeatherData(location, forecastDays = 7) }

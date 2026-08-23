@@ -1,8 +1,11 @@
 package com.clockweather.app.data.provider
 
 import com.clockweather.app.data.mapper.GoogleWeatherMapper
+import com.clockweather.app.data.remote.api.GoogleAirQualityApi
 import com.clockweather.app.data.remote.api.GooglePollenApi
 import com.clockweather.app.data.remote.api.GoogleWeatherApi
+import com.clockweather.app.data.remote.dto.google.GoogleAirQualityLocationDto
+import com.clockweather.app.data.remote.dto.google.GoogleAirQualityRequestDto
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
 import kotlinx.coroutines.async
@@ -12,7 +15,7 @@ import javax.inject.Named
 
 /**
  * Google Weather API implementation of [WeatherDataProvider].
- * Makes parallel requests (current conditions, horizon-sized hourly, N-day daily, and 5-day pollen forecast)
+ * Makes parallel requests (current conditions, horizon-sized hourly, N-day daily, 5-day pollen forecast, and air quality)
  * and merges them into a single [WeatherData] domain object.
  *
  * Google Weather API supports up to 10 forecast days; requests above that are capped.
@@ -21,6 +24,7 @@ import javax.inject.Named
 class GoogleWeatherProvider @Inject constructor(
     private val googleWeatherApi: GoogleWeatherApi,
     private val googlePollenApi: GooglePollenApi,
+    private val googleAirQualityApi: GoogleAirQualityApi,
     @Named("googleWeatherApiKey") private val apiKey: String,
     private val mapper: GoogleWeatherMapper
 ) : WeatherDataProvider {
@@ -71,11 +75,23 @@ class GoogleWeatherProvider @Inject constructor(
                 }.getOrNull()
             }
 
+            val airQualityDeferred = async {
+                runCatching {
+                    googleAirQualityApi.getCurrentConditions(
+                        apiKey = apiKey,
+                        body = GoogleAirQualityRequestDto(
+                            location = GoogleAirQualityLocationDto(latitude = lat, longitude = lon)
+                        )
+                    )
+                }.getOrNull()
+            }
+
             mapper.mapToWeatherData(
                 current = currentDeferred.await(),
                 hourly  = hourlyDeferred.await(),
                 daily   = dailyDeferred.await(),
                 pollen  = pollenDeferred.await(),
+                airQuality = airQualityDeferred.await(),
                 location = location
             )
         }

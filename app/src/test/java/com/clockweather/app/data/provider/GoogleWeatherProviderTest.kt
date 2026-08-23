@@ -1,8 +1,10 @@
 package com.clockweather.app.data.provider
 
 import com.clockweather.app.data.mapper.GoogleWeatherMapper
+import com.clockweather.app.data.remote.api.GoogleAirQualityApi
 import com.clockweather.app.data.remote.api.GooglePollenApi
 import com.clockweather.app.data.remote.api.GoogleWeatherApi
+import com.clockweather.app.data.remote.dto.google.GoogleAirQualityResponseDto
 import com.clockweather.app.data.remote.dto.google.GoogleCurrentConditionsDto
 import com.clockweather.app.data.remote.dto.google.GoogleDailyForecastResponseDto
 import com.clockweather.app.data.remote.dto.google.GoogleHourlyForecastResponseDto
@@ -22,12 +24,14 @@ class GoogleWeatherProviderTest {
 
     private val googleWeatherApi: GoogleWeatherApi = mockk()
     private val googlePollenApi: GooglePollenApi = mockk()
+    private val googleAirQualityApi: GoogleAirQualityApi = mockk()
     private val mapper: GoogleWeatherMapper = mockk()
     private val fakeWeatherData: WeatherData = mockk()
 
     private val provider = GoogleWeatherProvider(
         googleWeatherApi = googleWeatherApi,
         googlePollenApi = googlePollenApi,
+        googleAirQualityApi = googleAirQualityApi,
         apiKey = "test-key",
         mapper = mapper
     )
@@ -44,6 +48,7 @@ class GoogleWeatherProviderTest {
     private val hourlyDto: GoogleHourlyForecastResponseDto = mockk()
     private val dailyDto: GoogleDailyForecastResponseDto = mockk()
     private val pollenDto: GooglePollenForecastResponseDto = mockk()
+    private val airQualityDto: GoogleAirQualityResponseDto = mockk()
 
     @Test
     fun `fetchWeatherData requests weather and pollen forecast`() = runTest {
@@ -67,6 +72,7 @@ class GoogleWeatherProviderTest {
                 hourly = hourlyDto,
                 daily = dailyDto,
                 pollen = pollenDto,
+                airQuality = airQualityDto,
                 location = location
             )
         }
@@ -105,6 +111,7 @@ class GoogleWeatherProviderTest {
                 hourly = hourlyDto,
                 daily = dailyDto,
                 pollen = null,
+                airQuality = airQualityDto,
                 location = location
             )
         }
@@ -131,12 +138,17 @@ class GoogleWeatherProviderTest {
             googlePollenApi.getPollenForecast(any(), any(), any(), any(), any(), any())
         } returns pollenDto
 
+        coEvery {
+            googleAirQualityApi.getCurrentConditions(any(), any())
+        } returns airQualityDto
+
         every {
             mapper.mapToWeatherData(
                 current = any(),
                 hourly = any(),
                 daily = any(),
                 pollen = any(),
+                airQuality = any(),
                 location = any()
             )
         } returns fakeWeatherData

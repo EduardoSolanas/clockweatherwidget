@@ -33,7 +33,6 @@ fun SettingsScreen(
 ) {
     val temperatureUnit  by viewModel.temperatureUnit.collectAsStateWithLifecycle()
     val speedUnit        by viewModel.speedUnit.collectAsStateWithLifecycle()
-    val weatherProvider by viewModel.weatherProvider.collectAsStateWithLifecycle()
     val use24hClock      by viewModel.use24hClock.collectAsStateWithLifecycle()
     val showDateInWidget by viewModel.showDateInWidget.collectAsStateWithLifecycle()
     val showTodayCompact by viewModel.showTodayCompact.collectAsStateWithLifecycle()
@@ -517,34 +516,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(24.dp))
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-            SettingsSectionHeader(stringResource(R.string.settings_section_provider))
-            SettingsLabel(
-                label = stringResource(R.string.settings_weather_provider_label),
-                description = stringResource(R.string.settings_weather_provider_desc)
-            )
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                providerChipRows(viewModel.availableWeatherProviders).forEach { providerRow ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        providerRow.forEach { provider ->
-                            FilterChip(
-                                selected = provider == weatherProvider,
-                                onClick = { viewModel.setWeatherProvider(provider) },
-                                label = { Text(stringResource(provider.labelResId)) }
-                            )
-                        }
-                    }
-                }
-            }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
             // Build Info
             Box(

@@ -8,7 +8,7 @@ object WeatherProviderPreferences {
     val KEY_WEATHER_PROVIDER = stringPreferencesKey("weather_provider")
 
     fun defaultProvider(): WeatherProviderType =
-        if (BuildConfig.OPENWEATHERMAP_API_KEY.isNotBlank()) WeatherProviderType.OPENWEATHERMAP
+        if (BuildConfig.GOOGLE_WEATHER_API_KEY.isNotBlank()) WeatherProviderType.GOOGLE
         else WeatherProviderType.OPEN_METEO
 
     fun resolve(rawValue: String?): WeatherProviderType {
@@ -22,6 +22,5 @@ object WeatherProviderPreferences {
     fun isConfigured(provider: WeatherProviderType): Boolean = when (provider) {
         WeatherProviderType.OPEN_METEO -> true
         WeatherProviderType.GOOGLE -> BuildConfig.GOOGLE_WEATHER_API_KEY.isNotBlank()
-        WeatherProviderType.OPENWEATHERMAP -> BuildConfig.OPENWEATHERMAP_API_KEY.isNotBlank()
     }
 }

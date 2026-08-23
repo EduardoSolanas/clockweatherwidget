@@ -7,12 +7,10 @@ import javax.inject.Singleton
 @Singleton
 class WeatherDataProviderFactory @Inject constructor(
     private val openMeteoWeatherProvider: OpenMeteoWeatherProvider,
-    private val googleWeatherProvider: GoogleWeatherProvider,
-    private val openWeatherMapProvider: OpenWeatherMapProvider
+    private val googleWeatherProvider: GoogleWeatherProvider
 ) {
     fun get(providerType: WeatherProviderType): WeatherDataProvider = when (providerType) {
         WeatherProviderType.OPEN_METEO -> openMeteoWeatherProvider
         WeatherProviderType.GOOGLE -> googleWeatherProvider
-        WeatherProviderType.OPENWEATHERMAP -> openWeatherMapProvider
     }
 }

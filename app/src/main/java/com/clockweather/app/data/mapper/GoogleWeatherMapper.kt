@@ -35,6 +35,7 @@ class GoogleWeatherMapper @Inject constructor() {
         hourly: GoogleHourlyForecastResponseDto?,
         daily: GoogleDailyForecastResponseDto,
         pollen: GooglePollenForecastResponseDto? = null,
+        airQuality: com.clockweather.app.data.remote.dto.google.GoogleAirQualityResponseDto? = null,
         location: Location
     ): WeatherData {
         val timezone = current.timeZone?.id ?: "UTC"
@@ -49,7 +50,74 @@ class GoogleWeatherMapper @Inject constructor() {
                     .getOrElse { LocalDate.now() }
                 mapDaily(dto, timezone, pollen = pollenByDate[date])
             },
-            airQuality = null  // Google Weather API does not provide AQI data
+            airQuality = mapAirQuality(airQuality)
+        )
+    }
+
+    internal fun mapAirQuality(dto: com.clockweather.app.data.remote.dto.google.GoogleAirQualityResponseDto?): AirQuality? {
+        if (dto == null) return null
+        val indexes = dto.indexes.orEmpty()
+        val pollutants = dto.pollutants.orEmpty()
+
+        if (indexes.isEmpty() && pollutants.isEmpty()) return null
+
+        val usEpaAqi = indexes.firstOrNull { it.code.equals("usa_epa", ignoreCase = true) }?.aqi
+            ?: indexes.firstOrNull { it.code.equals("uaqi", ignoreCase = true) }?.aqi
+            ?: 0
+
+        val usEpaIndex = when {
+            usEpaAqi <= 50 -> 1
+            usEpaAqi <= 100 -> 2
+            usEpaAqi <= 150 -> 3
+            usEpaAqi <= 200 -> 4
+            usEpaAqi <= 300 -> 5
+            else -> 6
+        }
+
+        val gbDefraAqi = indexes.firstOrNull {
+            it.code.equals("gb_daqi", ignoreCase = true) || it.code.equals("gb_defra", ignoreCase = true)
+        }?.aqi ?: 1
+
+        fun pollutantValue(code: String): Double {
+            val pollutant = pollutants.firstOrNull { it.code.equals(code, ignoreCase = true) }
+            val raw = pollutant?.concentration?.value ?: return 0.0
+            val units = pollutant.concentration.units.orEmpty()
+            return when {
+                units.contains("PARTS_PER_BILLION", ignoreCase = true) -> {
+                    when (code.lowercase()) {
+                        "no2" -> raw * 1.88
+                        "o3" -> raw * 2.0
+                        "so2" -> raw * 2.62
+                        "co" -> raw * 1.15
+                        else -> raw
+                    }
+                }
+                units.contains("PARTS_PER_MILLION", ignoreCase = true) -> {
+                    when (code.lowercase()) {
+                        "co" -> raw * 1150.0
+                        else -> raw * 1000.0
+                    }
+                }
+                else -> raw
+            }
+        }
+
+        val pm25 = pollutantValue("pm25")
+        val pm10 = pollutantValue("pm10")
+        val co = pollutantValue("co")
+        val no2 = pollutantValue("no2")
+        val so2 = pollutantValue("so2")
+        val o3 = pollutantValue("o3")
+
+        return AirQuality(
+            co = co,
+            no2 = no2,
+            o3 = o3,
+            so2 = so2,
+            pm25 = pm25,
+            pm10 = pm10,
+            usEpaIndex = usEpaIndex,
+            gbDefraIndex = gbDefraAqi.coerceIn(1, 10)
         )
     }
 

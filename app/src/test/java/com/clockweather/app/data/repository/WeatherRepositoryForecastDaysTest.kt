@@ -32,7 +32,7 @@ class WeatherRepositoryForecastDaysTest {
     private val dataStore: DataStore<Preferences> = mockk()
     private val providerFactory: WeatherDataProviderFactory = mockk()
     private val openMeteoProvider: WeatherDataProvider = mockk()
-    private val openWeatherMapProvider: WeatherDataProvider = mockk()
+    private val googleProvider: WeatherDataProvider = mockk()
     private val database: WeatherDatabase = mockk()
     private val currentWeatherDao: CurrentWeatherDao = mockk()
     private val hourlyForecastDao: HourlyForecastDao = mockk()
@@ -108,10 +108,10 @@ class WeatherRepositoryForecastDaysTest {
 
     @Test
     fun `forceRefreshWeatherData propagates error when selected provider fails`() = runTest {
-        setupProviderSelection(WeatherProviderType.OPENWEATHERMAP)
-        every { providerFactory.get(WeatherProviderType.OPENWEATHERMAP) } returns openWeatherMapProvider
+        setupProviderSelection(WeatherProviderType.GOOGLE)
+        every { providerFactory.get(WeatherProviderType.GOOGLE) } returns googleProvider
         every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns openMeteoProvider
-        coEvery { openWeatherMapProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
+        coEvery { googleProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
         coEvery { openMeteoProvider.fetchWeatherData(any(), any()) } throws RuntimeException("unauthorized")
 
         val result = runCatching { repository.forceRefreshWeatherData(location, forecastDays = 14) }
@@ -123,19 +123,17 @@ class WeatherRepositoryForecastDaysTest {
     fun `forceRefreshWeatherData falls back to default provider when selected fails`() = runTest {
         val defaultProviderType = WeatherProviderPreferences.defaultProvider()
         val selectedProviderType = if (defaultProviderType == WeatherProviderType.OPEN_METEO) {
-            WeatherProviderType.OPENWEATHERMAP
+            WeatherProviderType.GOOGLE
         } else {
             WeatherProviderType.OPEN_METEO
         }
         val selectedProvider = when (selectedProviderType) {
             WeatherProviderType.OPEN_METEO -> openMeteoProvider
-            WeatherProviderType.OPENWEATHERMAP -> openWeatherMapProvider
-            else -> error("Unexpected selected provider for test")
+            WeatherProviderType.GOOGLE -> googleProvider
         }
         val defaultProvider = when (defaultProviderType) {
             WeatherProviderType.OPEN_METEO -> openMeteoProvider
-            WeatherProviderType.OPENWEATHERMAP -> openWeatherMapProvider
-            else -> error("Unexpected default provider for test")
+            WeatherProviderType.GOOGLE -> googleProvider
         }
         setupProviderSelection(selectedProviderType)
         every { providerFactory.get(selectedProviderType) } returns selectedProvider

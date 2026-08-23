@@ -33,9 +33,9 @@ class WeatherProviderPreferencesTest {
     }
 
     @Test
-    fun `default provider is openweathermap when key is configured, otherwise open meteo`() {
-        val expected = if (WeatherProviderPreferences.isConfigured(WeatherProviderType.OPENWEATHERMAP)) {
-            WeatherProviderType.OPENWEATHERMAP
+    fun `default provider is google when key is configured, otherwise open meteo`() {
+        val expected = if (WeatherProviderPreferences.isConfigured(WeatherProviderType.GOOGLE)) {
+            WeatherProviderType.GOOGLE
         } else {
             WeatherProviderType.OPEN_METEO
         }
@@ -43,15 +43,15 @@ class WeatherProviderPreferencesTest {
     }
 
     @Test
-    fun `resolve handles openweathermap storage value based on configuration`() {
-        val expected = if (WeatherProviderPreferences.isConfigured(WeatherProviderType.OPENWEATHERMAP)) {
-            WeatherProviderType.OPENWEATHERMAP
+    fun `resolve handles google storage value based on configuration`() {
+        val expected = if (WeatherProviderPreferences.isConfigured(WeatherProviderType.GOOGLE)) {
+            WeatherProviderType.GOOGLE
         } else {
             WeatherProviderPreferences.defaultProvider()
         }
         assertEquals(
             expected,
-            WeatherProviderPreferences.resolve("openweathermap")
+            WeatherProviderPreferences.resolve("google")
         )
     }
 }

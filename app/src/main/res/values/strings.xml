@@ -188,7 +188,6 @@
     <!-- Weather Providers -->
     <string name="weather_provider_open_meteo">Open-Meteo</string>
     <string name="weather_provider_google">Google Weather</string>
-    <string name="weather_provider_openweathermap">OpenWeatherMap</string>
 
     <!-- Widget Config -->
     <string name="config_title">Configure Widget</string>
@@ -266,4 +265,35 @@
     <string name="size_large">Large</string>
     <string name="size_xl">XL</string>
     <string name="widget_refresh_weather">Refresh weather</string>
+
+    <!-- Onboarding Wizard -->
+    <string name="onboarding_welcome_title">Welcome to Clock &amp; Weather</string>
+    <string name="onboarding_welcome_desc">Real-time local weather forecasts, hourly predictions, and customizable flip clock widgets right on your Android home screen.</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_location_title">Location Access</string>
+    <string name="onboarding_location_desc">To show live local forecasts and keep your home screen widgets updated as you travel, the app needs location access.</string>
+    <string name="onboarding_location_precise_title">Precise Location</string>
+    <string name="onboarding_location_precise_desc">Used to fetch local weather and hourly forecasts for your exact area.</string>
+    <string name="onboarding_location_background_title">Background Location (\"Allow all the time\")</string>
+    <string name="onboarding_location_background_desc">Enables home screen widgets to refresh automatically without opening the app.</string>
+    <string name="onboarding_grant_location">Grant Location</string>
+    <string name="onboarding_grant_background_location">Allow in Settings</string>
+    <string name="onboarding_granted">Granted ✓</string>
+    <string name="onboarding_battery_title">Reliable Background Updates</string>
+    <string name="onboarding_battery_desc">Android restricts background activity to save power, which may delay widget updates. Granting unrestricted battery usage ensures your home screen widgets stay fresh and accurate.</string>
+    <string name="onboarding_battery_action">Allow Unrestricted</string>
+    <string name="onboarding_battery_granted">Optimized ✓</string>
+    <string name="onboarding_preferences_title">Preferences &amp; Units</string>
+    <string name="onboarding_preferences_desc">Customize your preferred temperature units, clock style, and measurement formats. You can change these anytime in Settings.</string>
+    <string name="onboarding_pref_temp_unit">Temperature Unit</string>
+    <string name="onboarding_pref_clock_format">Clock Format</string>
+    <string name="onboarding_pref_clock_24h">24-Hour (14:30)</string>
+    <string name="onboarding_pref_clock_12h">12-Hour (2:30 PM)</string>
+    <string name="onboarding_pref_wind_speed">Wind Speed</string>
+    <string name="onboarding_all_set_title">You\'re All Set!</string>
+    <string name="onboarding_all_set_desc">Long-press any empty space on your home screen and select Clock &amp; Weather to add your first widget.</string>
+    <string name="onboarding_finish_btn">Open Weather &amp; Clock</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_skip">Skip for now</string>
+    <string name="onboarding_back">Back</string>
 </resources>

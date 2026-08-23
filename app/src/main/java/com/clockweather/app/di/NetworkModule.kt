@@ -7,7 +7,6 @@ import com.clockweather.app.data.remote.api.NominatimReverseGeocodingApi
 import com.clockweather.app.data.remote.api.OpenMeteoAirQualityApi
 import com.clockweather.app.data.remote.api.OpenMeteoGeocodingApi
 import com.clockweather.app.data.remote.api.OpenMeteoWeatherApi
-import com.clockweather.app.data.remote.api.OpenWeatherMapApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -97,16 +96,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    @Named("openweathermap")
-    fun provideOpenWeatherMapRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit =
-        Retrofit.Builder()
-            .baseUrl(OpenWeatherMapApi.BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-
-    @Provides
-    @Singleton
     fun provideOpenMeteoWeatherApi(@Named("weather") retrofit: Retrofit): OpenMeteoWeatherApi =
         retrofit.create(OpenMeteoWeatherApi::class.java)
 
@@ -137,6 +126,21 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @Named("googleairquality")
+    fun provideGoogleAirQualityRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(com.clockweather.app.data.remote.api.GoogleAirQualityApi.BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideGoogleAirQualityApi(@Named("googleairquality") retrofit: Retrofit): com.clockweather.app.data.remote.api.GoogleAirQualityApi =
+        retrofit.create(com.clockweather.app.data.remote.api.GoogleAirQualityApi::class.java)
+
+    @Provides
+    @Singleton
     @Named("googlepollen")
     fun provideGooglePollenRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit =
         Retrofit.Builder()
@@ -154,14 +158,4 @@ object NetworkModule {
     @Singleton
     @Named("googleWeatherApiKey")
     fun provideGoogleWeatherApiKey(): String = BuildConfig.GOOGLE_WEATHER_API_KEY
-
-    @Provides
-    @Singleton
-    fun provideOpenWeatherMapApi(@Named("openweathermap") retrofit: Retrofit): OpenWeatherMapApi =
-        retrofit.create(OpenWeatherMapApi::class.java)
-
-    @Provides
-    @Singleton
-    @Named("openWeatherMapApiKey")
-    fun provideOpenWeatherMapApiKey(): String = BuildConfig.OPENWEATHERMAP_API_KEY
 }

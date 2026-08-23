@@ -34,7 +34,6 @@ jobs:
           ./gradlew :app:testReleaseUnitTest
         env:
           GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
-          OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
 
       - name: Upload Test Results on Failure
         if: failure()
@@ -89,7 +88,6 @@ jobs:
           ./gradlew :app:bundleRelease
         env:
           GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
-          OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
 
       - name: Sign Bundle

@@ -26,18 +26,12 @@ enum class WeatherProviderType(
         maxForecastDays = 10,
         supportedForecastDays = listOf(7, 10),
         currentMaxAgeMinutes = 10
-    ),
-    OPENWEATHERMAP(
-        storageValue = "openweathermap",
-        labelResId = R.string.weather_provider_openweathermap,
-        maxForecastDays = 8,
-        supportedForecastDays = listOf(7, 8),
-        currentMaxAgeMinutes = 10
     );
 
     companion object {
         fun fromStorageValue(value: String?): WeatherProviderType? {
             if (value.isNullOrBlank()) return null
+            if (value.equals("openweathermap", ignoreCase = true)) return GOOGLE
             return entries.firstOrNull {
                 it.storageValue.equals(value, ignoreCase = true) ||
                     it.name.equals(value, ignoreCase = true)
