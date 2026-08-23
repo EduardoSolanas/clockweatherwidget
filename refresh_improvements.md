@@ -147,12 +147,18 @@ The decision is therefore to keep the watchdog but make it cheap, and to measure
 
 `WidgetUpdatePeriodTest` remains correct and should not be altered.
 
+**Status.** `1800000` is unchanged and the batching work is done. **The measurement has not been taken.** Until it is, "keep the watchdog and make it cheap" rests on reasoning rather than numbers, and no decision to remove the watchdog should be made.
+
+**Regression, since fixed.** Hoisting the staleness check out of `updateWidget` gated it on `snapshot == null`, which made every caller passing a shared snapshot responsible for scheduling the refresh itself. `refreshAllWidgets` was updated for that; `BaseWidgetProvider.onUpdate` was not. The watchdog then redrew stale data and never enqueued a refresh - reopening the `d252045` freeze while `updatePeriodMillis` still read `1800000` and its guard test still passed. Fixed by extracting `BaseWidgetUpdater.shouldScheduleRefresh` (pure, takes an `Instant`) and `scheduleRefreshIfStale`, and calling the latter from every snapshot-passing site. `WidgetRefreshSchedulingTest` asserts on the call sites, not only the predicate, because the failure mode is a caller silently inheriting no check rather than two copies drifting apart.
+
 **Evidence note.** The freeze is directly documented by commit `d252045`, which restored `1800000` and records the cause: "`updatePeriodMillis=0` meant Android never called `onUpdate` on its own, so the widget stayed frozen when the screen was continuously on." Commit `522ac4e` added the regression guard three minutes later. The specific "30-90 minute OEM deferral" figure in the test comment is documented rationale, not a captured measurement - treat it as a historical observation until logs or benchmarks exist.
 
-Two related items are unblocked and also reduce watchdog cost:
+Two related items that also reduce watchdog cost are **done**:
 
-- Schedule periodic work and passive location tracking only while at least one weather widget exists, unless background refresh is intentionally required for a separate non-widget feature.
-- Share one cache/prefs snapshot across all widget instances in a redraw batch instead of rereading Room and DataStore for every widget ID.
+- Periodic work and passive location tracking are now scheduled only while at least one weather widget exists (`ActiveWidgetDetector`, re-established from `onEnabled`).
+- One cache/prefs snapshot (`WidgetRenderSnapshot`) is shared across all widget instances in a redraw batch instead of rereading Room and DataStore per widget ID.
+
+These reduce the per-callback cost but do not substitute for measuring it.
 
 Reference: [Advanced widget update guidance](https://developer.android.com/develop/ui/views/appwidgets/advanced)
 
@@ -160,9 +166,21 @@ Reference: [Advanced widget update guidance](https://developer.android.com/devel
 
 ### 5.1 Android 12+ responsive `RemoteViews`
 
-**Recommendation: proceed independently; this does not wait on section 4.**
+**Status: attempted in Phase 1, withdrawn before release. Currently disabled.**
 
-Responsive layouts depend on rendering being reusable, not on location semantics or scheduler ownership. The only prerequisite is the view-builder refactor listed below, so this can be built in parallel with everything in section 4. The current resize callback already rebuilds a widget immediately, so this is a smoother-resizing and system-health improvement rather than a correctness fix.
+`getResponsiveSizeBreakpoints()` returns `emptyList()` in all three updaters. The `SDK_INT >= 31` branch in `updateWidget` remains as the extension point, inert.
+
+**Why it was withdrawn.** The first attempt passed `targetWidthDp` / `targetHeightDp` into `buildViews()`, which never read either one. Every breakpoint therefore produced a byte-identical `RemoteViews`: no behavioural benefit, and a multiplied payload. Forecast binds 6 icons at 192x192 ARGB_8888 (~144 KB each, ~864 KB total) - sized deliberately against the ~1 MB binder budget documented at `WidgetIconMaxDimensionPx`. Three breakpoints shipped roughly 2.6 MB per update, which surfaces as `TransactionTooLargeException` and "Can't load widget" - the exact failure the pre-rendered bitmap path exists to prevent.
+
+The unit suite did not catch this. The test asserted that the hardcoded breakpoint list equalled the hardcoded breakpoint list, without building views or measuring payload.
+
+**Before re-enabling, in order:**
+
+1. Make `buildViews` genuinely vary by size. Binding fewer icons at small sizes is the point, not just different text sizing.
+2. Measure the parcel per breakpoint set, per provider, and keep the total under the binder budget with margin.
+3. Assert that two breakpoints produce *different* views, and assert on payload size - never on the breakpoint list alone.
+
+The design guidance below still stands for that future attempt. Responsive layouts depend on rendering being reusable, not on location semantics or scheduler ownership, so this remains independent of section 4.
 
 Use a small set of dp breakpoints for each existing provider. Preserve the semantic difference between Compact, Extended and Forecast widgets rather than making every provider expose every possible content set without a product decision.
 
@@ -308,7 +326,7 @@ Every implementation should follow red-green-refactor with real objects and run 
 - *(Phase 2)* Persistence and deletion tests for every `appWidgetId -> locationId` mapping, including `onDeleted()` cleanup.
 - *(Phase 2)* Two widget IDs assigned to different locations render different weather and route to different detail targets.
 - *(Phase 2)* An unassigned widget falls back to the primary location; a widget whose assigned location was deleted degrades predictably.
-- Test responsive layout selection at every dp breakpoint and at the provider min/max sizes.
+- *(Responsive, when re-enabled)* Assert that two breakpoints produce **different** rendered views, and assert the total parcel size stays under the binder budget. Asserting the breakpoint list matches a hardcoded list is what let the withdrawn attempt ship broken - it cannot fail. Cover every dp breakpoint and the provider min/max sizes.
 - Test cache-only redraw while offline.
 - Test day/night mapping immediately before and after sunrise/sunset.
 - Test pre-12 layouts at API 26 and API 30, plus API 31+ for the responsive path, with Robolectric coverage and real launcher hosts where clipping behaviour matters. `minSdk` is 26, so API 30 alone is not sufficient pre-12 coverage.
