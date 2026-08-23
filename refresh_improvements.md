@@ -147,7 +147,11 @@ The decision is therefore to keep the watchdog but make it cheap, and to measure
 
 `WidgetUpdatePeriodTest` remains correct and should not be altered.
 
-**Status.** `1800000` is unchanged and the batching work is done. **The measurement has not been taken.** Until it is, "keep the watchdog and make it cheap" rests on reasoning rather than numbers, and no decision to remove the watchdog should be made.
+**Status.** `1800000` is unchanged and the batching work is done. The measurement is **partially taken**:
+
+- **Payload: measured.** See 5.1. It found and fixed a real 893,764-byte transaction; worst case is now 484,156 bytes single-view.
+- **Rasterisation: measured.** `WidgetWatchdogCostTest` counts work through the `renderIcon` seam. One forecast widget rasterises 6 icons per redraw; three widgets rasterise 18 from a single shared snapshot. The shared `WidgetRenderSnapshot` removed duplicate Room/DataStore reads but not duplicate bitmap work - that is what an icon cache (5.6) would remove, and it is now a measured quantity rather than a hunch.
+- **On-device CPU and battery: not measured.** This needs the OEM device that exhibited the WorkManager deferral. Emulator figures would not be representative. Until this exists, no decision to remove the watchdog should be made.
 
 **Regression, since fixed.** Hoisting the staleness check out of `updateWidget` gated it on `snapshot == null`, which made every caller passing a shared snapshot responsible for scheduling the refresh itself. `refreshAllWidgets` was updated for that; `BaseWidgetProvider.onUpdate` was not. The watchdog then redrew stale data and never enqueued a refresh - reopening the `d252045` freeze while `updatePeriodMillis` still read `1800000` and its guard test still passed. Fixed by extracting `BaseWidgetUpdater.shouldScheduleRefresh` (pure, takes an `Instant`) and `scheduleRefreshIfStale`, and calling the latter from every snapshot-passing site. `WidgetRefreshSchedulingTest` asserts on the call sites, not only the predicate, because the failure mode is a caller silently inheriting no check rather than two copies drifting apart.
 
@@ -166,37 +170,34 @@ Reference: [Advanced widget update guidance](https://developer.android.com/devel
 
 ### 5.1 Android 12+ responsive `RemoteViews`
 
-**Status: attempted in Phase 1, withdrawn before release. Currently disabled.**
+**Status: re-enabled, on measured evidence. Two breakpoints per provider.**
 
-`getResponsiveSizeBreakpoints()` returns `emptyList()` in all three updaters. The `SDK_INT >= 31` branch in `updateWidget` remains as the extension point, inert.
+The first attempt was withdrawn because `buildViews()` accepted `targetWidthDp` / `targetHeightDp` and never read either one. Every breakpoint produced a byte-identical `RemoteViews`, so the map multiplied the payload for no benefit. The test that shipped with it compared a hardcoded breakpoint list to itself and could not fail.
 
-**Why it was withdrawn.** The first attempt passed `targetWidthDp` / `targetHeightDp` into `buildViews()`, which never read either one. Every breakpoint therefore produced a byte-identical `RemoteViews`: no behavioural benefit, and a multiplied payload. Forecast binds 6 icons at 192x192 ARGB_8888 (~144 KB each, ~864 KB total) - sized deliberately against the ~1 MB binder budget documented at `WidgetIconMaxDimensionPx`. Three breakpoints shipped roughly 2.6 MB per update, which surfaces as `TransactionTooLargeException` and "Can't load widget" - the exact failure the pre-rendered bitmap path exists to prevent.
+**What the profiling found.** `WidgetPayloadBudgetTest` parcels each widget's real `RemoteViews` and measures `Parcel.dataSize()`. Robolectric parcels bitmap pixel data faithfully - a 192x192 ARGB_8888 icon measures 147,684 bytes against 147,456 theoretical - so the numbers reflect what crosses the binder.
 
-The unit suite did not catch this. The test asserted that the hardcoded breakpoint list equalled the hardcoded breakpoint list, without building views or measuring payload.
+Two things had to be right for the measurement to mean anything, and both were wrong at first:
 
-**Before re-enabling, in order:**
+- **Measure every icon style.** Per-icon cost varies about 5x. GLASS_LAYERED (the default) renders 96x70 at ~27KB; CLAY_3D sources are 512x512 PNGs capped to 192x192 at ~147KB.
+- **Anchor the fixture to wall-clock now.** `weatherToday()` filters forecast rows against the real date, so a fixed past date drops all five row icons and understates the payload roughly 5x.
 
-1. Make `buildViews` genuinely vary by size. Binding fewer icons at small sizes is the point, not just different text sizing.
-2. Measure the parcel per breakpoint set, per provider, and keep the total under the binder budget with margin.
-3. Assert that two breakpoints produce *different* views, and assert on payload size - never on the breakpoint list alone.
+With both corrected, the measurement surfaced a live bug unrelated to responsive layouts: **Extended and Forecast at CLAY_3D were shipping 893,764 bytes per update**, about 89% of the ~1MB launcher budget, in the shipped single-layout path. The five small forecast row icons were rasterising at the 192px hero cap.
 
-The design guidance below still stands for that future attempt. Responsive layouts depend on rendering being reusable, not on location semantics or scheduler ownership, so this remains independent of section 4.
+**Fix.** `WidgetForecastIconMaxDimensionPx = 128` caps row icons separately from the hero icon. Worst case drops to 484,156 bytes, a 46% reduction, with no visible change at their display size.
 
-Use a small set of dp breakpoints for each existing provider. Preserve the semantic difference between Compact, Extended and Forecast widgets rather than making every provider expose every possible content set without a product decision.
+**Responsive design that follows from the numbers.** `WidgetSizeClass` resolves `COMPACT` / `REGULAR` from rendered dp. Below `ForecastRowMinHeightDp` (150dp) the forecast row is **skipped, not hidden** - setting the container `GONE` would still parcel five bitmaps, which is the entire cost being avoided. `bindExtra` takes the size class and each updater honours it.
 
-Example content tiers:
+Measured payloads, worst-case CLAY_3D, against a 700KB working ceiling:
 
-- **Small:** time and current temperature.
-- **Medium:** time, condition, temperature, high/low and location.
-- **Large forecast-capable provider:** time, current weather and five-day row.
+| Provider | Single view | Two breakpoints summed |
+| :--- | ---: | ---: |
+| Compact | 153,504 | 306,952 |
+| Extended | 484,156 | 638,244 |
+| Forecast | 484,108 | 638,148 |
 
-Implementation requirements:
+**Two breakpoints per provider, not three.** A third full-content view would exceed the budget at CLAY_3D. That is a measured constraint, not a style preference - if content tiers are added later, the summed payload has to be re-measured.
 
-- Refactor view creation so one fully bound `RemoteViews` can be produced per size without immediately calling `updateAppWidget()`.
-- Bind clicks, clock formats, theme, visibility and weather data independently on every mapped view.
-- Keep the current single-layout path for API 26-30.
-- Verify at API 26 (oldest supported), API 30 (final pre-12 behaviour) and API 31+ (responsive path).
-- Test the documented min/max dp range of every provider, including portrait, landscape and foldable size lists.
+**Tests assert rendered output, never configuration:** that a compact breakpoint renders smaller than a regular one, that the compact tier drops more than 200KB of row icons (proving the rows are unbound rather than hidden), that a provider with no size-varying content renders identically at both sizes, and that the summed map fits the budget at every icon style.
 
 ### 5.2 Pre-12 clock size variants
 
@@ -304,8 +305,10 @@ Reference: [Jetpack Glance](https://developer.android.com/develop/ui/compose/gla
 | Watchdog freshness & staleness check unification | **P1** | Low | Ensures 30-min callback and batch redraws schedule refresh if stale | **Completed (Phase 1 Delivered)** |
 | Local day/night display mapping | **P2** | Low-Medium | More timely visual state | **Completed (Phase 1 Delivered)** |
 | Tabular-number hint (`tnum`) | **P3** | Minimal | Small OEM typography defence | **Completed (Phase 1 Delivered)** |
-| Android 12+ responsive layouts | **P1** | Medium | Smoother resizing and better size-specific UX | **Withdrawn / Disabled in Phase 1** (protects 1MB Binder transaction budget until size-varying views & payload profiling are ready) |
-| Watchdog CPU/battery measurement | **P1 Verification** | Low-Medium | Evidence for any future watchdog changes | Open (post-batching verification) |
+| Android 12+ responsive layouts | **Done** (`c270725`) | Medium | Two measured breakpoints per provider; compact tier drops the forecast row | - |
+| Cap forecast row icons (128px) | **Done** (`c270725`) | Low | Worst-case update 894KB -> 484KB | - |
+| Payload + rasterisation measurement | **Done** (`c270725`) | Low | Budget test guards every icon style | - |
+| Watchdog CPU/battery on-device | **P1 - open** | Low-Medium | Needs the OEM device that showed the deferral | Hardware |
 | Pre-12 layout variants | **P2** | Medium-High | Older-device size customization | Device evidence |
 | Forecast-derived temperature fallback/interpolation | **P2/P3** | Medium | Cosmetic progression with accuracy trade-off | Screen-wake redraw and product policy |
 | Bitmap LRU cache | **P3** | Low-Medium | Possible allocation reduction | Profiling evidence |
@@ -326,7 +329,8 @@ Every implementation should follow red-green-refactor with real objects and run 
 - *(Phase 2)* Persistence and deletion tests for every `appWidgetId -> locationId` mapping, including `onDeleted()` cleanup.
 - *(Phase 2)* Two widget IDs assigned to different locations render different weather and route to different detail targets.
 - *(Phase 2)* An unassigned widget falls back to the primary location; a widget whose assigned location was deleted degrades predictably.
-- *(Responsive, when re-enabled)* Assert that two breakpoints produce **different** rendered views, and assert the total parcel size stays under the binder budget. Asserting the breakpoint list matches a hardcoded list is what let the withdrawn attempt ship broken - it cannot fail. Cover every dp breakpoint and the provider min/max sizes.
+- *(Responsive - now in place)* Assert that two breakpoints produce **different** rendered views, and that the total parcel size stays under the binder budget at every icon style. Asserting the breakpoint list matches a hardcoded list is what let the first attempt ship broken - such a test cannot fail. Any new content tier must re-measure the summed payload before it lands.
+- Anchor any fixture that touches forecast rows to wall-clock now. `weatherToday()` filters rows against the real date, so a fixed past date silently drops all five row icons and understates payload measurements roughly 5x.
 - Test cache-only redraw while offline.
 - Test day/night mapping immediately before and after sunrise/sunset.
 - Test pre-12 layouts at API 26 and API 30, plus API 31+ for the responsive path, with Robolectric coverage and real launcher hosts where clipping behaviour matters. `minSdk` is 26, so API 30 alone is not sufficient pre-12 coverage.
