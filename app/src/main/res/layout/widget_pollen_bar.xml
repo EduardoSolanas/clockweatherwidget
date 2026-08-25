@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Horizontal Pollen Level Bar: displays Grass, Tree, and Weed 5-segment indicators -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pollen_bar_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="2dp"
+    android:paddingEnd="2dp"
+    android:paddingTop="2dp"
+    android:paddingBottom="2dp"
+    android:visibility="gone">
+
+    <!-- Grass Pollen -->
+    <LinearLayout
+        android:id="@+id/pollen_grass_group"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/pollen_label_grass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:includeFontPadding="false"
+            android:shadowColor="#B3000000"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="3"
+            android:text="@string/label_pollen_grass"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/pollen_bar_grass_segments"
+            android:layout_width="44dp"
+            android:layout_height="10dp"
+            android:contentDescription="@null"
+            android:scaleType="fitCenter" />
+    </LinearLayout>
+
+    <!-- Tree Pollen -->
+    <LinearLayout
+        android:id="@+id/pollen_tree_group"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/pollen_label_tree"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:includeFontPadding="false"
+            android:shadowColor="#B3000000"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="3"
+            android:text="@string/label_pollen_tree"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/pollen_bar_tree_segments"
+            android:layout_width="44dp"
+            android:layout_height="10dp"
+            android:contentDescription="@null"
+            android:scaleType="fitCenter" />
+    </LinearLayout>
+
+    <!-- Weed Pollen -->
+    <LinearLayout
+        android:id="@+id/pollen_weed_group"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/pollen_label_weed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:includeFontPadding="false"
+            android:shadowColor="#B3000000"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="3"
+            android:text="@string/label_pollen_weed"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/pollen_bar_weed_segments"
+            android:layout_width="44dp"
+            android:layout_height="10dp"
+            android:contentDescription="@null"
+            android:scaleType="fitCenter" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -5,11 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.view.View
 import android.widget.RemoteViews
 import androidx.appcompat.content.res.AppCompatResources
 import com.clockweather.app.R
 import com.clockweather.app.domain.model.Location
+import com.clockweather.app.domain.model.PollenData
 import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.currentDisplayWeather
@@ -182,6 +184,37 @@ object WidgetDataBinder {
         views.setViewVisibility(R.id.forecast_container, View.VISIBLE)
     }
 
+    fun bindPollenBar(
+        context: Context,
+        views: RemoteViews,
+        pollenData: PollenData?,
+        showPollen: Boolean = true,
+    ) {
+        if (!showPollen || pollenData == null || !pollenData.hasData) {
+            views.setViewVisibility(R.id.pollen_bar_container, View.GONE)
+            return
+        }
+
+        val grassLevel = pollenData.grassPollen?.indexValue ?: 0
+        val treeLevel = pollenData.treePollen?.indexValue ?: 0
+        val weedLevel = pollenData.weedPollen?.indexValue ?: 0
+
+        views.setImageViewBitmap(
+            R.id.pollen_bar_grass_segments,
+            renderPollenSegmentsBitmap(context, grassLevel)
+        )
+        views.setImageViewBitmap(
+            R.id.pollen_bar_tree_segments,
+            renderPollenSegmentsBitmap(context, treeLevel)
+        )
+        views.setImageViewBitmap(
+            R.id.pollen_bar_weed_segments,
+            renderPollenSegmentsBitmap(context, weedLevel)
+        )
+
+        views.setViewVisibility(R.id.pollen_bar_container, View.VISIBLE)
+    }
+
     fun buildDetailPendingIntent(context: Context, appWidgetId: Int): PendingIntent {
         val intent = Intent(context, WeatherDetailActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -193,6 +226,51 @@ object WidgetDataBinder {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
+}
+
+internal fun pollenLevelColor(level: Int): Int = when (level) {
+    1, 2 -> 0xFF22C55E.toInt() // Green (Low)
+    3 -> 0xFFEAB308.toInt()    // Amber / Yellow (Moderate)
+    4 -> 0xFFF97316.toInt()    // Orange (High)
+    5 -> 0xFFEF4444.toInt()    // Red (Very High)
+    else -> 0x5594A3B8         // Inactive
+}
+
+internal fun renderPollenSegmentsBitmap(
+    context: Context,
+    level: Int,
+    activeColor: Int = pollenLevelColor(level),
+    inactiveColor: Int = 0x5594A3B8,
+): Bitmap {
+    val density = context.resources.displayMetrics.density
+    val segWidthPx = 7f * density
+    val segHeightPx = 3.5f * density
+    val gapPx = 2f * density
+    val radiusPx = 1.75f * density
+    val totalWidthPx = (segWidthPx * 5 + gapPx * 4).toInt().coerceAtLeast(1)
+    val totalHeightPx = segHeightPx.toInt().coerceAtLeast(1)
+
+    val bitmap = Bitmap.createBitmap(totalWidthPx, totalHeightPx, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val activePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = activeColor
+        style = Paint.Style.FILL
+    }
+    val inactivePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = inactiveColor
+        style = Paint.Style.FILL
+    }
+
+    val clampedLevel = level.coerceIn(0, 5)
+    for (i in 0 until 5) {
+        val left = i * (segWidthPx + gapPx)
+        val paint = if (i < clampedLevel) activePaint else inactivePaint
+        canvas.drawRoundRect(
+            left, 0f, left + segWidthPx, segHeightPx,
+            radiusPx, radiusPx, paint
+        )
+    }
+    return bitmap
 }
 
 /**

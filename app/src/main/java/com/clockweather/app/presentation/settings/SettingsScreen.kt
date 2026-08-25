@@ -37,6 +37,7 @@ fun SettingsScreen(
     val showDateInWidget by viewModel.showDateInWidget.collectAsStateWithLifecycle()
     val showTodayCompact by viewModel.showTodayCompact.collectAsStateWithLifecycle()
     val showTodayExtended by viewModel.showTodayExtended.collectAsStateWithLifecycle()
+    val showPollenInWidget by viewModel.showPollenInWidget.collectAsStateWithLifecycle()
     val widgetTextScale  by viewModel.widgetTextScale.collectAsStateWithLifecycle()
     val clockTheme       by viewModel.clockTheme.collectAsStateWithLifecycle()
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
@@ -339,6 +340,15 @@ fun SettingsScreen(
                 description = stringResource(R.string.settings_show_today_forecast_desc),
                 checked     = showTodayExtended,
                 onCheckedChange = { viewModel.setShowTodayExtended(it) }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            SettingsToggleRow(
+                label       = stringResource(R.string.pref_show_pollen_widget_title),
+                description = stringResource(R.string.pref_show_pollen_widget_desc),
+                checked     = showPollenInWidget,
+                onCheckedChange = { viewModel.setShowPollenInWidget(it) }
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))

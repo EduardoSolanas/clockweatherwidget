@@ -332,12 +332,17 @@ abstract class BaseWidgetUpdater(
             com.clockweather.app.R.id.weather_icon_top
         }
 
+        val showPollen = prefs[SettingsViewModel.KEY_SHOW_POLLEN_IN_WIDGET] ?: true
         val weather = snapshot.weather
         if (weather != null) {
             WidgetDataBinder.bindWeatherViews(context, views, weather, tempUnit, weatherIconStyle, iconViewId = weatherIconViewId)
+            val todayForecast = weather.dailyForecasts.firstOrNull { it.date == LocalDate.now() }
+                ?: weather.dailyForecasts.firstOrNull()
+            WidgetDataBinder.bindPollenBar(context, views, todayForecast?.pollen, showPollen = showPollen)
             bindExtra(views, weather, tempUnit, prefs)
         } else {
             WidgetDataBinder.bindWeatherUnavailableViews(context, views, weatherIconStyle, iconViewId = weatherIconViewId)
+            WidgetDataBinder.bindPollenBar(context, views, null, showPollen = false)
         }
         applyWeatherTextSizing(views, widgetTextScale)
 
@@ -438,6 +443,10 @@ abstract class BaseWidgetUpdater(
                 add(com.clockweather.app.R.id.current_temp_top)
                 add(com.clockweather.app.R.id.high_low)
                 add(com.clockweather.app.R.id.high_low_top)
+                add(com.clockweather.app.R.id.pollen_bar_container)
+                add(com.clockweather.app.R.id.pollen_grass_group)
+                add(com.clockweather.app.R.id.pollen_tree_group)
+                add(com.clockweather.app.R.id.pollen_weed_group)
                 if (hasForecastViews) {
                     add(com.clockweather.app.R.id.forecast_container)
                     add(com.clockweather.app.R.id.fday1_name)

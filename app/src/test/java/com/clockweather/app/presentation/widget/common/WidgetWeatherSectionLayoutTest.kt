@@ -84,6 +84,29 @@ class WidgetWeatherSectionLayoutTest {
         )
     }
 
+    @Test
+    fun `shared top clock weather section includes pollen bar`() {
+        val xml = readLayout("widget_top_clock_weather.xml")
+
+        assertTrue(
+            "shared top section should include @layout/widget_pollen_bar",
+            xml.contains("<include") && xml.contains("layout=\"@layout/widget_pollen_bar\""),
+        )
+    }
+
+    @Test
+    fun `pollen bar layout exposes required segment views`() {
+        val xml = readLayout("widget_pollen_bar.xml")
+
+        assertTrue(
+            "pollen bar layout should contain container and segment image views",
+            xml.contains("android:id=\"@+id/pollen_bar_container\"") &&
+                xml.contains("android:id=\"@+id/pollen_bar_grass_segments\"") &&
+                xml.contains("android:id=\"@+id/pollen_bar_tree_segments\"") &&
+                xml.contains("android:id=\"@+id/pollen_bar_weed_segments\""),
+        )
+    }
+
     private fun readLayout(fileName: String): String {
         val candidates = listOf(
             File("src/main/res/layout/$fileName"),

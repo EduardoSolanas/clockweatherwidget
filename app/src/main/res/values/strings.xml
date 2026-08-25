@@ -314,4 +314,6 @@
     <string name="onboarding_next">Next</string>
     <string name="onboarding_skip">Skip for now</string>
     <string name="onboarding_back">Back</string>
+    <string name="pref_show_pollen_widget_title">Show pollen levels on widget</string>
+    <string name="pref_show_pollen_widget_desc">Display grass, tree, and weed pollen indicators on the widget</string>
 </resources>
