@@ -173,4 +173,12 @@
             android:textColor="@color/widget_text_secondary"
             android:textSize="16sp" />
     </LinearLayout>
+
+    <!-- Pollen Bar (Bottom overlay) -->
+    <include
+        layout="@layout/widget_pollen_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="0dp" />
 </FrameLayout>

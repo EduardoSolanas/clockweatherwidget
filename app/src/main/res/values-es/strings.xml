@@ -255,7 +255,7 @@
     <string name="label_pollen_allergy">POLEN Y ALERGIAS</string>
     <string name="label_pollen_tree">Árboles</string>
     <string name="label_pollen_grass">Gramíneas</string>
-    <string name="label_pollen_weed">Maleza</string>
+    <string name="label_pollen_weed">Malezas</string>
     <string name="label_pollen_active_allergens">ALÉRGENOS ACTIVOS</string>
     <string name="label_pollen_upi_format">UPI %1$d · %2$s</string>
     <string name="label_pollen_in_season">En temporada</string>
@@ -316,5 +316,5 @@
     <string name="onboarding_skip">Omitir por ahora</string>
     <string name="onboarding_back">Atrás</string>
     <string name="pref_show_pollen_widget_title">Mostrar niveles de polen en el widget</string>
-    <string name="pref_show_pollen_widget_desc">Muestra indicadores de polen de gramíneas, árboles y maleza en el widget</string>
+    <string name="pref_show_pollen_widget_desc">Muestra indicadores de polen de gramíneas, árboles y malezas en el widget</string>
 </resources>

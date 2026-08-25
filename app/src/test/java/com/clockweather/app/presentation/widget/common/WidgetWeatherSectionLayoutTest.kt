@@ -85,11 +85,11 @@ class WidgetWeatherSectionLayoutTest {
     }
 
     @Test
-    fun `shared top clock weather section includes pollen bar`() {
-        val xml = readLayout("widget_top_clock_weather.xml")
+    fun `weather card includes pollen bar at bottom`() {
+        val xml = readLayout("widget_weather_card.xml")
 
         assertTrue(
-            "shared top section should include @layout/widget_pollen_bar",
+            "weather card should include @layout/widget_pollen_bar",
             xml.contains("<include") && xml.contains("layout=\"@layout/widget_pollen_bar\""),
         )
     }

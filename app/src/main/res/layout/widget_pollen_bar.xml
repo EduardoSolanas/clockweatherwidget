@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Horizontal Pollen Level Bar: displays Grass, Tree, and Weed 5-segment indicators -->
+<!-- Horizontal Pollen Level Bar: displays Grass (left), Tree (center), and Weed (right) 5-segment indicators -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/pollen_bar_container"
     android:layout_width="match_parent"
@@ -7,19 +7,19 @@
     android:background="@android:color/transparent"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="2dp"
-    android:paddingEnd="2dp"
+    android:paddingStart="0dp"
+    android:paddingEnd="0dp"
     android:paddingTop="2dp"
-    android:paddingBottom="2dp"
+    android:paddingBottom="0dp"
     android:visibility="gone">
 
-    <!-- Grass Pollen -->
+    <!-- Grass Pollen (Stuck to the left) -->
     <LinearLayout
         android:id="@+id/pollen_grass_group"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:gravity="center"
+        android:gravity="start|center_vertical"
         android:orientation="horizontal">
 
         <TextView
@@ -42,10 +42,10 @@
             android:layout_width="44dp"
             android:layout_height="10dp"
             android:contentDescription="@null"
-            android:scaleType="fitCenter" />
+            android:scaleType="fitStart" />
     </LinearLayout>
 
-    <!-- Tree Pollen -->
+    <!-- Tree Pollen (Centered in middle) -->
     <LinearLayout
         android:id="@+id/pollen_tree_group"
         android:layout_width="0dp"
@@ -77,13 +77,13 @@
             android:scaleType="fitCenter" />
     </LinearLayout>
 
-    <!-- Weed Pollen -->
+    <!-- Weed Pollen (Stuck to the right) -->
     <LinearLayout
         android:id="@+id/pollen_weed_group"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:gravity="center"
+        android:gravity="end|center_vertical"
         android:orientation="horizontal">
 
         <TextView
@@ -106,7 +106,7 @@
             android:layout_width="44dp"
             android:layout_height="10dp"
             android:contentDescription="@null"
-            android:scaleType="fitCenter" />
+            android:scaleType="fitEnd" />
     </LinearLayout>
 
 </LinearLayout>
