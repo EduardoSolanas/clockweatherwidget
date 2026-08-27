@@ -20,14 +20,18 @@ import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.HourlyForecast
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherCondition
+import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WeatherProviderType
 import com.clockweather.app.domain.model.WindDirection
+import com.clockweather.app.domain.model.locationReferenceDateTime
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkObject
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -73,22 +77,23 @@ class WeatherRepositoryProviderTtlTest {
         longitude = 13.405
     )
 
+    private val fixedReferenceTime: LocalDateTime = LocalDateTime.of(2026, 6, 15, 14, 0)
+
     private fun setupCachedWeather(ageMinutes: Long) {
-        val now = LocalDateTime.now()
-        val hourlyEntities = List(24) { mockk<HourlyForecastEntity>() }
-        val dailyEntities = List(14) { mockk<DailyForecastEntity>() }
+        val hourly = hourlyForecastsFrom(fixedReferenceTime, count = 48)
+        val daily = dailyForecastsFrom(fixedReferenceTime.toLocalDate(), count = 14)
+        val hourlyEntities = List(hourly.size) { mockk<HourlyForecastEntity>() }
+        val dailyEntities = List(daily.size) { mockk<DailyForecastEntity>() }
         every { currentWeatherDao.getCurrentWeather(location.id) } returns
             flowOf(mockk<CurrentWeatherEntity>())
         every { hourlyForecastDao.getHourlyForecasts(location.id) } returns flowOf(hourlyEntities)
         every { dailyForecastDao.getDailyForecasts(location.id) } returns flowOf(dailyEntities)
         every { locationDao.getLocationById(location.id) } returns flowOf(null)
         every { entityMapper.mapCurrentWeatherToDomain(any()) } returns
-            sampleCurrentWeather(lastUpdated = now.minusMinutes(ageMinutes))
+            sampleCurrentWeather(lastUpdated = fixedReferenceTime.minusMinutes(ageMinutes))
         every { entityMapper.mapAirQualityFromEntity(any()) } returns null
-        every { entityMapper.mapHourlyToDomain(any()) } returnsMany
-            hourlyForecastsFrom(now, count = 24)
-        every { entityMapper.mapDailyToDomain(any()) } returnsMany
-            dailyForecastsFrom(now.toLocalDate(), count = 14)
+        every { entityMapper.mapHourlyToDomain(any()) } returnsMany hourly
+        every { entityMapper.mapDailyToDomain(any()) } returnsMany daily
     }
 
     @Before
@@ -96,10 +101,14 @@ class WeatherRepositoryProviderTtlTest {
         // Real resolve() consults BuildConfig API keys and silently falls back to
         // the default provider; mock it so the selected provider is always honored.
         mockkObject(WeatherProviderPreferences)
+        mockkStatic("com.clockweather.app.domain.model.WeatherDataKt")
+        every { any<WeatherData>().locationReferenceDateTime(any()) } returns fixedReferenceTime
+        every { any<WeatherData>().locationReferenceDateTime() } returns fixedReferenceTime
     }
 
     @After
     fun unmockProviderPreferences() {
+        unmockkStatic("com.clockweather.app.domain.model.WeatherDataKt")
         unmockkObject(WeatherProviderPreferences)
     }
 
