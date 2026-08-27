@@ -14,7 +14,7 @@
         android:layout_width="196dp"
         android:layout_height="126dp"
         android:layout_gravity="bottom|center_horizontal"
-        android:paddingBottom="10dp"
+        android:paddingBottom="16dp"
         android:contentDescription="@null"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_widget_weather_partly_cloudy_day" />
@@ -24,6 +24,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="start|center_vertical"
+        android:layout_marginBottom="6dp"
         android:orientation="vertical">
 
         <TextView
@@ -55,7 +56,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|center_vertical"
-        android:layout_marginBottom="18dp"
+        android:layout_marginBottom="24dp"
         android:orientation="vertical">
 
         <TextView
