@@ -26,6 +26,7 @@
             android:id="@+id/pollen_label_grass"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:layout_marginEnd="4dp"
             android:includeFontPadding="false"
             android:shadowColor="#B3000000"
@@ -41,8 +42,9 @@
             android:id="@+id/pollen_bar_grass_segments"
             android:layout_width="44dp"
             android:layout_height="10dp"
+            android:layout_gravity="center_vertical"
             android:contentDescription="@null"
-            android:scaleType="fitStart" />
+            android:scaleType="fitCenter" />
     </LinearLayout>
 
     <!-- Tree Pollen (Centered in middle) -->
@@ -58,6 +60,7 @@
             android:id="@+id/pollen_label_tree"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:layout_marginEnd="4dp"
             android:includeFontPadding="false"
             android:shadowColor="#B3000000"
@@ -73,6 +76,7 @@
             android:id="@+id/pollen_bar_tree_segments"
             android:layout_width="44dp"
             android:layout_height="10dp"
+            android:layout_gravity="center_vertical"
             android:contentDescription="@null"
             android:scaleType="fitCenter" />
     </LinearLayout>
@@ -90,6 +94,7 @@
             android:id="@+id/pollen_label_weed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:layout_marginEnd="4dp"
             android:includeFontPadding="false"
             android:shadowColor="#B3000000"
@@ -105,8 +110,9 @@
             android:id="@+id/pollen_bar_weed_segments"
             android:layout_width="44dp"
             android:layout_height="10dp"
+            android:layout_gravity="center_vertical"
             android:contentDescription="@null"
-            android:scaleType="fitEnd" />
+            android:scaleType="fitCenter" />
     </LinearLayout>
 
 </LinearLayout>
