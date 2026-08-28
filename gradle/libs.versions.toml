@@ -17,8 +17,14 @@ hiltWork = "1.3.0"
 coreKtx = "1.15.0"
 appcompat = "1.7.0"
 activityCompose = "1.9.3"
+# Ads & Privacy
+playServicesAds = "23.6.0"
+userMessagingPlatform = "3.1.0"
 
 [libraries]
+# Ads
+play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
+user-messaging-platform = { group = "com.google.android.ump", name = "user-messaging-platform", version.ref = "userMessagingPlatform" }
 # Kotlin & Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }

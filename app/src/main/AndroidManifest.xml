@@ -34,6 +34,11 @@
         android:theme="@style/Theme.ClockWeatherWidget"
         tools:targetApi="35">
 
+        <!-- Google AdMob Application ID -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
+
         <!-- Weather Detail Activity -->
         <activity
             android:name=".presentation.detail.WeatherDetailActivity"

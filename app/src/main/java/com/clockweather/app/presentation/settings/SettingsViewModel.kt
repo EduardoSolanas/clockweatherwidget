@@ -56,6 +56,7 @@ class SettingsViewModel @Inject constructor(
         val KEY_WEATHER_ICON_STYLE = stringPreferencesKey("weather_icon_style")
         val KEY_LANGUAGE = stringPreferencesKey("language")
         val KEY_FORECAST_DAYS = intPreferencesKey("forecast_days")
+        val KEY_TESTER_MODE = booleanPreferencesKey("tester_mode_ads_disabled")
         const val DEFAULT_WIDGET_TEXT_SCALE = 1f
         const val MAX_WIDGET_TEXT_SCALE = 1.05f
         const val MIN_WEATHER_REFRESH_INTERVAL_MINUTES = 15
@@ -194,6 +195,10 @@ class SettingsViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)
 
+    val isTesterMode: StateFlow<Boolean> = dataStore.data
+        .map { prefs -> prefs[KEY_TESTER_MODE] ?: false }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     private val _isBatteryOptimizationExempt = MutableStateFlow(checkBatteryOptimizationExempt())
     val isBatteryOptimizationExempt = _isBatteryOptimizationExempt.asStateFlow()
 
@@ -316,6 +321,12 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             dataStore.edit { it[KEY_WEATHER_ICON_STYLE] = style }
             triggerWidgetUpdate()
+        }
+    }
+
+    fun setTesterMode(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.edit { it[KEY_TESTER_MODE] = enabled }
         }
     }
 

@@ -20,6 +20,18 @@ val defaultWeatherProvider: String = System.getenv("DEFAULT_WEATHER_PROVIDER")
         if (f.exists()) props.load(f.inputStream())
     }.getProperty("DEFAULT_WEATHER_PROVIDER", "GOOGLE")
 
+val admobAppId: String = System.getenv("ADMOB_APP_ID")
+    ?: Properties().also { props ->
+        val f = rootProject.file("local.properties")
+        if (f.exists()) props.load(f.inputStream())
+    }.getProperty("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713") // Google sample app ID
+
+val admobInterstitialAdUnitId: String = System.getenv("ADMOB_INTERSTITIAL_AD_UNIT_ID")
+    ?: Properties().also { props ->
+        val f = rootProject.file("local.properties")
+        if (f.exists()) props.load(f.inputStream())
+    }.getProperty("ADMOB_INTERSTITIAL_AD_UNIT_ID", "ca-app-pub-3940256099942544/1033173712") // Google sample interstitial ID
+
 android {
     namespace = "com.clockweather.app"
     compileSdk = 35
@@ -37,8 +49,11 @@ android {
         versionName = "$vMajor.$vMinor.$vPatch"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["admobAppId"] = admobAppId
         buildConfigField("String", "GOOGLE_WEATHER_API_KEY", "\"$googleWeatherApiKey\"")
         buildConfigField("String", "DEFAULT_WEATHER_PROVIDER", "\"$defaultWeatherProvider\"")
+        buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
+        buildConfigField("String", "ADMOB_INTERSTITIAL_AD_UNIT_ID", "\"$admobInterstitialAdUnitId\"")
     }
 
     buildTypes {
@@ -147,6 +162,10 @@ dependencies {
 
     // Accompanist Permissions
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+
+    // Google Mobile Ads (AdMob) & Consent (UMP)
+    implementation(libs.play.services.ads)
+    implementation(libs.user.messaging.platform)
 
     // Testing
     testImplementation(libs.junit)
