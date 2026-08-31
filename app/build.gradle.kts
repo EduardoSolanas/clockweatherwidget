@@ -57,7 +57,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Tester builds never serve ads: no SDK init, no consent form, no impressions.
+            buildConfigField("Boolean", "ADS_ENABLED", "false")
+        }
         release {
+            buildConfigField("Boolean", "ADS_ENABLED", "true")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

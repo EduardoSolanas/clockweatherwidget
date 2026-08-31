@@ -24,18 +24,23 @@ object AdManager {
 
     private const val TAG = "AdManager"
 
-    /** Minimum interval between full-page interstitial ads to prevent user disruption (3 minutes). */
-    private const val MIN_INTERSTITIAL_INTERVAL_MS = 3 * 60 * 1000L
+    /** Minimum interval between full-page interstitial ads to prevent user disruption (10 minutes). */
+    private const val MIN_INTERSTITIAL_INTERVAL_MS = 10 * 60 * 1000L
 
     private var interstitialAd: InterstitialAd? = null
     private var isAdLoading = false
     private var isMobileAdsInitialized = AtomicBoolean(false)
-    private var lastAdShownTimestamp: Long = 0L
+    private var lastAdShownTimestamp: Long = System.currentTimeMillis()
 
     /**
      * Initializes UMP consent information and Google Mobile Ads SDK on activity startup.
      */
     fun initialize(activity: Activity) {
+        if (!BuildConfig.ADS_ENABLED) {
+            Log.d(TAG, "Ads disabled for this build: skipping SDK and consent initialization.")
+            return
+        }
+
         val consentInformation = UserMessagingPlatform.getConsentInformation(activity)
         val params = ConsentRequestParameters.Builder()
             .setTagForUnderAgeOfConsent(false)
@@ -79,6 +84,7 @@ object AdManager {
      * Preloads an interstitial ad into memory so it is ready for instant display.
      */
     fun preloadInterstitial(context: Context) {
+        if (!BuildConfig.ADS_ENABLED) return
         if (interstitialAd != null || isAdLoading) return
 
         val adUnitId = BuildConfig.ADMOB_INTERSTITIAL_AD_UNIT_ID.ifEmpty {
@@ -112,6 +118,11 @@ object AdManager {
      * Checks whether the current session is eligible to show an interstitial ad.
      */
     fun isEligibleToShowAd(isTester: Boolean): Boolean {
+        if (!BuildConfig.ADS_ENABLED) {
+            Log.d(TAG, "Ads disabled for this build: ad suppressed.")
+            return false
+        }
+
         if (isTester) {
             Log.d(TAG, "User is a tester: ad suppressed.")
             return false
