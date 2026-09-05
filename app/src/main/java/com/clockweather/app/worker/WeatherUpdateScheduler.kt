@@ -82,16 +82,27 @@ object WeatherUpdateScheduler {
         )
     }
 
-    /** Enqueue user-requested weather work, falling back safely if expedited quota is spent. */
-    fun scheduleUserRefresh(context: Context) {
+    /** Enqueue user-requested weather work, optionally passing relocated coordinates. */
+    fun scheduleUserRefresh(context: Context, latitude: Double? = null, longitude: Double? = null) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
+        val baseData = workDataOf(WeatherUpdateWorker.INPUT_FORCE_REFRESH to true)
+        val inputData = if (latitude != null && longitude != null) {
+            androidx.work.Data.Builder()
+                .putAll(baseData)
+                .putDouble(WeatherUpdateWorker.KEY_LATITUDE, latitude)
+                .putDouble(WeatherUpdateWorker.KEY_LONGITUDE, longitude)
+                .build()
+        } else {
+            baseData
+        }
+
         val workRequest = OneTimeWorkRequestBuilder<WeatherUpdateWorker>()
             .setConstraints(constraints)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
-            .setInputData(workDataOf(WeatherUpdateWorker.INPUT_FORCE_REFRESH to true))
+            .setInputData(inputData)
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
 

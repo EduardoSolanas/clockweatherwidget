@@ -30,6 +30,13 @@ data class CurrentWeatherEntity(
     val aqPm25: Double? = null,
     val aqPm10: Double? = null,
     val aqUsEpaIndex: Int? = null,
-    val aqGbDefraIndex: Int? = null
+    val aqGbDefraIndex: Int? = null,
+    // Weather-owned location snapshot metadata (Finding 2)
+    val locationName: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    // Independent section freshness timestamps (Finding 1)
+    val aqLastUpdated: String? = null,
+    val pollenLastUpdated: String? = null
 )
 

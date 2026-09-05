@@ -8,8 +8,9 @@ interface LocationRepository {
     suspend fun saveLocation(location: Location): Long
     suspend fun deleteLocation(locationId: Long)
     suspend fun getCurrentLocation(): Location?
+    /** Resolve supplied coordinates to a displayable current-location row. */
+    suspend fun resolveLocation(latitude: Double, longitude: Double): Location
     suspend fun searchLocations(query: String): List<Location>
     fun getLocationById(id: Long): Flow<Location?>
     fun getFallbackLocation(): Location
 }
-

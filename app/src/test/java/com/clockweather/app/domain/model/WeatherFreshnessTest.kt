@@ -31,6 +31,18 @@ class WeatherFreshnessTest {
     }
 
     @Test
+    fun `air quality is stale when its section timestamp is missing even if current weather is recent`() {
+        val aq = AirQuality(co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0, usEpaIndex = 1, gbDefraIndex = 1)
+        assertFalse(isAirQualityFresh(aq, null, referenceDateTime))
+    }
+
+    @Test
+    fun `air quality is not fresh when timestamp is in the future`() {
+        val aq = AirQuality(co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0, usEpaIndex = 1, gbDefraIndex = 1)
+        assertFalse(isAirQualityFresh(aq, referenceDateTime.plusMinutes(5), referenceDateTime))
+    }
+
+    @Test
     fun `pollen is fresh when within 360 minutes and covered days match`() {
         val today = referenceDateTime.toLocalDate()
         val pollen = PollenData(grassPollen = PollenType("GRASS", "Grass", true, 2, "Low"))
@@ -60,6 +72,81 @@ class WeatherFreshnessTest {
         assertTrue(isPollenFresh(daily, referenceDateTime.minusMinutes(350), referenceDateTime, requiredDays = 5))
         assertFalse(isPollenFresh(daily, referenceDateTime.minusMinutes(365), referenceDateTime, requiredDays = 5))
         assertFalse(isPollenFresh(emptyList(), referenceDateTime.minusMinutes(10), referenceDateTime, requiredDays = 5))
+    }
+
+    @Test
+    fun `pollen is stale when its section timestamp is missing even if current weather is recent`() {
+        val today = referenceDateTime.toLocalDate()
+        val pollen = PollenData(grassPollen = PollenType("GRASS", "Grass", true, 2, "Low"))
+        val daily = (0..4).map { i ->
+            DailyForecast(
+                date = today.plusDays(i.toLong()), weatherCondition = WeatherCondition.CLEAR_DAY,
+                temperatureMax = 20.0, temperatureMin = 10.0, feelsLikeMax = 20.0, feelsLikeMin = 10.0,
+                sunrise = LocalTime.of(6, 0), sunset = LocalTime.of(18, 0), daylightDurationSeconds = 43200.0,
+                precipitationSum = 0.0, precipitationProbability = 0, windSpeedMax = 10.0,
+                windDirectionDominant = WindDirection.N, windDirectionDegrees = 0, uvIndexMax = 3.0,
+                averageHumidity = 50, averagePressure = 1013.25, pollen = pollen
+            )
+        }
+        assertFalse(isPollenFresh(daily, null, referenceDateTime, requiredDays = 5))
+    }
+
+    @Test
+    fun `pollen is not fresh when timestamp is in the future`() {
+        val today = referenceDateTime.toLocalDate()
+        val pollen = PollenData(grassPollen = PollenType("GRASS", "Grass", true, 2, "Low"))
+        val daily = (0..4).map { i ->
+            DailyForecast(
+                date = today.plusDays(i.toLong()),
+                weatherCondition = WeatherCondition.CLEAR_DAY,
+                temperatureMax = 20.0,
+                temperatureMin = 10.0,
+                feelsLikeMax = 20.0,
+                feelsLikeMin = 10.0,
+                sunrise = LocalTime.of(6, 0),
+                sunset = LocalTime.of(18, 0),
+                daylightDurationSeconds = 43200.0,
+                precipitationSum = 0.0,
+                precipitationProbability = 0,
+                windSpeedMax = 10.0,
+                windDirectionDominant = WindDirection.N,
+                windDirectionDegrees = 0,
+                uvIndexMax = 3.0,
+                averageHumidity = 50,
+                averagePressure = 1013.25,
+                pollen = pollen
+            )
+        }
+        assertFalse(isPollenFresh(daily, referenceDateTime.plusMinutes(5), referenceDateTime, requiredDays = 5))
+    }
+
+    @Test
+    fun `independent sections are stale when only current weather is recent`() {
+        val pollen = PollenData(grassPollen = PollenType("GRASS", "Grass", true, 2, "Low"))
+        val baseline = sampleWeatherData()
+        val weather = baseline.copy(
+            airQuality = AirQuality(
+                co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0,
+                usEpaIndex = 1, gbDefraIndex = 1, lastUpdated = null
+            ),
+            pollenLastUpdated = null,
+            dailyForecasts = baseline.dailyForecasts.map { it.copy(pollen = pollen) }
+        )
+
+        assertFalse(isCachedAirQualityFresh(weather, referenceDateTime))
+        assertFalse(isCachedPollenFresh(weather, referenceDateTime, requiredDays = 3))
+    }
+
+    @Test
+    fun `weather is not fresh when timestamp is in the future`() {
+        val weather = sampleWeatherData(lastUpdated = referenceDateTime.plusMinutes(5))
+        assertFalse(
+            isWeatherDataFresh(
+                weather = weather,
+                referenceDateTime = referenceDateTime,
+                requiredForecastDays = 3,
+            )
+        )
     }
 
     @Test

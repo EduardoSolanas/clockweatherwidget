@@ -9,8 +9,8 @@ import com.clockweather.app.data.remote.dto.google.GoogleAirQualityLocationDto
 import com.clockweather.app.data.remote.dto.google.GoogleAirQualityRequestDto
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
-import com.clockweather.app.domain.model.isAirQualityFresh
-import com.clockweather.app.domain.model.isPollenFresh
+import com.clockweather.app.domain.model.isCachedAirQualityFresh
+import com.clockweather.app.domain.model.isCachedPollenFresh
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import java.time.LocalDateTime
@@ -47,20 +47,9 @@ class GoogleWeatherProvider @Inject constructor(
         val lat = location.latitude
         val lon = location.longitude
         val referenceDateTime = LocalDateTime.now()
-        val cachedLastUpdated = cachedData?.currentWeather?.lastUpdated
 
-        val pollenIsFresh = isPollenFresh(
-            dailyForecasts = cachedData?.dailyForecasts.orEmpty(),
-            lastUpdated = cachedLastUpdated,
-            referenceDateTime = referenceDateTime,
-            requiredDays = minOf(days, 5)
-        )
-
-        val airQualityIsFresh = isAirQualityFresh(
-            airQuality = cachedData?.airQuality,
-            lastUpdated = cachedLastUpdated,
-            referenceDateTime = referenceDateTime
-        )
+        val pollenIsFresh = isCachedPollenFresh(cachedData, referenceDateTime, minOf(days, 5))
+        val airQualityIsFresh = isCachedAirQualityFresh(cachedData, referenceDateTime)
 
         val currentDeferred = async {
             googleWeatherApi.getCurrentConditions(apiKey, lat, lon)
@@ -149,6 +138,7 @@ class GoogleWeatherProvider @Inject constructor(
             pollen  = pollenResult.first,
             openMeteoPollen = pollenResult.second,
             cachedPollenByDate = cachedPollenByDate,
+            cachedPollenLastUpdated = cachedData?.pollenLastUpdated,
             airQuality = airQualityDeferred.await(),
             cachedAirQuality = cachedData?.airQuality,
             location = location

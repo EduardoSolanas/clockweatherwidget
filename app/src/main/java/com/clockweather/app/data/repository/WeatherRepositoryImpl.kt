@@ -19,6 +19,7 @@ import com.clockweather.app.domain.model.locationReferenceDateTime
 import com.clockweather.app.domain.model.normalizeDailyConditions
 import com.clockweather.app.domain.repository.WeatherRepository
 import androidx.room.withTransaction
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -51,12 +52,25 @@ class WeatherRepositoryImpl @Inject constructor(
         ) { current, hourly, daily, locationEntity ->
             current ?: return@combine null
             val latestLocation = locationEntity?.let { entityMapper.mapLocationToDomain(it) } ?: location
+            val snapshotLocation = if (!current.locationName.isNullOrBlank()) {
+                latestLocation.copy(
+                    name = current.locationName,
+                    latitude = current.latitude ?: latestLocation.latitude,
+                    longitude = current.longitude ?: latestLocation.longitude
+                )
+            } else {
+                latestLocation
+            }
+            val pollenUpdated = current.pollenLastUpdated?.let {
+                runCatching { java.time.LocalDateTime.parse(it, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME) }.getOrNull()
+            }
             WeatherData(
-                location = latestLocation,
+                location = snapshotLocation,
                 currentWeather = entityMapper.mapCurrentWeatherToDomain(current),
                 hourlyForecasts = hourly.map { entityMapper.mapHourlyToDomain(it) },
                 dailyForecasts = daily.map { entityMapper.mapDailyToDomain(it) },
-                airQuality = entityMapper.mapAirQualityFromEntity(current)
+                airQuality = entityMapper.mapAirQualityFromEntity(current),
+                pollenLastUpdated = pollenUpdated
             )
         }
     }
@@ -97,6 +111,7 @@ class WeatherRepositoryImpl @Inject constructor(
         return try {
             fetch(providerFactory.get(providerType), providerType)
         } catch (error: Exception) {
+            if (error is CancellationException) throw error
             val fallbackType = WeatherProviderPreferences.defaultProvider()
             if (fallbackType == providerType) throw error
             fetch(providerFactory.get(fallbackType), fallbackType)
@@ -121,7 +136,15 @@ class WeatherRepositoryImpl @Inject constructor(
     private suspend fun persistWeatherData(data: WeatherData, locationId: Long) {
         database.withTransaction {
             currentWeatherDao.insertCurrentWeather(
-                entityMapper.mapCurrentWeatherToEntity(data.currentWeather, locationId, data.airQuality)
+                entityMapper.mapCurrentWeatherToEntity(
+                    domain = data.currentWeather,
+                    locationId = locationId,
+                    airQuality = data.airQuality,
+                    locationName = data.location.name,
+                    latitude = data.location.latitude,
+                    longitude = data.location.longitude,
+                    pollenLastUpdated = data.pollenLastUpdated
+                )
             )
             hourlyForecastDao.deleteHourlyForecasts(locationId)
             hourlyForecastDao.insertHourlyForecasts(

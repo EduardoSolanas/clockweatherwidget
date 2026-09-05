@@ -34,6 +34,10 @@ class ScreenWakeReceiver : BroadcastReceiver() {
             return
         }
 
+        if (!com.clockweather.app.util.ActiveWidgetDetector.hasActiveWidgets(context)) {
+            return
+        }
+
         val now = System.currentTimeMillis()
         val shouldRedraw = if (action == Intent.ACTION_USER_PRESENT) {
             lastScreenOnRedrawMillis = now

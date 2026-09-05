@@ -3,6 +3,7 @@ package com.clockweather.app.data.mapper
 import com.clockweather.app.data.remote.dto.*
 import com.clockweather.app.data.remote.dto.openmeteo.OpenMeteoAirQualityHourlyDto
 import com.clockweather.app.data.remote.dto.openmeteo.OpenMeteoAirQualityResponseDto
+import com.clockweather.app.domain.model.AirQuality
 import com.clockweather.app.domain.model.Location
 import org.junit.Assert.*
 import org.junit.Test
@@ -169,5 +170,55 @@ class WeatherDtoMapperPollenTest {
         assertNull(weatherData.airQuality)
         assertEquals(1, weatherData.dailyForecasts.size)
         assertNull(weatherData.dailyForecasts.first().pollen)
+    }
+
+    @Test
+    fun `mapToWeatherData stamps air quality and pollen timestamps when fresh air quality response is provided`() {
+        val airQualityDto = OpenMeteoAirQualityResponseDto(
+            latitude = 52.52,
+            longitude = 13.41,
+            timezone = "Europe/Berlin",
+            hourly = OpenMeteoAirQualityHourlyDto(
+                time = listOf("2026-08-18T12:00"),
+                pm10 = listOf(20.0),
+                pm25 = listOf(12.0),
+                carbonMonoxide = listOf(300.0),
+                nitrogenDioxide = listOf(25.0),
+                sulphurDioxide = listOf(4.0),
+                ozone = listOf(65.0),
+                usAqi = listOf(45),
+                europeanAqi = listOf(2),
+                grassPollen = listOf(35.0)
+            )
+        )
+
+        val weatherData = mapper.mapToWeatherData(
+            response = weatherResponse,
+            location = location,
+            airQualityResponse = airQualityDto
+        )
+
+        assertNotNull(weatherData.airQuality?.lastUpdated)
+        assertNotNull(weatherData.pollenLastUpdated)
+    }
+
+    @Test
+    fun `mapToWeatherData preserves cached air quality and pollen timestamps when response is null`() {
+        val cachedTime = java.time.LocalDateTime.of(2026, 8, 18, 10, 0)
+        val cachedAq = AirQuality(
+            co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0, usEpaIndex = 1, gbDefraIndex = 1,
+            lastUpdated = cachedTime
+        )
+
+        val weatherData = mapper.mapToWeatherData(
+            response = weatherResponse,
+            location = location,
+            airQualityResponse = null,
+            cachedAirQuality = cachedAq,
+            cachedPollenLastUpdated = cachedTime
+        )
+
+        assertEquals(cachedTime, weatherData.airQuality?.lastUpdated)
+        assertEquals(cachedTime, weatherData.pollenLastUpdated)
     }
 }

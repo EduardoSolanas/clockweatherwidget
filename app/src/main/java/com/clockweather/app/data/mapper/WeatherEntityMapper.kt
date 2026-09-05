@@ -70,6 +70,9 @@ class WeatherEntityMapper @Inject constructor() {
 
     fun mapAirQualityFromEntity(entity: CurrentWeatherEntity): AirQuality? {
         val epa = entity.aqUsEpaIndex ?: return null
+        val aqUpdated = entity.aqLastUpdated?.let {
+            runCatching { LocalDateTime.parse(it, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }.getOrNull()
+        }
         return AirQuality(
             co = entity.aqCo ?: 0.0,
             no2 = entity.aqNo2 ?: 0.0,
@@ -78,11 +81,20 @@ class WeatherEntityMapper @Inject constructor() {
             pm25 = entity.aqPm25 ?: 0.0,
             pm10 = entity.aqPm10 ?: 0.0,
             usEpaIndex = epa,
-            gbDefraIndex = entity.aqGbDefraIndex ?: 1
+            gbDefraIndex = entity.aqGbDefraIndex ?: 1,
+            lastUpdated = aqUpdated
         )
     }
 
-    fun mapCurrentWeatherToEntity(domain: CurrentWeather, locationId: Long, airQuality: AirQuality? = null): CurrentWeatherEntity =
+    fun mapCurrentWeatherToEntity(
+        domain: CurrentWeather,
+        locationId: Long,
+        airQuality: AirQuality? = null,
+        locationName: String? = null,
+        latitude: Double? = null,
+        longitude: Double? = null,
+        pollenLastUpdated: LocalDateTime? = null
+    ): CurrentWeatherEntity =
         CurrentWeatherEntity(
             locationId = locationId,
             temperature = domain.temperature,
@@ -108,7 +120,12 @@ class WeatherEntityMapper @Inject constructor() {
             aqPm25 = airQuality?.pm25,
             aqPm10 = airQuality?.pm10,
             aqUsEpaIndex = airQuality?.usEpaIndex,
-            aqGbDefraIndex = airQuality?.gbDefraIndex
+            aqGbDefraIndex = airQuality?.gbDefraIndex,
+            locationName = locationName,
+            latitude = latitude,
+            longitude = longitude,
+            aqLastUpdated = airQuality?.lastUpdated?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            pollenLastUpdated = pollenLastUpdated?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
 
     // ── HourlyForecast ────────────────────────────────────────────────────────

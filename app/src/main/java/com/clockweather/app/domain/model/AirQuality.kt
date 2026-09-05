@@ -9,7 +9,8 @@ data class AirQuality(
     val pm25: Double,     // Fine particles μg/m³
     val pm10: Double,     // Coarse particles μg/m³
     val usEpaIndex: Int,  // 1=Good, 2=Moderate, 3=Unhealthy for sensitive, 4=Unhealthy, 5=Very Unhealthy, 6=Hazardous
-    val gbDefraIndex: Int // 1-3=Low, 4-6=Moderate, 7-9=High, 10=Very High
+    val gbDefraIndex: Int, // 1-3=Low, 4-6=Moderate, 7-9=High, 10=Very High
+    val lastUpdated: java.time.LocalDateTime? = null
 ) {
     val usEpaLabelResId: Int get() = when (usEpaIndex) {
         1 -> R.string.aq_good

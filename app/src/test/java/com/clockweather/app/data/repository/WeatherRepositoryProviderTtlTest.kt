@@ -84,8 +84,8 @@ class WeatherRepositoryProviderTtlTest {
         val daily = dailyForecastsFrom(fixedReferenceTime.toLocalDate(), count = 14)
         val hourlyEntities = List(hourly.size) { mockk<HourlyForecastEntity>() }
         val dailyEntities = List(daily.size) { mockk<DailyForecastEntity>() }
-        every { currentWeatherDao.getCurrentWeather(location.id) } returns
-            flowOf(mockk<CurrentWeatherEntity>())
+        val currentEntity = mockk<CurrentWeatherEntity>(relaxed = true)
+        every { currentWeatherDao.getCurrentWeather(location.id) } returns flowOf(currentEntity)
         every { hourlyForecastDao.getHourlyForecasts(location.id) } returns flowOf(hourlyEntities)
         every { dailyForecastDao.getDailyForecasts(location.id) } returns flowOf(dailyEntities)
         every { locationDao.getLocationById(location.id) } returns flowOf(null)
@@ -172,6 +172,46 @@ class WeatherRepositoryProviderTtlTest {
         cloudCover = 30,
         lastUpdated = lastUpdated,
     )
+
+    @Test
+    fun `cancellation exception is rethrown without attempting fallback provider`() = runTest {
+        val fallbackProvider: WeatherDataProvider = mockk()
+        every { WeatherProviderPreferences.resolve(any()) } returns WeatherProviderType.GOOGLE
+        every { WeatherProviderPreferences.defaultProvider() } returns WeatherProviderType.OPEN_METEO
+        every { providerFactory.get(WeatherProviderType.GOOGLE) } returns provider
+        every { providerFactory.get(WeatherProviderType.OPEN_METEO) } returns fallbackProvider
+        every { dataStore.data } returns flowOf(
+            preferencesOf(WeatherProviderPreferences.KEY_WEATHER_PROVIDER to "GOOGLE")
+        )
+        coEvery { currentWeatherDao.getCurrentWeather(location.id) } returns flowOf(null)
+        coEvery { hourlyForecastDao.getHourlyForecasts(location.id) } returns flowOf(emptyList())
+        coEvery { dailyForecastDao.getDailyForecasts(location.id) } returns flowOf(emptyList())
+        coEvery { locationDao.getLocationById(location.id) } returns flowOf(null)
+
+        coEvery {
+            provider.fetchWeatherData(any(), any(), any())
+        } throws kotlinx.coroutines.CancellationException("Job cancelled")
+
+        val repo = WeatherRepositoryImpl(
+            database = database,
+            currentWeatherDao = currentWeatherDao,
+            hourlyForecastDao = hourlyForecastDao,
+            dailyForecastDao = dailyForecastDao,
+            locationDao = locationDao,
+            providerFactory = providerFactory,
+            entityMapper = entityMapper,
+            dataStore = dataStore
+        )
+
+        try {
+            repo.forceRefreshWeatherData(location, 7)
+            org.junit.Assert.fail("Expected CancellationException to be thrown")
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Expected
+        }
+
+        coVerify(exactly = 0) { fallbackProvider.fetchWeatherData(any(), any(), any()) }
+    }
 
     private fun hourlyForecastsFrom(start: LocalDateTime, count: Int): List<HourlyForecast> {
         val firstHour = start.withMinute(0).withSecond(0).withNano(0)

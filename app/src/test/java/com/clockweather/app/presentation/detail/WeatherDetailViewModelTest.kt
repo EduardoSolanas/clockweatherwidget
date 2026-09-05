@@ -60,6 +60,7 @@ class WeatherDetailViewModelTest {
         country = "UK",
         latitude = 51.5072,
         longitude = -0.1276,
+        isCurrentLocation = true,
     )
 
     @Before
@@ -204,6 +205,90 @@ class WeatherDetailViewModelTest {
             is UiState.Error -> error("Expected cancellation to stay internal, but UI showed: ${uiState.message}")
             else -> Unit
         }
+    }
+
+    @Test
+    fun `unrelated datastore preference changes do not trigger forceRefreshWeatherAndWidgets`() = runTest(dispatcher) {
+        val prefFlow = kotlinx.coroutines.flow.MutableSharedFlow<Preferences>()
+        every { dataStore.data } returns prefFlow
+
+        val viewModel = WeatherDetailViewModel(
+            getWeatherDataUseCase = getWeatherDataUseCase,
+            refreshWeatherUseCase = refreshWeatherUseCase,
+            locationRepository = locationRepository,
+            dataStore = dataStore,
+            context = context,
+        )
+        advanceUntilIdle()
+
+        // Initial emission with provider GOOGLE
+        prefFlow.emit(preferencesOf(
+            com.clockweather.app.presentation.settings.SettingsViewModel.KEY_WEATHER_PROVIDER to "GOOGLE",
+            com.clockweather.app.presentation.settings.SettingsViewModel.KEY_TEMP_UNIT to "CELSIUS"
+        ))
+        advanceUntilIdle()
+
+        // Unrelated emission: temp unit changed to FAHRENHEIT, provider remains GOOGLE
+        prefFlow.emit(preferencesOf(
+            com.clockweather.app.presentation.settings.SettingsViewModel.KEY_WEATHER_PROVIDER to "GOOGLE",
+            com.clockweather.app.presentation.settings.SettingsViewModel.KEY_TEMP_UNIT to "FAHRENHEIT"
+        ))
+        advanceUntilIdle()
+
+        // forceRefresh should NOT have been called for provider change
+        coVerify(exactly = 0) { refreshWeatherUseCase.forceRefresh(any(), any()) }
+    }
+
+    @Test
+    fun `failed manual refresh does not lock out user and permits immediate retry`() = runTest(dispatcher) {
+        coEvery { refreshWeatherUseCase.forceRefresh(any(), any()) } throws RuntimeException("Network down")
+
+        val viewModel = WeatherDetailViewModel(
+            getWeatherDataUseCase = getWeatherDataUseCase,
+            refreshWeatherUseCase = refreshWeatherUseCase,
+            locationRepository = locationRepository,
+            dataStore = dataStore,
+            context = context,
+        )
+        advanceUntilIdle()
+
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { refreshWeatherUseCase.forceRefresh(location, forecastDays = 7) }
+
+        // Second immediate refresh should NOT be blocked by 5min throttle because previous attempt failed
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        coVerify(exactly = 2) { refreshWeatherUseCase.forceRefresh(location, forecastDays = 7) }
+    }
+
+    @Test
+    fun `loadWeather emits cached weather data immediately before freshness check completes`() = runTest {
+        coEvery { refreshWeatherUseCase.ensureFresh(any(), any()) } coAnswers {
+            delay(5_000L)
+        }
+
+        val viewModel = WeatherDetailViewModel(
+            getWeatherDataUseCase = getWeatherDataUseCase,
+            refreshWeatherUseCase = refreshWeatherUseCase,
+            locationRepository = locationRepository,
+            dataStore = dataStore,
+            context = context,
+        )
+
+        testScheduler.runCurrent()
+
+        // Cache must be emitted immediately at t=0 despite refresh taking 5000ms
+        val state = viewModel.uiState.value
+        org.junit.Assert.assertTrue(
+            "Expected UiState.Success with cached weather, but was $state",
+            state is UiState.Success
+        )
+
+        advanceUntilIdle()
+        coVerify(exactly = 1) { refreshWeatherUseCase.ensureFresh(location, 7) }
     }
 
     private fun sampleWeatherData(location: Location): WeatherData {

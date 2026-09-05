@@ -66,6 +66,15 @@ class LocationRepositoryNoFixTest {
     )
 
     @Test
+    fun `fallback location remains eligible to track a later current fix`() {
+        val fallback = repository().getFallbackLocation()
+        org.junit.Assert.assertTrue(
+            "Fallback must remain current-location eligible until a real fix arrives",
+            fallback.isCurrentLocation
+        )
+    }
+
+    @Test
     fun `no fix returns null rather than the previously saved location`() = runTest {
         every { fusedLocationClient.lastLocation } returns Tasks.forResult(null)
         every { fusedLocationClient.getCurrentLocation(any<Int>(), any()) } returns Tasks.forResult(null)

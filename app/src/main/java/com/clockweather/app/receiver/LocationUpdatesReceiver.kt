@@ -66,12 +66,16 @@ class LocationUpdatesReceiver(
                             TAG,
                             "Relocation detected via passive fix (>=5km from ${currentLocation.name}): scheduling refresh"
                         )
-                    // Hand the whole update to the worker, which resolves the city name and
-                    // the weather for the new coordinates together. Persisting coordinates
-                    // here would leave the row naming one city while pointing at another,
-                    // and that survives every later worker run whose own fix comes back
+                        // Hand the whole update to the worker, which resolves the city name and
+                        // the weather for the new coordinates together. Persisting coordinates
+                        // here would leave the row naming one city while pointing at another,
+                        // and that survives every later worker run whose own fix comes back
                         // null — the widget would read "London" over Brighton's temperature.
-                        WeatherUpdateScheduler.scheduleUserRefresh(context)
+                        WeatherUpdateScheduler.scheduleUserRefresh(
+                            context,
+                            latitude = fix.latitude,
+                            longitude = fix.longitude
+                        )
                     }
                 }
             } catch (e: Throwable) {

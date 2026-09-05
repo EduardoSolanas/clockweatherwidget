@@ -5,8 +5,8 @@ import com.clockweather.app.data.remote.api.OpenMeteoAirQualityApi
 import com.clockweather.app.data.remote.api.OpenMeteoWeatherApi
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
-import com.clockweather.app.domain.model.isAirQualityFresh
-import com.clockweather.app.domain.model.isPollenFresh
+import com.clockweather.app.domain.model.isCachedAirQualityFresh
+import com.clockweather.app.domain.model.isCachedPollenFresh
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import java.time.LocalDateTime
@@ -27,19 +27,9 @@ class OpenMeteoWeatherProvider @Inject constructor(
         val days = forecastDays.coerceIn(1, 16)
         val timezone = TimeZone.getDefault().id
         val referenceDateTime = LocalDateTime.now()
-        val cachedLastUpdated = cachedData?.currentWeather?.lastUpdated
 
-        val pollenIsFresh = isPollenFresh(
-            dailyForecasts = cachedData?.dailyForecasts.orEmpty(),
-            lastUpdated = cachedLastUpdated,
-            referenceDateTime = referenceDateTime,
-            requiredDays = days
-        )
-        val airQualityIsFresh = isAirQualityFresh(
-            airQuality = cachedData?.airQuality,
-            lastUpdated = cachedLastUpdated,
-            referenceDateTime = referenceDateTime
-        )
+        val pollenIsFresh = isCachedPollenFresh(cachedData, referenceDateTime, days)
+        val airQualityIsFresh = isCachedAirQualityFresh(cachedData, referenceDateTime)
 
         val weatherDeferred = async {
             openMeteoWeatherApi.getWeatherForecast(
@@ -75,7 +65,8 @@ class OpenMeteoWeatherProvider @Inject constructor(
             location = location,
             airQualityResponse = airQualityDeferred.await(),
             cachedAirQuality = cachedData?.airQuality,
-            cachedPollenByDate = cachedPollenByDate
+            cachedPollenByDate = cachedPollenByDate,
+            cachedPollenLastUpdated = cachedData?.pollenLastUpdated
         )
     }
 }

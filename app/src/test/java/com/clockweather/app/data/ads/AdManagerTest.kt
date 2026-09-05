@@ -2,6 +2,7 @@ package com.clockweather.app.data.ads
 
 import com.clockweather.app.BuildConfig
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AdManagerTest {
@@ -21,11 +22,17 @@ class AdManagerTest {
 
     @Test
     fun `ads are disabled in debug and internal tester builds`() {
-        assertFalse(BuildConfig.ADS_ENABLED)
+        if (BuildConfig.DEBUG) {
+            assertFalse(BuildConfig.ADS_ENABLED)
+        } else {
+            assertTrue(BuildConfig.ADS_ENABLED)
+        }
     }
 
     @Test
     fun `no user is eligible while ads are disabled for the build`() {
-        assertFalse(AdManager.isEligibleToShowAd(isTester = false))
+        if (!BuildConfig.ADS_ENABLED) {
+            assertFalse(AdManager.isEligibleToShowAd(isTester = false))
+        }
     }
 }

@@ -37,6 +37,7 @@ class GoogleWeatherMapper @Inject constructor() {
         pollen: GooglePollenForecastResponseDto? = null,
         openMeteoPollen: com.clockweather.app.data.remote.dto.openmeteo.OpenMeteoAirQualityResponseDto? = null,
         cachedPollenByDate: Map<LocalDate, PollenData?> = emptyMap(),
+        cachedPollenLastUpdated: LocalDateTime? = null,
         airQuality: com.clockweather.app.data.remote.dto.google.GoogleAirQualityResponseDto? = null,
         cachedAirQuality: AirQuality? = null,
         location: Location
@@ -44,11 +45,19 @@ class GoogleWeatherMapper @Inject constructor() {
         val timezone = current.timeZone?.id ?: "UTC"
         val googlePollenByDate = mapPollenByDate(pollen)
         val openMeteoHourly = openMeteoPollen?.hourly
+        val fetchTime = LocalDateTime.now()
+
+        val mappedAirQuality = mapAirQuality(airQuality, fetchTime)
+        val finalPollenLastUpdated = if (pollen != null || openMeteoPollen != null) {
+            fetchTime
+        } else {
+            cachedPollenLastUpdated
+        }
 
         return WeatherData(
             location = location,
-            currentWeather = mapCurrent(current),
-            hourlyForecasts = hourly?.forecastHours?.map { mapHourly(it) } ?: emptyList(),
+            currentWeather = mapCurrent(current, fetchTime),
+            hourlyForecasts = hourly?.forecastHours?.mapNotNull { mapHourly(it) } ?: emptyList(),
             dailyForecasts = daily.forecastDays.map { dto ->
                 val date = runCatching { LocalDate.of(dto.displayDate.year, dto.displayDate.month, dto.displayDate.day) }
                     .getOrElse { LocalDate.now() }
@@ -57,11 +66,12 @@ class GoogleWeatherMapper @Inject constructor() {
                     ?: cachedPollenByDate[date]
                 mapDaily(dto, timezone, pollen = pollenForDate)
             },
-            airQuality = mapAirQuality(airQuality) ?: cachedAirQuality
+            airQuality = mappedAirQuality ?: cachedAirQuality,
+            pollenLastUpdated = finalPollenLastUpdated
         )
     }
 
-    internal fun mapAirQuality(dto: com.clockweather.app.data.remote.dto.google.GoogleAirQualityResponseDto?): AirQuality? {
+    internal fun mapAirQuality(dto: com.clockweather.app.data.remote.dto.google.GoogleAirQualityResponseDto?, fetchTime: LocalDateTime = LocalDateTime.now()): AirQuality? {
         if (dto == null) return null
         val indexes = dto.indexes.orEmpty()
         val pollutants = dto.pollutants.orEmpty()
@@ -151,14 +161,15 @@ class GoogleWeatherMapper @Inject constructor() {
             pm25 = pm25,
             pm10 = pm10,
             usEpaIndex = usEpaIndex,
-            gbDefraIndex = gbDefraAqi.coerceIn(1, 10)
+            gbDefraIndex = gbDefraAqi.coerceIn(1, 10),
+            lastUpdated = fetchTime
         )
     }
 
-    private fun mapCurrent(dto: GoogleCurrentConditionsDto): CurrentWeather {
+    private fun mapCurrent(dto: GoogleCurrentConditionsDto, fetchTime: LocalDateTime = LocalDateTime.now()): CurrentWeather {
         val windDeg = dto.wind?.direction?.degrees?.toInt() ?: 0
         // Stamp fetch time so the 10-min TTL is relative to when we fetched, not the API observation.
-        val lastUpdated = LocalDateTime.now()
+        val lastUpdated = fetchTime
 
         return CurrentWeather(
             temperature = dto.temperature.degrees,
@@ -183,11 +194,21 @@ class GoogleWeatherMapper @Inject constructor() {
         )
     }
 
-    private fun mapHourly(dto: GoogleHourlyForecastDto): HourlyForecast {
+    private fun mapHourly(dto: GoogleHourlyForecastDto): HourlyForecast? {
         val dt = dto.displayDateTime
+        val intervalStart = dto.interval?.startTime
         val dateTime = runCatching {
-            LocalDateTime.of(dt.year, dt.month, dt.day, dt.hours, dt.minutes, dt.seconds)
-        }.getOrElse { LocalDateTime.now() }
+            if (!intervalStart.isNullOrBlank()) {
+                val instant = Instant.parse(intervalStart)
+                LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+            } else {
+                val offset = parseGoogleOffset(dt.utcOffset)
+                val odt = java.time.OffsetDateTime.of(
+                    dt.year, dt.month, dt.day, dt.hours, dt.minutes, dt.seconds, dt.nanos, offset
+                )
+                LocalDateTime.ofInstant(odt.toInstant(), ZoneId.systemDefault())
+            }
+        }.getOrNull() ?: return null
 
         val windDeg = dto.wind?.direction?.degrees?.toInt() ?: 0
 
@@ -209,6 +230,15 @@ class GoogleWeatherMapper @Inject constructor() {
             visibility = dto.visibility?.distance ?: 10000.0,
             uvIndex = dto.uvIndex?.toDouble() ?: 0.0
         )
+    }
+
+    private fun parseGoogleOffset(value: String): ZoneOffset {
+        val trimmed = value.trim()
+        return if (trimmed.endsWith("s")) {
+            ZoneOffset.ofTotalSeconds(trimmed.removeSuffix("s").toInt())
+        } else {
+            ZoneOffset.of(trimmed)
+        }
     }
 
     private fun mapDaily(dto: GoogleDailyForecastDto, timezone: String, pollen: PollenData? = null): DailyForecast {
@@ -329,4 +359,3 @@ class GoogleWeatherMapper @Inject constructor() {
         }.getOrNull()
     }
 }
-

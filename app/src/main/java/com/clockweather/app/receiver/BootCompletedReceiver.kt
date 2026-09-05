@@ -31,6 +31,9 @@ class BootCompletedReceiver : BroadcastReceiver() {
 
     internal suspend fun restoreWeatherUpdates(context: Context) {
         withTimeout(15_000) {
+            if (!com.clockweather.app.util.ActiveWidgetDetector.hasActiveWidgets(context)) {
+                return@withTimeout
+            }
             // Read stored interval pref so the worker respects the user's setting.
             val intervalMinutes = try {
                 context.dataStore.data.first()[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]

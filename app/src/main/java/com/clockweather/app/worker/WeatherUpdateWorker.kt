@@ -47,15 +47,26 @@ class WeatherUpdateWorker @AssistedInject constructor(
         var anyFailure = false
         locations.forEach { savedLocation ->
             try {
+                val detectedLocation = if (savedLocation.isCurrentLocation) {
+                    val lat = if (inputData.keyValueMap.containsKey(KEY_LATITUDE)) {
+                        inputData.getDouble(KEY_LATITUDE, Double.NaN)
+                    } else Double.NaN
+                    val lon = if (inputData.keyValueMap.containsKey(KEY_LONGITUDE)) {
+                        inputData.getDouble(KEY_LONGITUDE, Double.NaN)
+                    } else Double.NaN
+
+                    if (!lat.isNaN() && !lon.isNaN()) {
+                        locationRepository.resolveLocation(lat, lon)
+                    } else {
+                        locationRepository.getCurrentLocation()
+                    }
+                } else null
+
                 val refreshLocation = if (savedLocation.isCurrentLocation) {
                     WeatherRefreshLocationResolver.resolve(
                         savedLocation,
-                        locationRepository.getCurrentLocation(),
-                    ).also { refreshedLocation ->
-                        if (refreshedLocation != savedLocation) {
-                            locationRepository.saveLocation(refreshedLocation)
-                        }
-                    }
+                        detectedLocation,
+                    )
                 } else {
                     savedLocation
                 }
@@ -78,6 +89,11 @@ class WeatherUpdateWorker @AssistedInject constructor(
                             maxAgeMinutes = refreshIntervalMinutes.toLong(),
                         )
                 }
+
+                // Publish the relocated row only after its weather fetch succeeds.
+                if (refreshLocation != savedLocation) {
+                    locationRepository.saveLocation(refreshLocation)
+                }
             } catch (e: Exception) {
                 Log.w(TAG, "Refresh failed for ${savedLocation.id}", e)
                 anyFailure = true
@@ -95,6 +111,8 @@ class WeatherUpdateWorker @AssistedInject constructor(
         private const val TAG = "WeatherUpdateWorker"
         const val WORK_NAME = "weather_update_work"
         const val INPUT_FORCE_REFRESH = "force_refresh"
+        const val KEY_LATITUDE = "latitude"
+        const val KEY_LONGITUDE = "longitude"
     }
 }
 

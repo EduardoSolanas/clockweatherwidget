@@ -35,7 +35,8 @@ class WeatherDtoMapper @Inject constructor() {
         location: Location,
         airQualityResponse: OpenMeteoAirQualityResponseDto? = null,
         cachedAirQuality: AirQuality? = null,
-        cachedPollenByDate: Map<LocalDate, PollenData?> = emptyMap()
+        cachedPollenByDate: Map<LocalDate, PollenData?> = emptyMap(),
+        cachedPollenLastUpdated: LocalDateTime? = null
     ): WeatherData {
         // Stamp fetch time so the 10-min TTL is relative to when we fetched, not the API model slot
         // (Open-Meteo's current.time can be 15+ min behind actual fetch time).
@@ -43,14 +44,16 @@ class WeatherDtoMapper @Inject constructor() {
         val currentWeather = mapCurrentWeather(requireNotNull(response.current) { "current weather is null" }, fetchTime)
         val hourlyForecasts = response.hourly?.let { mapHourlyForecasts(it) } ?: emptyList()
         val dailyForecasts = response.daily?.let { mapDailyForecasts(it, hourlyForecasts, airQualityResponse, cachedPollenByDate) } ?: emptyList()
-        val airQuality = mapAirQuality(airQualityResponse) ?: cachedAirQuality
+        val airQuality = mapAirQuality(airQualityResponse, fetchTime) ?: cachedAirQuality
+        val pollenLastUpdated = if (airQualityResponse != null) fetchTime else cachedPollenLastUpdated
 
         return WeatherData(
             location = location,
             currentWeather = currentWeather,
             hourlyForecasts = hourlyForecasts,
             dailyForecasts = dailyForecasts,
-            airQuality = airQuality
+            airQuality = airQuality,
+            pollenLastUpdated = pollenLastUpdated
         )
     }
 
@@ -145,7 +148,7 @@ class WeatherDtoMapper @Inject constructor() {
         }
     }
 
-    private fun mapAirQuality(dto: OpenMeteoAirQualityResponseDto?): AirQuality? {
+    private fun mapAirQuality(dto: OpenMeteoAirQualityResponseDto?, fetchTime: LocalDateTime = LocalDateTime.now()): AirQuality? {
         val hourly = dto?.hourly ?: return null
         if (hourly.time.isEmpty()) return null
 
@@ -179,7 +182,8 @@ class WeatherDtoMapper @Inject constructor() {
             pm25 = pm25,
             pm10 = pm10,
             usEpaIndex = usEpaIndex,
-            gbDefraIndex = rawDefra.coerceIn(1, 10)
+            gbDefraIndex = rawDefra.coerceIn(1, 10),
+            lastUpdated = fetchTime
         )
     }
 

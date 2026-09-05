@@ -12,6 +12,9 @@ internal const val AIR_QUALITY_MAX_AGE_MINUTES = 60L
 /** Pollen and allergy biological dispersion models publish runs only 1-2 times daily (12-24h). */
 internal const val POLLEN_MAX_AGE_MINUTES = 360L // 6 hours
 
+/** Tolerance for minor clock skew when checking future timestamps. */
+internal const val MAX_FUTURE_TOLERANCE_MINUTES = 2L
+
 internal fun isAirQualityFresh(
     airQuality: AirQuality?,
     lastUpdated: LocalDateTime?,
@@ -19,6 +22,7 @@ internal fun isAirQualityFresh(
     maxAgeMinutes: Long = AIR_QUALITY_MAX_AGE_MINUTES
 ): Boolean {
     if (airQuality == null || lastUpdated == null) return false
+    if (lastUpdated.isAfter(referenceDateTime.plusMinutes(MAX_FUTURE_TOLERANCE_MINUTES))) return false
     return lastUpdated.isAfter(referenceDateTime.minusMinutes(maxAgeMinutes))
 }
 
@@ -30,6 +34,7 @@ internal fun isPollenFresh(
     maxAgeMinutes: Long = POLLEN_MAX_AGE_MINUTES
 ): Boolean {
     if (lastUpdated == null || dailyForecasts.isEmpty()) return false
+    if (lastUpdated.isAfter(referenceDateTime.plusMinutes(MAX_FUTURE_TOLERANCE_MINUTES))) return false
     if (!lastUpdated.isAfter(referenceDateTime.minusMinutes(maxAgeMinutes))) return false
     val today = referenceDateTime.toLocalDate()
     val coveredWithPollen = dailyForecasts
@@ -38,6 +43,28 @@ internal fun isPollenFresh(
         .count()
     return coveredWithPollen >= requiredDays.coerceIn(1, 5)
 }
+
+/** Cache policy for a weather snapshot's independent air-quality section. */
+internal fun isCachedAirQualityFresh(
+    weather: WeatherData?,
+    referenceDateTime: LocalDateTime,
+): Boolean = isAirQualityFresh(
+    airQuality = weather?.airQuality,
+    lastUpdated = weather?.airQuality?.lastUpdated,
+    referenceDateTime = referenceDateTime,
+)
+
+/** Cache policy for a weather snapshot's independent pollen section. */
+internal fun isCachedPollenFresh(
+    weather: WeatherData?,
+    referenceDateTime: LocalDateTime,
+    requiredDays: Int,
+): Boolean = isPollenFresh(
+    dailyForecasts = weather?.dailyForecasts.orEmpty(),
+    lastUpdated = weather?.pollenLastUpdated,
+    referenceDateTime = referenceDateTime,
+    requiredDays = requiredDays,
+)
 
 internal fun isWeatherDataFresh(
     weather: WeatherData?,
@@ -50,6 +77,9 @@ internal fun isWeatherDataFresh(
     val referenceHour = referenceDateTime.truncatedTo(ChronoUnit.HOURS)
     val today = referenceDateTime.toLocalDate()
 
+    if (weather.currentWeather.lastUpdated.isAfter(referenceDateTime.plusMinutes(MAX_FUTURE_TOLERANCE_MINUTES))) {
+        return false
+    }
     if (!weather.currentWeather.lastUpdated.isAfter(referenceDateTime.minusMinutes(maxAgeMinutes))) {
         return false
     }

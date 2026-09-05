@@ -95,7 +95,8 @@ class OpenMeteoWeatherProviderTest {
                 location = location,
                 airQualityResponse = airQualityResponse,
                 cachedAirQuality = any(),
-                cachedPollenByDate = any()
+                cachedPollenByDate = any(),
+                cachedPollenLastUpdated = any()
             )
         } returns fakeWeatherData
 
@@ -133,7 +134,8 @@ class OpenMeteoWeatherProviderTest {
                 location = location,
                 airQualityResponse = airQualityResponse,
                 cachedAirQuality = any(),
-                cachedPollenByDate = any()
+                cachedPollenByDate = any(),
+                cachedPollenLastUpdated = any()
             )
         }
     }
@@ -194,8 +196,10 @@ class OpenMeteoWeatherProviderTest {
             hourlyForecasts = emptyList(),
             dailyForecasts = cachedDaily,
             airQuality = AirQuality(
-                co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0, usEpaIndex = 1, gbDefraIndex = 1
-            )
+                co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0, usEpaIndex = 1, gbDefraIndex = 1,
+                lastUpdated = now.minusMinutes(20)
+            ),
+            pollenLastUpdated = now.minusMinutes(20)
         )
 
         coEvery {
@@ -218,7 +222,8 @@ class OpenMeteoWeatherProviderTest {
                 location = location,
                 airQualityResponse = null,
                 cachedAirQuality = cachedWeather.airQuality,
-                cachedPollenByDate = any()
+                cachedPollenByDate = any(),
+                cachedPollenLastUpdated = cachedWeather.pollenLastUpdated
             )
         } returns fakeWeatherData
 
@@ -237,8 +242,106 @@ class OpenMeteoWeatherProviderTest {
                 location = location,
                 airQualityResponse = null,
                 cachedAirQuality = cachedWeather.airQuality,
-                cachedPollenByDate = any()
+                cachedPollenByDate = any(),
+                cachedPollenLastUpdated = cachedWeather.pollenLastUpdated
             )
+        }
+    }
+
+    @Test
+    fun `fetchWeatherData refetches air quality when air quality is stale even if current weather is fresh`() = runTest {
+        TimeZone.setDefault(TimeZone.getTimeZone("Europe/London"))
+        val now = LocalDateTime.now()
+        val freshPollen = PollenData(
+            grassPollen = PollenType("GRASS", "Grass", true, 2, "Low")
+        )
+        val cachedDaily = (0..6).map { dayOffset ->
+            DailyForecast(
+                date = now.toLocalDate().plusDays(dayOffset.toLong()),
+                weatherCondition = WeatherCondition.CLEAR_DAY,
+                temperatureMax = 20.0,
+                temperatureMin = 10.0,
+                feelsLikeMax = 20.0,
+                feelsLikeMin = 10.0,
+                sunrise = LocalTime.of(6, 0),
+                sunset = LocalTime.of(20, 0),
+                daylightDurationSeconds = 50400.0,
+                precipitationSum = 0.0,
+                precipitationProbability = 0,
+                windSpeedMax = 10.0,
+                windDirectionDominant = WindDirection.N,
+                windDirectionDegrees = 0,
+                uvIndexMax = 3.0,
+                averageHumidity = 50,
+                averagePressure = 1013.25,
+                pollen = freshPollen
+            )
+        }
+
+        val cachedWeather = WeatherData(
+            location = location,
+            currentWeather = CurrentWeather(
+                temperature = 18.0,
+                feelsLikeTemperature = 18.0,
+                humidity = 50,
+                dewPoint = 10.0,
+                precipitation = 0.0,
+                precipitationProbability = 0,
+                weatherCondition = WeatherCondition.CLEAR_DAY,
+                isDay = true,
+                pressure = 1013.25,
+                windSpeed = 10.0,
+                windDirection = WindDirection.N,
+                windDirectionDegrees = 0,
+                windGusts = 15.0,
+                visibility = 10000.0,
+                uvIndex = 3.0,
+                cloudCover = 0,
+                lastUpdated = now.minusMinutes(5) // Fresh current weather (<10m)
+            ),
+            hourlyForecasts = emptyList(),
+            dailyForecasts = cachedDaily,
+            airQuality = AirQuality(
+                co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0, usEpaIndex = 1, gbDefraIndex = 1,
+                lastUpdated = now.minusMinutes(70) // Stale air quality (>60m)
+            ),
+            pollenLastUpdated = now.minusMinutes(5)
+        )
+
+        coEvery {
+            api.getWeatherForecast(
+                latitude = any(),
+                longitude = any(),
+                current = any(),
+                hourly = any(),
+                daily = any(),
+                timezone = any(),
+                forecastDays = any(),
+                windSpeedUnit = any(),
+                temperatureUnit = any(),
+            )
+        } returns weatherResponse
+
+        coEvery {
+            airQualityApi.getAirQuality(any(), any(), any(), any(), any())
+        } returns airQualityResponse
+
+        every {
+            mapper.mapToWeatherData(
+                response = any(),
+                location = any(),
+                airQualityResponse = any(),
+                cachedAirQuality = any(),
+                cachedPollenByDate = any(),
+                cachedPollenLastUpdated = any()
+            )
+        } returns fakeWeatherData
+
+        provider.fetchWeatherData(location, forecastDays = 7, cachedData = cachedWeather)
+
+        // Verifies air quality API is called because airQuality is stale!
+        coVerify(exactly = 1) {
+            airQualityApi.getAirQuality(any(), any(), any(), any(), any())
         }
     }
 
@@ -270,7 +373,8 @@ class OpenMeteoWeatherProviderTest {
                 location = location,
                 airQualityResponse = null,
                 cachedAirQuality = any(),
-                cachedPollenByDate = any()
+                cachedPollenByDate = any(),
+                cachedPollenLastUpdated = any()
             )
         } returns fakeWeatherData
 
@@ -284,7 +388,8 @@ class OpenMeteoWeatherProviderTest {
                 location = location,
                 airQualityResponse = null,
                 cachedAirQuality = any(),
-                cachedPollenByDate = any()
+                cachedPollenByDate = any(),
+                cachedPollenLastUpdated = any()
             )
         }
     }

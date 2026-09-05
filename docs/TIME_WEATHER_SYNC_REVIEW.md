@@ -1,6 +1,6 @@
 # Time, weather and location sync review
 
-Review date and latest status audit: 5 September 2026. Scope: the Android working tree on `feat/disable-ads-debug-builds`. DONE means implemented locally, not committed, deployed or verified on a launcher. This document update changes no application code.
+Review date and latest status audit: 5 September 2026. Scope: `feat/disable-ads-debug-builds`. DONE means the scoped implementation is present; the commit checkpoint below records what has been saved in Git. It does not imply deployment or launcher verification.
 
 Read the current status table and implementation order first. Each numbered finding starts with a current status; its remaining evidence/change/acceptance text preserves the original audit unless explicitly updated. Original failures are historical, not claims that every defect still exists. The implementation follow-up records the last full test run; this status audit used source inspection only.
 
@@ -308,6 +308,12 @@ Last completed implementation test run — 5 September 2026 (not rerun for later
 - The snapshot persistence test now uses real Room and DataStore rather than mocked DAOs. The refresh guard has real state-transition tests. Earlier legacy tests elsewhere still use doubles.
 
 Cheaper agents implemented and cross-reviewed the main fixes. The orchestrator completed the last save-order correction and final checks after agent usage limits interrupted delegation. Device/launcher behavior, live reverse geocoding, production providers and battery/Doze performance have not been verified. The broader deferred roadmap, including a full persisted-`Instant` migration, remains separate from these corrections.
+
+## Implementation commit checkpoint — 5 September 2026
+
+The previously pending 40 application source/test files are committed together with this checkpoint. Generic, project-specific agent guidance was committed separately as `fe11370`; the audit was first committed as `85fb66d`. Baseline measurement and subsequent queue items have not started.
+
+An independent agent rechecked the manual save order, refresh guard, migration isolation, passive relocation and unknown section ages. Existing debug and release reports each contain 352 passing tests and postdate the final behavioral edits. The commit preparation changed only two trailing spaces in migration-test SQL; the unit suite was not repeated. A fresh `.\gradlew.bat :app:lintDebug --no-daemon` command passed: Gradle considered its analysis/report up to date, with zero errors, 93 warnings and two hints. No device, launcher, live-provider or battery verification was added, and the open findings remain open.
 
 ## Home-screen freshness and flicker follow-up — 5 September 2026
 

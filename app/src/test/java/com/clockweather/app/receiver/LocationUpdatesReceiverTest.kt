@@ -61,7 +61,7 @@ class LocationUpdatesReceiverTest {
         } returns entryPoint
 
         mockkObject(WeatherUpdateScheduler)
-        every { WeatherUpdateScheduler.scheduleUserRefresh(any()) } just Runs
+        every { WeatherUpdateScheduler.scheduleUserRefresh(any(), any(), any()) } just Runs
     }
 
     @After
@@ -91,11 +91,13 @@ class LocationUpdatesReceiverTest {
     }
 
     @Test
-    fun `significant move enqueues a refresh`() {
+    fun `significant move enqueues a refresh with passive fix coordinates`() {
         // Brighton (~75 km from London)
         receiveAndSettle(createLocationIntent(50.8225, -0.1372))
 
-        verify(atLeast = 1) { WeatherUpdateScheduler.scheduleUserRefresh(any()) }
+        verify(atLeast = 1) {
+            WeatherUpdateScheduler.scheduleUserRefresh(any(), latitude = 50.8225, longitude = -0.1372)
+        }
     }
 
     @Test

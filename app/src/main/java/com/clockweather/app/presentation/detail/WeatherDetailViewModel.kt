@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.TemperatureUnit
+import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.repository.LocationRepository
 import com.clockweather.app.domain.usecase.GetWeatherDataUseCase
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -50,7 +52,10 @@ class WeatherDetailViewModel @Inject constructor(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
     private var weatherLoadJob: Job? = null
 
-    internal var lastRefreshTimeMs: Long = 0L
+    private val refreshGate = ManualRefreshGate(REFRESH_THROTTLE_MS)
+    internal var lastRefreshTimeMs: Long
+        get() = refreshGate.lastSuccessfulRefreshMs
+        set(value) { refreshGate.lastSuccessfulRefreshMs = value }
 
     /** Observes the temperature unit from DataStore — updates immediately when changed in Settings. */
     val temperatureUnit: StateFlow<TemperatureUnit> = dataStore.data
@@ -132,6 +137,7 @@ class WeatherDetailViewModel @Inject constructor(
         viewModelScope.launch {
             dataStore.data
                 .map { prefs -> prefs[com.clockweather.app.presentation.settings.SettingsViewModel.KEY_WEATHER_PROVIDER] }
+                .distinctUntilChanged()
                 .drop(1)
                 .collect {
                     val location = (uiState.value as? UiState.Success)?.data?.location
@@ -162,12 +168,17 @@ class WeatherDetailViewModel @Inject constructor(
 
                 val location = locations.first()
 
-                try {
-                    ensureFreshWeatherAndWidgets(location, forecastDays.value)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Log.w(TAG, "Initial weather refresh failed; continuing with cache", e)
+                launch {
+                    try {
+                        ensureFreshWeatherAndWidgets(location, forecastDays.value)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Initial weather refresh failed; continuing with cache", e)
+                        if (_uiState.value is UiState.Loading) {
+                            _uiState.value = UiState.Error(e.message ?: context.getString(R.string.error_no_data))
+                        }
+                    }
                 }
 
                 getWeatherDataUseCase(location)
@@ -188,9 +199,10 @@ class WeatherDetailViewModel @Inject constructor(
 
     fun refresh() {
         val now = System.currentTimeMillis()
-        if (lastRefreshTimeMs > 0L && now - lastRefreshTimeMs < REFRESH_THROTTLE_MS) return
-        lastRefreshTimeMs = now
+        if (!refreshGate.tryAcquire(now)) return
         viewModelScope.launch {
+            var succeeded = false
+            var pendingLocationSave: Location? = null
             _isRefreshing.value = true
             try {
                 val savedLocations = locationRepository.getSavedLocations().first()
@@ -210,8 +222,12 @@ class WeatherDetailViewModel @Inject constructor(
                             id = reusedId,
                             isCurrentLocation = true
                         )
-                        val insertedId = locationRepository.saveLocation(candidate)
-                        val finalId = if (candidate.id == 0L) insertedId else candidate.id
+                        val finalId = if (candidate.id == 0L) {
+                            locationRepository.saveLocation(candidate)
+                        } else {
+                            pendingLocationSave = candidate
+                            candidate.id
+                        }
                         candidate.copy(id = finalId)
                     }
                     primaryLocation != null -> primaryLocation
@@ -228,18 +244,23 @@ class WeatherDetailViewModel @Inject constructor(
                     }
                 }
 
+                forceRefreshWeatherAndWidgets(
+                    resolvedLocation,
+                    forecastDays.value,
+                    saveLocationAfterRefresh = pendingLocationSave != null,
+                )
                 if (currentUiLocation == null || currentUiLocation.id != resolvedLocation.id) {
-                    // Location context changed (or we had no active context): restart the load stream.
+                    // Restart the observation stream after the manual request has persisted.
                     loadWeather()
-                } else {
-                    forceRefreshWeatherAndWidgets(resolvedLocation, forecastDays.value)
                 }
+                succeeded = true
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Log.w(TAG, "Manual weather refresh failed", e)
             } finally {
                 _isRefreshing.value = false
+                refreshGate.finish(succeeded, System.currentTimeMillis())
             }
         }
     }
@@ -255,9 +276,14 @@ class WeatherDetailViewModel @Inject constructor(
 
     private suspend fun forceRefreshWeatherAndWidgets(
         location: com.clockweather.app.domain.model.Location,
-        forecastDays: Int
+        forecastDays: Int,
+        saveLocationAfterRefresh: Boolean = false,
     ) {
-        refreshWeatherUseCase.forceRefresh(location, forecastDays = forecastDays)
+        if (saveLocationAfterRefresh) {
+            refreshWeatherUseCase.forceRefreshThenSaveLocation(location, forecastDays, locationRepository)
+        } else {
+            refreshWeatherUseCase.forceRefresh(location, forecastDays = forecastDays)
+        }
         val app = context.applicationContext as? com.clockweather.app.ClockWeatherApplication
         app?.refreshAllWidgets(app)
     }
@@ -265,5 +291,25 @@ class WeatherDetailViewModel @Inject constructor(
     companion object {
         private const val TAG = "WeatherDetailViewModel"
         const val REFRESH_THROTTLE_MS = 5 * 60 * 1000L
+    }
+}
+
+/** Coordinates manual refresh cooldown and suppresses duplicate in-flight requests. */
+internal class ManualRefreshGate(private val cooldownMs: Long) {
+    internal var lastSuccessfulRefreshMs: Long = 0L
+    private var inFlight = false
+
+    @Synchronized
+    fun tryAcquire(nowMs: Long): Boolean {
+        if (inFlight) return false
+        if (lastSuccessfulRefreshMs > 0L && nowMs - lastSuccessfulRefreshMs < cooldownMs) return false
+        inFlight = true
+        return true
+    }
+
+    @Synchronized
+    fun finish(succeeded: Boolean, nowMs: Long) {
+        if (succeeded) lastSuccessfulRefreshMs = nowMs
+        inFlight = false
     }
 }

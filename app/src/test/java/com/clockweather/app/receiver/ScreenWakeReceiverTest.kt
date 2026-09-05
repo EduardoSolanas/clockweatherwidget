@@ -28,6 +28,8 @@ class ScreenWakeReceiverTest {
     fun mockScheduler() {
         ScreenWakeReceiver.lastScreenOnRedrawMillis = 0L
         mockkObject(WeatherUpdateScheduler)
+        mockkObject(com.clockweather.app.util.ActiveWidgetDetector)
+        every { com.clockweather.app.util.ActiveWidgetDetector.hasActiveWidgets(any(), any()) } returns true
         justRun { WeatherUpdateScheduler.scheduleImmediateRefresh(any()) }
         coEvery { application.refreshAllWidgets(any()) } returns Unit
     }
@@ -35,6 +37,7 @@ class ScreenWakeReceiverTest {
     @After
     fun unmockScheduler() {
         unmockkObject(WeatherUpdateScheduler)
+        unmockkObject(com.clockweather.app.util.ActiveWidgetDetector)
     }
 
     private fun intentWithAction(action: String?): Intent =
@@ -84,6 +87,18 @@ class ScreenWakeReceiverTest {
     @Test
     fun `null action does nothing`() {
         receiver.onReceive(context, intentWithAction(null))
+
+        Thread.sleep(50)
+
+        coVerify(exactly = 0) { application.refreshAllWidgets(any()) }
+        verify(exactly = 0) { WeatherUpdateScheduler.scheduleImmediateRefresh(any()) }
+    }
+
+    @Test
+    fun `screen on does nothing when no active widgets exist`() {
+        every { com.clockweather.app.util.ActiveWidgetDetector.hasActiveWidgets(any(), any()) } returns false
+
+        receiver.onReceive(context, intentWithAction(Intent.ACTION_SCREEN_ON))
 
         Thread.sleep(50)
 

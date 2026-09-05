@@ -30,19 +30,46 @@ class BootCompletedReceiverWorkTest {
     }
 
     @Test
-    fun `boot restores periodic schedule and enqueues immediate freshness check`() = runBlocking {
-        BootCompletedReceiver().restoreWeatherUpdates(context)
+    fun `boot restores periodic schedule and enqueues immediate freshness check when widgets exist`() = runBlocking {
+        io.mockk.mockkObject(com.clockweather.app.util.ActiveWidgetDetector)
+        io.mockk.every { com.clockweather.app.util.ActiveWidgetDetector.hasActiveWidgets(any(), any()) } returns true
+        try {
+            BootCompletedReceiver().restoreWeatherUpdates(context)
 
-        val workManager = WorkManager.getInstance(context)
-        eventually {
+            val workManager = WorkManager.getInstance(context)
+            eventually {
+                assertEquals(
+                    1,
+                    workManager.getWorkInfosForUniqueWork(WeatherUpdateWorker.WORK_NAME).get().size,
+                )
+                assertEquals(
+                    1,
+                    workManager.getWorkInfosForUniqueWork(WeatherUpdateScheduler.IMMEDIATE_WORK_NAME).get().size,
+                )
+            }
+        } finally {
+            io.mockk.unmockkObject(com.clockweather.app.util.ActiveWidgetDetector)
+        }
+    }
+
+    @Test
+    fun `boot skips scheduling when no active widgets exist`() = runBlocking {
+        io.mockk.mockkObject(com.clockweather.app.util.ActiveWidgetDetector)
+        io.mockk.every { com.clockweather.app.util.ActiveWidgetDetector.hasActiveWidgets(any(), any()) } returns false
+        try {
+            BootCompletedReceiver().restoreWeatherUpdates(context)
+
+            val workManager = WorkManager.getInstance(context)
             assertEquals(
-                1,
+                0,
                 workManager.getWorkInfosForUniqueWork(WeatherUpdateWorker.WORK_NAME).get().size,
             )
             assertEquals(
-                1,
+                0,
                 workManager.getWorkInfosForUniqueWork(WeatherUpdateScheduler.IMMEDIATE_WORK_NAME).get().size,
             )
+        } finally {
+            io.mockk.unmockkObject(com.clockweather.app.util.ActiveWidgetDetector)
         }
     }
 

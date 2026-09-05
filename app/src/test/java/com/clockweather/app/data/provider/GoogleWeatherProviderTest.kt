@@ -161,8 +161,10 @@ class GoogleWeatherProviderTest {
             hourlyForecasts = emptyList(),
             dailyForecasts = cachedDaily,
             airQuality = AirQuality(
-                co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0, usEpaIndex = 1, gbDefraIndex = 1
-            )
+                co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0, usEpaIndex = 1, gbDefraIndex = 1,
+                lastUpdated = now.minusMinutes(25)
+            ),
+            pollenLastUpdated = now.minusMinutes(25)
         )
 
         val result = provider.fetchWeatherData(location, forecastDays = 7, cachedData = cachedWeather)
@@ -182,6 +184,7 @@ class GoogleWeatherProviderTest {
                 pollen = null,
                 openMeteoPollen = null,
                 cachedPollenByDate = any(),
+                cachedPollenLastUpdated = any(),
                 airQuality = null,
                 cachedAirQuality = cachedWeather.airQuality,
                 location = location
@@ -245,6 +248,46 @@ class GoogleWeatherProviderTest {
         }
     }
 
+    @Test
+    fun `fetchWeatherData refetches air quality when air quality is stale even if current weather is fresh`() = runTest {
+        stubApiAndMapper()
+        val now = LocalDateTime.now()
+        val cachedWeather = WeatherData(
+            location = location,
+            currentWeather = CurrentWeather(
+                temperature = 18.0,
+                feelsLikeTemperature = 18.0,
+                humidity = 50,
+                dewPoint = 10.0,
+                precipitation = 0.0,
+                precipitationProbability = 0,
+                weatherCondition = WeatherCondition.CLEAR_DAY,
+                isDay = true,
+                pressure = 1013.25,
+                windSpeed = 10.0,
+                windDirection = WindDirection.N,
+                windDirectionDegrees = 0,
+                windGusts = 15.0,
+                visibility = 10000.0,
+                uvIndex = 3.0,
+                cloudCover = 0,
+                lastUpdated = now.minusMinutes(10) // Current weather updated 10m ago (fresh)
+            ),
+            hourlyForecasts = emptyList(),
+            dailyForecasts = emptyList(),
+            airQuality = AirQuality(
+                co = 1.0, no2 = 1.0, o3 = 1.0, so2 = 1.0, pm25 = 5.0, pm10 = 10.0, usEpaIndex = 1, gbDefraIndex = 1,
+                lastUpdated = now.minusMinutes(75) // AQ is 75m old (STALE! >60m TTL)
+            ),
+            pollenLastUpdated = now.minusMinutes(100)
+        )
+
+        provider.fetchWeatherData(location, forecastDays = 7, cachedData = cachedWeather)
+
+        // Must NOT skip Google Air Quality request because AQ is stale!
+        coVerify(exactly = 1) { googleAirQualityApi.getCurrentConditions(any(), any()) }
+    }
+
     private fun stubApiAndMapper() {
         coEvery {
             googleWeatherApi.getCurrentConditions(any(), any(), any(), any(), any())
@@ -282,6 +325,7 @@ class GoogleWeatherProviderTest {
                 pollen = any(),
                 openMeteoPollen = any(),
                 cachedPollenByDate = any(),
+                cachedPollenLastUpdated = any(),
                 airQuality = any(),
                 cachedAirQuality = any(),
                 location = any()

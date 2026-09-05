@@ -92,7 +92,45 @@ class WeatherRefreshAfterRelocationTest {
         assertEquals(listOf(PARIS), weatherRepository.ensureFreshCalls)
     }
 
-    private class RecordingWeatherRepository : WeatherRepository {
+    @Test
+    fun `relocated location is not saved if weather refresh fails`() = runTest {
+        val locationRepository = FakeLocationRepository(saved = listOf(LONDON), detected = BRIGHTON_FIX)
+        val failingWeatherRepository = RecordingWeatherRepository(
+            forceRefreshError = java.io.IOException("Network unavailable")
+        )
+
+        runWorker(locationRepository, failingWeatherRepository).doWork()
+
+        // Since weather fetch failed, we must NOT have saved the new location to DB
+        assertEquals(emptyList<Location>(), locationRepository.savedUpdates)
+    }
+
+    @Test
+    fun `worker uses coordinates from inputData without calling getCurrentLocation`() = runTest {
+        val locationRepository = FakeLocationRepository(saved = listOf(LONDON), detected = BRIGHTON_FIX)
+        val weatherRepository = RecordingWeatherRepository()
+
+        val worker = TestListenableWorkerBuilder<WeatherUpdateWorker>(context)
+            .setWorkerFactory(HiltWorkerFactoryStub(weatherRepository, locationRepository, dataStore))
+            .setInputData(
+                androidx.work.workDataOf(
+                    WeatherUpdateWorker.KEY_LATITUDE to BRIGHTON_FIX.latitude,
+                    WeatherUpdateWorker.KEY_LONGITUDE to BRIGHTON_FIX.longitude
+                )
+            )
+            .build()
+
+        worker.doWork()
+
+        assertEquals(1, weatherRepository.forceRefreshCalls.size)
+        assertEquals(BRIGHTON_FIX.latitude, weatherRepository.forceRefreshCalls.first().latitude, 0.001)
+        assertEquals(BRIGHTON_FIX.longitude, weatherRepository.forceRefreshCalls.first().longitude, 0.001)
+        assertEquals(BRIGHTON_FIX.name, weatherRepository.forceRefreshCalls.first().name)
+    }
+
+    private class RecordingWeatherRepository(
+        private val forceRefreshError: Throwable? = null
+    ) : WeatherRepository {
         val ensureFreshCalls = mutableListOf<Location>()
         val forceRefreshCalls = mutableListOf<Location>()
 
@@ -108,6 +146,7 @@ class WeatherRefreshAfterRelocationTest {
 
         override suspend fun forceRefreshWeatherData(location: Location, forecastDays: Int) {
             forceRefreshCalls += location
+            forceRefreshError?.let { throw it }
         }
     }
 
@@ -115,6 +154,8 @@ class WeatherRefreshAfterRelocationTest {
         saved: List<Location>,
         private val detected: Location?,
     ) : LocationRepository {
+        override suspend fun resolveLocation(latitude: Double, longitude: Double): Location =
+            detected ?: error("No coordinate resolution configured")
         private val locations = saved.toMutableList()
         val savedUpdates = mutableListOf<Location>()
 

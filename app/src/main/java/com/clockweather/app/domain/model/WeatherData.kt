@@ -11,7 +11,8 @@ data class WeatherData(
     val currentWeather: CurrentWeather,
     val hourlyForecasts: List<HourlyForecast>,
     val dailyForecasts: List<DailyForecast>,
-    val airQuality: AirQuality? = null
+    val airQuality: AirQuality? = null,
+    val pollenLastUpdated: LocalDateTime? = null
 )
 
 // The phone's clock is the single source of truth for "now" everywhere (detail

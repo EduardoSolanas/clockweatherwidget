@@ -17,6 +17,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -77,12 +78,16 @@ class LocationRepositoryImpl @Inject constructor(
                 return mapToLocation(lastKnown)
             }
 
-            val cancellationToken = CancellationTokenSource()
-            var androidLocation = withTimeoutOrNull(10_000L) {
-                fusedLocationClient.getCurrentLocation(
-                    Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-                    cancellationToken.token
-                ).await()
+            val balancedToken = CancellationTokenSource()
+            var androidLocation = try {
+                withTimeoutOrNull(10_000L) {
+                    fusedLocationClient.getCurrentLocation(
+                        Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                        balancedToken.token
+                    ).await()
+                }
+            } finally {
+                balancedToken.cancel()
             }
 
             logGeoDebug {
@@ -90,11 +95,16 @@ class LocationRepositoryImpl @Inject constructor(
             }
 
             if (androidLocation == null) {
-                androidLocation = withTimeoutOrNull(5_000L) {
-                    fusedLocationClient.getCurrentLocation(
-                        Priority.PRIORITY_HIGH_ACCURACY,
-                        CancellationTokenSource().token
-                    ).await()
+                val highToken = CancellationTokenSource()
+                androidLocation = try {
+                    withTimeoutOrNull(5_000L) {
+                        fusedLocationClient.getCurrentLocation(
+                            Priority.PRIORITY_HIGH_ACCURACY,
+                            highToken.token
+                        ).await()
+                    }
+                } finally {
+                    highToken.cancel()
                 }
 
                 logGeoDebug {
@@ -118,10 +128,18 @@ class LocationRepositoryImpl @Inject constructor(
                 null
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Log.w(GEO_DEBUG_TAG, "getCurrentLocation() failed; reporting no fix", e)
             null
         }
     }
+
+    override suspend fun resolveLocation(latitude: Double, longitude: Double): Location =
+        mapToLocation(android.location.Location("worker-coordinate").apply {
+            this.latitude = latitude
+            this.longitude = longitude
+            this.time = System.currentTimeMillis()
+        })
 
     private suspend fun mapToLocation(androidLocation: android.location.Location): Location {
         logGeoDebug {
@@ -232,6 +250,7 @@ class LocationRepositoryImpl @Inject constructor(
             country = "GB",
             latitude = 51.5074,
             longitude = -0.1278,
+            // Keep this row eligible for replacement when a real fix becomes available.
             isCurrentLocation = true
         ).also {
             logGeoDebug { "Falling back to generic label='${it.name}'" }
