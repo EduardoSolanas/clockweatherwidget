@@ -49,7 +49,7 @@ class SettingsWeatherRefreshIntervalTest {
         weatherRepository = mockk()
         every { locationRepository.getSavedLocations() } returns flowOf(emptyList())
         mockkObject(WeatherUpdateScheduler)
-        every { WeatherUpdateScheduler.schedule(any(), any()) } returns Unit
+        every { WeatherUpdateScheduler.scheduleIfWidgetsActive(any(), any()) } returns Unit
     }
 
     @After
@@ -60,7 +60,7 @@ class SettingsWeatherRefreshIntervalTest {
     }
 
     @Test
-    fun `setWeatherRefreshInterval stores active weather refresh key and reschedules`() = runTest(dispatcher) {
+    fun `setWeatherRefreshInterval stores the key and reschedules only when a widget is placed`() = runTest(dispatcher) {
         dataStoreFile = File(context.filesDir, "settings-refresh-interval-test.preferences_pb").apply {
             delete()
         }
@@ -75,7 +75,9 @@ class SettingsWeatherRefreshIntervalTest {
         viewModel.setWeatherRefreshInterval(2)
         advanceUntilIdle()
 
-        verify(timeout = 1_000, exactly = 1) { WeatherUpdateScheduler.schedule(context, 15) }
+        // Periodic work is widget-only (finding 7): the guarded entry point decides whether
+        // this actually schedules. The preference is stored either way.
+        verify(timeout = 1_000, exactly = 1) { WeatherUpdateScheduler.scheduleIfWidgetsActive(context, 15) }
         assertEquals(15, dataStore.data.first()[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL])
     }
 }

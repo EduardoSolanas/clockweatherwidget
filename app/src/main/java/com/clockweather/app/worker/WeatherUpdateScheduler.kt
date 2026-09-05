@@ -28,6 +28,18 @@ object WeatherUpdateScheduler {
      * @param intervalMinutes How often to fetch weather. Normalized to the settings range.
      *                        Defaults to 30 minutes.
      */
+    /**
+     * Schedules periodic work only while a widget is placed.
+     *
+     * Periodic weather work exists to keep widgets current, so settings changes on a device
+     * with none placed should not start it. The chosen interval is still saved, and placing a
+     * widget applies it through the provider's onEnabled.
+     */
+    fun scheduleIfWidgetsActive(context: Context, intervalMinutes: Int = 30) {
+        if (!com.clockweather.app.util.ActiveWidgetDetector.hasActiveWidgets(context)) return
+        schedule(context, intervalMinutes)
+    }
+
     fun schedule(context: Context, intervalMinutes: Int = 30) {
         val normalizedInterval = SettingsViewModel.normalizeWeatherRefreshInterval(intervalMinutes).toLong()
 

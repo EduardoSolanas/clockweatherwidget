@@ -70,7 +70,7 @@ class LocationRepositoryImpl @Inject constructor(
 
             val lastKnown = fusedLocationClient.lastLocation.await()
             val nowMs = System.currentTimeMillis()
-            if (lastKnown != null && (nowMs - lastKnown.time) < RECENT_LAST_KNOWN_MAX_AGE_MS) {
+            if (lastKnown != null && isLastKnownFixAcceptable(nowMs, lastKnown.time, RECENT_LAST_KNOWN_MAX_AGE_MS)) {
                 logGeoDebug {
                     "lastLocation=lat=${lastKnown.latitude}, lon=${lastKnown.longitude}, ageMs=${nowMs - lastKnown.time}, accuracy=${lastKnown.accuracy}, provider=${lastKnown.provider}"
                 }
@@ -114,7 +114,7 @@ class LocationRepositoryImpl @Inject constructor(
 
             if (androidLocation != null) {
                 mapToLocation(androidLocation)
-            } else if (lastKnown != null && (nowMs - lastKnown.time) < FALLBACK_LAST_KNOWN_MAX_AGE_MS) {
+            } else if (lastKnown != null && isLastKnownFixAcceptable(nowMs, lastKnown.time, FALLBACK_LAST_KNOWN_MAX_AGE_MS)) {
                 // If active requests time out (e.g. indoors in a new city), fall back to
                 // a real GPS fix from recent travel (within 6h) rather than failing silently.
                 logGeoDebug {
@@ -288,4 +288,20 @@ class LocationRepositoryImpl @Inject constructor(
         val isSpecificName: Boolean,
         val area: String? = null
     )
+}
+
+/** Tolerance for the small clock disagreements that happen without anything being wrong. */
+private const val FIX_FUTURE_TOLERANCE_MS = 2 * 60 * 1000L
+
+/**
+ * Whether a last-known fix is recent enough to use.
+ *
+ * The age is bounded below as well as above: a fix stamped in the future produces a negative
+ * age, which passes every upper bound, so an arbitrarily wrong fix would read as the freshest
+ * one available. That happens whenever the clock moves backwards under the stored timestamp.
+ */
+internal fun isLastKnownFixAcceptable(nowMs: Long, fixTimeMs: Long, maxAgeMs: Long): Boolean {
+    val ageMs = nowMs - fixTimeMs
+    if (ageMs < -FIX_FUTURE_TOLERANCE_MS) return false
+    return ageMs < maxAgeMs
 }

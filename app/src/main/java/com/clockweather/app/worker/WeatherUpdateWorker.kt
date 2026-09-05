@@ -15,6 +15,7 @@ import com.clockweather.app.domain.repository.WeatherRepository
 import com.clockweather.app.presentation.settings.SettingsViewModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlin.math.cos
 import kotlin.math.hypot
@@ -34,6 +35,8 @@ class WeatherUpdateWorker @AssistedInject constructor(
         try {
             prefs = dataStore.data.first()
             locations = locationRepository.getSavedLocations().first()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.w(TAG, "Failed to read prefs or locations, scheduling retry", e)
             return if (runAttemptCount < 3) Result.retry() else Result.failure()
@@ -94,6 +97,10 @@ class WeatherUpdateWorker @AssistedInject constructor(
                 if (refreshLocation != savedLocation) {
                     locationRepository.saveLocation(refreshLocation)
                 }
+            } catch (e: CancellationException) {
+                // Stopped work must stop. Treating cancellation as a per-location failure
+                // walks the rest of the list and reports retry for work nobody awaits.
+                throw e
             } catch (e: Exception) {
                 Log.w(TAG, "Refresh failed for ${savedLocation.id}", e)
                 anyFailure = true

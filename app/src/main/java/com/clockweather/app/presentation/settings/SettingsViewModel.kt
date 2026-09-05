@@ -340,7 +340,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val validMinutes = normalizeWeatherRefreshInterval(minutes)
             dataStore.edit { it[KEY_WEATHER_REFRESH_INTERVAL] = validMinutes }
-            com.clockweather.app.worker.WeatherUpdateScheduler.schedule(context, validMinutes)
+            com.clockweather.app.worker.WeatherUpdateScheduler.scheduleIfWidgetsActive(context, validMinutes)
         }
     }
 
