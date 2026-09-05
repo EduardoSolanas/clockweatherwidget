@@ -144,6 +144,28 @@ internal object WeatherRefreshLocationResolver {
         )
     }
 
+    /**
+     * Whether a cached weather snapshot may still be handed to the provider for [requested].
+     *
+     * Takes the coordinates recorded on the weather row itself, not those of the location row:
+     * after a move the location row already holds the new position, so comparing it with itself
+     * would always report no movement. Rows written before those columns existed hold null, and
+     * unknown provenance cannot establish ownership.
+     */
+    fun cacheDescribes(
+        snapshotLatitude: Double?,
+        snapshotLongitude: Double?,
+        requested: Location,
+    ): Boolean {
+        if (snapshotLatitude == null || snapshotLongitude == null) return false
+        return !hasMovedSignificantly(
+            snapshotLatitude,
+            snapshotLongitude,
+            requested.latitude,
+            requested.longitude,
+        )
+    }
+
     /** True when weather cached for [from] no longer describes [to]. */
     fun hasMovedSignificantly(from: Location, to: Location): Boolean =
         hasMovedSignificantly(from.latitude, from.longitude, to.latitude, to.longitude)

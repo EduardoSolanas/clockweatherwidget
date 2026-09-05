@@ -19,6 +19,7 @@ import com.clockweather.app.domain.model.locationReferenceDateTime
 import com.clockweather.app.domain.model.normalizeDailyConditions
 import com.clockweather.app.domain.repository.WeatherRepository
 import androidx.room.withTransaction
+import com.clockweather.app.worker.WeatherRefreshLocationResolver
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -119,7 +120,18 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     private suspend fun refreshAndPersist(location: Location, forecastDays: Int) {
-        val cached = getWeatherData(location).first()
+        // Optional sections are reused from this cache, so it may only be offered when it was
+        // actually recorded at the requested position. The weather row's own coordinates are
+        // the ones that matter: the location row has already moved by this point, and rows
+        // migrated from before those columns existed cannot prove where they came from.
+        val cachedEntity = currentWeatherDao.getCurrentWeather(location.id).first()
+        val cached = getWeatherData(location).first()?.takeIf {
+            WeatherRefreshLocationResolver.cacheDescribes(
+                snapshotLatitude = cachedEntity?.latitude,
+                snapshotLongitude = cachedEntity?.longitude,
+                requested = location,
+            )
+        }
         val providerType = WeatherProviderPreferences.resolve(
             dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
         )
