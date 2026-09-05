@@ -11,6 +11,7 @@ import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.presentation.widget.common.BaseWidgetUpdater
+import com.clockweather.app.presentation.widget.common.FORECAST_WIDGET_ROW_COUNT
 import com.clockweather.app.presentation.widget.common.WeatherIconMapper
 import com.clockweather.app.presentation.widget.common.WidgetDataBinder
 
@@ -23,7 +24,10 @@ class ForecastWidgetUpdater(
     override val layoutResId = R.layout.widget_forecast
     override val rootViewId = R.id.widget_root
     override val dateViewId = R.id.widget_date
-    override val minimumFutureForecastDaysRequired = 7
+    // The row list starts at today, so the rows beyond it are what must be forecast.
+    // Derived from the layout's row count: a literal here previously demanded eight covered
+    // days, which no selectable forecast length delivers, so the widget never read as fresh.
+    override val minimumFutureForecastDaysRequired = FORECAST_WIDGET_ROW_COUNT - 1
     override val widgetPaddingDp = 10f
     override val hasForecastViews = true
 

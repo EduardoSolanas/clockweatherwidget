@@ -18,6 +18,7 @@ import com.clockweather.app.domain.model.TemperatureUnit
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.isWeatherDataFresh
 import com.clockweather.app.domain.model.locationReferenceDateTime
+import com.clockweather.app.data.provider.WeatherProviderPreferences
 import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.worker.WeatherUpdateScheduler
 import kotlinx.coroutines.Dispatchers
@@ -115,9 +116,22 @@ abstract class BaseWidgetUpdater(
             val weather = snapshot.weather
             val referenceDateTime = weather?.locationReferenceDateTime(currentInstant)
                 ?: java.time.LocalDateTime.ofInstant(currentInstant, java.time.ZoneId.systemDefault())
-            val requiredForecastDays = requiredForecastDaysForRefresh(
-                requestedForecastDays = 7,
-                minimumFutureForecastDaysRequired = minimumFutureForecastDaysRequired,
+            // The worker fetches the saved length, normalized to the selected provider, so the
+            // target has to be the same number. Asking for more than will ever arrive makes the
+            // widget permanently stale and enqueues a refresh on every host callback.
+            val providerType = WeatherProviderPreferences.resolve(
+                snapshot.prefs[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
+            )
+            val configuredForecastDays = SettingsViewModel.normalizeForecastDaysForProvider(
+                snapshot.prefs[SettingsViewModel.KEY_FORECAST_DAYS] ?: DEFAULT_WIDGET_FORECAST_DAYS,
+                providerType,
+            )
+            val requiredForecastDays = minOf(
+                requiredForecastDaysForRefresh(
+                    requestedForecastDays = configuredForecastDays,
+                    minimumFutureForecastDaysRequired = minimumFutureForecastDaysRequired,
+                ),
+                configuredForecastDays,
             )
             return !isWeatherDataFresh(
                 weather,
@@ -503,6 +517,9 @@ internal fun shouldRefreshWeather(
     val futureDayCount = weather.dailyForecasts.count { it.date.isAfter(today) }
     return futureDayCount < minimumFutureForecastDaysRequired
 }
+
+/** Mirrors WeatherUpdateWorker's fallback, so both sides assume the same length. */
+internal const val DEFAULT_WIDGET_FORECAST_DAYS = 7
 
 internal fun requiredForecastDaysForRefresh(
     requestedForecastDays: Int,

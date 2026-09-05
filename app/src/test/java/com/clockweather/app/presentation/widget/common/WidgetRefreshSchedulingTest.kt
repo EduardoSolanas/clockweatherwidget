@@ -8,6 +8,8 @@ import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WindDirection
+import com.clockweather.app.data.provider.WeatherProviderPreferences
+import com.clockweather.app.domain.model.WeatherProviderType
 import com.clockweather.app.presentation.settings.SettingsViewModel
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -100,6 +102,93 @@ class WidgetRefreshSchedulingTest {
     }
 
     /**
+     * The forecast widget renders a fixed number of rows, and the shortest forecast a user
+     * can select is seven days. If its declared minimum ever exceeds what that selection
+     * delivers, the widget reports stale on every callback and enqueues work forever.
+     */
+    @Test
+    fun `the forecast widget cannot need more coverage than the shortest selectable forecast`() {
+        val shortestSelectableForecastDays = 7
+        val required = requiredForecastDaysForRefresh(
+            requestedForecastDays = shortestSelectableForecastDays,
+            minimumFutureForecastDaysRequired = FORECAST_WIDGET_ROW_COUNT - 1,
+        )
+
+        assertTrue(
+            "the forecast widget renders $FORECAST_WIDGET_ROW_COUNT rows, so it must be " +
+                "satisfiable by a $shortestSelectableForecastDays-day fetch, but it needs $required days",
+            required <= shortestSelectableForecastDays
+        )
+    }
+
+    @Test
+    fun `a seven day cache satisfies the forecast widget`() {
+        val snapshot = snapshot(
+            weather = sampleWeatherData(
+                lastUpdated = referenceDateTime.minusMinutes(1),
+                dailyForecasts = dailyForecastsFrom(referenceDateTime.toLocalDate(), count = 7),
+            ),
+            refreshIntervalMinutes = 30,
+            forecastDays = 7,
+        )
+
+        assertFalse(
+            "a seven-day fetch is what the default setting asks for, so it must count as fresh",
+            BaseWidgetUpdater.shouldScheduleRefresh(
+                snapshot = snapshot,
+                minimumFutureForecastDaysRequired = FORECAST_WIDGET_ROW_COUNT - 1,
+                currentInstant = referenceInstant,
+            )
+        )
+    }
+
+    /**
+     * The worker fetches the saved forecast length, so the widget's freshness target has to
+     * track the same setting rather than a hardcoded one. Open-Meteo is pinned because the
+     * selectable lengths are per-provider, and 14 is its longer option.
+     */
+    @Test
+    fun `the freshness target follows the saved forecast length`() {
+        val longSelection = snapshot(
+            weather = sampleWeatherData(
+                lastUpdated = referenceDateTime.minusMinutes(1),
+                dailyForecasts = dailyForecastsFrom(referenceDateTime.toLocalDate(), count = 7),
+            ),
+            refreshIntervalMinutes = 30,
+            forecastDays = 14,
+            provider = WeatherProviderType.OPEN_METEO,
+        )
+
+        assertTrue(
+            "seven cached days cannot satisfy a fourteen-day selection",
+            BaseWidgetUpdater.shouldScheduleRefresh(
+                snapshot = longSelection,
+                minimumFutureForecastDaysRequired = 0,
+                currentInstant = referenceInstant,
+            )
+        )
+
+        val covered = snapshot(
+            weather = sampleWeatherData(
+                lastUpdated = referenceDateTime.minusMinutes(1),
+                dailyForecasts = dailyForecastsFrom(referenceDateTime.toLocalDate(), count = 14),
+            ),
+            refreshIntervalMinutes = 30,
+            forecastDays = 14,
+            provider = WeatherProviderType.OPEN_METEO,
+        )
+
+        assertFalse(
+            "fourteen cached days satisfy a fourteen-day selection",
+            BaseWidgetUpdater.shouldScheduleRefresh(
+                snapshot = covered,
+                minimumFutureForecastDaysRequired = 0,
+                currentInstant = referenceInstant,
+            )
+        )
+    }
+
+    /**
      * The regression guard. Both snapshot-passing call sites must delegate to the shared
      * helper; neither may inline its own copy of the decision, and neither may skip it.
      */
@@ -126,9 +215,13 @@ class WidgetRefreshSchedulingTest {
     private fun snapshot(
         weather: WeatherData?,
         refreshIntervalMinutes: Int? = null,
+        forecastDays: Int? = null,
+        provider: WeatherProviderType? = null,
     ): WidgetRenderSnapshot {
         val prefs = mutablePreferencesOf().apply {
             refreshIntervalMinutes?.let { this[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL] = it }
+            forecastDays?.let { this[SettingsViewModel.KEY_FORECAST_DAYS] = it }
+            provider?.let { this[WeatherProviderPreferences.KEY_WEATHER_PROVIDER] = it.storageValue }
         }
         return WidgetRenderSnapshot(
             prefs = prefs,

@@ -371,6 +371,12 @@ internal fun resolveWidgetLocationLabel(
     }
 }
 
+/**
+ * Forecast rows the widget layout provides. The widget's freshness requirement is derived
+ * from this, so the two cannot drift apart and demand coverage that is never rendered.
+ */
+internal const val FORECAST_WIDGET_ROW_COUNT = 5
+
 internal fun selectForecastWidgetDays(
     weatherData: WeatherData,
     today: LocalDate = weatherData.weatherToday(),
@@ -378,5 +384,5 @@ internal fun selectForecastWidgetDays(
     return weatherData.dailyForecasts
         .sortedBy { it.date }
         .filter { !it.date.isBefore(today) }
-        .take(5)
+        .take(FORECAST_WIDGET_ROW_COUNT)
 }
