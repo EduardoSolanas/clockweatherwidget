@@ -41,7 +41,7 @@ Severity alone is a poor ordering signal here: the first revision of this docume
 | 1 | Independent AQ/pollen ages | DONE | Two timestamps, migration, provider policies and unknown-age handling | Launcher age display is separate |
 | 2 | City/weather snapshot identity | PARTIAL | Weather-owned label/coordinates; location saved after successful fetch; optional-section reuse now blocked after movement | No single location+weather transaction; end-to-end persistence regression for the movement guard |
 | 3 | Timezone handling | PARTIAL | Google interval/offset parsing; future-age bound | Full instant storage and DST/zone migration deferred |
-| 4 | Cache-first startup and resume | PARTIAL | Network launch no longer blocks Room collection | Resume freshness check and visible age/error states |
+| 4 | Cache-first startup and resume | PARTIAL | Network launch no longer blocks Room collection; ON_RESUME re-checks freshness after the first resume | Visible age/error states |
 | 5 | Refresh ownership and coverage | PARTIAL | distinctUntilChanged; widget coverage target now reads the saved setting and is satisfiable | Broader request coalescing separate |
 | 6 | Manual refresh and cancellation | PARTIAL | In-flight guard; success-only cooldown; cancellation propagated in repository/location lookup/VM | Provider and worker catches; app/widget policy and elapsed-time cooldown |
 | 7 | Lifecycle policy | PARTIAL | Boot and screen-wake active-widget guards | Settings still schedules with no widget; runtime wake limitation remains |
@@ -114,7 +114,7 @@ The reason to defer: this is a current-location-first product, so device zone an
 
 ### 4. Perceived quality — Show cached weather immediately and refresh on return
 
-**Current status — PARTIAL: loadWeather launches its initial freshness request concurrently with Room collection. WeatherDetailScreen ON_RESUME still only invokes refreshPermissions; resume refresh and richer age/error UI remain open.**
+**Current status — PARTIAL: loadWeather launches its initial freshness request concurrently with Room collection, and ON_RESUME now runs a freshness-gated check on every resume after the first (ResumeFreshnessGate suppresses the one that accompanies construction, which init already covered). Richer age/error UI remains open.**
 
 The evidence and proposed changes below are from the original audit; use the status above to distinguish completed work.
 
@@ -231,11 +231,10 @@ The clock being current does not imply weather is current. Display weather fetch
 
 Current queue, replacing the original completed-work list:
 
-1. **Resume freshness (4).** Add one freshness-gated check on ON_RESUME while retaining immediate cache display and avoiding duplicate startup downloads. `WeatherDetailScreen`'s ON_RESUME still only calls `refreshPermissions`.
-2. **Launcher verification of the placeholder change.** The step below removed the blanking placeholder for populated widgets, but no device ran. Check first placement, process death, launcher restart, reboot and resize on an API 26-30 device and an API 31+ device, including Xiaomi/MIUI, before trusting it.
-3. **End-to-end regression for the movement guard.** The decision is covered by real-object tests; the persisted path that proves a provider receives no cache after a move is not. Open-Meteo only skips its air-quality call when pollen and air quality are both fresh, so this needs five days of persisted pollen fixtures.
-4. **Remaining correctness/policy gaps (6, 7, 8).** Finish cancellation propagation in the Google provider's `runCatching` blocks and the worker's broad catches, decide whether no-widget settings may schedule, and separate follow-device intent from evidence of a real fix. Recheck each path immediately before implementing.
-5. **Measured improvements.** Hourly pagination is 7 of the 12 requests in a default Google refresh, so it is where any cost work should aim. Consider a larger supported page size or loading distant hours on demand, measured against the committed baseline. A full location+weather transaction remains unimplemented; assess it separately from the save-order fix.
+1. **Launcher verification of the placeholder change.** The step below removed the blanking placeholder for populated widgets, but no device ran. Check first placement, process death, launcher restart, reboot and resize on an API 26-30 device and an API 31+ device, including Xiaomi/MIUI, before trusting it.
+2. **End-to-end regression for the movement guard.** The decision is covered by real-object tests; the persisted path that proves a provider receives no cache after a move is not. Open-Meteo only skips its air-quality call when pollen and air quality are both fresh, so this needs five days of persisted pollen fixtures.
+3. **Remaining correctness/policy gaps (6, 7, 8).** Finish cancellation propagation in the Google provider's `runCatching` blocks and the worker's broad catches, decide whether no-widget settings may schedule, and separate follow-device intent from evidence of a real fix. Recheck each path immediately before implementing.
+4. **Measured improvements.** Hourly pagination is 7 of the 12 requests in a default Google refresh, so it is where any cost work should aim. Consider a larger supported page size or loading distant hours on demand, measured against the committed baseline. A full location+weather transaction remains unimplemented; assess it separately from the save-order fix.
 
 Completed prerequisites: variant-aware AdManagerTest, weather-owned location metadata, safer relocation save order, section-age migration, Google offset handling, distinct provider observation, manual in-flight/success guard, explicit default-city label and boot/wake active-widget guards.
 
@@ -323,6 +322,12 @@ Committed as `4d64582`, `72471fb`, `7531367` and `c7fb57f`. Suite green in both 
 - **Step 4, placeholder.** Limited to widgets with nothing to preserve, tracked in `WidgetRenderState` (SharedPreferences, because the decision happens synchronously in a broadcast receiver and must survive process death).
 
 No device, launcher, live-provider or battery verification was performed. The request counts come from a local server exercising the real provider code, not from production traffic or a bill.
+
+## Resume freshness implemented — 6 September 2026
+
+`WeatherDetailScreen`'s ON_RESUME calls `onResumed()` rather than `refreshPermissions()`. Every resume after the first runs a freshness-gated check; a failure is logged and leaves the cached weather on screen. `ResumeFreshnessGate` suppresses the resume that arrives with the composition that constructed the ViewModel, whose init already issued that check, so a cold start still downloads once. Its state transitions have real-object tests, following `ManualRefreshGate` rather than the mockk-based ViewModel tests the audit noted as legacy.
+
+Suite green in both variants: 371 tests, zero failures, errors or skips. Lint: zero errors.
 
 ## Home-screen freshness and flicker follow-up — 5 September 2026
 

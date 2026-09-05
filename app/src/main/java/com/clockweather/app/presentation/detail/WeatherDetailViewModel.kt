@@ -53,6 +53,7 @@ class WeatherDetailViewModel @Inject constructor(
     private var weatherLoadJob: Job? = null
 
     private val refreshGate = ManualRefreshGate(REFRESH_THROTTLE_MS)
+    private val resumeGate = ResumeFreshnessGate()
     internal var lastRefreshTimeMs: Long
         get() = refreshGate.lastSuccessfulRefreshMs
         set(value) { refreshGate.lastSuccessfulRefreshMs = value }
@@ -84,6 +85,29 @@ class WeatherDetailViewModel @Inject constructor(
     private val _needsBackgroundLocation =
         MutableStateFlow(BackgroundLocationAccess.needsGrant(context))
     val needsBackgroundLocation: StateFlow<Boolean> = _needsBackgroundLocation.asStateFlow()
+
+    /**
+     * Call from ON_RESUME. Re-checks permissions, and on any resume after the first also
+     * re-checks whether the cached weather is still current — the screen can sit in the
+     * background for hours while its cache goes stale.
+     */
+    fun onResumed() {
+        refreshPermissions()
+        if (!resumeGate.shouldCheckOnResume()) return
+        viewModelScope.launch {
+            val location = (uiState.value as? UiState.Success)?.data?.location
+                ?: locationRepository.getSavedLocations().first().firstOrNull()
+                ?: return@launch
+            try {
+                ensureFreshWeatherAndWidgets(location, forecastDays.value)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // The cache stays on screen; a failed background check must not replace it.
+                Log.w(TAG, "Resume freshness check failed", e)
+            }
+        }
+    }
 
     /** Call from ON_RESUME after the user returns from system settings. */
     fun refreshPermissions() {
@@ -291,6 +315,25 @@ class WeatherDetailViewModel @Inject constructor(
     companion object {
         private const val TAG = "WeatherDetailViewModel"
         const val REFRESH_THROTTLE_MS = 5 * 60 * 1000L
+    }
+}
+
+/**
+ * Decides whether an ON_RESUME should re-check weather freshness.
+ *
+ * The first resume arrives with the composition that created the ViewModel, and its init has
+ * already issued that check, so honouring it would download twice on every cold start.
+ */
+internal class ResumeFreshnessGate {
+    private var initialResumeConsumed = false
+
+    @Synchronized
+    fun shouldCheckOnResume(): Boolean {
+        if (!initialResumeConsumed) {
+            initialResumeConsumed = true
+            return false
+        }
+        return true
     }
 }
 

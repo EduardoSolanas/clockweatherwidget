@@ -89,9 +89,10 @@ fun WeatherDetailScreen(
     val needsBattery by viewModel.needsBatteryExemption.collectAsStateWithLifecycle()
     val needsBackgroundLocation by viewModel.needsBackgroundLocation.collectAsStateWithLifecycle()
 
-    // Re-check permissions whenever the user returns from the system settings screen.
+    // Re-check permissions after a trip to system settings, and re-check weather freshness
+    // when returning to a screen that may have been in the background for hours.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        viewModel.refreshPermissions()
+        viewModel.onResumed()
     }
 
     val locationName = (uiState as? UiState.Success)?.data?.location?.name ?: stringResource(R.string.label_weather_fallback_title)
