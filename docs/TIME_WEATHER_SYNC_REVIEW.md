@@ -311,9 +311,9 @@ Cheaper agents implemented and cross-reviewed the main fixes. The orchestrator c
 
 ## Implementation commit checkpoint — 5 September 2026
 
-The previously pending 40 application source/test files are committed together with this checkpoint. Generic, project-specific agent guidance was committed separately as `fe11370`; the audit was first committed as `85fb66d`. Baseline measurement and subsequent queue items have not started.
+The previously pending 40 application source/test files are committed together with this checkpoint. Project-specific, model-neutral agent guidance was committed separately as `fe11370`; the audit was first committed as `85fb66d`. Baseline measurement and subsequent queue items have not started.
 
-An independent agent rechecked the manual save order, refresh guard, migration isolation, passive relocation and unknown section ages. Existing debug and release reports each contain 352 passing tests and postdate the final behavioral edits. The commit preparation changed only two trailing spaces in migration-test SQL; the unit suite was not repeated. A fresh `.\gradlew.bat :app:lintDebug --no-daemon` command passed: Gradle considered its analysis/report up to date, with zero errors, 93 warnings and two hints. No device, launcher, live-provider or battery verification was added, and the open findings remain open.
+An independent agent rechecked the manual save order, refresh guard, migration isolation, passive relocation and unknown section ages. The commit preparation changed only two trailing spaces in migration-test SQL, so the suite was rerun rather than assumed: `.\gradlew.bat test --no-daemon` passed against the committed tree — 352 tests in each of debug and release, zero failures, errors or skips, with no source file modified after the reports were written. A fresh `.\gradlew.bat :app:lintDebug --no-daemon` command passed: Gradle considered its analysis/report up to date, with zero errors, 93 warnings and two hints. No device, launcher, live-provider or battery verification was added, and the open findings remain open.
 
 ## Home-screen freshness and flicker follow-up — 5 September 2026
 
