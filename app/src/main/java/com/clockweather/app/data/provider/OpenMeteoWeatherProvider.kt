@@ -22,7 +22,10 @@ class OpenMeteoWeatherProvider @Inject constructor(
     override suspend fun fetchWeatherData(
         location: Location,
         forecastDays: Int,
-        cachedData: WeatherData?
+        cachedData: WeatherData?,
+        // Hourly data arrives inside the single forecast response, so narrowing the scope
+        // would save no request here. Open-Meteo always returns extended coverage.
+        hourlyScope: HourlyScope
     ): WeatherData = coroutineScope {
         val days = forecastDays.coerceIn(1, 16)
         val timezone = TimeZone.getDefault().id

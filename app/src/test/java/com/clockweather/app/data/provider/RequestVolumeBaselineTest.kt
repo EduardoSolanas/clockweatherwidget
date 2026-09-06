@@ -11,6 +11,7 @@ import com.clockweather.app.domain.model.AirQuality
 import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.Location
+import com.clockweather.app.domain.model.NEAR_TERM_HOURS
 import com.clockweather.app.domain.model.PollenData
 import com.clockweather.app.domain.model.PollenType
 import com.clockweather.app.domain.model.WeatherCondition
@@ -94,6 +95,40 @@ class RequestVolumeBaselineTest {
         assertEquals(1, count("POST /v1/currentConditions:lookup"))
         assertEquals(12, total())
         report("Google 7-day, empty cache")
+    }
+
+    /**
+     * The saving. Routine refreshes take the near-term scope, which is two hourly pages instead
+     * of seven, and every other endpoint is unchanged.
+     */
+    @Test
+    fun `a near-term Google refresh costs two hourly pages instead of seven`() = runTest {
+        val weather = googleProvider().fetchWeatherData(
+            location,
+            forecastDays = 7,
+            cachedData = null,
+            hourlyScope = HourlyScope.NEAR_TERM,
+        )
+
+        assertEquals(NEAR_TERM_HOURS, weather.hourlyForecasts.size)
+        assertEquals(2, count("GET /v1/forecast/hours:lookup"))
+        assertEquals(1, count("GET /v1/currentConditions:lookup"))
+        assertEquals(1, count("GET /v1/forecast/days:lookup"))
+        assertEquals(7, total())
+        report("Google 7-day, near-term hours")
+    }
+
+    /** Open-Meteo returns hourly inside the forecast response, so the scope changes nothing. */
+    @Test
+    fun `the near-term scope does not change Open-Meteo request volume`() = runTest {
+        openMeteoProvider().fetchWeatherData(
+            location,
+            forecastDays = 7,
+            cachedData = null,
+            hourlyScope = HourlyScope.NEAR_TERM,
+        )
+
+        assertEquals(2, total())
     }
 
     @Test

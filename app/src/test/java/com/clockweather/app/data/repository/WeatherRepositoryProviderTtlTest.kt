@@ -119,7 +119,7 @@ class WeatherRepositoryProviderTtlTest {
             preferencesOf(WeatherProviderPreferences.KEY_WEATHER_PROVIDER to providerType.storageValue)
         )
         every { providerFactory.get(any()) } returns provider
-        coEvery { provider.fetchWeatherData(any(), any(), any()) } throws
+        coEvery { provider.fetchWeatherData(any(), any(), any(), any()) } throws
             RuntimeException("stop-after-provider-call")
     }
 
@@ -130,7 +130,7 @@ class WeatherRepositoryProviderTtlTest {
 
         repository.ensureFreshWeatherData(location, forecastDays = 7)
 
-        coVerify(exactly = 0) { provider.fetchWeatherData(any(), any(), any()) }
+        coVerify(exactly = 0) { provider.fetchWeatherData(any(), any(), any(), any()) }
     }
 
     @Test
@@ -140,7 +140,7 @@ class WeatherRepositoryProviderTtlTest {
 
         runCatching { repository.ensureFreshWeatherData(location, forecastDays = 7) }
 
-        coVerify(atLeast = 1) { provider.fetchWeatherData(any(), any(), any()) }
+        coVerify(atLeast = 1) { provider.fetchWeatherData(any(), any(), any(), any()) }
     }
 
     @Test
@@ -150,7 +150,7 @@ class WeatherRepositoryProviderTtlTest {
 
         runCatching { repository.ensureFreshWeatherData(location, forecastDays = 7) }
 
-        coVerify(atLeast = 1) { provider.fetchWeatherData(any(), any(), any()) }
+        coVerify(atLeast = 1) { provider.fetchWeatherData(any(), any(), any(), any()) }
     }
 
     private fun sampleCurrentWeather(lastUpdated: LocalDateTime) = CurrentWeather(
@@ -189,7 +189,7 @@ class WeatherRepositoryProviderTtlTest {
         coEvery { locationDao.getLocationById(location.id) } returns flowOf(null)
 
         coEvery {
-            provider.fetchWeatherData(any(), any(), any())
+            provider.fetchWeatherData(any(), any(), any(), any())
         } throws kotlinx.coroutines.CancellationException("Job cancelled")
 
         val repo = WeatherRepositoryImpl(
@@ -210,7 +210,7 @@ class WeatherRepositoryProviderTtlTest {
             // Expected
         }
 
-        coVerify(exactly = 0) { fallbackProvider.fetchWeatherData(any(), any(), any()) }
+        coVerify(exactly = 0) { fallbackProvider.fetchWeatherData(any(), any(), any(), any()) }
     }
 
     private fun hourlyForecastsFrom(start: LocalDateTime, count: Int): List<HourlyForecast> {

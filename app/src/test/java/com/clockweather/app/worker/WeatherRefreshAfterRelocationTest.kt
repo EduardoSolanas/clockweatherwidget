@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.work.testing.TestListenableWorkerBuilder
+import com.clockweather.app.data.provider.HourlyScope
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.repository.LocationRepository
@@ -128,11 +129,26 @@ class WeatherRefreshAfterRelocationTest {
         assertEquals(BRIGHTON_FIX.name, weatherRepository.forceRefreshCalls.first().name)
     }
 
+    /**
+     * Widgets read the daily forecast, never the hourly one, so background work must not buy
+     * the extended hourly pages — that is the whole saving in the near-term scope.
+     */
+    @Test
+    fun `background refresh asks only for the near-term hours`() = runTest {
+        val weatherRepository = RecordingWeatherRepository()
+        val locationRepository = FakeLocationRepository(saved = listOf(LONDON), detected = LONDON)
+
+        runWorker(locationRepository, weatherRepository).doWork()
+
+        assertEquals(listOf(HourlyScope.NEAR_TERM), weatherRepository.requestedScopes)
+    }
+
     private class RecordingWeatherRepository(
         private val forceRefreshError: Throwable? = null
     ) : WeatherRepository {
         val ensureFreshCalls = mutableListOf<Location>()
         val forceRefreshCalls = mutableListOf<Location>()
+        val requestedScopes = mutableListOf<HourlyScope>()
 
         override fun getWeatherData(location: Location): Flow<WeatherData?> = flowOf(null)
 
@@ -140,12 +156,19 @@ class WeatherRefreshAfterRelocationTest {
             location: Location,
             forecastDays: Int,
             maxAgeMinutes: Long?,
+            hourlyScope: HourlyScope,
         ) {
             ensureFreshCalls += location
+            requestedScopes += hourlyScope
         }
 
-        override suspend fun forceRefreshWeatherData(location: Location, forecastDays: Int) {
+        override suspend fun forceRefreshWeatherData(
+            location: Location,
+            forecastDays: Int,
+            hourlyScope: HourlyScope,
+        ) {
             forceRefreshCalls += location
+            requestedScopes += hourlyScope
             forceRefreshError?.let { throw it }
         }
     }

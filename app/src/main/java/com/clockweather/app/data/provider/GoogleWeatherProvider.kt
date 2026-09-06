@@ -8,6 +8,7 @@ import com.clockweather.app.data.remote.api.OpenMeteoAirQualityApi
 import com.clockweather.app.data.remote.dto.google.GoogleAirQualityLocationDto
 import com.clockweather.app.data.remote.dto.google.GoogleAirQualityRequestDto
 import com.clockweather.app.domain.model.Location
+import com.clockweather.app.domain.model.NEAR_TERM_HOURS
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.isCachedAirQualityFresh
 import com.clockweather.app.domain.model.isCachedPollenFresh
@@ -40,10 +41,15 @@ class GoogleWeatherProvider @Inject constructor(
     override suspend fun fetchWeatherData(
         location: Location,
         forecastDays: Int,
-        cachedData: WeatherData?
+        cachedData: WeatherData?,
+        hourlyScope: HourlyScope
     ): WeatherData = coroutineScope {
         val days = forecastDays.coerceIn(1, 10)
-        val totalTargetHours = days * 24
+        // One page per 24 hours, so this is the whole cost difference between the two scopes.
+        val totalTargetHours = when (hourlyScope) {
+            HourlyScope.NEAR_TERM -> NEAR_TERM_HOURS
+            HourlyScope.EXTENDED -> days * 24
+        }
         val lat = location.latitude
         val lon = location.longitude
         val referenceDateTime = LocalDateTime.now()

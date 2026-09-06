@@ -10,8 +10,10 @@ import com.clockweather.app.data.local.db.WeatherDatabase
 import com.clockweather.app.data.mapper.WeatherEntityMapper
 import com.clockweather.app.data.provider.WeatherDataProvider
 import com.clockweather.app.data.provider.WeatherDataProviderFactory
+import com.clockweather.app.data.provider.HourlyScope
 import com.clockweather.app.data.provider.WeatherProviderPreferences
 import com.clockweather.app.domain.model.Location
+import com.clockweather.app.domain.model.hasExtendedHourlyCoverage
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WeatherProviderType
 import com.clockweather.app.domain.model.isWeatherDataFresh
@@ -80,6 +82,7 @@ class WeatherRepositoryImpl @Inject constructor(
         location: Location,
         forecastDays: Int,
         maxAgeMinutes: Long?,
+        hourlyScope: HourlyScope,
     ) {
         refreshMutex.withLock {
             val cached = getWeatherData(location).first()
@@ -88,15 +91,24 @@ class WeatherRepositoryImpl @Inject constructor(
                 dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
             )
             val effectiveMaxAgeMinutes = maxAgeMinutes ?: providerType.currentMaxAgeMinutes
-            if (isWeatherDataFresh(cached, referenceDateTime, forecastDays, effectiveMaxAgeMinutes)) return
+            val isFresh = isWeatherDataFresh(cached, referenceDateTime, forecastDays, effectiveMaxAgeMinutes)
+            // Fresh core weather is not enough for a caller that needs the later days: routine
+            // refreshes only keep a rolling 24 hours, so the rest has to be fetched on demand.
+            val needsExtendedHours = hourlyScope == HourlyScope.EXTENDED &&
+                !hasExtendedHourlyCoverage(cached?.hourlyForecasts.orEmpty(), referenceDateTime)
+            if (isFresh && !needsExtendedHours) return
 
-            refreshAndPersist(location, forecastDays)
+            refreshAndPersist(location, forecastDays, hourlyScope)
         }
     }
 
-    override suspend fun forceRefreshWeatherData(location: Location, forecastDays: Int) {
+    override suspend fun forceRefreshWeatherData(
+        location: Location,
+        forecastDays: Int,
+        hourlyScope: HourlyScope,
+    ) {
         refreshMutex.withLock {
-            refreshAndPersist(location, forecastDays)
+            refreshAndPersist(location, forecastDays, hourlyScope)
         }
     }
 
@@ -119,7 +131,11 @@ class WeatherRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun refreshAndPersist(location: Location, forecastDays: Int) {
+    private suspend fun refreshAndPersist(
+        location: Location,
+        forecastDays: Int,
+        hourlyScope: HourlyScope = HourlyScope.NEAR_TERM,
+    ) {
         // Optional sections are reused from this cache, so it may only be offered when it was
         // actually recorded at the requested position. The weather row's own coordinates are
         // the ones that matter: the location row has already moved by this point, and rows
@@ -139,7 +155,8 @@ class WeatherRepositoryImpl @Inject constructor(
             provider.fetchWeatherData(
                 location = location,
                 forecastDays = forecastDays.coerceIn(1, actualProviderType.maxForecastDays),
-                cachedData = cached
+                cachedData = cached,
+                hourlyScope = hourlyScope
             )
         }
         persistWeatherData(weatherData.normalizeDailyConditions(), location.id)
