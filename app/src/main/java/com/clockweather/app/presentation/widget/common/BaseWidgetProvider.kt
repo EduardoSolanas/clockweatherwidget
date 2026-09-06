@@ -85,8 +85,11 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
                 val updater = getUpdater(context, appWidgetManager, entryPoint)
                 val renderSnapshot = BaseWidgetUpdater.createRenderSnapshot(context, entryPoint)
                 appWidgetIds.forEach { id ->
-                    updater.updateWidget(id, renderSnapshot)
-                    WidgetRenderState.markRendered(context, id)
+                    // Only a render that reached the host counts: marking a failed one would
+                    // suppress the placeholder for a widget that is showing nothing.
+                    if (updater.updateWidget(id, renderSnapshot)) {
+                        WidgetRenderState.markRendered(context, id)
+                    }
                 }
                 // This is the 30-minute host callback acting as freshness watchdog: the shared
                 // snapshot suppresses the per-widget check, so the batch must schedule here.
@@ -127,8 +130,9 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
             try {
                 val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
                 val updater = getUpdater(context, appWidgetManager, entryPoint)
-                updater.updateWidget(appWidgetId)
-                WidgetRenderState.markRendered(context, appWidgetId)
+                if (updater.updateWidget(appWidgetId)) {
+                    WidgetRenderState.markRendered(context, appWidgetId)
+                }
             } catch (e: Throwable) {
                 Log.e("ClockWeatherApp", "onAppWidgetOptionsChanged failed for ${this@BaseWidgetProvider::class.simpleName}", e)
                 if (WidgetRenderState.needsPlaceholder(context, appWidgetId)) {

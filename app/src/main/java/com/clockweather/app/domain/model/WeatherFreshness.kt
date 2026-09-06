@@ -67,35 +67,17 @@ internal fun isCachedPollenFresh(
 )
 
 /**
- * Hours a routine refresh fetches. Only the detail screen's per-day graph reads beyond this,
- * and Google bills a request per 24 hours, so background work stops here.
- *
- * Two days rather than one: [isWeatherDataFresh] requires a full day of future hours, and a
- * cache holding exactly that falls below it within the hour and then reads stale continuously.
- * The second day is the headroom that keeps the invariant true as the cache ages.
+ * [requireHourly] belongs to the caller, not to the data: the home-screen widgets render
+ * current conditions, the daily forecast and pollen, so demanding hourly coverage of them
+ * would hold a cache stale that is perfectly adequate for what they display — and a
+ * permanently stale widget re-enqueues work on every callback.
  */
-internal const val NEAR_TERM_HOURS = 48
-
-/**
- * Whether the cache already holds hours past the near-term window, which is what the detail
- * screen's later days need.
- *
- * Derived from the hours themselves rather than a stored fetch time: a set that was complete
- * yesterday is not complete now, and a timestamp would have to be aged separately to say so.
- */
-internal fun hasExtendedHourlyCoverage(
-    hourlyForecasts: List<HourlyForecast>,
-    referenceDateTime: LocalDateTime,
-): Boolean {
-    val nearTermEnd = referenceDateTime.plusHours(NEAR_TERM_HOURS.toLong())
-    return hourlyForecasts.any { it.dateTime.isAfter(nearTermEnd) }
-}
-
 internal fun isWeatherDataFresh(
     weather: WeatherData?,
     referenceDateTime: LocalDateTime,
     requiredForecastDays: Int,
     maxAgeMinutes: Long = CURRENT_MAX_AGE_MINUTES,
+    requireHourly: Boolean = true,
 ): Boolean {
     if (weather == null) return false
 
@@ -112,16 +94,18 @@ internal fun isWeatherDataFresh(
         return false
     }
 
-    val futureHours = weather.hourlyForecasts
-        .asSequence()
-        .filter { !it.dateTime.truncatedTo(ChronoUnit.HOURS).isBefore(referenceHour) }
-        .sortedBy { it.dateTime }
-        .toList()
+    if (requireHourly) {
+        val futureHours = weather.hourlyForecasts
+            .asSequence()
+            .filter { !it.dateTime.truncatedTo(ChronoUnit.HOURS).isBefore(referenceHour) }
+            .sortedBy { it.dateTime }
+            .toList()
 
-    if (futureHours.firstOrNull()?.dateTime?.truncatedTo(ChronoUnit.HOURS) != referenceHour) {
-        return false
+        if (futureHours.firstOrNull()?.dateTime?.truncatedTo(ChronoUnit.HOURS) != referenceHour) {
+            return false
+        }
+        if (futureHours.size < 24) return false
     }
-    if (futureHours.size < 24) return false
 
     val coveredDays = weather.dailyForecasts
         .filter { !it.date.isBefore(today) }

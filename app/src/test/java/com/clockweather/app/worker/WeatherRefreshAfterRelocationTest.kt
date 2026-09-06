@@ -5,7 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.work.testing.TestListenableWorkerBuilder
-import com.clockweather.app.data.provider.HourlyScope
+import com.clockweather.app.data.provider.RefreshScope
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.repository.LocationRepository
@@ -130,17 +130,17 @@ class WeatherRefreshAfterRelocationTest {
     }
 
     /**
-     * Widgets read the daily forecast, never the hourly one, so background work must not buy
-     * the extended hourly pages — that is the whole saving in the near-term scope.
+     * Widgets read the daily forecast and pollen, never hourly or air quality. The worker
+     * therefore names no scope, taking the repository's background policy.
      */
     @Test
-    fun `background refresh asks only for the near-term hours`() = runTest {
+    fun `background refresh does not request the foreground scope`() = runTest {
         val weatherRepository = RecordingWeatherRepository()
         val locationRepository = FakeLocationRepository(saved = listOf(LONDON), detected = LONDON)
 
         runWorker(locationRepository, weatherRepository).doWork()
 
-        assertEquals(listOf(HourlyScope.NEAR_TERM), weatherRepository.requestedScopes)
+        assertEquals(listOf<RefreshScope?>(null), weatherRepository.requestedScopes)
     }
 
     private class RecordingWeatherRepository(
@@ -148,7 +148,7 @@ class WeatherRefreshAfterRelocationTest {
     ) : WeatherRepository {
         val ensureFreshCalls = mutableListOf<Location>()
         val forceRefreshCalls = mutableListOf<Location>()
-        val requestedScopes = mutableListOf<HourlyScope>()
+        val requestedScopes = mutableListOf<RefreshScope?>()
 
         override fun getWeatherData(location: Location): Flow<WeatherData?> = flowOf(null)
 
@@ -156,19 +156,19 @@ class WeatherRefreshAfterRelocationTest {
             location: Location,
             forecastDays: Int,
             maxAgeMinutes: Long?,
-            hourlyScope: HourlyScope,
+            scope: RefreshScope?,
         ) {
             ensureFreshCalls += location
-            requestedScopes += hourlyScope
+            requestedScopes += scope
         }
 
         override suspend fun forceRefreshWeatherData(
             location: Location,
             forecastDays: Int,
-            hourlyScope: HourlyScope,
+            scope: RefreshScope?,
         ) {
             forceRefreshCalls += location
-            requestedScopes += hourlyScope
+            requestedScopes += scope
             forceRefreshError?.let { throw it }
         }
     }

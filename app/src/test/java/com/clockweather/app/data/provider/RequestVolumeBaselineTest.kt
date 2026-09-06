@@ -11,7 +11,6 @@ import com.clockweather.app.domain.model.AirQuality
 import com.clockweather.app.domain.model.CurrentWeather
 import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.Location
-import com.clockweather.app.domain.model.NEAR_TERM_HOURS
 import com.clockweather.app.domain.model.PollenData
 import com.clockweather.app.domain.model.PollenType
 import com.clockweather.app.domain.model.WeatherCondition
@@ -98,37 +97,55 @@ class RequestVolumeBaselineTest {
     }
 
     /**
-     * The saving. Routine refreshes take the near-term scope, which is two hourly pages instead
-     * of seven, and every other endpoint is unchanged.
+     * The saving. Nothing on the home screen renders hourly data or air quality, so a routine
+     * background refresh buys neither, and pollen only while the widget's pollen bar is on.
      */
     @Test
-    fun `a near-term Google refresh costs two hourly pages instead of seven`() = runTest {
+    fun `a background refresh with the pollen bar on costs four requests`() = runTest {
         val weather = googleProvider().fetchWeatherData(
             location,
             forecastDays = 7,
             cachedData = null,
-            hourlyScope = HourlyScope.NEAR_TERM,
+            scope = RefreshScope.background(pollenShownInWidget = true),
         )
 
-        assertEquals(NEAR_TERM_HOURS, weather.hourlyForecasts.size)
-        assertEquals(2, count("GET /v1/forecast/hours:lookup"))
+        assertEquals("no hourly pages", 0, count("GET /v1/forecast/hours:lookup"))
+        assertEquals("no air quality", 0, count("POST /v1/currentConditions:lookup"))
         assertEquals(1, count("GET /v1/currentConditions:lookup"))
         assertEquals(1, count("GET /v1/forecast/days:lookup"))
-        assertEquals(7, total())
-        report("Google 7-day, near-term hours")
+        assertEquals("pollen, plus its Open-Meteo fallback beyond day five", 1, count("GET /v1/forecast:lookup"))
+        assertEquals(1, count("GET /v1/air-quality"))
+        assertEquals(4, total())
+        assertEquals("hours are left to the app", 0, weather.hourlyForecasts.size)
+        report("Google, background refresh, pollen bar on")
     }
 
-    /** Open-Meteo returns hourly inside the forecast response, so the scope changes nothing. */
     @Test
-    fun `the near-term scope does not change Open-Meteo request volume`() = runTest {
+    fun `a background refresh with the pollen bar off costs two requests`() = runTest {
+        googleProvider().fetchWeatherData(
+            location,
+            forecastDays = 7,
+            cachedData = null,
+            scope = RefreshScope.background(pollenShownInWidget = false),
+        )
+
+        assertEquals(0, count("GET /v1/forecast:lookup"))
+        assertEquals(0, count("GET /v1/air-quality"))
+        assertEquals(2, total())
+        report("Google, background refresh, pollen bar off")
+    }
+
+    /** Open-Meteo bundles hourly into its forecast call, so only the optional call can go. */
+    @Test
+    fun `an Open-Meteo background refresh drops its optional call`() = runTest {
         openMeteoProvider().fetchWeatherData(
             location,
             forecastDays = 7,
             cachedData = null,
-            hourlyScope = HourlyScope.NEAR_TERM,
+            scope = RefreshScope.background(pollenShownInWidget = false),
         )
 
-        assertEquals(2, total())
+        assertEquals(1, total())
     }
 
     @Test

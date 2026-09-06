@@ -23,16 +23,19 @@ class OpenMeteoWeatherProvider @Inject constructor(
         location: Location,
         forecastDays: Int,
         cachedData: WeatherData?,
-        // Hourly data arrives inside the single forecast response, so narrowing the scope
-        // would save no request here. Open-Meteo always returns extended coverage.
-        hourlyScope: HourlyScope
+        // Hourly data arrives inside the single forecast response, so excluding it would save
+        // no request here; Open-Meteo always returns it. Only the combined air-quality and
+        // pollen call can be skipped.
+        scope: RefreshScope
     ): WeatherData = coroutineScope {
         val days = forecastDays.coerceIn(1, 16)
         val timezone = TimeZone.getDefault().id
         val referenceDateTime = LocalDateTime.now()
 
-        val pollenIsFresh = isCachedPollenFresh(cachedData, referenceDateTime, days)
-        val airQualityIsFresh = isCachedAirQualityFresh(cachedData, referenceDateTime)
+        val pollenIsFresh = !scope.includePollen ||
+            isCachedPollenFresh(cachedData, referenceDateTime, days)
+        val airQualityIsFresh = !scope.includeAirQuality ||
+            isCachedAirQualityFresh(cachedData, referenceDateTime)
 
         val weatherDeferred = async {
             openMeteoWeatherApi.getWeatherForecast(

@@ -317,4 +317,6 @@
     <string name="onboarding_back">Atrás</string>
     <string name="pref_show_pollen_widget_title">Mostrar niveles de polen en el widget</string>
     <string name="pref_show_pollen_widget_desc">Muestra indicadores de polen de gramíneas, árboles y malezas en el widget</string>
+    <string name="label_hourly_unavailable">La previsión por horas de este día aún no se ha descargado</string>
+    <string name="label_hourly_unavailable_offline">Conéctate para cargar la previsión por horas de este día</string>
 </resources>

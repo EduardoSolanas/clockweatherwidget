@@ -4,6 +4,43 @@ import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
 
 /**
+ * What a refresh is worth buying.
+ *
+ * Google bills per request, and the home-screen widgets render far less than the app does:
+ * current conditions, the daily forecast, and the pollen bar when the user has enabled it.
+ * They never show the hourly forecast or air quality. Routine background work therefore skips
+ * whatever nothing on the home screen can display, and the app fetches the rest when opened.
+ *
+ * A section that is not fetched is left as it was rather than overwritten with nothing, so
+ * turning a section off costs the user no data they already had.
+ */
+data class RefreshScope(
+    val includeHourly: Boolean,
+    val includeAirQuality: Boolean,
+    val includePollen: Boolean,
+) {
+    companion object {
+        /** Someone is looking at the app, where every section is visible. */
+        val FOREGROUND = RefreshScope(
+            includeHourly = true,
+            includeAirQuality = true,
+            includePollen = true,
+        )
+
+        /**
+         * Keeping the widgets current. Pollen is bought only while the widget's pollen bar is
+         * switched on; with it off, nothing on the home screen displays pollen and it becomes
+         * another section the app fetches on demand.
+         */
+        fun background(pollenShownInWidget: Boolean) = RefreshScope(
+            includeHourly = false,
+            includeAirQuality = false,
+            includePollen = pollenShownInWidget,
+        )
+    }
+}
+
+/**
  * Abstraction over a weather data source.
  *
  * Each implementation fetches and maps raw API data into domain [WeatherData].
@@ -13,26 +50,11 @@ import com.clockweather.app.domain.model.WeatherData
  * An optional [cachedData] instance allows providers to implement tiered TTL caching,
  * reusing fresh air quality or pollen data without re-fetching from the network.
  */
-/**
- * How much of the hourly forecast a fetch should retrieve.
- *
- * Google bills one request per 24 hours of hourly data, and only the detail screen reads
- * beyond the first day — the widgets use the daily forecast. Routine refreshes therefore ask
- * for [NEAR_TERM] and the app asks for [EXTENDED] when someone opens it.
- */
-enum class HourlyScope {
-    /** A rolling 24 hours from now: one page, enough for every background caller. */
-    NEAR_TERM,
-
-    /** The whole requested forecast, for the detail screen's later days. */
-    EXTENDED,
-}
-
 interface WeatherDataProvider {
     suspend fun fetchWeatherData(
         location: Location,
         forecastDays: Int,
         cachedData: WeatherData? = null,
-        hourlyScope: HourlyScope = HourlyScope.EXTENDED
+        scope: RefreshScope = RefreshScope.FOREGROUND
     ): WeatherData
 }

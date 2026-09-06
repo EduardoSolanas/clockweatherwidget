@@ -1,6 +1,6 @@
 package com.clockweather.app.domain.repository
 
-import com.clockweather.app.data.provider.HourlyScope
+import com.clockweather.app.data.provider.RefreshScope
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
 import kotlinx.coroutines.flow.Flow
@@ -11,11 +11,12 @@ interface WeatherRepository {
         location: Location,
         forecastDays: Int = 7,
         maxAgeMinutes: Long? = null,
-        hourlyScope: HourlyScope = HourlyScope.NEAR_TERM,
+        /** Null means the background scope, which the repository derives from settings. */
+        scope: RefreshScope? = null,
     )
     suspend fun forceRefreshWeatherData(
         location: Location,
         forecastDays: Int = 7,
-        hourlyScope: HourlyScope = HourlyScope.NEAR_TERM,
+        scope: RefreshScope? = null,
     )
 }

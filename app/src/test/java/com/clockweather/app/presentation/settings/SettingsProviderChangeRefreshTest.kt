@@ -2,6 +2,7 @@ package com.clockweather.app.presentation.settings
 
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.repository.LocationRepository
+import com.clockweather.app.data.provider.RefreshScope
 import com.clockweather.app.domain.repository.WeatherRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,7 +30,7 @@ class SettingsProviderChangeRefreshTest {
         every { locationRepository.getSavedLocations() } returns flowOf(listOf(location))
         coEvery { locationRepository.getCurrentLocation() } returns null
         every { locationRepository.getFallbackLocation() } returns location
-        coEvery { weatherRepository.forceRefreshWeatherData(any(), any()) } returns Unit
+        coEvery { weatherRepository.forceRefreshWeatherData(any(), any(), any()) } returns Unit
 
         refreshWeatherForProviderChange(
             locationRepository = locationRepository,
@@ -37,6 +38,10 @@ class SettingsProviderChangeRefreshTest {
             forecastDays = 7
         )
 
-        coVerify(exactly = 1) { weatherRepository.forceRefreshWeatherData(location, 7) }
+        // Changing provider is a foreground action, so it must not silently take the
+        // background scope and leave the new provider without hourly or air quality.
+        coVerify(exactly = 1) {
+            weatherRepository.forceRefreshWeatherData(location, 7, RefreshScope.FOREGROUND)
+        }
     }
 }

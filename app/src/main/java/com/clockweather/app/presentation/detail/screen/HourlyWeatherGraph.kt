@@ -156,7 +156,12 @@ fun HourlyWeatherGraph(
         val scoped = scopedHourlyForecasts(hourlyForecasts, selectedDate, referenceDateTime)
         linkCurrentHourForecastToWeather(scoped, currentWeather, referenceDateTime)
     }
-    if (hours.size < 2) return
+    // Background refreshes buy no hourly data, so a day the app has not fetched yet has none.
+    // Returning silently leaves an unexplained gap where the graph was; say so instead.
+    if (hours.size < 2) {
+        HourlyForecastUnavailable(modifier = modifier)
+        return
+    }
 
     val convertedTemps = remember(hours, temperatureUnit) {
         hours.map { TemperatureFormatter.convert(it.temperature, temperatureUnit) }
@@ -616,3 +621,27 @@ private val TimeRowH = 50.dp
 private val GraphH = 144.dp
 private val BottomSliceH = 144.dp
 private val HourlyGraphPanelHeight = TimeRowH + GraphH + BottomSliceH
+
+/**
+ * Shown when the selected day has no hourly data cached. The app fetches hours on demand, so
+ * this is a normal state on a day the user reaches before the download lands, or offline.
+ */
+@Composable
+private fun HourlyForecastUnavailable(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 96.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .padding(horizontal = 20.dp, vertical = 24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.label_hourly_unavailable),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}

@@ -138,6 +138,10 @@ abstract class BaseWidgetUpdater(
                 referenceDateTime,
                 requiredForecastDays,
                 maxAgeMinutes = refreshIntervalMinutes.toLong(),
+                // No widget renders the hourly forecast, and background refreshes no longer
+                // fetch it. Demanding it here would report stale forever and enqueue work on
+                // every host callback.
+                requireHourly = false,
             )
         }
 
@@ -363,11 +367,16 @@ abstract class BaseWidgetUpdater(
         return views
     }
 
+    /**
+     * @return whether RemoteViews actually reached the host. Callers record the render from
+     * this rather than from reaching the end of the call: a swallowed failure here would
+     * otherwise mark an empty widget as rendered and suppress its placeholder for good.
+     */
     suspend fun updateWidget(
         appWidgetId: Int,
         snapshot: WidgetRenderSnapshot? = null
-    ) {
-        withContext(Dispatchers.IO) {
+    ): Boolean {
+        return withContext(Dispatchers.IO) {
             try {
                 Log.d(tag, "updateWidget id=$appWidgetId")
                 val renderSnapshot = snapshot ?: createRenderSnapshot(context, entryPoint)
@@ -398,8 +407,10 @@ abstract class BaseWidgetUpdater(
 
                 appWidgetManager.updateAppWidget(appWidgetId, finalViews)
                 Log.d(tag, "Widget $appWidgetId updated.")
+                true
             } catch (e: Exception) {
                 Log.e(tag, "Widget update failed for widget $appWidgetId", e)
+                false
             }
         }
     }

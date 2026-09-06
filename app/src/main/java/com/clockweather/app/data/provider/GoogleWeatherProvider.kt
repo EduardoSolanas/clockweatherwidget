@@ -8,7 +8,6 @@ import com.clockweather.app.data.remote.api.OpenMeteoAirQualityApi
 import com.clockweather.app.data.remote.dto.google.GoogleAirQualityLocationDto
 import com.clockweather.app.data.remote.dto.google.GoogleAirQualityRequestDto
 import com.clockweather.app.domain.model.Location
-import com.clockweather.app.domain.model.NEAR_TERM_HOURS
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.isCachedAirQualityFresh
 import com.clockweather.app.domain.model.isCachedPollenFresh
@@ -42,20 +41,20 @@ class GoogleWeatherProvider @Inject constructor(
         location: Location,
         forecastDays: Int,
         cachedData: WeatherData?,
-        hourlyScope: HourlyScope
+        scope: RefreshScope
     ): WeatherData = coroutineScope {
         val days = forecastDays.coerceIn(1, 10)
-        // One page per 24 hours, so this is the whole cost difference between the two scopes.
-        val totalTargetHours = when (hourlyScope) {
-            HourlyScope.NEAR_TERM -> NEAR_TERM_HOURS
-            HourlyScope.EXTENDED -> days * 24
-        }
+        val totalTargetHours = days * 24
         val lat = location.latitude
         val lon = location.longitude
         val referenceDateTime = LocalDateTime.now()
 
-        val pollenIsFresh = isCachedPollenFresh(cachedData, referenceDateTime, minOf(days, 5))
-        val airQualityIsFresh = isCachedAirQualityFresh(cachedData, referenceDateTime)
+        // A section outside this scope is not bought at all; the mapper keeps whatever the
+        // cache already holds for it, with its own age intact.
+        val pollenIsFresh = !scope.includePollen ||
+            isCachedPollenFresh(cachedData, referenceDateTime, minOf(days, 5))
+        val airQualityIsFresh = !scope.includeAirQuality ||
+            isCachedAirQualityFresh(cachedData, referenceDateTime)
 
         val currentDeferred = async {
             googleWeatherApi.getCurrentConditions(apiKey, lat, lon)
@@ -64,6 +63,13 @@ class GoogleWeatherProvider @Inject constructor(
         val hourlyDeferred = async {
             val allHours = mutableListOf<com.clockweather.app.data.remote.dto.google.GoogleHourlyForecastDto>()
             var pageToken: String? = null
+            // Seven of the twelve requests in a full refresh are these pages, and nothing on
+            // the home screen displays them.
+            if (!scope.includeHourly) {
+                return@async com.clockweather.app.data.remote.dto.google.GoogleHourlyForecastResponseDto(
+                    forecastHours = emptyList()
+                )
+            }
 
             // Keep fetching until we hit our target or the API runs out of pages
             while (allHours.size < totalTargetHours) {

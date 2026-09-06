@@ -398,5 +398,11 @@ internal suspend fun refreshWeatherForProviderChange(
     val location = locationRepository.getSavedLocations().first().firstOrNull()
         ?: locationRepository.getCurrentLocation()
         ?: locationRepository.getFallbackLocation()
-    weatherRepository.forceRefreshWeatherData(location, forecastDays)
+    // Changing provider is something the user did in the app, so the new provider's cache is
+    // populated with everything the app displays, not the background subset.
+    weatherRepository.forceRefreshWeatherData(
+        location,
+        forecastDays,
+        scope = com.clockweather.app.data.provider.RefreshScope.FOREGROUND,
+    )
 }

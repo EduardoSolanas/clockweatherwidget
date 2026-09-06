@@ -9,7 +9,6 @@ import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import com.clockweather.app.ClockWeatherApplication
-import com.clockweather.app.data.provider.HourlyScope
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.repository.LocationRepository
 import com.clockweather.app.domain.repository.WeatherRepository
@@ -84,20 +83,15 @@ class WeatherUpdateWorker @AssistedInject constructor(
                     refreshMode
                 }
                 when (effectiveMode) {
-                    // Widgets read the daily forecast, never the hourly one, so background
-                    // work buys the near-term hours only. The app fetches the rest when opened.
+                    // Leaving the scope null takes the repository's background policy: no
+                    // hourly, no air quality, and pollen only while the widget bar shows it.
                     WeatherRefreshMode.FORCE ->
-                        weatherRepository.forceRefreshWeatherData(
-                            refreshLocation,
-                            forecastDays,
-                            hourlyScope = HourlyScope.NEAR_TERM,
-                        )
+                        weatherRepository.forceRefreshWeatherData(refreshLocation, forecastDays)
                     WeatherRefreshMode.ENSURE_FRESH ->
                         weatherRepository.ensureFreshWeatherData(
                             refreshLocation,
                             forecastDays,
                             maxAgeMinutes = refreshIntervalMinutes.toLong(),
-                            hourlyScope = HourlyScope.NEAR_TERM,
                         )
                 }
 
