@@ -318,4 +318,6 @@
     <string name="pref_show_pollen_widget_desc">Display grass, tree, and weed pollen indicators on the widget</string>
     <string name="label_hourly_unavailable">Hourly forecast for this day isn’t downloaded yet</string>
     <string name="label_hourly_unavailable_offline">Connect to load this day’s hourly forecast</string>
+    <string name="settings_tester_mode">Tester mode</string>
+    <string name="settings_tester_mode_desc">Hide ads on this device. For internal testers.</string>
 </resources>

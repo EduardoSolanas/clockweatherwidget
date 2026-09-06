@@ -2,6 +2,7 @@ package com.clockweather.app.presentation.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +39,7 @@ fun SettingsScreen(
     val showTodayCompact by viewModel.showTodayCompact.collectAsStateWithLifecycle()
     val showTodayExtended by viewModel.showTodayExtended.collectAsStateWithLifecycle()
     val showPollenInWidget by viewModel.showPollenInWidget.collectAsStateWithLifecycle()
+    val isTesterMode     by viewModel.isTesterMode.collectAsStateWithLifecycle()
     val widgetTextScale  by viewModel.widgetTextScale.collectAsStateWithLifecycle()
     val clockTheme       by viewModel.clockTheme.collectAsStateWithLifecycle()
     val clockTileSize    by viewModel.clockTileSize.collectAsStateWithLifecycle()
@@ -528,9 +530,18 @@ fun SettingsScreen(
 
 
 
-            // Build Info
+            // Build Info. Repeated taps here reveal the tester switch below; see
+            // TesterModeReveal for why it is not simply shown.
+            val testerReveal = remember { TesterModeReveal() }
+            var testerSwitchVisible by remember { mutableStateOf(false) }
             Box(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { testerSwitchVisible = testerReveal.onVersionTapped() }
+                    .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -541,6 +552,15 @@ fun SettingsScreen(
                     ),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
+            }
+
+            if (testerSwitchVisible) {
+                SettingsToggleRow(
+                    label       = stringResource(R.string.settings_tester_mode),
+                    description = stringResource(R.string.settings_tester_mode_desc),
+                    checked     = isTesterMode,
+                    onCheckedChange = { viewModel.setTesterMode(it) }
                 )
             }
             
