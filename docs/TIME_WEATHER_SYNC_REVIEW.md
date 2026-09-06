@@ -41,12 +41,12 @@ Severity alone is a poor ordering signal here: the first revision of this docume
 | 1 | Independent AQ/pollen ages | DONE | Two timestamps, migration, provider policies and unknown-age handling | Launcher age display is separate |
 | 2 | City/weather snapshot identity | PARTIAL | Weather-owned label/coordinates; location saved after successful fetch; optional-section reuse blocked after movement, covered end to end through real Room and a real server | No single location+weather transaction |
 | 3 | Timezone handling | PARTIAL | Google interval/offset parsing; future-age bound | Full instant storage and DST/zone migration deferred |
-| 4 | Cache-first startup and resume | PARTIAL | Network launch no longer blocks Room collection; ON_RESUME re-checks freshness after the first resume | Visible age/error states |
+| 4 | Cache-first startup and resume | PARTIAL | Network launch no longer blocks Room collection; ON_RESUME re-checks freshness after the first resume; the hourly graph states when a day is not downloaded instead of rendering nothing | Visible age/error states for the snapshot as a whole |
 | 5 | Refresh ownership and coverage | PARTIAL | distinctUntilChanged; widget coverage target now reads the saved setting and is satisfiable | Broader request coalescing separate |
-| 6 | Manual refresh and cancellation | PARTIAL | In-flight guard; success-only cooldown; cancellation propagated in repository/location lookup/VM and rethrown in the worker; provider propagation shown to hold via coroutineScope | Shared app/widget manual policy; elapsed-time cooldown |
+| 6 | Manual refresh and cancellation | PARTIAL | In-flight guard; success-only cooldown; cancellation rethrown in the worker. Provider propagation holds through coroutineScope, and mutation testing showed no test can falsify the runCatching blocks — the claim is narrowed, not proven | Shared app/widget manual policy; elapsed-time cooldown |
 | 7 | Lifecycle policy | PARTIAL | Boot, screen-wake and settings all guard on an active widget | Runtime wake limitation remains |
 | 8 | Location quality | PARTIAL | Explicit London default label; replacement remains enabled; last-known fix age bounded below so a rolled-back clock cannot make a stale fix read as newest | Accuracy still logged rather than enforced; provenance separation has no consumer today |
-| 9 | Request volume and rendering cost | PARTIAL | Per-endpoint baseline measured and asserted; placeholder no longer blanks populated widgets | Launcher verification of the placeholder change; optimize hourly pagination only with evidence |
+| 9 | Request volume and rendering cost | PARTIAL | Baseline measured and asserted; background refresh buys only what the home screen renders, 12 requests down to 4 (2 with the pollen bar off); placeholder no longer blanks populated widgets, and only a render that reached the host is recorded | Launcher verification; observing the detail screen while extended hours arrive |
 
 The completed work is not a pending one-day batch. Estimates from the original audit are historical. The remaining coverage mismatch is a bounded correctness fix, independent of a refresh-ownership redesign.
 
@@ -232,7 +232,7 @@ The clock being current does not imply weather is current. Display weather fetch
 Current queue, replacing the original completed-work list:
 
 1. **Launcher verification of the placeholder change.** Widget rendering changed with no device run. Check first placement, process death, launcher restart, reboot and resize on an API 26-30 device and an API 31+ device, including Xiaomi/MIUI. This gates trusting that change; everything else here is optional.
-2. **Hourly request volume — a product decision, not a cleanup.** See the cost note below. It needs a call on the detail screen's behaviour before any code moves.
+2. **Observe the detail screen while extended hours arrive.** Implemented but never seen running: opening the app fetches the hourly forecast on demand, and a day whose hours have not landed shows an explicit message. Whether that reads as informative or as breakage is a judgement no test makes.
 3. **Remaining smaller gaps.** Shared manual-refresh policy between app and widget, elapsed-time cooldowns via `SystemClock.elapsedRealtime()`, enforcing rather than logging fix accuracy, and richer age/error states on the detail screen.
 4. **Deferred by design.** The full `Instant` migration (finding 3), the single location+weather transaction (finding 2), and flicker follow-up items 2-5, including the render deduplication whose failure mode is a permanently frozen widget.
 
@@ -338,14 +338,40 @@ Committed as `d2a7939` and the relocation regression alongside it. Suite green i
 - **Fix age (8).** `isLastKnownFixAcceptable` bounds the age below as well as above, with two minutes of tolerance. Previously a fix stamped in the future gave a negative age that passed every threshold — which is what a clock rolled back under a stored timestamp produces.
 - **Provenance (8), not done.** Every reader of `isCurrentLocation` wants follow-device semantics, which is correct for the labelled default, so a schema column separating provenance has no consumer. Revisit when something needs to say "we could not find you" differently from "follow the device".
 
-### Cost note: why hourly pagination was not changed
+### Cost note — superseded on 6 September 2026 by the scoping change recorded below
+
+This was the position before the background scope was narrowed. Its reasoning about the two suggested levers still holds and is why a third was taken instead.
 
 Hourly pages are 7 of the 12 requests in a default Google refresh, so they are the whole cost question. Neither lever the original audit suggested is available:
 
 - **A larger page size does not exist.** Google caps the hourly endpoint at 24 hours per page, so 7 days is 7 requests by construction.
 - **Truncating coverage would remove a feature.** `scopedHourlyForecasts` gives the detail screen a 24-hour graph *for the selected day*, and the user can select any day in the forecast. The distant hours are displayed, not merely fetched.
 
-What remains is loading distant hours on demand: fetch the near term eagerly and a day's hours when that day is selected. That is a real saving and a real change — repository, cache shape and detail-screen loading states — and it trades a request for a visible wait when the user taps a far day. That is a product decision, so it is recorded here rather than implemented.
+What remained was loading distant hours on demand. That was taken, in a form that avoids the merge this note anticipated: background refreshes buy no hourly data at all and leave whatever is cached alone, so the hours are still written wholesale by a single foreground fetch. See the scoping section below.
+
+## Background refresh scoped to the home screen — 6 September 2026
+
+Committed as `c284140`, `794f96d` and `c25c9f9`. Suite green in both variants: 387 tests, zero failures, errors or skips. Lint: zero errors.
+
+Hourly pages were 7 of the 12 requests in a full Google refresh and nothing on the home screen renders them; air quality is the same. `RefreshScope` now carries three flags, because whether pollen is worth buying depends on a user setting rather than on who is asking. A background refresh costs **4 requests with the widget's pollen bar on, 2 with it off**, and the app buys the rest when opened. `isWeatherDataFresh` gained `requireHourly` so callers that never render hours are not held stale by their absence — demanding it would re-enqueue work on every host callback, the failure fixed in `72471fb`.
+
+A section outside the scope is left untouched rather than overwritten with nothing, so cached hours survive background refreshes. Hours are still replaced wholesale or not at all, never merged, so the cache holds one fetch on one clock and this needs no timezone invalidation and no dependency on the deferred `Instant` migration.
+
+### What independent review changed
+
+Four reviewers examined this work; five defects were theirs, not mine to claim as found.
+
+- The hourly graph returned without composing anything when a day had no cached hours, leaving an unexplained gap rather than the "brief wait" the design assumed. It now says so.
+- `SettingsViewModel`'s provider-change refresh took the background scope by omission, populating a newly chosen provider without hourly or air quality. Its existing test asserted the old two-argument call and passed.
+- `BaseWidgetProvider` recorded a widget as rendered even when `updateWidget` had swallowed a failure, suppressing the placeholder for a widget showing nothing — reintroducing what the placeholder exists to prevent. `updateWidget` now reports success.
+- `WidgetRefreshSchedulingTest` could not catch `requireHourly` being restored, because every fixture carried a full day of hours. An empty-hourly case now covers it, verified red under that mutation.
+- `ProviderCancellationTest` claimed more than it proves. `coroutineScope` rethrows on a cancelled Job whatever the body does, so wrapping the whole fetch in `catch(Throwable)` leaves it green. Its docstring now claims only that the optional fetches stay inside a cancellable scope.
+
+### Corrections to earlier figures in this document
+
+The 12-request baseline is the empty-cache worst case, not a routine refresh: air quality expires hourly and pollen every six hours, so steady state before this work was about 9 requests and roughly **464 per day per location**, not the 576 quoted earlier. The cache-independent way to state the saving is requests removed per refresh, not a percentage against a worst case.
+
+No device, launcher, live-provider or battery verification was performed. Request counts come from a local server exercising the real provider code, not production traffic or a bill.
 
 ## Home-screen freshness and flicker follow-up — 5 September 2026
 
