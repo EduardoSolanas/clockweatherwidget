@@ -33,15 +33,23 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 /**
- * Finding 6 of docs/TIME_WEATHER_SYNC_REVIEW.md.
+ * Finding 6 of docs/TIME_WEATHER_SYNC_REVIEW.md, with its claim narrowed by review.
  *
- * The optional air-quality and pollen requests are wrapped in handlers broad enough to catch
- * [kotlinx.coroutines.CancellationException]. When one does, cancelling a refresh does not stop
- * it: the optional request reports an ordinary failure, the fetch runs to completion and
- * persists a partial snapshot that nobody is waiting for.
+ * The finding was that broad `runCatching` handlers around the optional air-quality and pollen
+ * calls swallow [kotlinx.coroutines.CancellationException]. They do — but mutation testing
+ * showed this test cannot fail on that: `fetchWeatherData` is a `coroutineScope` that reaches
+ * its results through `await()`, and the builder rethrows on a cancelled Job whatever the body
+ * does. Wrapping the entire body in `catch (t: Throwable)` and returning a default still leaves
+ * these tests green.
+ *
+ * So this does not prove the handlers are cancellation-safe; structured concurrency makes them
+ * irrelevant. What it does guard is the narrower and still real regression of moving those
+ * fetches somewhere cancellation does not reach — `GlobalScope`, `NonCancellable`, or a
+ * detached scope — which would make a cancelled refresh keep running and keep spending
+ * requests. Read it as protecting the shape of the concurrency, not the catch blocks.
  *
  * The required endpoints answer immediately here and only the optional ones hang, so a fetch
- * that completes after cancellation can only have completed by swallowing the cancellation.
+ * that completes after cancellation has escaped its scope.
  */
 @RunWith(RobolectricTestRunner::class)
 class ProviderCancellationTest {

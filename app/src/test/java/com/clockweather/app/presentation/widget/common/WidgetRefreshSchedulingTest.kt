@@ -189,6 +189,33 @@ class WidgetRefreshSchedulingTest {
     }
 
     /**
+     * Background refreshes buy no hourly data at all, so this is what a widget's cache
+     * actually looks like in production. Every other fixture here happens to carry a full
+     * day of hours, which satisfies the hourly branch too and hides whether it is applied —
+     * so without this case, restoring the hourly requirement would pass unnoticed and leave
+     * widgets reporting stale on every host callback.
+     */
+    @Test
+    fun `a cache with no hourly data is still fresh for a widget`() {
+        val snapshot = snapshot(
+            weather = sampleWeatherData(
+                lastUpdated = referenceDateTime.minusMinutes(5),
+                hourlyForecasts = emptyList(),
+            ),
+            refreshIntervalMinutes = 30,
+        )
+
+        assertFalse(
+            "no widget renders hourly data, so its absence must not make the cache stale",
+            BaseWidgetUpdater.shouldScheduleRefresh(
+                snapshot = snapshot,
+                minimumFutureForecastDaysRequired = FORECAST_WIDGET_ROW_COUNT - 1,
+                currentInstant = referenceInstant,
+            )
+        )
+    }
+
+    /**
      * The regression guard. Both snapshot-passing call sites must delegate to the shared
      * helper; neither may inline its own copy of the decision, and neither may skip it.
      */
