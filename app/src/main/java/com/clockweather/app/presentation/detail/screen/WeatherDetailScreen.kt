@@ -20,6 +20,7 @@ import com.clockweather.app.domain.model.DailyForecast
 import com.clockweather.app.domain.model.SpeedUnit
 import com.clockweather.app.domain.model.locationReferenceDateTime
 import com.clockweather.app.presentation.common.UiState
+import com.clockweather.app.presentation.detail.LocationPermissionRefreshGate
 import com.clockweather.app.presentation.detail.WeatherDetailViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -68,8 +69,15 @@ fun WeatherDetailScreen(
         )
     )
 
+    // This effect also runs on first composition, so opening the page with permission already
+    // granted used to force a download regardless of how fresh the cache was. Loading the page
+    // is the startup path's job; the gate limits this one to a permission that actually changed.
+    val permissionRefreshGate = remember { LocationPermissionRefreshGate() }
     LaunchedEffect(locationPermissionState.allPermissionsGranted) {
-        if (locationPermissionState.allPermissionsGranted) {
+        if (permissionRefreshGate.shouldRefreshForPermissionChange(
+                locationPermissionState.allPermissionsGranted
+            )
+        ) {
             viewModel.refresh()
         }
     }
