@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.clockweather.app.di.WidgetEntryPoint
+import com.clockweather.app.worker.LatestLocationFixStore
 import com.clockweather.app.worker.WeatherRefreshLocationResolver
 import com.clockweather.app.worker.WeatherUpdateScheduler
 import com.google.android.gms.location.LocationResult
@@ -65,6 +66,15 @@ class LocationUpdatesReceiver(
                         Log.i(
                             TAG,
                             "Relocation detected via passive fix (>=5km from ${currentLocation.name}): scheduling refresh"
+                        )
+                        // Recorded before the request is enqueued, because the request may be
+                        // dropped by KEEP while an earlier one is still queued. The store keeps
+                        // the newest fix so whichever request does run acts on this one.
+                        LatestLocationFixStore.record(
+                            entryPoint.dataStore(),
+                            latitude = fix.latitude,
+                            longitude = fix.longitude,
+                            fixTimeMs = fix.time,
                         )
                         // Hand the whole update to the worker, which resolves the city name and
                         // the weather for the new coordinates together. Persisting coordinates

@@ -47,16 +47,25 @@ class WeatherUpdateWorker @AssistedInject constructor(
             prefs[SettingsViewModel.KEY_WEATHER_REFRESH_INTERVAL]
         )
         val refreshMode = weatherRefreshMode(inputData)
+        // Relocation work is enqueued with KEEP, so a fix that arrived while this request was
+        // queued never got a request of its own. Reading the store at start — rather than
+        // trusting the coordinates this request was built with — is what lets the newest fix
+        // win without cancelling work in flight.
+        val queuedFix = LatestLocationFixStore.read(prefs)
         var anyFailure = false
         locations.forEach { savedLocation ->
             try {
                 val detectedLocation = if (savedLocation.isCurrentLocation) {
-                    val lat = if (inputData.keyValueMap.containsKey(KEY_LATITUDE)) {
+                    val inputLat = if (inputData.keyValueMap.containsKey(KEY_LATITUDE)) {
                         inputData.getDouble(KEY_LATITUDE, Double.NaN)
                     } else Double.NaN
-                    val lon = if (inputData.keyValueMap.containsKey(KEY_LONGITUDE)) {
+                    val inputLon = if (inputData.keyValueMap.containsKey(KEY_LONGITUDE)) {
                         inputData.getDouble(KEY_LONGITUDE, Double.NaN)
                     } else Double.NaN
+                    // The store only ever holds the newest observation, so it outranks the
+                    // coordinates this request was created with.
+                    val lat = queuedFix?.latitude ?: inputLat
+                    val lon = queuedFix?.longitude ?: inputLon
 
                     if (!lat.isNaN() && !lon.isNaN()) {
                         locationRepository.resolveLocation(lat, lon)
@@ -108,6 +117,13 @@ class WeatherUpdateWorker @AssistedInject constructor(
                 anyFailure = true
             }
         }
+        // Consumed only once its weather actually published. A failed run keeps the fix so the
+        // retry still acts on it rather than falling back to a fresh lookup.
+        if (queuedFix != null && !anyFailure) {
+            runCatching { LatestLocationFixStore.clear(dataStore) }
+                .onFailure { Log.w(TAG, "Failed to clear the consumed location fix", it) }
+        }
+
         // Always redraw widgets from cache, even on partial failure.
         val app = applicationContext as? ClockWeatherApplication
         app?.refreshAllWidgets(applicationContext)
