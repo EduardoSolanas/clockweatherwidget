@@ -8,13 +8,14 @@ import androidx.room.Room
 import com.clockweather.app.data.local.db.WeatherDatabase
 import com.clockweather.app.data.local.entity.CurrentWeatherEntity
 import com.clockweather.app.data.local.entity.DailyForecastEntity
-import com.clockweather.app.data.local.entity.LocationEntity
 import com.clockweather.app.data.local.entity.HourlyForecastEntity
+import com.clockweather.app.data.local.entity.LocationEntity
 import com.clockweather.app.data.mapper.GoogleWeatherMapper
 import com.clockweather.app.data.mapper.WeatherDtoMapper
 import com.clockweather.app.data.mapper.WeatherEntityMapper
 import com.clockweather.app.data.provider.GoogleWeatherProvider
 import com.clockweather.app.data.provider.OpenMeteoWeatherProvider
+import com.clockweather.app.data.provider.RefreshScope
 import com.clockweather.app.data.provider.WeatherDataProviderFactory
 import com.clockweather.app.data.provider.WeatherProviderPreferences
 import com.clockweather.app.data.remote.api.GoogleAirQualityApi
@@ -39,6 +40,8 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,19 +53,21 @@ import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Queue step 3 of docs/TIME_WEATHER_SYNC_REVIEW.md, end to end.
+ * Finding S5 of refresh_improvements.md.
  *
- * [CachedWeatherOwnershipTest] covers the decision; this covers the path through real Room and
- * a real HTTP server. Open-Meteo skips its air-quality request only when pollen and air quality
- * are both fresh in the cache it is given, so that request is a direct observation of whether
- * the cache was offered at all.
+ * `ensureFreshWeatherData` used to decide freshness from core weather and forecast coverage
+ * alone, so a warm resume could sit behind fresh current conditions with an expired air quality
+ * reading and never ask for more. Every case here seeds core weather, hourly and daily coverage
+ * that the old predicate already considered fresh, so the request count observes the optional
+ * sections and nothing else.
  */
 @RunWith(RobolectricTestRunner::class)
-class RelocationCacheReuseTest {
+class OptionalSectionFreshnessTest {
 
     private lateinit var database: WeatherDatabase
     private lateinit var dataStore: DataStore<Preferences>
@@ -72,15 +77,14 @@ class RelocationCacheReuseTest {
     private val counts = ConcurrentHashMap<String, AtomicInteger>()
 
     private val brighton = Location(1L, "Brighton", "GB", 50.8225, -0.1372, isCurrentLocation = true)
-    private val londonLatitude = 51.5074
-    private val londonLongitude = -0.1278
+    private val forecastDays = 7
 
     @Before
     fun setUp() = runTest {
         val context = RuntimeEnvironment.getApplication()
         database = Room.inMemoryDatabaseBuilder(context, WeatherDatabase::class.java)
             .allowMainThreadQueries().build()
-        dataStoreFile = File(context.cacheDir, "relocation_${System.nanoTime()}.preferences_pb")
+        dataStoreFile = File(context.cacheDir, "optional_sections_${System.nanoTime()}.preferences_pb")
         dataStoreScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         dataStore = PreferenceDataStoreFactory.create(scope = dataStoreScope) { dataStoreFile }
         dataStore.edit {
@@ -108,70 +112,89 @@ class RelocationCacheReuseTest {
     }
 
     @Test
-    fun `optional sections cached at the previous city are not reused after a move`() = runTest {
-        seedCache(snapshotLatitude = londonLatitude, snapshotLongitude = londonLongitude)
+    fun `expired air quality refreshes a cache the core predicate calls fresh`() = runTest {
+        seedCache(airQualityAgeMinutes = 90, pollenAgeMinutes = 0)
 
-        repository().forceRefreshWeatherData(brighton, forecastDays = 7)
+        repository().ensureFreshWeatherData(brighton, forecastDays, scope = RefreshScope.FOREGROUND)
 
         assertEquals(
-            "London air quality and pollen must not be reused for Brighton",
+            "air quality past its 60-minute TTL must not hide behind fresh current weather",
             1,
-            count("/v1/air-quality"),
+            count("/v1/forecast"),
         )
     }
 
     @Test
-    fun `optional sections cached at the same city are reused`() = runTest {
-        seedCache(snapshotLatitude = brighton.latitude, snapshotLongitude = brighton.longitude)
+    fun `air quality never fetched at all refreshes on the first foreground request`() = runTest {
+        seedCache(airQualityAgeMinutes = null, pollenAgeMinutes = 0)
 
-        repository().forceRefreshWeatherData(brighton, forecastDays = 7)
+        repository().ensureFreshWeatherData(brighton, forecastDays, scope = RefreshScope.FOREGROUND)
 
         assertEquals(
-            "unmoved fresh sections must not be re-bought",
-            0,
-            count("/v1/air-quality"),
+            "background work buys no air quality, so the app must fetch it on opening",
+            1,
+            count("/v1/forecast"),
         )
     }
 
-    /** Rows written before the coordinate columns existed cannot establish ownership. */
     @Test
-    fun `optional sections with unknown coordinates are not reused`() = runTest {
-        seedCache(snapshotLatitude = null, snapshotLongitude = null)
+    fun `fresh optional sections leave a fresh cache alone`() = runTest {
+        seedCache(airQualityAgeMinutes = 5, pollenAgeMinutes = 5)
 
-        repository().forceRefreshWeatherData(brighton, forecastDays = 7)
+        repository().ensureFreshWeatherData(brighton, forecastDays, scope = RefreshScope.FOREGROUND)
 
-        assertEquals(1, count("/v1/air-quality"))
+        assertEquals("nothing was due; no request should have been made", 0, count("/v1/forecast"))
     }
 
+    /** The savings from scoping background work must survive this change. */
     @Test
-    fun `background relocation invalidates hourly rows owned by the previous city`() = runTest {
-        seedCache(snapshotLatitude = londonLatitude, snapshotLongitude = londonLongitude)
-        database.hourlyForecastDao().insertHourlyForecasts(
-            listOf(
-                HourlyForecastEntity(
-                    locationId = brighton.id, dateTime = "2026-09-10T12:00:00",
-                    temperature = 12.0, feelsLike = 12.0, humidity = 50, dewPoint = 8.0,
-                    precipitationProbability = 0, weatherCode = 1, isDay = true,
-                    pressure = 1013.0, windSpeed = 5.0, windDirectionDegrees = 0,
-                    visibility = 10000.0, uvIndex = 2.0
-                )
-            )
-        )
+    fun `background scope is not held stale by sections no widget displays`() = runTest {
+        seedCache(airQualityAgeMinutes = 90, pollenAgeMinutes = 600)
 
-        repository().forceRefreshWeatherData(
+        repository().ensureFreshWeatherData(
             brighton,
-            forecastDays = 7,
-            scope = com.clockweather.app.data.provider.RefreshScope.background(pollenShownInWidget = false)
+            forecastDays,
+            scope = RefreshScope.background(pollenShownInWidget = false),
         )
 
-        assertEquals(0, database.hourlyForecastDao().getHourlyForecasts(brighton.id).first().size)
+        assertEquals(
+            "widgets show neither section, so neither may trigger background work",
+            0,
+            count("/v1/forecast"),
+        )
+    }
+
+    /**
+     * The loop guard. A section the provider does not publish here would otherwise read as
+     * permanently missing and enqueue a refresh on every single check.
+     */
+    @Test
+    fun `a section that comes back empty still records when it was asked`() = runTest {
+        seedCache(airQualityAgeMinutes = null, pollenAgeMinutes = null)
+
+        repository().ensureFreshWeatherData(brighton, forecastDays, scope = RefreshScope.FOREGROUND)
+
+        val row = database.currentWeatherDao().getCurrentWeather(1L).first()
+        assertNull("the mock server returns no usable air quality", row?.aqUsEpaIndex)
+        assertNotNull(
+            "an unanswerable section must still be marked as asked, or it re-fetches forever",
+            row?.aqLastUpdated,
+        )
     }
 
     private fun count(path: String) = counts[path]?.get() ?: 0
 
-    private suspend fun seedCache(snapshotLatitude: Double?, snapshotLongitude: Double?) {
+    /**
+     * Seeds a cache the pre-S5 predicate considered entirely fresh: current conditions from this
+     * minute, 25 hours from the current hour, and [forecastDays] of daily coverage. A null age
+     * means the section was never recorded, which is what background-only refreshes leave behind.
+     */
+    private suspend fun seedCache(airQualityAgeMinutes: Long?, pollenAgeMinutes: Long?) {
         val now = LocalDateTime.now()
         val stamp = now.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        fun ageStamp(minutes: Long?) = minutes
+            ?.let { now.minusMinutes(it).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
+
         database.locationDao().insertLocation(
             LocationEntity(1L, "Brighton", "GB", brighton.latitude, brighton.longitude, "Europe/London", true)
         )
@@ -182,17 +205,41 @@ class RelocationCacheReuseTest {
                 isDay = true, pressure = 1013.25, windSpeed = 10.0, windDirectionDegrees = 0,
                 windGusts = 12.0, visibility = 10000.0, uvIndex = 3.0, cloudCover = 20,
                 lastUpdated = stamp,
-                locationName = "Cached city",
-                latitude = snapshotLatitude, longitude = snapshotLongitude,
-                aqCo = 1.0, aqNo2 = 2.0, aqO3 = 3.0, aqSo2 = 4.0, aqPm25 = 5.0, aqPm10 = 6.0,
-                aqUsEpaIndex = 1, aqGbDefraIndex = 1,
-                aqLastUpdated = stamp, pollenLastUpdated = stamp
+                locationName = "Brighton",
+                latitude = brighton.latitude, longitude = brighton.longitude,
+                aqCo = airQualityAgeMinutes?.let { 1.0 },
+                aqNo2 = airQualityAgeMinutes?.let { 2.0 },
+                aqO3 = airQualityAgeMinutes?.let { 3.0 },
+                aqSo2 = airQualityAgeMinutes?.let { 4.0 },
+                aqPm25 = airQualityAgeMinutes?.let { 5.0 },
+                aqPm10 = airQualityAgeMinutes?.let { 6.0 },
+                aqUsEpaIndex = airQualityAgeMinutes?.let { 1 },
+                aqGbDefraIndex = airQualityAgeMinutes?.let { 1 },
+                aqLastUpdated = ageStamp(airQualityAgeMinutes),
+                pollenLastUpdated = ageStamp(pollenAgeMinutes)
             )
         )
-        // isPollenFresh also needs enough covered days actually carrying pollen.
+
+        // 24 future hours starting exactly at the current hour is what the foreground predicate
+        // demands; seeding one more keeps the test off that boundary.
+        val currentHour = now.truncatedTo(ChronoUnit.HOURS)
+        database.hourlyForecastDao().insertHourlyForecasts(
+            (0 until 25).map { offset ->
+                HourlyForecastEntity(
+                    locationId = 1L,
+                    dateTime = currentHour.plusHours(offset.toLong())
+                        .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                    temperature = 15.0, feelsLike = 15.0, humidity = 60, dewPoint = 8.0,
+                    precipitationProbability = 0, weatherCode = 1, isDay = true,
+                    pressure = 1013.0, windSpeed = 5.0, windDirectionDegrees = 0,
+                    visibility = 10000.0, uvIndex = 2.0
+                )
+            }
+        )
+
         val today = LocalDate.now()
         database.dailyForecastDao().insertDailyForecasts(
-            (0 until 5).map { offset ->
+            (0 until forecastDays).map { offset ->
                 DailyForecastEntity(
                     locationId = 1L,
                     date = today.plusDays(offset.toLong()).toString(),

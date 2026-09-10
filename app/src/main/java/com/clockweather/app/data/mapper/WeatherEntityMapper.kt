@@ -93,7 +93,14 @@ class WeatherEntityMapper @Inject constructor() {
         locationName: String? = null,
         latitude: Double? = null,
         longitude: Double? = null,
-        pollenLastUpdated: LocalDateTime? = null
+        pollenLastUpdated: LocalDateTime? = null,
+        /**
+         * When air quality was last resolved, which is not always when data arrived: a refresh
+         * that asked and got nothing records the attempt so an unavailable section does not read
+         * as permanently missing. Defaults to the reading's own timestamp for callers that only
+         * have the data.
+         */
+        airQualityLastUpdated: LocalDateTime? = airQuality?.lastUpdated
     ): CurrentWeatherEntity =
         CurrentWeatherEntity(
             locationId = locationId,
@@ -124,7 +131,7 @@ class WeatherEntityMapper @Inject constructor() {
             locationName = locationName,
             latitude = latitude,
             longitude = longitude,
-            aqLastUpdated = airQuality?.lastUpdated?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            aqLastUpdated = airQualityLastUpdated?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
             pollenLastUpdated = pollenLastUpdated?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
 

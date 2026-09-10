@@ -7,6 +7,7 @@ import com.clockweather.app.data.local.dao.DailyForecastDao
 import com.clockweather.app.data.local.dao.HourlyForecastDao
 import com.clockweather.app.data.local.dao.LocationDao
 import com.clockweather.app.data.local.db.WeatherDatabase
+import com.clockweather.app.data.local.entity.CurrentWeatherEntity
 import com.clockweather.app.data.mapper.WeatherEntityMapper
 import com.clockweather.app.data.provider.WeatherDataProvider
 import com.clockweather.app.data.provider.WeatherDataProviderFactory
@@ -16,6 +17,9 @@ import com.clockweather.app.data.provider.WeatherProviderPreferences
 import com.clockweather.app.domain.model.Location
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WeatherProviderType
+import com.clockweather.app.domain.model.AIR_QUALITY_MAX_AGE_MINUTES
+import com.clockweather.app.domain.model.POLLEN_MAX_AGE_MINUTES
+import com.clockweather.app.domain.model.isOptionalSectionFresh
 import com.clockweather.app.domain.model.isWeatherDataFresh
 import com.clockweather.app.domain.model.locationReferenceDateTime
 import com.clockweather.app.domain.model.normalizeDailyConditions
@@ -101,7 +105,7 @@ class WeatherRepositoryImpl @Inject constructor(
                 effectiveMaxAgeMinutes,
                 requireHourly = effectiveScope.includeHourly,
             )
-            if (isFresh) return
+            if (isFresh && optionalSectionsFresh(location, referenceDateTime, effectiveScope)) return
 
             refreshAndPersist(location, forecastDays, effectiveScope)
         }
@@ -134,6 +138,43 @@ class WeatherRepositoryImpl @Inject constructor(
             if (fallbackType == providerType) throw error
             fetch(providerFactory.get(fallbackType), fallbackType)
         }
+    }
+
+    /**
+     * Whether the optional sections this caller asked for are still recent enough to skip.
+     *
+     * Core weather and forecast coverage say nothing about air quality or pollen: they carry
+     * their own cadences and their own timestamps. A warm resume after background work — which
+     * buys neither — would otherwise sit behind fresh current weather with an expired air
+     * quality reading, or none at all, and never ask for more.
+     *
+     * Sections the scope does not request are not consulted, so background work stays as cheap
+     * as it was and cannot be held stale by data no widget displays.
+     */
+    private suspend fun optionalSectionsFresh(
+        location: Location,
+        referenceDateTime: java.time.LocalDateTime,
+        scope: RefreshScope,
+    ): Boolean {
+        if (!scope.includeAirQuality && !scope.includePollen) return true
+        val entity = currentWeatherDao.getCurrentWeather(location.id).first() ?: return false
+        val airQualityFresh = !scope.includeAirQuality || isOptionalSectionFresh(
+            parseTimestamp(entity.aqLastUpdated),
+            referenceDateTime,
+            AIR_QUALITY_MAX_AGE_MINUTES,
+        )
+        val pollenFresh = !scope.includePollen || isOptionalSectionFresh(
+            parseTimestamp(entity.pollenLastUpdated),
+            referenceDateTime,
+            POLLEN_MAX_AGE_MINUTES,
+        )
+        return airQualityFresh && pollenFresh
+    }
+
+    private fun parseTimestamp(value: String?): java.time.LocalDateTime? = value?.let {
+        runCatching {
+            java.time.LocalDateTime.parse(it, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        }.getOrNull()
     }
 
     /**
@@ -172,10 +213,39 @@ class WeatherRepositoryImpl @Inject constructor(
                 scope = scope
             )
         }
-        persistWeatherData(weatherData.normalizeDailyConditions(), location.id, scope)
+        persistWeatherData(weatherData.normalizeDailyConditions(), location.id, scope, cachedEntity)
     }
 
-    private suspend fun persistWeatherData(data: WeatherData, locationId: Long, scope: RefreshScope) {
+    private suspend fun persistWeatherData(
+        data: WeatherData,
+        locationId: Long,
+        scope: RefreshScope,
+        previous: CurrentWeatherEntity?,
+    ) {
+        val answeredAt = java.time.LocalDateTime.now()
+        // A section that was asked for and came back empty has been answered: it is unavailable
+        // here, not merely unseen. Recording when we asked keeps that answer for one TTL. A
+        // section nobody asked for keeps whatever timestamp it had, so an unrelated refresh
+        // cannot make it look freshly checked.
+        val airQualityAnsweredAt = data.airQuality?.lastUpdated
+            ?: answeredAt.takeIf { scope.includeAirQuality }
+            ?: parseTimestamp(previous?.aqLastUpdated)
+        val pollenAnsweredAt = data.pollenLastUpdated
+            ?: answeredAt.takeIf { scope.includePollen }
+            ?: parseTimestamp(previous?.pollenLastUpdated)
+
+        // The location row keeps its id across a move, so it cannot tell us who these hours
+        // belong to. The coordinates the previous fetch recorded on the weather row can.
+        val previousLatitude = previous?.latitude
+        val previousLongitude = previous?.longitude
+        val movedAway = previousLatitude != null && previousLongitude != null &&
+            WeatherRefreshLocationResolver.hasMovedSignificantly(
+                previousLatitude,
+                previousLongitude,
+                data.location.latitude,
+                data.location.longitude,
+            )
+
         database.withTransaction {
             currentWeatherDao.insertCurrentWeather(
                 entityMapper.mapCurrentWeatherToEntity(
@@ -185,7 +255,8 @@ class WeatherRepositoryImpl @Inject constructor(
                     locationName = data.location.name,
                     latitude = data.location.latitude,
                     longitude = data.location.longitude,
-                    pollenLastUpdated = data.pollenLastUpdated
+                    pollenLastUpdated = pollenAnsweredAt,
+                    airQualityLastUpdated = airQualityAnsweredAt
                 )
             )
             // Hours are replaced wholesale or not touched at all, never merged, so the cache
@@ -196,6 +267,12 @@ class WeatherRepositoryImpl @Inject constructor(
                 hourlyForecastDao.insertHourlyForecasts(
                     data.hourlyForecasts.map { entityMapper.mapHourlyToEntity(it, locationId) }
                 )
+            } else if (movedAway) {
+                // This refresh bought no hours, so there is nothing to put in their place — but
+                // the ones on file describe the city the user left. An empty graph is a gap the
+                // app can fill on its next foreground fetch; the alternative is the previous
+                // city's hours under this city's name.
+                hourlyForecastDao.deleteHourlyForecasts(locationId)
             }
             dailyForecastDao.deleteDailyForecasts(locationId)
             dailyForecastDao.insertDailyForecasts(

@@ -40,6 +40,7 @@ import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 /**
  * ensureFreshWeatherData must use the selected provider's currentMaxAgeMinutes
@@ -85,6 +86,12 @@ class WeatherRepositoryProviderTtlTest {
         val hourlyEntities = List(hourly.size) { mockk<HourlyForecastEntity>() }
         val dailyEntities = List(daily.size) { mockk<DailyForecastEntity>() }
         val currentEntity = mockk<CurrentWeatherEntity>(relaxed = true)
+        // These cases are about the provider's current-conditions TTL. Air quality and pollen
+        // carry their own cadences and would otherwise be the thing under test: a relaxed mock
+        // reports them as never fetched, which is a due section regardless of core freshness.
+        val sectionsAnsweredNow = fixedReferenceTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        every { currentEntity.aqLastUpdated } returns sectionsAnsweredNow
+        every { currentEntity.pollenLastUpdated } returns sectionsAnsweredNow
         every { currentWeatherDao.getCurrentWeather(location.id) } returns flowOf(currentEntity)
         every { hourlyForecastDao.getHourlyForecasts(location.id) } returns flowOf(hourlyEntities)
         every { dailyForecastDao.getDailyForecasts(location.id) } returns flowOf(dailyEntities)

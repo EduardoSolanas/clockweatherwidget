@@ -67,6 +67,24 @@ internal fun isCachedPollenFresh(
 )
 
 /**
+ * Whether a requested optional section still holds a recent enough answer to skip buying again.
+ *
+ * [lastAnswered] is when the section was last resolved, which a refresh records even when the
+ * provider returned nothing for it. Judging by the presence of data instead would make a section
+ * this location simply does not publish read as permanently missing, and every freshness check
+ * would enqueue another refresh for data that is never going to arrive.
+ */
+internal fun isOptionalSectionFresh(
+    lastAnswered: LocalDateTime?,
+    referenceDateTime: LocalDateTime,
+    maxAgeMinutes: Long,
+): Boolean {
+    if (lastAnswered == null) return false
+    if (lastAnswered.isAfter(referenceDateTime.plusMinutes(MAX_FUTURE_TOLERANCE_MINUTES))) return false
+    return lastAnswered.isAfter(referenceDateTime.minusMinutes(maxAgeMinutes))
+}
+
+/**
  * [requireHourly] belongs to the caller, not to the data: the home-screen widgets render
  * current conditions, the daily forecast and pollen, so demanding hourly coverage of them
  * would hold a cache stale that is perfectly adequate for what they display — and a
