@@ -2,6 +2,14 @@
 
 This document describes the current widget refresh and rendering architecture in Clock & Weather and proposes improvements in implementation order. It distinguishes observed weather from forecast-derived estimates, network refreshes from local redraws, and phase 1 (local-only) behaviour from the per-widget weather location planned for phase 2.
 
+**Status audit: 10 September 2026, source revision `017b11c`** — *its verification limits are superseded by the toolchain note directly below.* DONE means the scoped code or recorded decision is present in the current checkout. PARTIAL means some acceptance work remains; OPEN means the proposed change is absent. Device verification is tracked separately. This documentation audit did not run application tests: the preceding review's unit-test and lint commands both stopped before Gradle because Java was unavailable (`JAVA_HOME` unset and no `java` on PATH). Neither debug nor release ran. Existing test counts and profiling figures below are historical, not results from this audit.
+
+**Toolchain restored — 10 September 2026.** The blocker described above is cleared. Microsoft OpenJDK 17.0.20.1 is installed at `C:\Program Files\Microsoft\jdk-17.0.20.101-hotspot`; the Android SDK is installed at `C:\Users\eduar\AppData\Local\Android\Sdk` (cmdline-tools, platform-35, build-tools 35.0.0, platform-tools, all licenses accepted). Gradle 8.13 resolves and builds. `gradlew testDebugUnitTest` is green: **398 tests, 0 failures, 0 errors.** This is the first execution recorded in this document rather than a source reading.
+
+**S1 and S5 are DONE and verified by that run.** S2, S3, S4 and S6 remain **OPEN**. See [section 8](#8-weather-sync-review--10-september-2026). Earlier implementation history is in [Time, weather and location sync review](docs/TIME_WEATHER_SYNC_REVIEW.md).
+
+**One caveat on reproducing that green run.** The working tree carries two red TDD specs for findings that are not implemented — `LocationPermissionRefreshGateTest` (S6) and `LatestLocationFixStoreTest` (S2) — which reference `LocationPermissionRefreshGate` and `LatestLocationFixStore`. Neither type exists, so with both files in the source set `compileDebugUnitTestKotlin` fails and **no test runs at all**. The 398-test run was taken with those two files moved outside `app/src/test`. Either implement S2 and S6, or park those two files, before running the suite. A third file in the same state, `RelocationCacheReuseTest`, was failing to compile on a missing `kotlinx.coroutines.flow.first` import; that one is fixed.
+
 ## 1. Design Principles
 
 - The displayed current temperature must not be presented as a live observation when it is forecast-derived.
@@ -33,7 +41,9 @@ Periodic WorkManager / manual refresh / screen wake / relocation
              ClockWeatherApplication.refreshAllWidgets()
 ```
 
-`WeatherUpdateWorker` refreshes every saved location, then redraws all active widgets from the cache. Automatic work is freshness-gated; user refreshes force a network request. Screen wake currently enqueues network-constrained work rather than performing an immediate cache-only redraw.
+`WeatherUpdateWorker` refreshes every saved location, then redraws all active widgets from the cache. Automatic work is freshness-gated; user refreshes force a network request. Screen wake first attempts a cache-only redraw, then enqueues network-constrained freshness work. The runtime wake receiver is available only while the app process exists.
+
+The weather page calls `RefreshWeatherUseCase` directly, observes the shared Room cache, and redraws widgets after a successful refresh. Foreground scope includes hourly forecasts, air quality and pollen. Background scope excludes hourly persistence and does not require an air-quality refresh; pollen depends on the widget setting. Open-Meteo can still return hours in its combined weather response and air quality alongside pollen. These different scopes require the consistency fixes in section 8.
 
 ### Local widget render path
 
@@ -63,7 +73,7 @@ AppWidget update / resize / settings change / time or date change
 - `WeatherData.locationZoneId()` intentionally returns the device time zone, and Open-Meteo requests forecast timestamps in the device time zone.
 - `currentDisplayWeather()` returns the fetched `currentWeather` observation unchanged.
 - All three widget providers declare `updatePeriodMillis="1800000"`, so the host's 30-minute callback and WorkManager's periodic job both trigger update paths. Only the WorkManager job performs a network refresh directly; the provider callback redraws and enqueues weather work only when the cached data is stale. `WidgetUpdatePeriodTest` enforces this floor deliberately; see the decision in section 4.3.
-- Application startup schedules periodic weather work and passive location tracking even when no widget is active.
+- Application startup and boot check for active widgets before scheduling periodic work and passive tracking; removing the final widget cancels periodic work and unregisters tracking. Settings interval changes also check for active widgets. **Remaining gap:** the weather page and settings permission-return paths can still register passive tracking without checking whether a widget exists.
 
 ## 3. Android Version Behaviour
 
@@ -83,7 +93,7 @@ References:
 
 ## 4. Foundations
 
-Sections 4.1 and 4.3 record resolved decisions; 4.2 records shipped work. The only item still open in this section is the on-device watchdog measurement in 4.3.
+Sections 4.1 and 4.3 record resolved decisions; 4.2 records implemented work. Device measurements and the permission-return tracking guard remain open in 4.3.
 
 ### 4.1 Resolved Decision: Local-only now, per-widget weather location later
 
@@ -113,13 +123,14 @@ Because the clock stays device-local in phase 2, no timezone work is required fo
 
 **Design constraint for phase 1 work:** do not add code that assumes one global location. Where it is free to do so, thread `appWidgetId` through rather than resolving the location from a singleton, so phase 2 is an extension rather than a rewrite.
 
-### 4.2 Implemented: Screen wake redraws from cache before refreshing (Delivered)
+### 4.2 DONE: Screen wake redraws from cache before refreshing
 
-**Status:** Completed and merged in Phase 1 (with a 60s throttle on `ACTION_SCREEN_ON` and immediate redraw on `ACTION_USER_PRESENT`).
+**Status: DONE in code.** [ScreenWakeReceiver](app/src/main/java/com/clockweather/app/receiver/ScreenWakeReceiver.kt) redraws cache with a 60s throttle on `ACTION_SCREEN_ON` and immediate redraw on `ACTION_USER_PRESENT`, then enqueues freshness work. This is opportunistic while the process is alive; no launcher, deployment or battery verification is claimed by this audit.
 
-The redraw path uses `ClockWeatherApplication.refreshAllWidgets()`, which loops `updater.updateWidget(id)` over every active widget, reading once from the Room cache and DataStore.
+The redraw path uses [ClockWeatherApplication.refreshAllWidgets()](app/src/main/java/com/clockweather/app/ClockWeatherApplication.kt), which shares one `WidgetRenderSnapshot` across every active widget and calls `updater.updateWidget(id, renderSnapshot)`. This batches reads; it does not establish atomic observation of the underlying tables (S4).
 
 In `ScreenWakeReceiver`:
+
 1. **`ACTION_USER_PRESENT` (Unlock):** Redraws immediately from cached data off the main thread.
 2. **`ACTION_SCREEN_ON` (Ambient/Notification):** Throttled to minimum 60-second intervals to avoid waking on transient notifications.
 3. **Network Enqueue:** Enqueues the existing freshness-gated refresh via WorkManager (`scheduleImmediateRefresh`, deduplicated via `KEEP`).
@@ -150,27 +161,29 @@ The decision is therefore to keep the watchdog but make it cheap, and to measure
 **Status.** `1800000` is unchanged and the batching work is done. The measurement is **partially taken**:
 
 - **Payload: measured.** See 5.1. It found and fixed a real 893,764-byte transaction; worst case is now 484,156 bytes single-view.
-- **Rasterisation: measured.** `WidgetWatchdogCostTest` counts work through the `renderIcon` seam. One forecast widget rasterises 6 icons per redraw; three widgets rasterise 18 from a single shared snapshot. The shared `WidgetRenderSnapshot` removed duplicate Room/DataStore reads but not duplicate bitmap work - that is what an icon cache (5.6) would remove, and it is now a measured quantity rather than a hunch.
+- **Rasterisation: count test implemented.** [WidgetWatchdogCostTest](app/src/test/java/com/clockweather/app/presentation/widget/common/WidgetWatchdogCostTest.kt) asserts 5 forecast-row icon renders for one row and 15 when binding three rows from the same data. These counts exclude the separate hero icon and do not time a full widget update. Shared snapshots remove duplicate Room/DataStore reads, but this test demonstrates repeated row bitmap work. Device allocation/render-time measurement for an icon cache (5.6) remains open.
 - **On-device CPU and battery: not measured.** This needs the OEM device that exhibited the WorkManager deferral. Emulator figures would not be representative. Until this exists, no decision to remove the watchdog should be made.
 
 **Regression, since fixed.** Hoisting the staleness check out of `updateWidget` gated it on `snapshot == null`, which made every caller passing a shared snapshot responsible for scheduling the refresh itself. `refreshAllWidgets` was updated for that; `BaseWidgetProvider.onUpdate` was not. The watchdog then redrew stale data and never enqueued a refresh - reopening the `d252045` freeze while `updatePeriodMillis` still read `1800000` and its guard test still passed. Fixed by extracting `BaseWidgetUpdater.shouldScheduleRefresh` (pure, takes an `Instant`) and `scheduleRefreshIfStale`, and calling the latter from every snapshot-passing site. `WidgetRefreshSchedulingTest` asserts on the call sites, not only the predicate, because the failure mode is a caller silently inheriting no check rather than two copies drifting apart.
 
 **Evidence note.** The freeze is directly documented by commit `d252045`, which restored `1800000` and records the cause: "`updatePeriodMillis=0` meant Android never called `onUpdate` on its own, so the widget stayed frozen when the screen was continuously on." Commit `522ac4e` added the regression guard three minutes later. The specific "30-90 minute OEM deferral" figure in the test comment is documented rationale, not a captured measurement - treat it as a historical observation until logs or benchmarks exist.
 
-Two related items that also reduce watchdog cost are **done**:
+Related implementation status:
 
-- Periodic work and passive location tracking are now scheduled only while at least one weather widget exists (`ActiveWidgetDetector`, re-established from `onEnabled`).
-- One cache/prefs snapshot (`WidgetRenderSnapshot`) is shared across all widget instances in a redraw batch instead of rereading Room and DataStore per widget ID.
+- **DONE:** Application startup, boot and interval-setting changes gate periodic work on active widgets; `onEnabled` restores it and `onDisabled` cancels it after the final widget is removed. Startup/boot tracking registration and final-widget unregistration are also present.
+- **PARTIAL:** Tracking is not yet limited to active widgets on every path. `WeatherDetailViewModel.refreshPermissions()` and `SettingsViewModel.refreshPermissionStatus()` register it after a grant without an active-widget check; `PassiveLocationManager.register()` checks permissions only.
+- **DONE:** One cache/prefs snapshot (`WidgetRenderSnapshot`) is shared across all widget instances in a redraw batch instead of rereading Room and DataStore per widget ID.
+- **DONE in code:** `BaseWidgetProvider` skips placeholder replacement for widgets with a recorded successful render. First placement, process recovery and flicker still need launcher verification.
 
 These reduce the per-callback cost but do not substitute for measuring it.
 
 Reference: [Advanced widget update guidance](https://developer.android.com/develop/ui/views/appwidgets/advanced)
 
-## 5. Proposed Improvements
+## 5. Improvement Status
 
 ### 5.1 Android 12+ responsive `RemoteViews`
 
-**Status: profiling done and acted on. Breakpoints deliberately not used.**
+**Status: DONE for the forecast-icon cap and profiling tests; responsive breakpoints NOT ADOPTED.** The measurements below are recorded historical results and were not rerun in this audit.
 
 The first attempt was withdrawn because `buildViews()` accepted `targetWidthDp` / `targetHeightDp` and never read either one. Every breakpoint produced a byte-identical `RemoteViews`, so the map multiplied the payload for no benefit. The test that shipped with it compared a hardcoded breakpoint list to itself and could not fail.
 
@@ -199,6 +212,8 @@ Measured single-view payloads, worst-case CLAY_3D, against the ~1MB launcher bud
 
 ### 5.2 Pre-12 clock size variants
 
+**Status: OPEN, conditional on device evidence.**
+
 **Recommendation: low priority; implement only if device testing shows material user value.**
 
 The problem is geometry, not lack of remote text-size support. The 29dp clippers and 58dp two-digit `TextClock` widths are coupled to the 48dp font. Changing one value independently breaks digit extraction.
@@ -211,6 +226,8 @@ Because `widget_clock_block.xml` is included inside shared and provider root lay
 Prefer the approach with the smallest tested XML surface. Four sizes across three provider roots can otherwise create substantial duplication. Preview layouts must remain visually consistent with runtime layouts.
 
 ### 5.3 Temperature behaviour between network refreshes
+
+**Status: PARTIAL.** `currentDisplayWeather()` already preserves fetched current conditions unchanged. A visible stale-data state remains open; forecast fallback/interpolation remains a product decision and is not implemented.
 
 **Recommendation: do not describe interpolation as real-time accuracy.**
 
@@ -234,30 +251,23 @@ If interpolation is chosen:
 
 ### 5.4 Day/night icon transitions
 
-**Recommendation: calculate display state locally; avoid exact alarms by default.**
+**Status: DONE in code for local mapping at redraw.** [LocalDayNightDisplayMapper](app/src/main/java/com/clockweather/app/presentation/widget/common/LocalDayNightDisplayMapper.kt) selects day/night variants using the reference time and today's sunrise/sunset, with a 06:00-20:00 fallback when solar times are unavailable or equal. It handles paired clear/partly-cloudy conditions and preserves unpaired weather phenomena.
 
-A redraw alone cannot currently change the icon because the cached `currentWeather.weatherCondition` already contains the day/night variant chosen at fetch time.
-
-First add a display-layer mapping that:
-
-- Finds today's sunrise and sunset in the device timezone (section 4.1).
-- Determines whether the reference instant is day or night.
-- Converts only conditions with meaningful day/night pairs, such as clear or partly cloudy.
-- Leaves weather phenomena without separate variants unchanged.
-
-Then refresh the icon on the next normal cache-only redraw. If closer timing is demonstrably important, schedule an inexact alarm/window and measure the benefit. An exact alarm adds permission, denial, reboot, timezone-change, stale-alarm and multi-widget lifecycle handling, and Android recommends exact alarms only for genuinely time-critical user-facing functionality.
+[WidgetDataBinder](app/src/main/java/com/clockweather/app/presentation/widget/common/WidgetDataBinder.kt) applies the mapping during cached rendering. [LocalDayNightDisplayMapperTest](app/src/test/java/com/clockweather/app/presentation/widget/common/LocalDayNightDisplayMapperTest.kt) covers the pure mapping; it was not rerun in this audit. The change appears on the next redraw, not at a guaranteed exact sunrise/sunset deadline. Device and timezone edge-case validation remains separate. No new alarm is required by this completed scope.
 
 Reference: [Schedule alarms](https://developer.android.com/develop/background-work/services/alarms)
 
 ### 5.5 Tabular digits
 
-**Recommendation: optional, low priority.**
+**Status: DONE in XML.** Runtime and preview clock text already include `android:fontFeatureSettings="tnum"` alongside the monospace family. This is a font hint, not a guarantee of identical rendering on all OEM devices.
 
-The runtime clock already requests the generic monospace family, which should provide equal glyph advances. Adding `android:fontFeatureSettings="tnum"` is a reasonable defensive hint, but it is effective only when the selected font supports that OpenType feature and should not be described as a universal OEM guarantee.
+The hint is present in [widget_clock_block.xml](app/src/main/res/layout/widget_clock_block.xml) and [widget_clock_block_preview.xml](app/src/main/res/layout/widget_clock_block_preview.xml). Its effect still depends on the selected font's OpenType support.
 
-Apply it consistently to runtime and preview clock text, then verify on devices or emulators that previously demonstrated digit jitter.
+Remaining verification: inspect devices or emulators that previously demonstrated digit jitter. Do not add the hint again as a pending code task.
 
 ### 5.6 Bitmap icon caching
+
+**Status: OPEN.** The rasterisation-count test exists, but no bitmap LRU cache is implemented. Device allocation/render-time evidence remains a prerequisite.
 
 **Recommendation: profile before implementing.**
 
@@ -273,6 +283,8 @@ If profiling shows meaningful allocation churn:
 - Measure allocation count, render time, process memory and RemoteViews transaction size before and after.
 
 ### 5.7 Jetpack Glance investigation
+
+**Status: OPEN research option; no migration or parity spike is implemented.**
 
 **Recommendation: research spike only, not an assumed migration.**
 
@@ -297,15 +309,22 @@ Reference: [Jetpack Glance](https://developer.android.com/develop/ui/compose/gla
 
 | Work item | Priority | Complexity | Expected value | Status / Dependency |
 | :--- | :--- | :--- | :--- | :--- |
-| Screen wake: cached redraw before freshness-gated refresh | **P0** | Low | Fixes the no-update-when-offline wake | **Completed (Phase 1 Delivered)** |
-| Gate background work on active-widget existence | **P1** | Low-Medium | Less background work with no widget installed | **Completed (Phase 1 Delivered)** |
-| Batch cache/prefs reads across a redraw | **P1** | Low | Fewer redundant Room/DataStore reads per update | **Completed (Phase 1 Delivered)** |
-| Watchdog freshness & staleness check unification | **P1** | Low | Ensures 30-min callback and batch redraws schedule refresh if stale | **Completed (Phase 1 Delivered)** |
-| Local day/night display mapping | **P2** | Low-Medium | More timely visual state | **Completed (Phase 1 Delivered)** |
-| Tabular-number hint (`tnum`) | **P3** | Minimal | Small OEM typography defence | **Completed (Phase 1 Delivered)** |
+| Screen wake: cached redraw before freshness-gated refresh | **P0** | Low | Cache redraw while offline | **DONE in code; process must be alive** |
+| Gate background work on active-widget existence | **P1** | Low-Medium | Less background work with no widget installed | **PARTIAL: periodic/lifecycle guards DONE; permission-return tracking guard OPEN** |
+| Batch cache/prefs reads across a redraw | **P1** | Low | Fewer redundant Room/DataStore reads per update | **DONE; atomic reads remain S4** |
+| Watchdog freshness & staleness check unification | **P1** | Low | Ensures 30-min callback and batch redraws schedule refresh if stale | **DONE for shared call sites and configured coverage** |
+| Preserve populated widgets during routine callbacks | **P1** | Low | Avoids placeholder flashes | **DONE in code; launcher checks OPEN** |
+| Local day/night display mapping | **P2** | Low-Medium | More timely visual state | **DONE in code; device checks separate** |
+| Tabular-number hint (`tnum`) | **P3** | Minimal | Small OEM typography defence | **DONE in XML; device checks separate** |
 | Android 12+ responsive layouts | **Not adopted** | Medium | Only pays off by dropping the forecast row; not worth it | See 5.1 |
-| Cap forecast row icons (128px) | **Done** | Low | Worst-case update 894KB -> 484KB, no visible change | - |
-| Payload + rasterisation measurement | **Done** | Low | Budget test guards every icon style | - |
+| Cap forecast row icons (128px) | **DONE** | Low | Historically measured update reduction, about 894KB -> 484KB | Code present; figures not rerun |
+| Payload + rasterisation measurement | **DONE** | Low | Budget/count tests exist | Historical measurements; not device battery evidence |
+| S1: invalidate old-city hourly cache | **P1** | Low | Prevents mixed-city forecasts | **DONE, verified, section 8** |
+| S5: include optional-section freshness | **P1** | Low | Refreshes stale/missing AQ and pollen on resume | **DONE, verified, section 8** |
+| S3: measure movement from weather coordinates | **P2** | Low | Detects accumulated small moves | **OPEN, section 8 — best remaining effort/benefit** |
+| S6: avoid duplicate startup refreshes | **P2** | Low-Medium | Avoids a forced paid download on every screen open | **OPEN, section 8 — under-rated, see note** |
+| S2: preserve newest queued location fix | **P2** | Medium-High | Prevents delayed work reverting location | **OPEN, section 8 — riskiest fix, sequence last** |
+| S4: observe one coherent Room snapshot | **P3** | Medium | Prevents mixed refresh generations | **OPEN, section 8 — downgraded from P2, re-evaluate after S1** |
 | Watchdog CPU/battery on-device | **P1 - open** | Low-Medium | Needs the OEM device that showed the deferral | Hardware |
 | Pre-12 layout variants | **P2** | Medium-High | Older-device size customization | Device evidence |
 | Forecast-derived temperature fallback/interpolation | **P2/P3** | Medium | Cosmetic progression with accuracy trade-off | Screen-wake redraw and product policy |
@@ -318,7 +337,7 @@ Reference: [Jetpack Glance](https://developer.android.com/develop/ui/compose/gla
 
 ## 7. Verification Requirements
 
-Every implementation should follow red-green-refactor with real objects and run the full test suite. In addition:
+Every behavior change should follow red-green-refactor with real objects and run the full test suite. The checks below are proposed acceptance requirements, not claims that they were all performed. Existing tests are identified where relevant; their presence alone does not establish that the acceptance requirement is satisfied. Documentation-only updates require prose, path/link and diff checks instead of application tests. In addition:
 
 - Add contract tests for no-widget behaviour: no periodic work and no passive location tracking while zero widgets are installed.
 - Test that a screen wake with no network still redraws cached content, and that a wake with fresh data issues no request.
@@ -327,10 +346,98 @@ Every implementation should follow red-green-refactor with real objects and run 
 - *(Phase 2)* Persistence and deletion tests for every `appWidgetId -> locationId` mapping, including `onDeleted()` cleanup.
 - *(Phase 2)* Two widget IDs assigned to different locations render different weather and route to different detail targets.
 - *(Phase 2)* An unassigned widget falls back to the primary location; a widget whose assigned location was deleted degrades predictably.
-- *(Responsive - now in place)* Assert that two breakpoints produce **different** rendered views, and that the total parcel size stays under the binder budget at every icon style. Asserting the breakpoint list matches a hardcoded list is what let the first attempt ship broken - such a test cannot fail. Any new content tier must re-measure the summed payload before it lands.
+- *(Responsive - only if revisited; currently not adopted)* Assert that two breakpoints produce **different** rendered views, and that the total parcel size stays under the binder budget at every icon style. Asserting the breakpoint list matches a hardcoded list is what let the first attempt ship broken - such a test cannot fail. Any new content tier must re-measure the summed payload before it lands.
 - Anchor any fixture that touches forecast rows to wall-clock now. `weatherToday()` filters rows against the real date, so a fixed past date silently drops all five row icons and understates payload measurements roughly 5x.
 - Test cache-only redraw while offline.
 - Test day/night mapping immediately before and after sunrise/sunset.
 - Test pre-12 layouts at API 26 and API 30, plus API 31+ for the responsive path, with Robolectric coverage and real launcher hosts where clipping behaviour matters. `minSdk` is 26, so API 30 alone is not sufficient pre-12 coverage.
 - Measure bitmap allocation and RemoteViews payloads before accepting caching as an optimization.
 - Visually verify Android 8 (API 26), Android 10/11, Android 12+, at least one high-density device, and an OEM launcher previously affected by vector inflation.
+
+## 8. Weather Sync Review — 10 September 2026
+
+Six findings were raised. **S1 and S5 are now implemented (unverified); S2, S3, S4 and S6 remain OPEN.** They are source-derived failure scenarios, not device reproductions. Every line, predicate and default cited below was re-checked against `017b11c` and all six were confirmed real. Preserve host-driven `TextClock`, useful offline cache and the background request savings while resolving them.
+
+Two priority corrections came out of that re-check and are carried into [section 6](#6-revised-priority-matrix): **S4 drops to P3** and **S6 is under-rated at P2**. Both are argued in place below.
+
+### S1 — P1: Invalidate hourly forecasts after relocation
+
+- [x] **DONE, verified:** Prevent a new city's current/daily weather from retaining the previous city's hourly graph.
+
+**Evidence:** [WeatherRepositoryImpl.persistWeatherData](app/src/main/java/com/clockweather/app/data/repository/WeatherRepositoryImpl.kt) replaces hourly rows only when `scope.includeHourly` is true. [WeatherUpdateWorker](app/src/main/java/com/clockweather/app/worker/WeatherUpdateWorker.kt) uses background scope even for a forced relocation. Current and daily data move to city B while city A's hours retain the same `locationId`. The foreground freshness predicate checks hourly time coverage, not ownership, so a warm resume shortly after the background refresh can accept this mixed cache.
+
+**Root cause, corrected.** The original proposed fix — "invalidate hours whose location identity no longer matches" — is not implementable as written. `WeatherRefreshLocationResolver.resolve` returns `detectedLocation.copy(id = savedLocation.id)`, so the row id is deliberately *stable* across a move. `locationId` is therefore structurally incapable of expressing ownership and there is no mismatch to detect.
+
+The sharper defect is that the worker already believes it handles this. On a significant move it escalates to `WeatherRefreshMode.FORCE`, under the comment *"Cached weather is keyed by the location row, so right after a move it still holds the city the user left. Refetch however recent it looks."* But it then calls `forceRefreshWeatherData(refreshLocation, forecastDays)` with no scope argument, which falls through to `backgroundScope()`, where `includeHourly` is false — so the `deleteHourlyForecasts` branch never runs. **The mitigation is defeated by a defaulted parameter.**
+
+**Implemented fix:** `persistWeatherData` now receives the pre-fetch `CurrentWeatherEntity` and derives ownership from the coordinates the previous fetch recorded on the weather row — the same provenance `cacheDescribes` already uses for optional sections. When the scope bought no hours but the committed weather is `SIGNIFICANT_MOVE_METERS` or more from those coordinates, the stale hours are dropped. Deletion requires *proven* movement: rows migrated from before the coordinate columns existed hold null and are left alone, so pre-migration caches are not wiped on every background refresh.
+
+**Acceptance:** `RelocationCacheReuseTest.background relocation invalidates hourly rows owned by the previous city` seeds London coordinates, inserts an hourly row, forces a background-scope refresh at Brighton and asserts zero hourly rows remain. *(Correction: an earlier revision of this document claimed `RelocationCacheReuseTest` covered only optional-section cache eligibility. That was true at `017b11c` but the test above was already present uncommitted in the working tree.)* Passing.
+
+### S2 — P2: Preserve the newest location fix across queued work
+
+- [ ] **OPEN:** Prevent delayed relocation work from applying an obsolete fix after a newer one arrives.
+
+**Evidence:** [LocationUpdatesReceiver](app/src/main/java/com/clockweather/app/receiver/LocationUpdatesReceiver.kt) passes coordinates into [WeatherUpdateScheduler.scheduleUserRefresh](app/src/main/java/com/clockweather/app/worker/WeatherUpdateScheduler.kt). Its unique-work policy is `KEEP`, so a newer fix C is discarded while B is queued or running. The worker prefers B's input coordinates over a fresh location lookup and has no original fix timestamp to validate. After network delay or retry, it can publish B although the device has moved on.
+
+**Sequencing note: real, but the riskiest of the six — do it last.** `ExistingWorkPolicy.KEEP` does discard fix C, but switching to `REPLACE` makes things worse, not better: continuous movement would cancel in-flight work repeatedly and no refresh would ever complete. This is the one finding where the obvious reading of "fix the policy" is a regression. The design below is correct precisely because it keeps `KEEP` and moves the fix outside the WorkManager request; the untracked `LatestLocationFixStoreTest` in the working tree already sketches it against a real Preferences DataStore.
+
+**Proposed fix:** Coalesce relocation work while preserving the latest accepted fix and its age. Revalidate before publishing so older work cannot overwrite a newer location. Keep user-tap deduplication without discarding newer relocation input.
+
+**Proposed acceptance:** Queue B while disconnected, deliver C, then permit work to run; verify the resulting snapshot follows the latest valid fix. Also cover a newer foreground location published while the older worker is in flight, using real persistence and platform/work components.
+
+### S3 — P2: Measure accumulated movement from the weather snapshot
+
+- [ ] **OPEN:** Trigger relocation when several small moves exceed 5 km from the last successful weather coordinates.
+
+**Evidence:** [WeatherUpdateWorker.doWork](app/src/main/java/com/clockweather/app/worker/WeatherUpdateWorker.kt) compares the detected fix with `savedLocation`, then saves the detected location even when `ensureFreshWeatherData` skips a fetch. Successive worker/wake fixes less than 5 km apart advance that row without advancing the weather snapshot. With a long refresh interval, their cumulative displacement can be much greater than 5 km while the old weather still passes its age check. The cache-ownership guard in `refreshAndPersist` runs only after a fetch has already been selected.
+
+**Magnitude, corrected.** The drift is bounded by the refresh interval, not open-ended. `ENSURE_FRESH` passes `maxAgeMinutes = refreshIntervalMinutes`, so the periodic run itself almost always finds the weather older than the interval and refetches, re-anchoring the snapshot. The skip-then-`saveLocation` sequence only accumulates via *extra* triggers between periodic runs — screen wake, location updates, boot. Real, and worse with a long configured interval, but the ceiling is interval × travel speed rather than unbounded.
+
+**Proposed fix:** Compare requested coordinates with the coordinates on the successful weather row before accepting the cache as fresh. Preserve useful small-movement cache reuse without resetting the movement reference on every skipped request.
+
+**Why this is the best remaining item:** `WeatherRefreshLocationResolver.cacheDescribes` already computes exactly this comparison and is already imported by the repository — it is simply never consulted in the freshness decision. Lowest cost of the four remaining, which is why the matrix now lists it ahead of S6 and S2.
+
+**Proposed acceptance:** Seed weather at A and apply two same-direction 4 km worker fixes before its TTL expires. Verify the second fix triggers a fetch despite being only 4 km from the latest saved location; one small fix alone should remain eligible for reuse.
+
+### S4 — P2: Observe current, hourly and daily data as one snapshot
+
+- [ ] **OPEN:** Prevent an observation from combining different refresh generations.
+
+**Evidence:** [WeatherRepositoryImpl.getWeatherData](app/src/main/java/com/clockweather/app/data/repository/WeatherRepositoryImpl.kt) combines four independent DAO flows. `persistWeatherData` writes within a transaction, but each flow can emit its new value at a different time. An active page collector can temporarily receive new current weather with old forecasts; independent initial queries can also straddle a commit. Sharing one `WidgetRenderSnapshot` across widgets reduces reads but does not make those underlying reads atomic.
+
+**Priority corrected: P2 → P3, and sequence it last.** The `combine` over four DAO flows is exactly as described, but writes go through `database.withTransaction` and Room's invalidation tracker fires only after the transaction commits, so all four flows re-query post-commit. The skew window is milliseconds — one frame on a graph. More importantly, most of the harm attributed to S4 was actually **S1**: a *persistent* mixed generation rather than a transient one. With S1 fixed, re-evaluate whether a medium-effort change to the main read path — which the widgets also use — still earns its place on source-derived evidence alone. Do not start this one before there is a visible artifact to point at.
+
+**Proposed fix:** Observe an aggregate snapshot read under one Room transaction, retaining the existing transactional write boundary.
+
+**Proposed acceptance:** Collect repository emissions while committing distinguishable A/B snapshots through real Room. Every non-null emission must contain one complete generation. `WeatherRepositorySnapshotTest` currently reads once after seeding and does not test emissions during writes.
+
+### S5 — P2: Check freshness of requested air quality and pollen
+
+- [x] **DONE, verified:** Refresh stale or missing optional sections when the weather page requests them.
+
+**Evidence:** [WeatherRepositoryImpl.ensureFreshWeatherData](app/src/main/java/com/clockweather/app/data/repository/WeatherRepositoryImpl.kt) returns early based on core weather and forecast coverage, consulting only `includeHourly` from the scope. It never includes `includeAirQuality` or `includePollen` in that decision. Their independent timestamps and provider reuse checks are **DONE**, but those checks are not reached when the repository skips fetching. A warm resume after a background refresh can therefore keep expired AQ or missing pollen behind fresh current weather and sufficient cached hours.
+
+**Implemented fix:** `ensureFreshWeatherData` now also requires `optionalSectionsFresh(...)` before returning early. Sections the scope does not request are not consulted, so background work stays exactly as cheap as it was and cannot be held stale by data no widget displays.
+
+The loop hazard is handled by changing what the timestamp *means*. `WeatherProviderType` carries no capability flags, so "air quality is absent" cannot be distinguished from "this provider does not publish air quality here" by looking at the data. Judging freshness on the presence of data would make an unavailable section read as permanently missing and enqueue a refresh on every check, forever. Instead `aqLastUpdated` and `pollenLastUpdated` are now recorded as **when the section was last resolved, not when data last arrived**: a refresh that asked and got nothing back stamps the attempt, which is itself an answer ("unavailable here") and holds for one TTL. A section nobody asked for keeps whatever timestamp it had, so an unrelated refresh cannot make it look freshly checked. The new `isOptionalSectionFresh` predicate reads that marker alone.
+
+No migration is required — the `aqLastUpdated` and `pollenLastUpdated` columns already exist from finding 1.
+
+**Cost trade-off, stated plainly.** This fix *increases* foreground request volume, deliberately. Previously a fresh current-weather reading (10-15 min TTL) short-circuited the whole check; now an air-quality reading older than its 60-minute TTL will trigger a fetch even when current weather is fresh. The ceiling is roughly one extra fetch per hour of active app use, and the provider still reuses whichever sections are individually fresh, so a triggered refresh does not re-buy everything. Background scope is untouched and the savings from `c284140` and `794f96d` are preserved in full. This is correctness bought at a known price, and it should be weighed against S6, which removes a forced download on *every* screen open.
+
+**Acceptance:** `OptionalSectionFreshnessTest` (new, real Room + `MockWebServer`) seeds a cache the pre-S5 predicate called entirely fresh — current conditions from this minute, 25 hours from the current hour, seven days of daily coverage — so the request count observes the optional sections and nothing else. Five cases: expired air quality refreshes; air quality never recorded refreshes on first foreground request; fresh sections make no request; background scope is not held stale by sections no widget displays; and a section that comes back empty still records when it was asked. Passing.
+
+**Known gap in that coverage.** The end-to-end "bought once per TTL, not once per check" case is *not* covered. The shared Open-Meteo fixture returns `"hourly": null, "daily": null`, so the first fetch wipes both tables and any second `ensureFreshWeatherData` call re-fetches on missing hourly coverage — failing for a reason that has nothing to do with S5. The loop guard is therefore covered at the mechanism level only (the marker is stamped when the provider returns nothing). Closing this properly needs a fuller fixture carrying real hourly and daily arrays, which would also let `RelocationCacheReuseTest` assert what replaces the invalidated hours rather than only that they are gone.
+
+### S6 — P2: Avoid a second full refresh on screen creation
+
+- [ ] **OPEN:** Treat already-granted location permission differently from a newly granted permission.
+
+**Evidence:** [WeatherDetailScreen](app/src/main/java/com/clockweather/app/presentation/detail/screen/WeatherDetailScreen.kt) runs `LaunchedEffect(allPermissionsGranted)` on initial composition and calls `viewModel.refresh()` when permission was already granted. [WeatherDetailViewModel.loadWeather](app/src/main/java/com/clockweather/app/presentation/detail/WeatherDetailViewModel.kt) independently launches `ensureFreshWeatherAndWidgets`. The manual request forces a download, and the repository mutex serializes rather than merges it. Stale-cache startup can download twice; reopening a newly created page can force a request despite fresh cache. The first-resume gate does not suppress this Compose effect.
+
+**Under-rated at P2.** `refresh()` ends in `forceRefreshWeatherAndWidgets`, unconditionally, so every screen open forces a paid download regardless of how fresh the cache is — `ManualRefreshGate` is a cooldown on repeated manual refreshes and does not dedupe against `loadWeather`'s `ensureFresh`. This branch spent `c284140` and `794f96d` cutting request volume on a per-request-billed API; a guaranteed forced fetch per screen open partly undoes that work. The cost argument, not the duplicate-download argument, is what should decide this one's position.
+
+**Proposed fix:** Give startup one refresh owner. Preserve refresh after a newly granted permission and explicit user gestures, while routing ordinary opening through the freshness check. The untracked `LocationPermissionRefreshGateTest` in the working tree already specifies the intended gate: an initially granted permission belongs to the startup freshness owner, while a grant *after* a denial still requests a refresh.
+
+**Proposed acceptance:** Exercise actual screen composition with already-granted permissions and real shared data: stale-cache startup performs one intended refresh; fresh-cache startup performs none when the location is unchanged. Then grant permission after denial and verify the required location/weather refresh still occurs. Current ViewModel and pure screen-helper tests bypass the permission effect.

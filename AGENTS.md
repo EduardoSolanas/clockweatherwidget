@@ -30,6 +30,12 @@
 - If delegation is unavailable, proceed directly with the same bounded workflow and state that limitation briefly. Do not create approval loops.
 - Independently inspect delegated changes and verification evidence before reporting completion. Rerun checks when changes, failures, or gaps in evidence justify it; avoid repeating unchanged successful checks.
 
+## Branching
+
+- `main` is the working branch. Base work on it and land work back on it as soon as the suite is green, rather than accumulating changes on a long-lived side branch.
+- Do not open a feature branch unless asked for one. When one already exists, prefer finishing and merging it over adding unrelated work to it.
+- A branch whose contents no longer match its name has drifted. Say so and propose a rename or a split instead of continuing to add to it.
+
 ## Workflow
 
 1. Read this file and inspect repository status before acting.
