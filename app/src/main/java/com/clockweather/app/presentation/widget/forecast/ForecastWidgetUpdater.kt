@@ -18,7 +18,7 @@ import com.clockweather.app.presentation.widget.common.WidgetDataBinder
 class ForecastWidgetUpdater(
     context: Context,
     appWidgetManager: AppWidgetManager,
-    entryPoint: WidgetEntryPoint
+    entryPoint: WidgetEntryPoint? = null,
 ) : BaseWidgetUpdater(context, appWidgetManager, entryPoint) {
 
     override val layoutResId = R.layout.widget_forecast

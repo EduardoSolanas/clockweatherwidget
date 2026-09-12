@@ -50,8 +50,21 @@ data class WidgetRenderSnapshot(
 abstract class BaseWidgetUpdater(
     protected val context: Context,
     protected val appWidgetManager: AppWidgetManager,
-    protected val entryPoint: WidgetEntryPoint
+    private val injectedEntryPoint: WidgetEntryPoint? = null,
 ) {
+    /**
+     * The Hilt graph, which only the data path needs: [createRenderSnapshot] reads the
+     * repositories through it, and [updateWidget] uses it when no snapshot was supplied.
+     *
+     * [buildViews] renders entirely from the snapshot it is handed and never reads this, so a
+     * render-only caller can build an updater without a graph. That is what lets the style
+     * tests drive the real view tree with real domain objects instead of a stand-in.
+     */
+    protected val entryPoint: WidgetEntryPoint
+        get() = requireNotNull(injectedEntryPoint) {
+            "This updater was built for rendering only, so it has no WidgetEntryPoint."
+        }
+
     private val tag = this::class.simpleName ?: "WidgetUpdater"
 
     abstract val layoutResId: Int
