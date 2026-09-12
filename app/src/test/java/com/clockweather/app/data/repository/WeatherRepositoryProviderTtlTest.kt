@@ -92,6 +92,10 @@ class WeatherRepositoryProviderTtlTest {
         val sectionsAnsweredNow = fixedReferenceTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         every { currentEntity.aqLastUpdated } returns sectionsAnsweredNow
         every { currentEntity.pollenLastUpdated } returns sectionsAnsweredNow
+        // Likewise the recorded position: a relaxed mock cannot prove where the cache came from,
+        // and unknown provenance is a refetch on its own regardless of the TTL under test.
+        every { currentEntity.latitude } returns location.latitude
+        every { currentEntity.longitude } returns location.longitude
         every { currentWeatherDao.getCurrentWeather(location.id) } returns flowOf(currentEntity)
         every { hourlyForecastDao.getHourlyForecasts(location.id) } returns flowOf(hourlyEntities)
         every { dailyForecastDao.getDailyForecasts(location.id) } returns flowOf(dailyEntities)

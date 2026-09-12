@@ -1,22 +1,24 @@
 # Time, weather and location sync review
 
-Original review: 5 September 2026, `feat/disable-ads-debug-builds`. Latest source/status audit: **10 September 2026**, revision `017b11c`. DONE means the scoped implementation is present; the historical commit checkpoints below record earlier verification. It does not imply deployment or launcher verification.
+Original review: 5 September 2026, `feat/disable-ads-debug-builds`. Latest source/status audit: **11 September 2026**. DONE means the scoped implementation is present; the historical commit checkpoints below record earlier verification. It does not imply deployment or launcher verification.
 
 Read the current status table and implementation order first. Each numbered finding starts with a current status; its remaining evidence/change/acceptance text preserves the original audit unless explicitly updated. Original failures are historical, not claims that every defect still exists. The implementation follow-up records earlier runs; the current verification status is recorded below.
 
-**Latest verification status:** the Java and Android SDK toolchain gap that blocked the 10 September audit is resolved, and `gradlew clean testDebugUnitTest lintDebug` now passes — **398 tests across 84 classes, 0 failures, 0 errors; lint reports 0 errors** (96 warnings, 2 hints, all pre-existing). Historical passing counts below predate that run. No device, emulator, live-provider, Doze, battery or deployment validation was performed.
+**Latest verification status:** the toolchain is installed and Gradle runs — Microsoft OpenJDK 17.0.20.1 and the Android SDK at the `local.properties` path (platform-35, build-tools 35.0.0, licences accepted). `gradlew testDebugUnitTest lintDebug assembleDebug` passes: **409 tests across 86 classes, 0 failures, 0 errors; lint 0 errors** (96 warnings, 2 hints, all pre-existing). Historical passing counts below predate that run. No device, emulator, live-provider, Doze, battery or deployment validation was performed.
 
-The six new sync findings are tracked as **S1-S6** in [refresh_improvements.md, section 8](../refresh_improvements.md#8-weather-sync-review--10-september-2026), which holds the scenarios, source references and acceptance checks. **S1 and S5 are DONE and verified by the run above; S2, S3, S4 and S6 remain OPEN.**
+The six new sync findings are tracked as **S1-S6** in [refresh_improvements.md, section 8](../refresh_improvements.md#8-weather-sync-review--11-september-2026), which holds the scenarios, source references and acceptance checks. **S1-S3 and S5-S6 are DONE and verified by the run above; S4 alone remains OPEN by design.**
 
 ## Recommended direction
 
 Keep Android responsible for the ticking clock. Keep Room as the persistent weather cache and WorkManager as the background weather scheduler. Improve the identity, age and visibility of cached data before increasing refresh frequency.
 
-**DONE in code:** weather-owned city labels/coordinates, fetch-before-location-save, independent optional-section ages, Google offset parsing, configured widget forecast coverage, optional-cache rejection after significant movement, placeholder preservation and the resume freshness hook. Request-count and rendering tests also exist; their measurements below are historical. The next correctness work is S1-S6: hourly ownership after travel, newest-fix retention, accumulated movement, coherent reads, requested optional-section freshness and duplicate startup requests. Keep renderer deduplication optional until launcher evidence justifies it.
+**DONE in code:** weather-owned city labels/coordinates, fetch-before-location-save, independent optional-section ages, Google offset parsing, configured widget forecast coverage, optional-cache rejection after significant movement, placeholder preservation and the resume freshness hook. Request-count and rendering tests also exist; their measurements below are historical.
+
+Five of the six sync findings are now implemented and verified: hourly ownership after travel (S1), newest-fix retention (S2), accumulated movement (S3), requested optional-section freshness (S5) and duplicate startup requests (S6). Only coherent reads (S4) remain, deliberately deferred — writes are already transactional and Room's invalidation fires post-commit, so the residual skew is a frame rather than a state, and the persistent mixed generation that gave S4 most of its weight was S1. Keep renderer deduplication optional until launcher evidence justifies it.
 
 ### Original test blocker — DONE
 
-The original release-variant assertion was corrected to branch on `BuildConfig.DEBUG`; this code correction is DONE. The checkpoint recorded 352 passing tests per variant, with a later historical entry recording 387. Neither figure is a new run; the current figure is the 398-test run recorded above.
+The original release-variant assertion was corrected to branch on `BuildConfig.DEBUG`; this code correction is DONE. The checkpoint recorded 352 passing tests per variant, with a later historical entry recording 387. Neither figure is a new run; the current figure is the 409-test run recorded above.
 
 Assumptions: retain the existing native Kotlin/Compose application, Android API 26 minimum, and the documented current-location-first product. Per-widget cities and world clocks remain a separate product decision. “Sync” here means synchronizing the app and home-screen widgets with device time, location and weather providers, rather than account or cross-device synchronization.
 
@@ -43,13 +45,13 @@ Severity alone is a poor ordering signal here: the first revision of this docume
 | # | Finding | Status | Implemented locally | Remaining work |
 | --- | --- | --- | --- | --- |
 | 1 | Independent AQ/pollen ages | DONE for stored ages/provider reuse | Two timestamps, migration, provider policies and unknown-age handling | Repository freshness integration S5 DONE; user-visible age is separate |
-| 2 | City/weather snapshot identity | PARTIAL | Weather-owned label/coordinates; location saved after successful fetch; optional-section reuse blocked after movement; regression tests present | S1 DONE; S3/S4 open; no single location+weather transaction |
+| 2 | City/weather snapshot identity | PARTIAL | Weather-owned label/coordinates; location saved after successful fetch; optional-section reuse blocked after movement; regression tests present | S1 and S3 DONE; S4 open; no single location+weather transaction |
 | 3 | Timezone handling | PARTIAL | Google interval/offset parsing; future-age bound | Full instant storage and DST/zone migration deferred |
-| 4 | Cache-first startup and resume | PARTIAL | Network launch no longer blocks Room collection; ON_RESUME re-checks freshness after the first resume; the hourly graph states when a day is not downloaded | Duplicate startup refresh S6; visible age/error states |
-| 5 | Refresh ownership and coverage | PARTIAL | distinctUntilChanged; widget coverage target now reads the saved setting and selected provider limits | S2/S5/S6; broader request coalescing and fallback-provider coverage remain open |
+| 4 | Cache-first startup and resume | PARTIAL | Network launch no longer blocks Room collection; ON_RESUME re-checks freshness after the first resume; the hourly graph states when a day is not downloaded | S6 DONE; visible age/error states remain |
+| 5 | Refresh ownership and coverage | PARTIAL | distinctUntilChanged; widget coverage target now reads the saved setting and selected provider limits; S2/S5 are implemented | Broader request coalescing and fallback-provider coverage remain open |
 | 6 | Manual refresh and cancellation | PARTIAL | In-flight guard; success-only cooldown; cancellation rethrown in the worker. Provider propagation holds through coroutineScope, and mutation testing showed no test can falsify the runCatching blocks — the claim is narrowed, not proven | Shared app/widget manual policy; elapsed-time cooldown |
 | 7 | Lifecycle policy | PARTIAL | Startup/boot periodic scheduling, screen wake and interval settings guard on active widgets; final-widget removal cancels periodic work and tracking | Permission-return tracking registration lacks a widget guard; runtime wake limitation remains |
-| 8 | Location quality | PARTIAL | Explicit London default label; replacement remains enabled; last-known fixes more than two minutes in the future are rejected | Newest-fix retention S2 and accumulated movement S3; accuracy/provenance gaps |
+| 8 | Location quality | PARTIAL | Explicit London default label; replacement remains enabled; last-known fixes more than two minutes in the future are rejected | S2 and S3 DONE; accuracy/provenance gaps remain |
 | 9 | Request volume and rendering cost | PARTIAL | Request-count, payload and rasterisation tests present; scoped background requests; populated-widget placeholder preservation | S1/S5/S6 interactions; launcher, live traffic and device battery verification |
 
 Completed substeps remain DONE; their broader findings remain PARTIAL when acceptance work is still missing. Estimates and test counts from the original audit are historical. The former hardcoded widget coverage target is fixed; fallback-provider coverage and the new S1-S6 interactions are not marked complete.
@@ -74,7 +76,7 @@ Scope note: the first revision of this document proposed separate timestamps for
 
 ### 2. Wrong data, visible — Keep the city name and weather from the same snapshot
 
-**Current status — PARTIAL: weather-owned display metadata, fetch-before-location-save and the repository optional-cache eligibility guard are DONE. Providers are no longer offered optional cache with unknown or significantly different weather coordinates. These are still separate location/weather writes. Old-city hourly retention, cumulative movement checks and coherent observation remain OPEN as S1/S3/S4.**
+**Current status — PARTIAL: weather-owned display metadata, fetch-before-location-save, optional-cache eligibility, old-city hourly invalidation and cumulative movement checks are DONE. Providers are no longer offered optional cache with unknown or significantly different weather coordinates. These are still separate location/weather writes; coherent observation remains OPEN as S4.**
 
 The evidence and proposed changes below are from the original audit; use the status above to distinguish completed work.
 
@@ -118,7 +120,7 @@ The reason to defer: this is a current-location-first product, so device zone an
 
 ### 4. Perceived quality — Show cached weather immediately and refresh on return
 
-**Current status — PARTIAL: cache-first collection and the resume freshness hook are DONE. The first-resume gate suppresses that lifecycle request only; it does not suppress the permission Compose effect, so duplicate cold-start downloads remain OPEN as S6. Richer age/error UI remains open.**
+**Current status — PARTIAL: cache-first collection, the resume freshness hook and the permission Compose startup gate are DONE. Richer age/error UI remains open, and full Compose/device acceptance remains outstanding.**
 
 The evidence and proposed changes below are from the original audit; use the status above to distinguish completed work.
 
@@ -132,7 +134,7 @@ The evidence and proposed changes below are from the original audit; use the sta
 
 ### 5. Mixed — Give refresh side effects one owner
 
-**Current status — PARTIAL: distinctUntilChanged and the configured widget coverage target are DONE. BaseWidgetUpdater reads the saved range and selected provider limits instead of demanding a hardcoded seven days. Request coalescing, fallback-provider coverage and S2/S5/S6 remain open.**
+**Current status — PARTIAL: distinctUntilChanged, the configured widget coverage target, requested optional-section freshness and newest-fix retention are DONE. BaseWidgetUpdater reads the saved range and selected provider limits instead of demanding a hardcoded seven days. Broader request coalescing and fallback-provider coverage remain open.**
 
 The evidence and proposed changes below are from the original audit; use the status above to distinguish completed work.
 
@@ -182,7 +184,7 @@ A requested refresh interval is approximate. WorkManager's minimum periodic inte
 
 ### 8. Honesty, then reliability — Improve location quality and reduce unnecessary location work
 
-**Current status — PARTIAL: explicit London-default labelling and bounded last-known fix age are DONE. Fixes more than two minutes in the future are rejected; smaller clock skew is tolerated. isCurrentLocation remains true to permit automatic replacement and is not proof of a real fix. Elapsed-time age, accuracy enforcement, fix provenance and the S2/S3 relocation gaps remain open.**
+**Current status — PARTIAL: explicit London-default labelling and bounded last-known fix age are DONE. Fixes more than two minutes in the future are rejected; smaller clock skew is tolerated. isCurrentLocation remains true to permit automatic replacement and is not proof of a real fix. Elapsed-time age, accuracy enforcement and fix provenance remain open; S2/S3 are DONE in code, with full WorkManager/device validation outstanding.**
 
 The evidence and proposed changes below are from the original audit; use the status above to distinguish completed work.
 
@@ -198,7 +200,7 @@ The evidence and proposed changes below are from the original audit; use the sta
 
 ### 9. Cost — Local measurements implemented; live/device measurements remain open
 
-**Current status — PARTIAL: endpoint baseline tests, scoped background refresh, payload/rasterisation tests and placeholder preservation are DONE in code. Historical local measurements are recorded below and in refresh_improvements.md; they were not rerun here. Live endpoint counts, actual bills, launcher rendering and device battery measurements remain unverified. S1/S5/S6 address correctness and request gaps around the scoped refresh.**
+**Current status — PARTIAL: endpoint baseline tests, scoped background refresh, payload/rasterisation tests and placeholder preservation are DONE in code. Historical local measurements are recorded below and in refresh_improvements.md; they were not rerun here. Live endpoint counts, actual bills, launcher rendering and device battery measurements remain unverified. S1-S3 and S5-S6 address correctness and request gaps around the scoped refresh; S4 remains open.**
 
 The evidence and proposed changes below are from the original audit; use the status above to distinguish completed work.
 
@@ -233,9 +235,9 @@ The clock being current does not imply weather is current. Display weather fetch
 
 ## Implementation order and verification
 
-Current queue, audited on 10 September 2026:
+Current queue, audited on 11 September 2026:
 
-1. **OPEN, S1-S6 correctness work.** Address old-city hours first, then newest-fix retention and accumulated movement; make Room observation coherent, include requested optional sections in freshness and remove duplicate startup downloads. Full evidence and proposed checks are in [refresh_improvements.md](../refresh_improvements.md#8-weather-sync-review--10-september-2026).
+1. **PARTIAL, S4 and acceptance work remain.** S1-S3 and S5-S6 are implemented in code; make Room observation coherent only if further evidence justifies it, then complete WorkManager, Compose, launcher and device checks. Full evidence and proposed checks are in [refresh_improvements.md](../refresh_improvements.md#8-weather-sync-review--11-september-2026).
 2. **OPEN, launcher verification.** Check placeholder preservation, first placement, process death, launcher restart, reboot and resize on API 26-30 and API 31+, including Xiaomi/MIUI. Observe the weather page while missing hours are fetched and during background relocation. Existing code/tests do not replace these checks.
 3. **OPEN, remaining gaps.** Guard permission-return passive registration when no widget exists; retain the separate shared manual-refresh policy, elapsed-time cooldown, fix-accuracy and visible age/error work.
 4. **Deferred by design.** The full `Instant` migration, broader location+weather atomic publication and optional render deduplication. Deferring those larger changes does not defer S1-S6.
@@ -261,7 +263,7 @@ Follow the repository's Red → Green → Refactor requirement for implementatio
 
 ## Relationship to earlier plans
 
-Use this review as implementation history alongside [refresh_improvements.md](../refresh_improvements.md), whose status matrix and section 8 track the latest work. Both documents were reconciled against source on 10 September 2026. [APP_IMPROVEMENT_PLAN.md](APP_IMPROVEMENT_PLAN.md) and other earlier task lists may still contain stale descriptions; recheck them before implementing work. Existing local-only scope and launcher-watchdog decisions remain unchanged.
+Use this review as implementation history alongside [refresh_improvements.md](../refresh_improvements.md), whose status matrix and section 8 track the latest work. Both documents were reconciled against source on 11 September 2026. [APP_IMPROVEMENT_PLAN.md](APP_IMPROVEMENT_PLAN.md) and other earlier task lists may still contain stale descriptions; recheck them before implementing work. Existing local-only scope and launcher-watchdog decisions remain unchanged.
 
 ## Source navigation
 
@@ -379,7 +381,7 @@ No device, launcher, live-provider or battery verification was performed. Reques
 
 ## Home-screen freshness and flicker follow-up — 5 September 2026
 
-Status audited 10 September: item 1 is DONE in code with device checks OPEN; item 2 remains OPEN; item 3 is PARTIAL (cache preservation and freshness checks exist, but S1-S6 remain); item 4 is OPEN; item 5's existing interval/watchdog policy is retained, with continuous-display verification OPEN. These fixes do not establish flicker-free launcher rendering or guarantee fresh weather whenever the user looks at the widget.
+Status audited 11 September: item 1 is DONE in code with device checks OPEN; item 2 remains OPEN; item 3 is PARTIAL (cache preservation and freshness checks exist; the S1-S3 and S5-S6 sync fixes are implemented); item 4 is OPEN; item 5's existing interval/watchdog policy is retained, with continuous-display verification OPEN. These fixes do not establish flicker-free launcher rendering or guarantee fresh weather whenever the user looks at the widget.
 
 ### Historical trigger and remaining evidence
 

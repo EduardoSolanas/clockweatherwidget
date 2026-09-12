@@ -167,6 +167,19 @@ class RelocationCacheReuseTest {
         assertEquals(0, database.hourlyForecastDao().getHourlyForecasts(brighton.id).first().size)
     }
 
+    @Test
+    fun `fresh cache still refreshes when requested position moved from weather snapshot`() = runTest {
+        seedCache(snapshotLatitude = londonLatitude, snapshotLongitude = londonLongitude)
+
+        repository().ensureFreshWeatherData(
+            brighton,
+            forecastDays = 7,
+            scope = com.clockweather.app.data.provider.RefreshScope.background(pollenShownInWidget = false),
+        )
+
+        assertEquals(1, count("/v1/forecast"))
+    }
+
     private fun count(path: String) = counts[path]?.get() ?: 0
 
     private suspend fun seedCache(snapshotLatitude: Double?, snapshotLongitude: Double?) {

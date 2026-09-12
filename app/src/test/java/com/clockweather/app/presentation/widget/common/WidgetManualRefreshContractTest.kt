@@ -34,10 +34,24 @@ class WidgetManualRefreshContractTest {
         val scheduler = File(
             "src/main/java/com/clockweather/app/worker/WeatherUpdateScheduler.kt"
         ).readText()
-        val method = scheduler.substringAfter("fun scheduleUserRefresh")
 
-        assertTrue(method.contains("WeatherUpdateWorker.INPUT_FORCE_REFRESH to true"))
-        assertTrue(method.contains("OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST"))
-        assertTrue(method.contains("ExistingWorkPolicy.KEEP"))
+        // The user-facing entry point still forces a fetch and still deduplicates against work
+        // already queued. Relocation has its own entry point with a different queueing policy,
+        // so these two properties belong to this method rather than to the shared builder.
+        val userRefresh = scheduler.substringAfter("fun scheduleUserRefresh(").substringBefore("}")
+        assertTrue(
+            "a user refresh must force a fetch rather than consult freshness",
+            userRefresh.contains("forceRefresh = true")
+        )
+        assertTrue(
+            "a user refresh must not displace work already queued",
+            userRefresh.contains("ExistingWorkPolicy.KEEP")
+        )
+
+        // The shared builder carries the expedited request and the quota fallback that keeps it
+        // from being dropped when the app has no expedited quota left.
+        val builder = scheduler.substringAfter("private fun scheduleUserRefreshInternal")
+        assertTrue(builder.contains("WeatherUpdateWorker.INPUT_FORCE_REFRESH to forceRefresh"))
+        assertTrue(builder.contains("OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST"))
     }
 }

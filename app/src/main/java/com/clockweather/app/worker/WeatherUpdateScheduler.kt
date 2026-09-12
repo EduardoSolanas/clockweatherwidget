@@ -96,11 +96,39 @@ object WeatherUpdateScheduler {
 
     /** Enqueue user-requested weather work, optionally passing relocated coordinates. */
     fun scheduleUserRefresh(context: Context, latitude: Double? = null, longitude: Double? = null) {
+        scheduleUserRefreshInternal(
+            context = context,
+            latitude = latitude,
+            longitude = longitude,
+            forceRefresh = true,
+            existingWorkPolicy = ExistingWorkPolicy.KEEP,
+        )
+    }
+
+    /**
+     * Enqueues relocation work behind a refresh already in flight. A newer passive fix must
+     * leave a follow-up run, rather than being discarded by KEEP while the older run executes.
+     */
+    fun scheduleRelocationRefresh(context: Context) {
+        scheduleUserRefreshInternal(
+            context = context,
+            forceRefresh = false,
+            existingWorkPolicy = ExistingWorkPolicy.APPEND_OR_REPLACE,
+        )
+    }
+
+    private fun scheduleUserRefreshInternal(
+        context: Context,
+        latitude: Double? = null,
+        longitude: Double? = null,
+        forceRefresh: Boolean,
+        existingWorkPolicy: ExistingWorkPolicy,
+    ) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val baseData = workDataOf(WeatherUpdateWorker.INPUT_FORCE_REFRESH to true)
+        val baseData = workDataOf(WeatherUpdateWorker.INPUT_FORCE_REFRESH to forceRefresh)
         val inputData = if (latitude != null && longitude != null) {
             androidx.work.Data.Builder()
                 .putAll(baseData)
@@ -120,7 +148,7 @@ object WeatherUpdateScheduler {
 
         WorkManager.getInstance(context).enqueueUniqueWork(
             USER_REFRESH_WORK_NAME,
-            ExistingWorkPolicy.KEEP,
+            existingWorkPolicy,
             workRequest
         )
     }

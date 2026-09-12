@@ -42,6 +42,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -180,6 +181,19 @@ class OptionalSectionFreshnessTest {
             "an unanswerable section must still be marked as asked, or it re-fetches forever",
             row?.aqLastUpdated,
         )
+    }
+
+    @Test
+    fun `an empty response does not keep the stale observation timestamp`() = runTest {
+        seedCache(airQualityAgeMinutes = 90, pollenAgeMinutes = 600)
+        val before = database.currentWeatherDao().getCurrentWeather(1L).first()?.aqLastUpdated
+
+        repository().ensureFreshWeatherData(brighton, forecastDays, scope = RefreshScope.FOREGROUND)
+
+        val after = database.currentWeatherDao().getCurrentWeather(1L).first()?.aqLastUpdated
+        assertNotNull(before)
+        assertNotNull(after)
+        assertTrue("an attempted empty response must advance the answer marker", after != before)
     }
 
     private fun count(path: String) = counts[path]?.get() ?: 0

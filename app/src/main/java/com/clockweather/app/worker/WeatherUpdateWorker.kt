@@ -51,7 +51,13 @@ class WeatherUpdateWorker @AssistedInject constructor(
         // queued never got a request of its own. Reading the store at start — rather than
         // trusting the coordinates this request was built with — is what lets the newest fix
         // win without cancelling work in flight.
-        val queuedFix = LatestLocationFixStore.read(prefs)
+        val storedFix = LatestLocationFixStore.read(prefs)
+        // A fix that sat in the store while this run was deferred describes where the device
+        // was, not where it is. Past the age bound a live lookup is the better answer.
+        val queuedFix = storedFix?.takeIf { LatestLocationFixStore.isRecent(it) }
+        if (storedFix != null && queuedFix == null) {
+            Log.i(TAG, "Discarding a queued location fix older than its usefulness")
+        }
         var anyFailure = false
         locations.forEach { savedLocation ->
             try {
@@ -118,10 +124,16 @@ class WeatherUpdateWorker @AssistedInject constructor(
             }
         }
         // Consumed only once its weather actually published. A failed run keeps the fix so the
-        // retry still acts on it rather than falling back to a fresh lookup.
-        if (queuedFix != null && !anyFailure) {
-            runCatching { LatestLocationFixStore.clear(dataStore) }
-                .onFailure { Log.w(TAG, "Failed to clear the consumed location fix", it) }
+        // retry still acts on it rather than falling back to a fresh lookup. A fix discarded for
+        // age is dropped too, so it cannot linger and be reconsidered by every later run.
+        if (storedFix != null && !anyFailure) {
+            try {
+                LatestLocationFixStore.clearIfSame(dataStore, storedFix.fixTimeMs)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to clear the consumed location fix", e)
+            }
         }
 
         // Always redraw widgets from cache, even on partial failure.

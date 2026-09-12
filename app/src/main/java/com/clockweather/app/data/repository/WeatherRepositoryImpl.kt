@@ -90,6 +90,15 @@ class WeatherRepositoryImpl @Inject constructor(
     ) {
         refreshMutex.withLock {
             val cached = getWeatherData(location).first()
+            // The saved location row may advance on every small fix. Compare the requested
+            // position with the coordinates recorded by the last successful weather fetch so
+            // accumulated movement cannot keep reusing an otherwise fresh snapshot.
+            val cachedEntity = currentWeatherDao.getCurrentWeather(location.id).first()
+            val cacheStillDescribesLocation = WeatherRefreshLocationResolver.cacheDescribes(
+                snapshotLatitude = cachedEntity?.latitude,
+                snapshotLongitude = cachedEntity?.longitude,
+                requested = location,
+            )
             val referenceDateTime = cached?.locationReferenceDateTime() ?: java.time.LocalDateTime.now()
             val providerType = WeatherProviderPreferences.resolve(
                 dataStore.data.first()[WeatherProviderPreferences.KEY_WEATHER_PROVIDER]
@@ -98,7 +107,7 @@ class WeatherRepositoryImpl @Inject constructor(
             val effectiveScope = scope ?: backgroundScope()
             // Background work never fetches hourly, so requiring it would leave the widgets
             // permanently stale and re-enqueueing. The app is the only caller that needs it.
-            val isFresh = isWeatherDataFresh(
+            val isFresh = cacheStillDescribesLocation && isWeatherDataFresh(
                 cached,
                 referenceDateTime,
                 forecastDays,
@@ -223,16 +232,28 @@ class WeatherRepositoryImpl @Inject constructor(
         previous: CurrentWeatherEntity?,
     ) {
         val answeredAt = java.time.LocalDateTime.now()
-        // A section that was asked for and came back empty has been answered: it is unavailable
-        // here, not merely unseen. Recording when we asked keeps that answer for one TTL. A
-        // section nobody asked for keeps whatever timestamp it had, so an unrelated refresh
-        // cannot make it look freshly checked.
-        val airQualityAnsweredAt = data.airQuality?.lastUpdated
-            ?: answeredAt.takeIf { scope.includeAirQuality }
-            ?: parseTimestamp(previous?.aqLastUpdated)
-        val pollenAnsweredAt = data.pollenLastUpdated
-            ?: answeredAt.takeIf { scope.includePollen }
-            ?: parseTimestamp(previous?.pollenLastUpdated)
+        // A section that was asked for and came back empty, or only echoed the stale value we
+        // supplied as cache, has been answered: it is unavailable here, not merely unseen.
+        // Recording when we asked keeps that answer for one TTL. A section nobody asked for
+        // keeps whatever timestamp it had, so an unrelated refresh cannot make it look fresh.
+        val previousAirQualityAt = parseTimestamp(previous?.aqLastUpdated)
+        val returnedAirQualityAt = data.airQuality?.lastUpdated
+        val airQualityAnsweredAt = if (
+            scope.includeAirQuality && returnedAirQualityAt == previousAirQualityAt
+        ) {
+            answeredAt
+        } else {
+            returnedAirQualityAt ?: previousAirQualityAt
+        }
+        val previousPollenAt = parseTimestamp(previous?.pollenLastUpdated)
+        val returnedPollenAt = data.pollenLastUpdated
+        val pollenAnsweredAt = if (
+            scope.includePollen && returnedPollenAt == previousPollenAt
+        ) {
+            answeredAt
+        } else {
+            returnedPollenAt ?: previousPollenAt
+        }
 
         // The location row keeps its id across a move, so it cannot tell us who these hours
         // belong to. The coordinates the previous fetch recorded on the weather row can.

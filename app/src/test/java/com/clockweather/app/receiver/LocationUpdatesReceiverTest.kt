@@ -61,7 +61,7 @@ class LocationUpdatesReceiverTest {
         } returns entryPoint
 
         mockkObject(WeatherUpdateScheduler)
-        every { WeatherUpdateScheduler.scheduleUserRefresh(any(), any(), any()) } just Runs
+        every { WeatherUpdateScheduler.scheduleRelocationRefresh(any()) } just Runs
     }
 
     @After
@@ -91,12 +91,12 @@ class LocationUpdatesReceiverTest {
     }
 
     @Test
-    fun `significant move enqueues a refresh with passive fix coordinates`() {
+    fun `significant move enqueues relocation refresh`() {
         // Brighton (~75 km from London)
         receiveAndSettle(createLocationIntent(50.8225, -0.1372))
 
         verify(atLeast = 1) {
-            WeatherUpdateScheduler.scheduleUserRefresh(any(), latitude = 50.8225, longitude = -0.1372)
+            WeatherUpdateScheduler.scheduleRelocationRefresh(any())
         }
     }
 
@@ -117,7 +117,7 @@ class LocationUpdatesReceiverTest {
         receiveAndSettle(createLocationIntent(51.5076, -0.1280))
 
         coVerify(exactly = 0) { locationRepo.saveLocation(any()) }
-        verify(exactly = 0) { WeatherUpdateScheduler.scheduleUserRefresh(any()) }
+        verify(exactly = 0) { WeatherUpdateScheduler.scheduleRelocationRefresh(any()) }
     }
 
     @Test
@@ -142,6 +142,40 @@ class LocationUpdatesReceiverTest {
         receiveAndSettle(Intent(LocationUpdatesReceiver.ACTION_LOCATION_UPDATE))
 
         coVerify(exactly = 0) { locationRepo.saveLocation(any()) }
-        verify(exactly = 0) { WeatherUpdateScheduler.scheduleUserRefresh(any()) }
+        verify(exactly = 0) { WeatherUpdateScheduler.scheduleRelocationRefresh(any()) }
+    }
+
+    /**
+     * Recording the fix is storage work that runs before the request is enqueued, and the
+     * request carries no coordinates of its own any more. An unguarded throw here would skip
+     * scheduling entirely, so the relocation would go unnoticed until the next periodic run —
+     * a silent failure, because nothing else reports that the move was seen and dropped.
+     */
+    @Test
+    fun `a storage failure while recording the fix still enqueues the refresh`() {
+        every { entryPoint.dataStore() } throws RuntimeException("datastore unavailable")
+
+        receiveAndSettle(createLocationIntent(50.8225, -0.1372))
+
+        verify(atLeast = 1) { WeatherUpdateScheduler.scheduleRelocationRefresh(any()) }
+    }
+
+    /**
+     * The guard must not swallow cancellation: the surrounding withTimeout enforces the
+     * broadcast budget by cancelling this coroutine, and catching that would defeat it.
+     */
+    @Test
+    fun `a cancelled recording still releases the broadcast`() = runTest {
+        every { entryPoint.dataStore() } throws kotlinx.coroutines.CancellationException("stopped")
+
+        val receiver = spyk(LocationUpdatesReceiver(StandardTestDispatcher(testScheduler)))
+        val pendingResult = mockk<BroadcastReceiver.PendingResult>(relaxed = true)
+        every { receiver.goAsync() } returns pendingResult
+
+        receiver.onReceive(context, createLocationIntent(50.8225, -0.1372))
+        advanceUntilIdle()
+
+        verify(atLeast = 1) { pendingResult.finish() }
+        verify(exactly = 0) { WeatherUpdateScheduler.scheduleRelocationRefresh(any()) }
     }
 }

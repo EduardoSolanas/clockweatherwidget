@@ -10,6 +10,7 @@ import com.clockweather.app.worker.WeatherRefreshLocationResolver
 import com.clockweather.app.worker.WeatherUpdateScheduler
 import com.google.android.gms.location.LocationResult
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -67,25 +68,29 @@ class LocationUpdatesReceiver(
                             TAG,
                             "Relocation detected via passive fix (>=5km from ${currentLocation.name}): scheduling refresh"
                         )
-                        // Recorded before the request is enqueued, because the request may be
-                        // dropped by KEEP while an earlier one is still queued. The store keeps
-                        // the newest fix so whichever request does run acts on this one.
-                        LatestLocationFixStore.record(
-                            entryPoint.dataStore(),
-                            latitude = fix.latitude,
-                            longitude = fix.longitude,
-                            fixTimeMs = fix.time,
-                        )
+                        // Recorded before the request is enqueued, because the request carries no
+                        // coordinates of its own: the store is where the worker reads them. The
+                        // write is guarded so a storage failure cannot swallow the refresh —
+                        // without it, a throw here would skip scheduling entirely and the
+                        // relocation would go unnoticed until the next periodic run.
+                        try {
+                            LatestLocationFixStore.record(
+                                entryPoint.dataStore(),
+                                latitude = fix.latitude,
+                                longitude = fix.longitude,
+                                fixTimeMs = fix.time,
+                            )
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to record the passive fix", e)
+                        }
                         // Hand the whole update to the worker, which resolves the city name and
                         // the weather for the new coordinates together. Persisting coordinates
                         // here would leave the row naming one city while pointing at another,
                         // and that survives every later worker run whose own fix comes back
                         // null — the widget would read "London" over Brighton's temperature.
-                        WeatherUpdateScheduler.scheduleUserRefresh(
-                            context,
-                            latitude = fix.latitude,
-                            longitude = fix.longitude
-                        )
+                        WeatherUpdateScheduler.scheduleRelocationRefresh(context)
                     }
                 }
             } catch (e: Throwable) {
