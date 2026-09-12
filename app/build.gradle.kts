@@ -34,12 +34,12 @@ val admobInterstitialAdUnitId: String = System.getenv("ADMOB_INTERSTITIAL_AD_UNI
 
 android {
     namespace = "com.clockweather.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.clockweather.app"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         
         val vMajor = project.property("VERSION_MAJOR").toString()
         val vMinor = project.property("VERSION_MINOR").toString()

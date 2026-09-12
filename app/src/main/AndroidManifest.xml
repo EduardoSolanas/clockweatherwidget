@@ -32,7 +32,7 @@
         android:supportsRtl="true"
         android:localeConfig="@xml/locale_config"
         android:theme="@style/Theme.ClockWeatherWidget"
-        tools:targetApi="35">
+        tools:targetApi="36">
 
         <!-- Google AdMob Application ID -->
         <meta-data
