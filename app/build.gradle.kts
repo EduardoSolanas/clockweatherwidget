@@ -8,29 +8,37 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
-val googleWeatherApiKey: String = System.getenv("GOOGLE_WEATHER_API_KEY")
-    ?: Properties().also { props ->
-        val f = rootProject.file("local.properties")
-        if (f.exists()) props.load(f.inputStream())
-    }.getProperty("GOOGLE_WEATHER_API_KEY", "")
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
 
-val defaultWeatherProvider: String = System.getenv("DEFAULT_WEATHER_PROVIDER")
-    ?: Properties().also { props ->
-        val f = rootProject.file("local.properties")
-        if (f.exists()) props.load(f.inputStream())
-    }.getProperty("DEFAULT_WEATHER_PROVIDER", "GOOGLE")
+/**
+ * Resolves a build secret from the environment, then local.properties, then [default].
+ *
+ * Blank counts as absent at every level. A GitHub secret that was never created still reaches
+ * Gradle: the workflow expands it to an empty string rather than leaving the variable unset, so
+ * a plain `?:` keeps that empty value and ships it. An empty AdMob id is fatal -- the SDK
+ * rejects it while content providers are installed, which is before Application.onCreate, so
+ * the app, the widget provider and the worker all die on every process start.
+ */
+fun resolveBuildSecret(name: String, default: String): String =
+    System.getenv(name)?.takeIf { it.isNotBlank() }
+        ?: localProperties.getProperty(name)?.takeIf { it.isNotBlank() }
+        ?: default
 
-val admobAppId: String = System.getenv("ADMOB_APP_ID")
-    ?: Properties().also { props ->
-        val f = rootProject.file("local.properties")
-        if (f.exists()) props.load(f.inputStream())
-    }.getProperty("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713") // Google sample app ID
+val googleWeatherApiKey: String = resolveBuildSecret("GOOGLE_WEATHER_API_KEY", "")
 
-val admobInterstitialAdUnitId: String = System.getenv("ADMOB_INTERSTITIAL_AD_UNIT_ID")
-    ?: Properties().also { props ->
-        val f = rootProject.file("local.properties")
-        if (f.exists()) props.load(f.inputStream())
-    }.getProperty("ADMOB_INTERSTITIAL_AD_UNIT_ID", "ca-app-pub-3940256099942544/1033173712") // Google sample interstitial ID
+val defaultWeatherProvider: String = resolveBuildSecret("DEFAULT_WEATHER_PROVIDER", "GOOGLE")
+
+// Google's sample ids are valid, show test ads, and earn nothing. They keep a misconfigured
+// build runnable instead of crash-on-launch; AdMobConfigurationTest is what keeps a blank id
+// from reaching the Play Store.
+val admobAppId: String =
+    resolveBuildSecret("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713")
+
+val admobInterstitialAdUnitId: String =
+    resolveBuildSecret("ADMOB_INTERSTITIAL_AD_UNIT_ID", "ca-app-pub-3940256099942544/1033173712")
 
 android {
     namespace = "com.clockweather.app"
