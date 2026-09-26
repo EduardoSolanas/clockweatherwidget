@@ -348,6 +348,45 @@ class GoogleWeatherMapperTest {
         assertTrue(result.hourlyForecasts.isEmpty())
     }
 
+    @Test
+    fun `daily condition and wind come from the day parts Google actually sends`() {
+        // Google's forecast/days items carry condition and wind only inside
+        // daytimeForecast / nighttimeForecast, never at the top level.
+        val json = """
+            {"forecastDays": [{
+              "displayDate": {"year": 2026, "month": 9, "day": 27},
+              "maxTemperature": {"degrees": 22.0},
+              "minTemperature": {"degrees": 11.0},
+              "daytimeForecast": {
+                "weatherCondition": {"type": "CLOUDY"},
+                "precipitation": {"probability": {"percent": 20}},
+                "wind": {"direction": {"degrees": 180}, "speed": {"value": 21.0}}
+              },
+              "nighttimeForecast": {
+                "weatherCondition": {"type": "PARTLY_CLOUDY"},
+                "precipitation": {"probability": {"percent": 10}},
+                "wind": {"direction": {"degrees": 200}, "speed": {"value": 9.0}}
+              }
+            }]}
+        """.trimIndent()
+        val daily = com.squareup.moshi.Moshi.Builder()
+            .addLast(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory())
+            .build()
+            .adapter(GoogleDailyForecastResponseDto::class.java)
+            .fromJson(json)!!
+
+        val day = mapper.mapToWeatherData(
+            current = currentDto(timeZone = "Europe/London"),
+            hourly = null,
+            daily = daily,
+            location = location
+        ).dailyForecasts.single()
+
+        assertEquals(com.clockweather.app.domain.model.WeatherCondition.OVERCAST, day.weatherCondition)
+        assertEquals(21.0, day.windSpeedMax, 0.01)
+        assertEquals(180, day.windDirectionDegrees)
+    }
+
     private fun currentDto(timeZone: String = "UTC") = GoogleCurrentConditionsDto(
         timeZone = GoogleTimeZoneDto(id = timeZone),
         temperature = GoogleTemperatureDto(degrees = 18.0)

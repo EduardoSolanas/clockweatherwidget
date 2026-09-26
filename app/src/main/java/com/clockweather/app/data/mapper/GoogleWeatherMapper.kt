@@ -253,15 +253,17 @@ class GoogleWeatherMapper @Inject constructor() {
             (sunset.toSecondOfDay() - sunrise.toSecondOfDay()).toDouble()
         else 43200.0
 
-        val windDeg = dto.wind?.direction?.degrees?.toInt() ?: 0
+        // Google sends condition and wind only per day part; prefer the daytime half.
+        val day = dto.daytimeForecast
+        val night = dto.nighttimeForecast
+        val conditionType = day?.weatherCondition?.type ?: night?.weatherCondition?.type ?: "CLEAR"
+        val windDeg = (day?.wind?.direction ?: night?.wind?.direction)?.degrees?.toInt() ?: 0
         val humidityMin = dto.humidity?.min ?: 50
         val humidityMax = dto.humidity?.max ?: 50
 
         return DailyForecast(
             date = date,
-            weatherCondition = WeatherCondition.fromGoogleWeatherType(
-                dto.weatherCondition.type, isDay = true
-            ),
+            weatherCondition = WeatherCondition.fromGoogleWeatherType(conditionType, isDay = true),
             temperatureMax = dto.maxTemperature.degrees,
             temperatureMin = dto.minTemperature.degrees,
             feelsLikeMax = dto.feelsLikeMaxTemperature?.degrees ?: dto.maxTemperature.degrees,
@@ -274,7 +276,7 @@ class GoogleWeatherMapper @Inject constructor() {
                 dto.daytimeForecast?.precipitation?.probability?.percent ?: 0,
                 dto.nighttimeForecast?.precipitation?.probability?.percent ?: 0
             ),
-            windSpeedMax = dto.wind?.maxSpeed?.value ?: 0.0,
+            windSpeedMax = maxOf(day?.wind?.speed?.value ?: 0.0, night?.wind?.speed?.value ?: 0.0),
             windDirectionDominant = WindDirection.fromDegrees(windDeg),
             windDirectionDegrees = windDeg,
             uvIndexMax = dto.uvIndex?.toDouble() ?: 0.0,
