@@ -96,7 +96,8 @@ class OpenMeteoWeatherProviderTest {
                 airQualityResponse = airQualityResponse,
                 cachedAirQuality = any(),
                 cachedPollenByDate = any(),
-                cachedPollenLastUpdated = any()
+                cachedPollenLastUpdated = any(),
+                now = any()
             )
         } returns fakeWeatherData
 
@@ -135,7 +136,8 @@ class OpenMeteoWeatherProviderTest {
                 airQualityResponse = airQualityResponse,
                 cachedAirQuality = any(),
                 cachedPollenByDate = any(),
-                cachedPollenLastUpdated = any()
+                cachedPollenLastUpdated = any(),
+                now = any()
             )
         }
     }
@@ -223,7 +225,8 @@ class OpenMeteoWeatherProviderTest {
                 airQualityResponse = null,
                 cachedAirQuality = cachedWeather.airQuality,
                 cachedPollenByDate = any(),
-                cachedPollenLastUpdated = cachedWeather.pollenLastUpdated
+                cachedPollenLastUpdated = cachedWeather.pollenLastUpdated,
+                now = any()
             )
         } returns fakeWeatherData
 
@@ -243,7 +246,8 @@ class OpenMeteoWeatherProviderTest {
                 airQualityResponse = null,
                 cachedAirQuality = cachedWeather.airQuality,
                 cachedPollenByDate = any(),
-                cachedPollenLastUpdated = cachedWeather.pollenLastUpdated
+                cachedPollenLastUpdated = cachedWeather.pollenLastUpdated,
+                now = any()
             )
         }
     }
@@ -333,7 +337,8 @@ class OpenMeteoWeatherProviderTest {
                 airQualityResponse = any(),
                 cachedAirQuality = any(),
                 cachedPollenByDate = any(),
-                cachedPollenLastUpdated = any()
+                cachedPollenLastUpdated = any(),
+                now = any()
             )
         } returns fakeWeatherData
 
@@ -374,7 +379,8 @@ class OpenMeteoWeatherProviderTest {
                 airQualityResponse = null,
                 cachedAirQuality = any(),
                 cachedPollenByDate = any(),
-                cachedPollenLastUpdated = any()
+                cachedPollenLastUpdated = any(),
+                now = any()
             )
         } returns fakeWeatherData
 
@@ -389,7 +395,8 @@ class OpenMeteoWeatherProviderTest {
                 airQualityResponse = null,
                 cachedAirQuality = any(),
                 cachedPollenByDate = any(),
-                cachedPollenLastUpdated = any()
+                cachedPollenLastUpdated = any(),
+                now = any()
             )
         }
     }

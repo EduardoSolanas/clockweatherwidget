@@ -3,6 +3,7 @@ package com.clockweather.app.data.mapper
 import com.clockweather.app.data.remote.dto.google.GoogleCurrentConditionsDto
 import com.clockweather.app.data.remote.dto.google.GoogleDailyForecastDto
 import com.clockweather.app.data.remote.dto.google.GoogleDailyForecastResponseDto
+import com.clockweather.app.data.remote.dto.google.GoogleDistanceDto
 import com.clockweather.app.data.remote.dto.google.GoogleHourlyForecastDto
 import com.clockweather.app.data.remote.dto.google.GoogleHourlyForecastResponseDto
 import com.clockweather.app.data.remote.dto.google.GooglePollenDayInfoDto
@@ -174,7 +175,7 @@ class GoogleWeatherMapper @Inject constructor() {
         return CurrentWeather(
             temperature = dto.temperature.degrees,
             feelsLikeTemperature = dto.feelsLikeTemperature.degrees,
-            humidity = dto.humidity,
+            humidity = dto.relativeHumidity,
             dewPoint = dto.dewPoint?.degrees ?: 0.0,
             precipitation = dto.precipitation?.qpf?.quantity ?: 0.0,
             precipitationProbability = dto.precipitation?.probability?.percent ?: 0,
@@ -182,12 +183,12 @@ class GoogleWeatherMapper @Inject constructor() {
                 dto.weatherCondition.type, dto.isDaytime
             ),
             isDay = dto.isDaytime,
-            pressure = dto.pressure?.meanSeaLevelMillibars ?: 1013.25,
+            pressure = dto.airPressure?.meanSeaLevelMillibars ?: 1013.25,
             windSpeed = dto.wind?.speed?.value ?: 0.0,
             windDirection = WindDirection.fromDegrees(windDeg),
             windDirectionDegrees = windDeg,
             windGusts = dto.wind?.gust?.value ?: 0.0,
-            visibility = dto.visibility?.distance ?: 10000.0,
+            visibility = visibilityMeters(dto.visibility),
             uvIndex = dto.uvIndex.toDouble(),
             cloudCover = dto.cloudCover,
             lastUpdated = lastUpdated
@@ -216,20 +217,27 @@ class GoogleWeatherMapper @Inject constructor() {
             dateTime = dateTime,
             temperature = dto.temperature.degrees,
             feelsLike = dto.feelsLikeTemperature?.degrees ?: dto.temperature.degrees,
-            humidity = dto.humidity,
+            humidity = dto.relativeHumidity,
             dewPoint = dto.dewPoint?.degrees ?: 0.0,
             precipitationProbability = dto.precipitation?.probability?.percent ?: 0,
             weatherCondition = WeatherCondition.fromGoogleWeatherType(
                 dto.weatherCondition.type, dto.isDaytime
             ),
             isDay = dto.isDaytime,
-            pressure = dto.pressure?.meanSeaLevelMillibars ?: 1013.25,
+            pressure = dto.airPressure?.meanSeaLevelMillibars ?: 1013.25,
             windSpeed = dto.wind?.speed?.value ?: 0.0,
             windDirection = WindDirection.fromDegrees(windDeg),
             windDirectionDegrees = windDeg,
-            visibility = dto.visibility?.distance ?: 10000.0,
+            visibility = visibilityMeters(dto.visibility),
             uvIndex = dto.uvIndex?.toDouble() ?: 0.0
         )
+    }
+
+    /** Domain visibility is in meters; Google reports kilometers or miles. */
+    private fun visibilityMeters(dto: GoogleDistanceDto?): Double = when {
+        dto == null -> 10000.0
+        dto.unit == "MILES" -> dto.distance * 1609.344
+        else -> dto.distance * 1000.0
     }
 
     private fun parseGoogleOffset(value: String): ZoneOffset {
@@ -253,13 +261,12 @@ class GoogleWeatherMapper @Inject constructor() {
             (sunset.toSecondOfDay() - sunrise.toSecondOfDay()).toDouble()
         else 43200.0
 
-        // Google sends condition and wind only per day part; prefer the daytime half.
+        // Google sends condition, wind, rain, UV and humidity only per day part; prefer the daytime half.
         val day = dto.daytimeForecast
         val night = dto.nighttimeForecast
-        val conditionType = day?.weatherCondition?.type ?: night?.weatherCondition?.type ?: "CLEAR"
+        val conditionType = day?.weatherCondition?.type ?: night?.weatherCondition?.type ?: "TYPE_UNSPECIFIED"
         val windDeg = (day?.wind?.direction ?: night?.wind?.direction)?.degrees?.toInt() ?: 0
-        val humidityMin = dto.humidity?.min ?: 50
-        val humidityMax = dto.humidity?.max ?: 50
+        val humidities = listOfNotNull(day?.relativeHumidity, night?.relativeHumidity)
 
         return DailyForecast(
             date = date,
@@ -271,7 +278,8 @@ class GoogleWeatherMapper @Inject constructor() {
             sunrise = sunrise,
             sunset = sunset,
             daylightDurationSeconds = daylightSeconds,
-            precipitationSum = dto.precipitation?.qpf?.quantity ?: 0.0,
+            precipitationSum = (day?.precipitation?.qpf?.quantity ?: 0.0) +
+                (night?.precipitation?.qpf?.quantity ?: 0.0),
             precipitationProbability = maxOf(
                 dto.daytimeForecast?.precipitation?.probability?.percent ?: 0,
                 dto.nighttimeForecast?.precipitation?.probability?.percent ?: 0
@@ -279,8 +287,8 @@ class GoogleWeatherMapper @Inject constructor() {
             windSpeedMax = maxOf(day?.wind?.speed?.value ?: 0.0, night?.wind?.speed?.value ?: 0.0),
             windDirectionDominant = WindDirection.fromDegrees(windDeg),
             windDirectionDegrees = windDeg,
-            uvIndexMax = dto.uvIndex?.toDouble() ?: 0.0,
-            averageHumidity = (humidityMin + humidityMax) / 2,
+            uvIndexMax = maxOf(day?.uvIndex ?: 0, night?.uvIndex ?: 0).toDouble(),
+            averageHumidity = if (humidities.isEmpty()) 50 else humidities.average().toInt(),
             averagePressure = 1013.25, // Google daily forecast does not include pressure
             pollen = pollen
         )

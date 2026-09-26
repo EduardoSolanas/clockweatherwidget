@@ -19,8 +19,8 @@ data class GoogleSpeedDto(
 
 @JsonClass(generateAdapter = true)
 data class GoogleDistanceDto(
-    val distance: Double = 10000.0,
-    val unit: String = "METERS"
+    val distance: Double = 0.0,
+    val unit: String = "KILOMETERS" // Google reports KILOMETERS or MILES, never meters
 )
 
 @JsonClass(generateAdapter = true)
@@ -42,7 +42,7 @@ data class GoogleTextDto(
 
 @JsonClass(generateAdapter = true)
 data class GoogleConditionTypeDto(
-    val type: String = "CLEAR",
+    val type: String = "TYPE_UNSPECIFIED",
     val description: GoogleTextDto? = null,
     val iconBaseUri: String? = null
 )
@@ -97,11 +97,11 @@ data class GoogleCurrentConditionsDto(
     val dewPoint: GoogleTemperatureDto? = null,
     val heatIndex: GoogleTemperatureDto? = null,
     val windChill: GoogleTemperatureDto? = null,
-    val humidity: Int = 0,
+    val relativeHumidity: Int = 0,
     val wind: GoogleWindDto? = null,
     val visibility: GoogleDistanceDto? = null,
     val cloudCover: Int = 0,
-    val pressure: GooglePressureDto? = null,
+    val airPressure: GooglePressureDto? = null,
     val precipitation: GooglePrecipitationDto? = null,
     val uvIndex: Int = 0,
     val thunderstormProbability: Int? = null
@@ -130,11 +130,11 @@ data class GoogleHourlyForecastDto(
     val temperature: GoogleTemperatureDto = GoogleTemperatureDto(),
     val feelsLikeTemperature: GoogleTemperatureDto? = null,
     val dewPoint: GoogleTemperatureDto? = null,
-    val humidity: Int = 0,
+    val relativeHumidity: Int = 0,
     val wind: GoogleWindDto? = null,
     val visibility: GoogleDistanceDto? = null,
     val cloudCover: Int? = null,
-    val pressure: GooglePressureDto? = null,
+    val airPressure: GooglePressureDto? = null,
     val precipitation: GooglePrecipitationDto? = null,
     val uvIndex: Int? = null,
     val thunderstormProbability: Int? = null
@@ -162,17 +162,13 @@ data class GoogleSunEventsDto(
 )
 
 @JsonClass(generateAdapter = true)
-data class GoogleHumidityRangeDto(
-    val min: Int? = null,
-    val max: Int? = null
-)
-
-@JsonClass(generateAdapter = true)
 data class GooglePartialDayForecastDto(
     val weatherCondition: GoogleConditionTypeDto? = null,
     val cloudCover: Int? = null,
     val precipitation: GooglePrecipitationDto? = null,
-    val wind: GoogleWindDto? = null
+    val wind: GoogleWindDto? = null,
+    val relativeHumidity: Int? = null,
+    val uvIndex: Int? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -184,9 +180,6 @@ data class GoogleDailyForecastDto(
     val minTemperature: GoogleTemperatureDto = GoogleTemperatureDto(),
     val feelsLikeMaxTemperature: GoogleTemperatureDto? = null,
     val feelsLikeMinTemperature: GoogleTemperatureDto? = null,
-    val precipitation: GooglePrecipitationDto? = null,
-    val uvIndex: Int? = null,
-    val humidity: GoogleHumidityRangeDto? = null,
     val daytimeForecast: GooglePartialDayForecastDto? = null,
     val nighttimeForecast: GooglePartialDayForecastDto? = null
 )

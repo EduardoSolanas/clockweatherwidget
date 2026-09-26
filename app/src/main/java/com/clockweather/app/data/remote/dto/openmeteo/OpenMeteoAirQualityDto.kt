@@ -13,7 +13,6 @@ data class OpenMeteoAirQualityHourlyDto(
     @Json(name = "sulphur_dioxide") val sulphurDioxide: List<Double?>? = null,
     @Json(name = "ozone") val ozone: List<Double?>? = null,
     @Json(name = "us_aqi") val usAqi: List<Int?>? = null,
-    @Json(name = "european_aqi") val europeanAqi: List<Int?>? = null,
     // Pollen variables (grains/m³)
     @Json(name = "alder_pollen") val alderPollen: List<Double?>? = null,
     @Json(name = "birch_pollen") val birchPollen: List<Double?>? = null,

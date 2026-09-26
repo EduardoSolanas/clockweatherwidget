@@ -18,11 +18,15 @@ import com.clockweather.app.domain.model.PollenType
 import com.clockweather.app.domain.model.WeatherCondition
 import com.clockweather.app.domain.model.WeatherData
 import com.clockweather.app.domain.model.WindDirection
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 class WeatherDtoMapper @Inject constructor() {
 
@@ -36,7 +40,8 @@ class WeatherDtoMapper @Inject constructor() {
         airQualityResponse: OpenMeteoAirQualityResponseDto? = null,
         cachedAirQuality: AirQuality? = null,
         cachedPollenByDate: Map<LocalDate, PollenData?> = emptyMap(),
-        cachedPollenLastUpdated: LocalDateTime? = null
+        cachedPollenLastUpdated: LocalDateTime? = null,
+        now: Instant = Instant.now()
     ): WeatherData {
         // Stamp fetch time so the 10-min TTL is relative to when we fetched, not the API model slot
         // (Open-Meteo's current.time can be 15+ min behind actual fetch time).
@@ -44,7 +49,7 @@ class WeatherDtoMapper @Inject constructor() {
         val currentWeather = mapCurrentWeather(requireNotNull(response.current) { "current weather is null" }, fetchTime)
         val hourlyForecasts = response.hourly?.let { mapHourlyForecasts(it) } ?: emptyList()
         val dailyForecasts = response.daily?.let { mapDailyForecasts(it, hourlyForecasts, airQualityResponse, cachedPollenByDate) } ?: emptyList()
-        val airQuality = mapAirQuality(airQualityResponse, fetchTime) ?: cachedAirQuality
+        val airQuality = mapAirQuality(airQualityResponse, fetchTime, now) ?: cachedAirQuality
         val pollenLastUpdated = if (airQualityResponse != null) fetchTime else cachedPollenLastUpdated
 
         return WeatherData(
@@ -81,23 +86,32 @@ class WeatherDtoMapper @Inject constructor() {
     }
 
     private fun mapHourlyForecasts(dto: HourlyWeatherDto): List<HourlyForecast> {
-        return dto.time.indices.map { i ->
+        return dto.time.indices.mapNotNull { i ->
+            // Hours past the model horizon arrive as nulls: drop them rather than invent a forecast.
+            val temperature = dto.temperature.getOrNull(i) ?: return@mapNotNull null
+            val feelsLike = dto.apparentTemperature.getOrNull(i) ?: return@mapNotNull null
+            val humidity = dto.relativeHumidity.getOrNull(i) ?: return@mapNotNull null
+            val dewPoint = dto.dewPoint.getOrNull(i) ?: return@mapNotNull null
+            val weatherCode = dto.weatherCode.getOrNull(i) ?: return@mapNotNull null
+            val pressure = dto.pressureMsl.getOrNull(i) ?: return@mapNotNull null
+            val windSpeed = dto.windSpeed.getOrNull(i) ?: return@mapNotNull null
+            val windDirection = dto.windDirection.getOrNull(i) ?: return@mapNotNull null
             val isDay = dto.isDay[i] == 1
             HourlyForecast(
                 dateTime = LocalDateTime.parse(dto.time[i], dateTimeFormatter),
-                temperature = dto.temperature[i],
-                feelsLike = dto.apparentTemperature[i],
-                humidity = dto.relativeHumidity[i],
-                dewPoint = dto.dewPoint[i],
-                precipitationProbability = dto.precipitationProbability.getOrElse(i) { 0 },
-                weatherCondition = WeatherCondition.fromCode(dto.weatherCode[i], isDay),
+                temperature = temperature,
+                feelsLike = feelsLike,
+                humidity = humidity,
+                dewPoint = dewPoint,
+                precipitationProbability = dto.precipitationProbability.getOrNull(i) ?: 0,
+                weatherCondition = WeatherCondition.fromCode(weatherCode, isDay),
                 isDay = isDay,
-                pressure = dto.pressureMsl[i],
-                windSpeed = dto.windSpeed[i],
-                windDirection = WindDirection.fromDegrees(dto.windDirection[i]),
-                windDirectionDegrees = dto.windDirection[i],
-                visibility = dto.visibility[i],
-                uvIndex = dto.uvIndex.getOrElse(i) { 0.0 }
+                pressure = pressure,
+                windSpeed = windSpeed,
+                windDirection = WindDirection.fromDegrees(windDirection),
+                windDirectionDegrees = windDirection,
+                visibility = dto.visibility.getOrNull(i) ?: 10000.0,
+                uvIndex = dto.uvIndex.getOrNull(i) ?: 0.0
             )
         }
     }
@@ -109,7 +123,14 @@ class WeatherDtoMapper @Inject constructor() {
         cachedPollenByDate: Map<LocalDate, PollenData?> = emptyMap()
     ): List<DailyForecast> {
         val hourlyAirQuality = airQualityResponse?.hourly
-        return dto.time.indices.map { i ->
+        return dto.time.indices.mapNotNull { i ->
+            // Days past the model horizon arrive as nulls: drop them rather than invent a forecast.
+            val weatherCode = dto.weatherCode.getOrNull(i) ?: return@mapNotNull null
+            val temperatureMax = dto.temperatureMax.getOrNull(i) ?: return@mapNotNull null
+            val temperatureMin = dto.temperatureMin.getOrNull(i) ?: return@mapNotNull null
+            val feelsLikeMax = dto.apparentTemperatureMax.getOrNull(i) ?: return@mapNotNull null
+            val feelsLikeMin = dto.apparentTemperatureMin.getOrNull(i) ?: return@mapNotNull null
+            val windDirection = dto.windDirectionDominant.getOrNull(i) ?: 0
             val date = LocalDate.parse(dto.time[i], dateFormatter)
 
             val dayHourly = hourlyForecasts.filter { it.dateTime.toLocalDate() == date }
@@ -127,20 +148,20 @@ class WeatherDtoMapper @Inject constructor() {
 
             DailyForecast(
                 date = date,
-                weatherCondition = WeatherCondition.fromCode(dto.weatherCode[i], isDay = true),
-                temperatureMax = dto.temperatureMax[i],
-                temperatureMin = dto.temperatureMin[i],
-                feelsLikeMax = dto.apparentTemperatureMax[i],
-                feelsLikeMin = dto.apparentTemperatureMin[i],
+                weatherCondition = WeatherCondition.fromCode(weatherCode, isDay = true),
+                temperatureMax = temperatureMax,
+                temperatureMin = temperatureMin,
+                feelsLikeMax = feelsLikeMax,
+                feelsLikeMin = feelsLikeMin,
                 sunrise = sunrise,
                 sunset = sunset,
                 daylightDurationSeconds = dto.daylightDuration[i],
-                precipitationSum = dto.precipitationSum[i],
-                precipitationProbability = dto.precipitationProbabilityMax[i],
-                windSpeedMax = dto.windSpeedMax[i],
-                windDirectionDominant = WindDirection.fromDegrees(dto.windDirectionDominant[i]),
-                windDirectionDegrees = dto.windDirectionDominant[i],
-                uvIndexMax = dto.uvIndexMax[i],
+                precipitationSum = dto.precipitationSum.getOrNull(i) ?: 0.0,
+                precipitationProbability = dto.precipitationProbabilityMax.getOrNull(i) ?: 0,
+                windSpeedMax = dto.windSpeedMax.getOrNull(i) ?: 0.0,
+                windDirectionDominant = WindDirection.fromDegrees(windDirection),
+                windDirectionDegrees = windDirection,
+                uvIndexMax = dto.uvIndexMax.getOrNull(i) ?: 0.0,
                 averageHumidity = avgHumidity,
                 averagePressure = avgPressure,
                 pollen = pollen
@@ -148,18 +169,24 @@ class WeatherDtoMapper @Inject constructor() {
         }
     }
 
-    private fun mapAirQuality(dto: OpenMeteoAirQualityResponseDto?, fetchTime: LocalDateTime = LocalDateTime.now()): AirQuality? {
+    private fun mapAirQuality(dto: OpenMeteoAirQualityResponseDto?, fetchTime: LocalDateTime, now: Instant): AirQuality? {
         val hourly = dto?.hourly ?: return null
         if (hourly.time.isEmpty()) return null
 
-        val pm25 = hourly.pm25?.filterNotNull()?.maxOrNull() ?: 0.0
-        val pm10 = hourly.pm10?.filterNotNull()?.maxOrNull() ?: 0.0
-        val co = hourly.carbonMonoxide?.filterNotNull()?.maxOrNull() ?: 0.0
-        val no2 = hourly.nitrogenDioxide?.filterNotNull()?.maxOrNull() ?: 0.0
-        val so2 = hourly.sulphurDioxide?.filterNotNull()?.maxOrNull() ?: 0.0
-        val o3 = hourly.ozone?.filterNotNull()?.maxOrNull() ?: 0.0
-        val rawUsAqi = hourly.usAqi?.filterNotNull()?.maxOrNull() ?: 0
-        val rawDefra = hourly.europeanAqi?.filterNotNull()?.maxOrNull() ?: 1
+        // Current conditions: the latest hour not after now, in the location's own zone.
+        val zone = runCatching { ZoneId.of(dto.timezone) }.getOrElse { ZoneOffset.UTC }
+        val currentHour = LocalDateTime.ofInstant(now, zone)
+        val i = hourly.time.indexOfLast { time ->
+            runCatching { !LocalDateTime.parse(time, dateTimeFormatter).isAfter(currentHour) }.getOrDefault(false)
+        }.coerceAtLeast(0)
+
+        val pm25 = hourly.pm25?.getOrNull(i) ?: 0.0
+        val pm10 = hourly.pm10?.getOrNull(i) ?: 0.0
+        val co = hourly.carbonMonoxide?.getOrNull(i) ?: 0.0
+        val no2 = hourly.nitrogenDioxide?.getOrNull(i) ?: 0.0
+        val so2 = hourly.sulphurDioxide?.getOrNull(i) ?: 0.0
+        val o3 = hourly.ozone?.getOrNull(i) ?: 0.0
+        val rawUsAqi = hourly.usAqi?.getOrNull(i) ?: 0
 
         if (pm25 == 0.0 && pm10 == 0.0 && co == 0.0 && no2 == 0.0 && so2 == 0.0 && o3 == 0.0 && rawUsAqi == 0) {
             return null
@@ -182,8 +209,27 @@ class WeatherDtoMapper @Inject constructor() {
             pm25 = pm25,
             pm10 = pm10,
             usEpaIndex = usEpaIndex,
-            gbDefraIndex = rawDefra.coerceIn(1, 10),
+            gbDefraIndex = daqiIndex(pm25 = pm25, pm10 = pm10, no2 = no2, o3 = o3, so2 = so2),
             lastUpdated = fetchTime
+        )
+    }
+
+    /**
+     * UK Daily Air Quality Index: the worst band across pollutants, using DEFRA's
+     * upper bounds for indices 1-9 in µg/m³ (https://uk-air.defra.gov.uk/air-pollution/daqi).
+     * DEFRA bands running means; hourly values are the closest Open-Meteo offers.
+     */
+    private fun daqiIndex(pm25: Double, pm10: Double, no2: Double, o3: Double, so2: Double): Int {
+        fun band(value: Double, upperBounds: IntArray): Int {
+            val rounded = value.roundToInt()
+            return upperBounds.indexOfFirst { rounded <= it }.let { if (it < 0) 10 else it + 1 }
+        }
+        return maxOf(
+            band(pm25, intArrayOf(11, 23, 35, 41, 47, 53, 58, 64, 70)),
+            band(pm10, intArrayOf(16, 33, 50, 58, 66, 75, 83, 91, 100)),
+            band(no2, intArrayOf(67, 134, 200, 267, 334, 400, 467, 534, 600)),
+            band(o3, intArrayOf(33, 66, 100, 120, 140, 160, 187, 213, 240)),
+            band(so2, intArrayOf(88, 177, 266, 354, 443, 532, 710, 887, 1064))
         )
     }
 

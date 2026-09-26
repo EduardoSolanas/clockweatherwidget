@@ -369,11 +369,7 @@ class GoogleWeatherMapperTest {
               }
             }]}
         """.trimIndent()
-        val daily = com.squareup.moshi.Moshi.Builder()
-            .addLast(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory())
-            .build()
-            .adapter(GoogleDailyForecastResponseDto::class.java)
-            .fromJson(json)!!
+        val daily = parse<GoogleDailyForecastResponseDto>(json)
 
         val day = mapper.mapToWeatherData(
             current = currentDto(timeZone = "Europe/London"),
@@ -386,6 +382,84 @@ class GoogleWeatherMapperTest {
         assertEquals(21.0, day.windSpeedMax, 0.01)
         assertEquals(180, day.windDirectionDegrees)
     }
+
+    @Test
+    fun `daily rain total UV and humidity come from the day parts`() {
+        val daily = parse<GoogleDailyForecastResponseDto>(
+            """
+            {"forecastDays": [{
+              "displayDate": {"year": 2026, "month": 9, "day": 27},
+              "maxTemperature": {"degrees": 22.0},
+              "minTemperature": {"degrees": 11.0},
+              "daytimeForecast": {
+                "relativeHumidity": 60, "uvIndex": 4,
+                "precipitation": {"qpf": {"quantity": 0.8, "unit": "MILLIMETERS"}}
+              },
+              "nighttimeForecast": {
+                "relativeHumidity": 80, "uvIndex": 0,
+                "precipitation": {"qpf": {"quantity": 0.5, "unit": "MILLIMETERS"}}
+              }
+            }]}
+            """.trimIndent()
+        )
+
+        val day = mapper.mapToWeatherData(
+            current = currentDto(timeZone = "Europe/London"),
+            hourly = null,
+            daily = daily,
+            location = location
+        ).dailyForecasts.single()
+
+        assertEquals(1.3, day.precipitationSum, 0.001)
+        assertEquals(4.0, day.uvIndexMax, 0.001)
+        assertEquals(70, day.averageHumidity)
+    }
+
+    @Test
+    fun `current and hourly read Google's humidity pressure and visibility fields`() {
+        val current = parse<GoogleCurrentConditionsDto>(
+            """
+            {"timeZone": {"id": "Europe/London"},
+             "temperature": {"degrees": 18.0},
+             "relativeHumidity": 72,
+             "airPressure": {"meanSeaLevelMillibars": 1004.5},
+             "visibility": {"distance": 16, "unit": "KILOMETERS"}}
+            """.trimIndent()
+        )
+        val hourly = parse<com.clockweather.app.data.remote.dto.google.GoogleHourlyForecastResponseDto>(
+            """
+            {"forecastHours": [{
+              "interval": {"startTime": "2026-09-27T09:00:00Z"},
+              "temperature": {"degrees": 15.0},
+              "relativeHumidity": 81,
+              "airPressure": {"meanSeaLevelMillibars": 1009.0},
+              "visibility": {"distance": 10, "unit": "MILES"}
+            }]}
+            """.trimIndent()
+        )
+
+        val result = mapper.mapToWeatherData(
+            current = current,
+            hourly = hourly,
+            daily = GoogleDailyForecastResponseDto(),
+            location = location
+        )
+
+        assertEquals(72, result.currentWeather.humidity)
+        assertEquals(1004.5, result.currentWeather.pressure, 0.001)
+        assertEquals(16_000.0, result.currentWeather.visibility, 0.001)
+        val hour = result.hourlyForecasts.single()
+        assertEquals(81, hour.humidity)
+        assertEquals(1009.0, hour.pressure, 0.001)
+        assertEquals(16_093.44, hour.visibility, 0.01)
+    }
+
+    private inline fun <reified T> parse(json: String): T =
+        com.squareup.moshi.Moshi.Builder()
+            .addLast(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory())
+            .build()
+            .adapter(T::class.java)
+            .fromJson(json)!!
 
     private fun currentDto(timeZone: String = "UTC") = GoogleCurrentConditionsDto(
         timeZone = GoogleTimeZoneDto(id = timeZone),

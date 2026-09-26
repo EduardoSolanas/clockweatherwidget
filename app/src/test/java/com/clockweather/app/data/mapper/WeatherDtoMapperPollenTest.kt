@@ -101,7 +101,6 @@ class WeatherDtoMapperPollenTest {
                 sulphurDioxide = listOf(2.0, 4.0, 3.0),
                 ozone = listOf(45.0, 65.0, 55.0),
                 usAqi = listOf(35, 45, 40),
-                europeanAqi = listOf(1, 2, 2),
                 // Pollen values (grains/m³)
                 grassPollen = listOf(5.0, 35.0, 20.0),      // Peak 35 -> Moderate (index 3)
                 birchPollen = listOf(0.0, 150.0, 80.0),     // Peak 150 -> High (index 4)
@@ -112,7 +111,10 @@ class WeatherDtoMapperPollenTest {
             )
         )
 
-        val weatherData = mapper.mapToWeatherData(weatherResponse, location, airQualityDto)
+        val weatherData = mapper.mapToWeatherData(
+            weatherResponse, location, airQualityDto,
+            now = java.time.Instant.parse("2026-08-18T10:00:00Z") // 12:00 in Berlin
+        )
 
         // Check Air Quality mapped on WeatherData
         assertNotNull(weatherData.airQuality)
@@ -187,7 +189,6 @@ class WeatherDtoMapperPollenTest {
                 sulphurDioxide = listOf(4.0),
                 ozone = listOf(65.0),
                 usAqi = listOf(45),
-                europeanAqi = listOf(2),
                 grassPollen = listOf(35.0)
             )
         )

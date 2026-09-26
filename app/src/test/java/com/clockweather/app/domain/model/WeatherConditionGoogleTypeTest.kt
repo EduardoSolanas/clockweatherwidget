@@ -1,0 +1,41 @@
+package com.clockweather.app.domain.model
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class WeatherConditionGoogleTypeTest {
+
+    // Every WeatherCondition.Type value Google documents that brings rain, snow, hail or storms.
+    // https://developers.google.com/maps/documentation/weather/reference/rest/v1/WeatherCondition
+    private val wetTypes = listOf(
+        "WIND_AND_RAIN", "LIGHT_RAIN_SHOWERS", "CHANCE_OF_SHOWERS", "SCATTERED_SHOWERS",
+        "RAIN_SHOWERS", "HEAVY_RAIN_SHOWERS", "LIGHT_TO_MODERATE_RAIN", "MODERATE_TO_HEAVY_RAIN",
+        "RAIN", "LIGHT_RAIN", "HEAVY_RAIN", "RAIN_PERIODICALLY_HEAVY",
+        "LIGHT_SNOW_SHOWERS", "CHANCE_OF_SNOW_SHOWERS", "SCATTERED_SNOW_SHOWERS", "SNOW_SHOWERS",
+        "HEAVY_SNOW_SHOWERS", "LIGHT_TO_MODERATE_SNOW", "MODERATE_TO_HEAVY_SNOW", "SNOW",
+        "LIGHT_SNOW", "HEAVY_SNOW", "SNOWSTORM", "SNOW_PERIODICALLY_HEAVY", "HEAVY_SNOW_STORM",
+        "BLOWING_SNOW", "RAIN_AND_SNOW", "HAIL", "HAIL_SHOWERS",
+        "THUNDERSTORM", "THUNDERSHOWER", "LIGHT_THUNDERSTORM_RAIN", "SCATTERED_THUNDERSTORMS",
+        "HEAVY_THUNDERSTORM"
+    )
+
+    private val dryConditions = setOf(
+        WeatherCondition.CLEAR_DAY, WeatherCondition.CLEAR_NIGHT,
+        WeatherCondition.MAINLY_CLEAR_DAY, WeatherCondition.MAINLY_CLEAR_NIGHT,
+        WeatherCondition.PARTLY_CLOUDY_DAY, WeatherCondition.PARTLY_CLOUDY_NIGHT,
+        WeatherCondition.OVERCAST, WeatherCondition.UNKNOWN
+    )
+
+    @Test
+    fun `every documented wet Google type maps to a wet condition`() {
+        val misses = wetTypes.filter { WeatherCondition.fromGoogleWeatherType(it) in dryConditions }
+        assertTrue("Wet types shown as dry: $misses", misses.isEmpty())
+    }
+
+    @Test
+    fun `unrecognised or unspecified types never show a sun`() {
+        assertEquals(WeatherCondition.OVERCAST, WeatherCondition.fromGoogleWeatherType("TYPE_UNSPECIFIED"))
+        assertEquals(WeatherCondition.OVERCAST, WeatherCondition.fromGoogleWeatherType("SOMETHING_NEW"))
+    }
+}

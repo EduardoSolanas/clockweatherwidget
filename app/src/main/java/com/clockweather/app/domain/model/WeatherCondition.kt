@@ -114,31 +114,40 @@ enum class WeatherCondition(
             "MOSTLY_CLOUDY", "CLOUDY"                            -> OVERCAST
             "WINDY"                                              -> if (isDay) MAINLY_CLEAR_DAY else MAINLY_CLEAR_NIGHT
             "WIND_AND_RAIN"                                      -> RAIN_MODERATE
-            "LIGHT_RAIN"                                         -> RAIN_SLIGHT
+            "LIGHT_RAIN", "LIGHT_TO_MODERATE_RAIN"               -> RAIN_SLIGHT
             "RAIN"                                               -> RAIN_MODERATE
-            "HEAVY_RAIN"                                         -> RAIN_HEAVY
-            "LIGHT_RAIN_SHOWERS", "RAIN_SHOWERS"                 -> RAIN_SHOWER_SLIGHT
+            "HEAVY_RAIN", "MODERATE_TO_HEAVY_RAIN",
+            "RAIN_PERIODICALLY_HEAVY"                            -> RAIN_HEAVY
+            "LIGHT_RAIN_SHOWERS", "RAIN_SHOWERS",
+            "CHANCE_OF_SHOWERS", "SCATTERED_SHOWERS"             -> RAIN_SHOWER_SLIGHT
             "HEAVY_RAIN_SHOWERS"                                 -> RAIN_SHOWER_VIOLENT
             "LIGHT_DRIZZLE", "DRIZZLE"                           -> DRIZZLE_LIGHT
             "HEAVY_DRIZZLE"                                      -> DRIZZLE_DENSE
             "LIGHT_FREEZING_DRIZZLE", "FREEZING_DRIZZLE"         -> FREEZING_DRIZZLE_LIGHT
             "LIGHT_FREEZING_RAIN"                                -> FREEZING_DRIZZLE_HEAVY
             "FREEZING_RAIN"                                      -> FREEZING_RAIN_LIGHT
-            "LIGHT_SNOW", "SNOW_FLURRIES", "FLURRIES"            -> SNOW_SLIGHT
+            "LIGHT_SNOW", "SNOW_FLURRIES", "FLURRIES",
+            "LIGHT_TO_MODERATE_SNOW"                             -> SNOW_SLIGHT
             "SNOW"                                               -> SNOW_MODERATE
-            "HEAVY_SNOW", "BLOWING_SNOW", "BLIZZARD"             -> SNOW_HEAVY
+            "HEAVY_SNOW", "BLOWING_SNOW", "BLIZZARD",
+            "MODERATE_TO_HEAVY_SNOW", "SNOW_PERIODICALLY_HEAVY",
+            "SNOWSTORM", "HEAVY_SNOW_STORM"                      -> SNOW_HEAVY
             "WINTRY_MIX", "MIXED_PRECIPITATION",
             "ICE_PELLETS", "LIGHT_ICE_PELLETS",
-            "HEAVY_ICE_PELLETS", "HAIL", "ICE_CRYSTALS"         -> SNOW_GRAINS
-            "LIGHT_SNOW_SHOWERS"                                 -> SNOW_SHOWER_SLIGHT
+            "HEAVY_ICE_PELLETS", "HAIL", "ICE_CRYSTALS",
+            "HAIL_SHOWERS", "RAIN_AND_SNOW"                      -> SNOW_GRAINS
+            "LIGHT_SNOW_SHOWERS", "CHANCE_OF_SNOW_SHOWERS",
+            "SCATTERED_SNOW_SHOWERS"                             -> SNOW_SHOWER_SLIGHT
             "SNOW_SHOWERS", "HEAVY_SNOW_SHOWERS"                 -> SNOW_SHOWER_HEAVY
             "THUNDERSTORM", "LIGHT_THUNDERSTORM",
-            "HEAVY_THUNDERSTORM"                                 -> THUNDERSTORM
+            "HEAVY_THUNDERSTORM", "THUNDERSHOWER",
+            "LIGHT_THUNDERSTORM_RAIN", "SCATTERED_THUNDERSTORMS" -> THUNDERSTORM
             "THUNDERSTORM_WITH_HAIL", "HAIL_THUNDERSTORM"        -> THUNDERSTORM_HEAVY_HAIL
             "FOG", "LIGHT_FOG", "ICE_FOG"                        -> FOG
             "HAZE", "SMOKE", "DUST", "SAND_STORM"               -> DEPOSITING_RIME_FOG
             "TROPICAL_STORM", "HURRICANE", "TORNADO"             -> THUNDERSTORM_HEAVY_HAIL
-            else                                                 -> if (isDay) MAINLY_CLEAR_DAY else MAINLY_CLEAR_NIGHT
+            // Unknown or TYPE_UNSPECIFIED: a neutral cloud, never a sun that could hide rain.
+            else                                                 -> OVERCAST
         }
     }
 }
