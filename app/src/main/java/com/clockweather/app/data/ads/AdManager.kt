@@ -151,7 +151,7 @@ object AdManager {
         onDismissed: () -> Unit = {}
     ) {
         if (!isEligibleToShowAd(isTester)) {
-            preloadInterstitial(activity.applicationContext)
+            if (!isTester) preloadInterstitial(activity.applicationContext)
             onDismissed()
             return
         }
