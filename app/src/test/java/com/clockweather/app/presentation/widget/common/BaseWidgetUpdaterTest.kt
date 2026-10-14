@@ -444,6 +444,44 @@ class BaseWidgetUpdaterTest {
     }
 
     @Test
+    fun `computeFlipClockFitScale shrinks a tile that would push the weather card out`() {
+        // POCO X3 at font scale 1.25: a ~4x2 widget is 544px tall, the 330px tile plus 236px of
+        // padding, date and weather card leaves only 308px for the clock.
+        assertEquals(
+            308f / 330f,
+            computeFlipClockFitScale(widgetHeightPx = 544f, reservedPx = 236f, tileHeightPx = 330f),
+            0.001f,
+        )
+    }
+
+    @Test
+    fun `computeFlipClockFitScale leaves a tile that already fits alone`() {
+        assertEquals(
+            1f,
+            computeFlipClockFitScale(widgetHeightPx = 900f, reservedPx = 236f, tileHeightPx = 330f),
+            0.001f,
+        )
+    }
+
+    @Test
+    fun `computeFlipClockFitScale keeps the clock readable in a tiny widget`() {
+        assertEquals(
+            0.5f,
+            computeFlipClockFitScale(widgetHeightPx = 300f, reservedPx = 236f, tileHeightPx = 330f),
+            0.001f,
+        )
+    }
+
+    @Test
+    fun `computeFlipClockFitScale ignores a launcher that reports no height`() {
+        assertEquals(
+            1f,
+            computeFlipClockFitScale(widgetHeightPx = 0f, reservedPx = 236f, tileHeightPx = 330f),
+            0.001f,
+        )
+    }
+
+    @Test
     fun `computeFlipTileHeightPx preserves base height at default scales`() {
         // At fontScale=1 and widgetTextScale=1, height equals the base dimen
         assertEquals(252f, computeFlipTileHeightPx(252f, 1f, 1f), 0.001f)

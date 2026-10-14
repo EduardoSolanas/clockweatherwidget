@@ -154,6 +154,24 @@ class WidgetRenderStyleTest {
         )
     }
 
+    /**
+     * Spreading the digits makes the text as wide as the pair plus the tile gap, because the
+     * letter spacing also trails the last glyph. A single-line TextView ellipsizes by default, and
+     * POCO Launcher on Android 12 then truncated "13" to nothing: four blank tiles.
+     */
+    @Test
+    fun `the spanning clock is never ellipsized`() {
+        val rendered = render()
+
+        listOf(R.id.clock_hour, R.id.clock_minute).forEach { id ->
+            assertEquals(
+                "view $id ellipsizes, so a spread that overflows by the tile gap blanks the digits",
+                null,
+                requireNotNull(rendered.findViewById<TextView>(id)).ellipsize,
+            )
+        }
+    }
+
     /** On API 31+ the spanning clock is the one that shows; the clipped per-tile clocks stay hidden. */
     @Test
     fun `the api 31 clock path is the one rendered`() {

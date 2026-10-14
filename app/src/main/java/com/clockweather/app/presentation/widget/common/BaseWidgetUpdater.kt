@@ -206,7 +206,7 @@ abstract class BaseWidgetUpdater(
 
         val tileSizeName = prefs[stringPreferencesKey("clock_tile_size")] ?: "MEDIUM"
         val tileSize = runCatching { ClockTileSize.valueOf(tileSizeName) }.getOrDefault(ClockTileSize.MEDIUM)
-        val clockTextPx = widgetTextPx(
+        val baseClockTextPx = widgetTextPx(
             context.resources,
             WidgetTextRole.clock(tileSize),
             widgetTextScale,
@@ -218,9 +218,21 @@ abstract class BaseWidgetUpdater(
             ClockTileSize.EXTRA_LARGE -> com.clockweather.app.R.dimen.flip_digit_height_xl
         }
         val fontScale = context.resources.configuration.fontScale.takeIf { it > 0f } ?: 1f
-        val heightPx = computeFlipTileHeightPx(
+        val baseHeightPx = computeFlipTileHeightPx(
             context.resources.getDimension(dimHeight), fontScale, widgetTextScale,
         )
+        // Room the rest of the widget needs: padding, the date line and two weather-card lines.
+        val reservedPx = widgetPaddingDp * context.resources.displayMetrics.density * 2 +
+            (widgetTextPx(context.resources, WidgetTextRole.EMPHASIS, widgetTextScale) * 2 +
+                widgetTextPx(context.resources, WidgetTextRole.SECONDARY, widgetTextScale)) * 1.3f
+        val widgetOptions by lazy { appWidgetManager.getAppWidgetOptions(appWidgetId) }
+        val widgetHeightDp = targetHeightDp
+            ?: widgetOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0).toFloat()
+        val fitScale = computeFlipClockFitScale(
+            widgetHeightDp * context.resources.displayMetrics.density, reservedPx, baseHeightPx,
+        )
+        val heightPx = baseHeightPx * fitScale
+        val clockTextPx = baseClockTextPx * fitScale
         val gapPx = context.resources.getDimension(com.clockweather.app.R.dimen.flip_digit_gap)
 
         val views = RemoteViews(context.packageName, layoutResId)
@@ -272,10 +284,11 @@ abstract class BaseWidgetUpdater(
 
         if (android.os.Build.VERSION.SDK_INT >= 31) {
             val colonSize = clockTextPx * 0.8f
+            // The clock views are textStyle="bold"; measure that face, not a faked one, so the
+            // digit centres stay on the tiles whichever monospace font the device ships.
             val paint = android.graphics.Paint().apply {
-                typeface = android.graphics.Typeface.MONOSPACE
+                typeface = android.graphics.Typeface.create(android.graphics.Typeface.MONOSPACE, android.graphics.Typeface.BOLD)
                 textSize = clockTextPx
-                isFakeBoldText = true
             }
             val glyphAdvancePx = paint.measureText("0")
             val colonPaint = android.graphics.Paint().apply {
@@ -287,8 +300,7 @@ abstract class BaseWidgetUpdater(
             val colonMarginPx = gapPx * 2
             val density = context.resources.displayMetrics.density
             val widgetWidthDp = targetWidthDp ?: run {
-                val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
-                options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0).toFloat()
+                widgetOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0).toFloat()
             }
             val widgetWidthPx = if (widgetWidthDp > 0) {
                 widgetWidthDp * density
@@ -612,6 +624,20 @@ internal fun computeFlipTileHeightPx(
     fontScale: Float,
     widgetTextScale: Float,
 ): Float = baseDimenPx * fontScale * widgetTextScale
+
+/**
+ * Tile height scales with the user's font scale but the widget does not, so at large font
+ * scales the clock alone can outgrow the widget and clip the weather card. Returns the factor
+ * (0.5..1) that leaves [reservedPx] for everything else; 1 when the launcher reports no height.
+ */
+internal fun computeFlipClockFitScale(
+    widgetHeightPx: Float,
+    reservedPx: Float,
+    tileHeightPx: Float,
+): Float {
+    if (widgetHeightPx <= 0f || tileHeightPx <= 0f) return 1f
+    return ((widgetHeightPx - reservedPx) / tileHeightPx).coerceIn(0.5f, 1f)
+}
 
 internal fun computeFlipClockLetterSpacing(
     pairWidthPx: Float,
