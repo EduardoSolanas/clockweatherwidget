@@ -2,6 +2,7 @@ package com.clockweather.app.presentation.widget.common
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.util.Log
 import android.util.SizeF
@@ -226,8 +227,11 @@ abstract class BaseWidgetUpdater(
             (widgetTextPx(context.resources, WidgetTextRole.EMPHASIS, widgetTextScale) * 2 +
                 widgetTextPx(context.resources, WidgetTextRole.SECONDARY, widgetTextScale)) * 1.3f
         val widgetOptions by lazy { appWidgetManager.getAppWidgetOptions(appWidgetId) }
-        val widgetHeightDp = targetHeightDp
-            ?: widgetOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0).toFloat()
+        val widgetHeightDp = targetHeightDp ?: currentWidgetHeightDp(
+            minHeightDp = widgetOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0),
+            maxHeightDp = widgetOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0),
+            isPortrait = context.resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE,
+        )
         val fitScale = computeFlipClockFitScale(
             widgetHeightDp * context.resources.displayMetrics.density, reservedPx, baseHeightPx,
         )
@@ -624,6 +628,15 @@ internal fun computeFlipTileHeightPx(
     fontScale: Float,
     widgetTextScale: Float,
 ): Float = baseDimenPx * fontScale * widgetTextScale
+
+/**
+ * AppWidgetManager reports the landscape height as MIN_HEIGHT and the portrait height as
+ * MAX_HEIGHT. Falls back to whichever the launcher gave; 0 when it gave neither.
+ */
+internal fun currentWidgetHeightDp(minHeightDp: Int, maxHeightDp: Int, isPortrait: Boolean): Float {
+    val preferred = if (isPortrait) maxHeightDp else minHeightDp
+    return (if (preferred > 0) preferred else maxOf(minHeightDp, maxHeightDp)).toFloat()
+}
 
 /**
  * Tile height scales with the user's font scale but the widget does not, so at large font

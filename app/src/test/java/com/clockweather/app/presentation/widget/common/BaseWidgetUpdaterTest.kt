@@ -444,6 +444,20 @@ class BaseWidgetUpdaterTest {
     }
 
     @Test
+    fun `widget height in portrait is the launcher max height, not the landscape one`() {
+        // AppWidgetManager reports MIN_HEIGHT for landscape and MAX_HEIGHT for portrait. Using
+        // the landscape value shrank the clock on a tall widget (Pixel) for no reason.
+        assertEquals(300f, currentWidgetHeightDp(minHeightDp = 180, maxHeightDp = 300, isPortrait = true), 0.001f)
+        assertEquals(180f, currentWidgetHeightDp(minHeightDp = 180, maxHeightDp = 300, isPortrait = false), 0.001f)
+    }
+
+    @Test
+    fun `widget height falls back to whichever the launcher reported`() {
+        assertEquals(180f, currentWidgetHeightDp(minHeightDp = 180, maxHeightDp = 0, isPortrait = true), 0.001f)
+        assertEquals(0f, currentWidgetHeightDp(minHeightDp = 0, maxHeightDp = 0, isPortrait = true), 0.001f)
+    }
+
+    @Test
     fun `computeFlipClockFitScale shrinks a tile that would push the weather card out`() {
         // POCO X3 at font scale 1.25: a ~4x2 widget is 544px tall, the 330px tile plus 236px of
         // padding, date and weather card leaves only 308px for the clock.
