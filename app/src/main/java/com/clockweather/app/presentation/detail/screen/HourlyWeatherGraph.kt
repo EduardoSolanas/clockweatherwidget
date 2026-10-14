@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -184,6 +185,8 @@ fun HourlyWeatherGraph(
 
     val scrollState = rememberScrollState()
     val density     = LocalDensity.current
+    val timeRowH    = density.hourlyTimeRowHeight()
+    val metaSliceH  = density.hourlyMetaSliceHeight()
     val layoutMetrics = remember(hours.size, density) {
         val columnWidthPx = with(density) { ColW.roundToPx() }
         HourlyGraphLayoutMetrics(
@@ -261,7 +264,7 @@ fun HourlyWeatherGraph(
                 Box(
                     modifier = Modifier
                         .width(totalWidth)
-                        .height(HourlyGraphPanelHeight)
+                        .height(timeRowH + GraphH + metaSliceH)
                 ) {
                     Box(
                         modifier = Modifier
@@ -311,7 +314,7 @@ fun HourlyWeatherGraph(
                             Row(
                                 modifier = Modifier
                                     .width(totalWidth)
-                                    .height(TimeRowH)
+                                    .height(timeRowH)
                             ) {
                                 hours.forEachIndexed { index, hour ->
                                     HourlyTimeSlice(
@@ -414,7 +417,7 @@ fun HourlyWeatherGraph(
                             Row(
                                 modifier = Modifier
                                     .width(totalWidth)
-                                    .height(BottomSliceH)
+                                    .height(metaSliceH)
                             ) {
                                 hours.forEachIndexed { index, hour ->
                                     HourlyMetaSlice(
@@ -617,10 +620,12 @@ private val GraphPanelCornerRadius = 22.dp
 private val CurrentHourSelectionCornerRadius = 12.dp
 private val CurrentHourSelectionHorizontalInset = 2.dp
 private val CurrentHourSelectionVerticalInset = 2.dp
-private val TimeRowH = 50.dp
 private val GraphH = 144.dp
-private val BottomSliceH = 144.dp
-private val HourlyGraphPanelHeight = TimeRowH + GraphH + BottomSliceH
+
+// Both rows hold two 16sp text lines (which follow the user's font size) beside padding and
+// icons that do not scale, so the fixed part is dp and the text part is sp.
+internal fun Density.hourlyTimeRowHeight(): Dp = 18.dp + (32f * fontScale).dp
+internal fun Density.hourlyMetaSliceHeight(): Dp = maxOf(144.dp, 88.dp + (32f * fontScale).dp)
 
 /**
  * Shown when the selected day has no hourly data cached. The app fetches hours on demand, so
