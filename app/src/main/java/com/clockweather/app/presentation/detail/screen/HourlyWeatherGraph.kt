@@ -87,7 +87,7 @@ internal fun scopedHourlyForecasts(
 
 // ── Curve colour (warm amber — matches reference) ─────────────────────────────
 
-private val CurveColor  = Color(0xFFFFA040)
+internal val CurveColor  = Color(0xFFFFA040)
 private val PrecipColor = Color(0xFF64B5F6)
 // Current-hour selection: border-only, matching the 14-day selected column style.
 private val CurrentHourBorderColor  = Color.White.copy(alpha = 0.92f)
@@ -405,7 +405,7 @@ fun HourlyWeatherGraph(
                                         style = TextStyle(
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = if (isCurrent) CurveColor else Color.White
+                                            color = hourlyTempLabelColor(isCurrent, onSurface)
                                         )
                                     )
                                     val lx = pts[index].x - label.size.width / 2f
@@ -621,6 +621,9 @@ private val CurrentHourSelectionCornerRadius = 12.dp
 private val CurrentHourSelectionHorizontalInset = 2.dp
 private val CurrentHourSelectionVerticalInset = 2.dp
 private val GraphH = 144.dp
+
+internal fun hourlyTempLabelColor(isCurrent: Boolean, onSurface: Color): Color =
+    if (isCurrent) CurveColor else onSurface
 
 // Both rows hold two 16sp text lines (which follow the user's font size) beside padding and
 // icons that do not scale, so the fixed part is dp and the text part is sp.
