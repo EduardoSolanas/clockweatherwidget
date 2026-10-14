@@ -375,7 +375,7 @@ abstract class BaseWidgetUpdater(
             com.clockweather.app.R.id.weather_icon_top
         }
 
-        val showPollen = prefs[SettingsViewModel.KEY_SHOW_POLLEN_IN_WIDGET] ?: true
+        val showPollen = SettingsViewModel.isPollenShownInWidget(prefs)
         val weather = snapshot.weather
         if (weather != null) {
             WidgetDataBinder.bindWeatherViews(context, views, weather, tempUnit, weatherIconStyle, iconViewId = weatherIconViewId)

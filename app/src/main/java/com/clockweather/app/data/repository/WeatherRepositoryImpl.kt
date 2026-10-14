@@ -191,7 +191,7 @@ class WeatherRepositoryImpl @Inject constructor(
      * whether background work still pays for pollen.
      */
     private suspend fun backgroundScope(): RefreshScope = RefreshScope.background(
-        pollenShownInWidget = dataStore.data.first()[SettingsViewModel.KEY_SHOW_POLLEN_IN_WIDGET] ?: true
+        pollenShownInWidget = SettingsViewModel.isPollenShownInWidget(dataStore.data.first())
     )
 
     private suspend fun refreshAndPersist(

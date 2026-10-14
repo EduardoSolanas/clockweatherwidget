@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.room.Room
 import com.clockweather.app.data.local.db.WeatherDatabase
+import com.clockweather.app.presentation.settings.SettingsViewModel
 import com.clockweather.app.data.local.entity.CurrentWeatherEntity
 import com.clockweather.app.data.local.entity.DailyForecastEntity
 import com.clockweather.app.data.local.entity.LocationEntity
@@ -85,6 +86,8 @@ class RelocationCacheReuseTest {
         dataStore = PreferenceDataStoreFactory.create(scope = dataStoreScope) { dataStoreFile }
         dataStore.edit {
             it[WeatherProviderPreferences.KEY_WEATHER_PROVIDER] = WeatherProviderType.OPEN_METEO.storageValue
+            // Optional-section reuse only matters while the widget shows pollen, which is opt-in.
+            it[SettingsViewModel.KEY_SHOW_POLLEN_IN_WIDGET] = true
         }
 
         server = MockWebServer()

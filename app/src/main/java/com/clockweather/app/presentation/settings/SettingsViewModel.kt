@@ -50,6 +50,13 @@ class SettingsViewModel @Inject constructor(
         val KEY_SHOW_TODAY_COMPACT = booleanPreferencesKey("show_today_compact")
         val KEY_SHOW_TODAY_EXTENDED = booleanPreferencesKey("show_today_extended")
         val KEY_SHOW_POLLEN_IN_WIDGET = booleanPreferencesKey("show_pollen_in_widget")
+
+        /** Pollen is opt-in: it crowds the widget, so it stays off until the user enables it. */
+        const val DEFAULT_SHOW_POLLEN_IN_WIDGET = false
+
+        fun isPollenShownInWidget(prefs: Preferences): Boolean =
+            prefs[KEY_SHOW_POLLEN_IN_WIDGET] ?: DEFAULT_SHOW_POLLEN_IN_WIDGET
+
         val KEY_WIDGET_TEXT_SCALE = floatPreferencesKey("widget_text_scale")
         val KEY_CLOCK_THEME = stringPreferencesKey("clock_theme")
         val KEY_CLOCK_TILE_SIZE = stringPreferencesKey("clock_tile_size")
@@ -155,8 +162,8 @@ class SettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val showPollenInWidget: StateFlow<Boolean> = dataStore.data
-        .map { prefs -> prefs[KEY_SHOW_POLLEN_IN_WIDGET] ?: true }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+        .map { prefs -> isPollenShownInWidget(prefs) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_SHOW_POLLEN_IN_WIDGET)
 
     val widgetTextScale: StateFlow<Float> = dataStore.data
         .map { prefs -> normalizeWidgetTextScale(prefs[KEY_WIDGET_TEXT_SCALE]) }
