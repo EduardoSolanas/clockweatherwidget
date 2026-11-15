@@ -2,6 +2,8 @@ package com.clockweather.app.presentation.widget.common
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.res.Configuration
+import android.os.Bundle
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -11,6 +13,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.clockweather.app.R
+import com.clockweather.app.presentation.widget.compact.CompactWidgetProvider
 import com.clockweather.app.presentation.widget.compact.CompactWidgetUpdater
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -20,11 +23,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.abs
 
 /**
  * Inflates the RemoteViews the widget actually ships and asserts the rendered view tree.
@@ -204,5 +209,89 @@ class WidgetRenderStyleTest {
             darkColor,
             lightDigits.currentTextColor,
         )
+    }
+
+    @Test
+    fun `weather card and icon bottoms align with the bottom of location and temperature`() {
+        val rendered = render()
+
+        val weatherCard = requireNotNull(rendered.findViewById<View>(R.id.weather_card))
+        val weatherIcon = requireNotNull(rendered.findViewById<View>(R.id.weather_icon))
+        val locationTop = requireNotNull(rendered.findViewById<View>(R.id.weather_overlay_location_top))
+        val tempTop = requireNotNull(rendered.findViewById<View>(R.id.weather_overlay_temp_top))
+
+        val expectedOverlayBottom = maxOf(locationTop.bottom, tempTop.bottom)
+        assertTrue(
+            "weather_card height (${weatherCard.height}, top=${weatherCard.top}, bottom=${weatherCard.bottom}) should match location/temp bottom ($expectedOverlayBottom)",
+            abs(weatherCard.height - expectedOverlayBottom) <= 1,
+        )
+        assertTrue(
+            "weather_icon bottom (${weatherIcon.bottom}) should match weather_card height (${weatherCard.height})",
+            abs(weatherIcon.bottom - weatherCard.height) <= 1,
+        )
+        assertEquals(0, weatherIcon.paddingBottom)
+    }
+
+    @Test
+    fun `clock tiles keep portrait height and never shrink below small tile minimum even when device configuration is landscape`() {
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        val appWidgetId = Shadows.shadowOf(appWidgetManager).createWidget(
+            CompactWidgetProvider::class.java,
+            R.layout.widget_compact,
+        )
+        val previousOrientation = context.resources.configuration.orientation
+        try {
+            context.resources.configuration.orientation = Configuration.ORIENTATION_LANDSCAPE
+
+            val portraitTallOptions = Bundle().apply {
+                putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 95)
+                putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 190)
+            }
+            appWidgetManager.updateAppWidgetOptions(appWidgetId, portraitTallOptions)
+
+            val snapshot = WidgetRenderSnapshot(
+                prefs = preferences(),
+                location = WidgetTestFixtures.london,
+                weather = WidgetTestFixtures.weatherData(LocalDateTime.now()),
+            )
+            val tallViews = updater.buildViews(appWidgetId = appWidgetId, snapshot = snapshot)
+            val tallRoot = tallViews.apply(context, FrameLayout(context))
+            val density = context.resources.displayMetrics.density
+            tallRoot.measure(
+                View.MeasureSpec.makeMeasureSpec((320 * density).toInt(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec((200 * density).toInt(), View.MeasureSpec.AT_MOST),
+            )
+            tallRoot.layout(0, 0, tallRoot.measuredWidth, tallRoot.measuredHeight)
+
+            val expectedMediumHeight = context.resources.getDimension(R.dimen.flip_digit_height_medium).toInt()
+            val tallHour = requireNotNull(tallRoot.findViewById<View>(R.id.clock_hour))
+            assertTrue(
+                "Expected unshrunk medium height ($expectedMediumHeight) using portrait MAX_HEIGHT even when device configuration is landscape, got ${tallHour.layoutParams.height}",
+                abs(tallHour.layoutParams.height - expectedMediumHeight) <= 1,
+            )
+
+            val tinyPortraitOptions = Bundle().apply {
+                putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 95)
+                putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 110)
+            }
+            appWidgetManager.updateAppWidgetOptions(appWidgetId, tinyPortraitOptions)
+
+            val tinyViews = updater.buildViews(appWidgetId = appWidgetId, snapshot = snapshot)
+            val tinyRoot = tinyViews.apply(context, FrameLayout(context))
+            tinyRoot.measure(
+                View.MeasureSpec.makeMeasureSpec((320 * density).toInt(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec((200 * density).toInt(), View.MeasureSpec.AT_MOST),
+            )
+            tinyRoot.layout(0, 0, tinyRoot.measuredWidth, tinyRoot.measuredHeight)
+
+            val minSmallHeight = context.resources.getDimension(R.dimen.flip_digit_height_small).toInt()
+            val tinyHour = requireNotNull(tinyRoot.findViewById<View>(R.id.clock_hour))
+            assertTrue(
+                "Clock height (${tinyHour.layoutParams.height}) must never shrink below small tile minimum ($minSmallHeight)",
+                tinyHour.layoutParams.height >= minSmallHeight,
+            )
+        } finally {
+            context.resources.configuration.orientation = previousOrientation
+        }
     }
 }

@@ -5,7 +5,6 @@
     android:id="@+id/weather_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="72dp"
     android:background="@android:color/transparent"
     android:clipChildren="false"
     android:clipToPadding="false"
@@ -16,7 +15,11 @@
         android:layout_width="196dp"
         android:layout_height="126dp"
         android:layout_gravity="bottom|center_horizontal"
-        android:paddingBottom="16dp"
+        android:layout_marginTop="-126dp"
+        android:paddingStart="2dp"
+        android:paddingTop="2dp"
+        android:paddingEnd="2dp"
+        android:paddingBottom="0dp"
         android:contentDescription="@null"
         android:scaleType="fitCenter"
         tools:src="@drawable/ic_widget_weather_partly_cloudy_day" />
@@ -181,5 +184,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="-3dp" />
+        android:layout_marginBottom="-15dp" />
 </FrameLayout>

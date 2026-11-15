@@ -2,7 +2,6 @@ package com.clockweather.app.presentation.widget.common
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
-import android.content.res.Configuration
 import android.content.res.Resources
 import android.util.Log
 import android.util.SizeF
@@ -230,13 +229,15 @@ abstract class BaseWidgetUpdater(
         val widgetHeightDp = targetHeightDp ?: currentWidgetHeightDp(
             minHeightDp = widgetOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0),
             maxHeightDp = widgetOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0),
-            isPortrait = context.resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE,
+            isPortrait = true,
         )
         val fitScale = computeFlipClockFitScale(
             widgetHeightDp * context.resources.displayMetrics.density, reservedPx, baseHeightPx,
         )
-        val heightPx = baseHeightPx * fitScale
-        val clockTextPx = baseClockTextPx * fitScale
+        val minTileHeightPx = context.resources.getDimension(com.clockweather.app.R.dimen.flip_digit_height_small)
+        val heightPx = (baseHeightPx * fitScale).coerceAtLeast(minTileHeightPx.coerceAtMost(baseHeightPx))
+        val effectiveFitScale = if (baseHeightPx > 0f) heightPx / baseHeightPx else 1f
+        val clockTextPx = baseClockTextPx * effectiveFitScale
         val gapPx = context.resources.getDimension(com.clockweather.app.R.dimen.flip_digit_gap)
 
         val views = RemoteViews(context.packageName, layoutResId)
